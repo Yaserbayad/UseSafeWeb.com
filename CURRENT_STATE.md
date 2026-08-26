@@ -2,7 +2,7 @@
 
 **Updated:** 2026-08-26  
 **Branch:** `main`  
-**Status authority:** This file is the current checkpoint. Detailed evidence is in `BUSINESS_EVALUATION.md`, `BUSINESS_PHASES_17_22.md`, and `BUSINESS_PHASES_23_42.md`.
+**Status authority:** This file is the current checkpoint. Detailed business evidence is in `BUSINESS_EVALUATION.md`, `BUSINESS_PHASES_17_22.md`, and `BUSINESS_PHASES_23_42.md`. Validation readiness is governed by `VALIDATION_READINESS_GATE.md`; Experiment 1 is governed by `EXPERIMENT_01_CONCIERGE_VALIDATION.md`.
 
 ## Frozen project identity
 
@@ -11,73 +11,73 @@
 - Initial market: **United Kingdom**; first behavioral validation concentrated in **England**.
 - Core segment: parent/caregiver around a child's first independently used smartphone, centered roughly ages 10–12.
 - Core JTBD: **SAFE INDEPENDENCE**.
-- Product: lightweight first-phone family digital-safety setup/orchestration service, not DNS software and not a surveillance suite.
-- Customer-facing shape: **UseSafeWeb — First Phone Safety Setup**.
-- MCP: registration-free guided setup coordinating native device safeguards + real AdGuard-backed baseline protection + one relevant external-service safeguard + truthful Protection Map.
+- Customer-facing product: **UseSafeWeb — First Phone Safety Setup**.
+- MCP: accountless guided setup coordinating native device safeguards + real AdGuard-backed baseline protection + one relevant external-service safeguard + truthful Protection Map.
 - Trust posture: **Simple guardrails. Clear limits. No invasive monitoring.**
+- Initial funding hypothesis: free core + optional £20/year or £2/month supporter contribution after value; no payment test in Experiment 1.
 
-## Business evaluation status
+## Business evaluation
 
 **Phases 1–42: COMPLETE.**
 
-The complete business evaluation is closed unless new material evidence requires reopening a specific phase.
+Final decision: **MODIFY — PROCEED TO VALIDATION, NOT FULL LAUNCH.**
 
-## Final authoritative business decision
+Internal decision score: **64/100** (project heuristic, not probability).
 
-# **MODIFY — PROCEED TO VALIDATION, NOT FULL LAUNCH**
+The original broad family-DNS proposition is superseded. The surviving hypothesis is a lightweight first-phone safety orchestration utility with DNS invisible underneath.
 
-- The original broad “family DNS” proposition is not sufficiently differentiated and is superseded.
-- The surviving concept is a first-smartphone safety setup/orchestration utility with DNS invisible underneath.
-- Strong evidence supports the parent problem, first-phone trigger, parental use of controls and fragmentation problem.
-- Exact-product adoption, payment, retention, channel repeatability and support burden remain unvalidated.
-- Internal opportunity/readiness decision score: **64/100**. This is a project heuristic, not a probability of success.
+## Validation objective
 
-## Final recommended product/business shape
+### Validation Readiness Gate — IN PROGRESS / BLOCKED ON OPERATIONAL EVIDENCE
 
-### Product
+Completed and persisted in `VALIDATION_READINESS_GATE.md`:
 
-**UseSafeWeb — First Phone Safety Setup**
+- intended pilot data-flow map;
+- minimum data inventory;
+- provisional lawful-basis map;
+- draft legitimate-interests assessment;
+- draft DPIA/risk register;
+- mandatory DNS privacy/logging requirements;
+- parent/child transparency requirements;
+- ICO-fee assessment logic;
+- processor/international-transfer checklist;
+- decision to keep payment/marketing disabled in Experiment 1.
 
-1. accountless start;
-2. minimal age/stage, device, new/existing-phone and relevant-service intake;
-3. native Apple/Google safeguards first;
-4. real AdGuard-backed baseline protection;
-5. one genuinely relevant external-service safeguard;
-6. Protection Map: verified / parent-confirmed / action-needed / not-covered;
-7. quiet completion; no engagement-driven dashboard.
+The gate is **NOT PASS** and real child-linked DNS processing for the validation experiment is not authorised yet.
 
-### Market/distribution
+### Blocking evidence required to close the gate
 
-- Validate first in **England**.
-- Initial market after validation: **UK**.
-- Priority acquisition: school/primary-to-secondary transition distribution → organic first-phone search → family/friend referral.
-- Paid acquisition deferred.
+1. Directly verify deployed AdGuard Home settings for query logging, file logging, statistics, client exclusions and client-IP anonymisation.
+2. Identify the actual server/hosting provider and processing country/region.
+3. Identify the configured upstream DNS provider/resolver and its privacy/retention/role.
+4. Identify any CDN/proxy, experiment/contact-data store, email/scheduling provider or other processor used for the pilot.
+5. Establish the actual controller/legal-entity facts needed for the ICO data-protection-fee assessment (entity type, relevant staff/turnover band, exemption position).
+6. Set final retention periods from verified operational need.
+7. Insert items 1–6 into the LIA/DPIA and formally approve the residual-risk decision before the pilot.
 
-### Funding
+No matching deployed-environment configuration or provider facts were found in the canonical repository, and prior recoverable project context did not establish them.
 
-- Full core service free during validation.
-- After activation: optional **£20/year or £2/month supporter contribution**.
-- No behavioral advertising or child-data monetisation.
-- Institutional sponsorship/grants may be explored only after consumer-value validation.
+## Required experiment privacy posture
 
-### Economics
+For participant child devices in Experiment 1:
 
-- Stripe UK domestic-card benchmark: 1.5% + £0.20; £20 annual support nets ~£19.50 before tax/refunds/other costs.
-- At 10% supporter conversion, average net annual payment revenue is ~£1.95 per activation.
-- Primary economic risk is **human support/operations**, not basic DNS hosting.
-- >30% needing substantial live help, or routine support materially above ~5–10 active human minutes/activation around 10% supporter conversion, is a major warning.
+- persistent identifiable query logging: OFF;
+- file query logging: OFF;
+- identifiable per-client statistics: OFF/excluded unless a necessary non-identifying aggregate is justified;
+- client-IP anonymisation: ON wherever an operational log/statistic can still contain addresses;
+- no browsing-history/top-domain product or research metric;
+- exceptional diagnostic logging only when necessary, time-boxed and deleted after resolution;
+- GitHub contains only aggregate/anonymised experiment results, never participant identities or child browsing data.
 
-## Market sizing
+AdGuard Home supports these relevant controls, but the deployed instance has not yet been inspected and therefore compliance is not claimed.
 
-- Broad UK 10–12 stage proxy: ~2.33M child-cohort places.
-- Central annual first-smartphone-transition proxy: ~201K child-events/year.
-- Heuristic behaviorally relevant envelope: ~70K–165K/year.
-- Exact obtainable UseSafeWeb market: **UNCONFIRMED**.
-- Plan initial expectations in hundreds to low-thousands of annual activations until distribution evidence proves more.
+## Experiment 1 protocol
 
-## Final validation/kill gates
+`EXPERIMENT_01_CONCIERGE_VALIDATION.md` is **READY AS A PROTOCOL but BLOCKED FROM EXECUTION until the readiness gate passes**.
 
-Promising evidence:
+Planned cohort: **20–30 qualified England parents/caregivers** around the first-smartphone transition.
+
+Primary existing decision gates:
 
 - ≥60% qualified-starter full activation;
 - ≥50% configure at least one previously missing native/external safeguard;
@@ -86,67 +86,25 @@ Promising evidence:
 - ≥80% understand at least two major coverage gaps;
 - ≤30% require substantial live assistance after basic refinement.
 
-Strong pivot/no-go evidence:
+Strong failure evidence after one materially improved iteration:
 
-- after two materially improved tests, <40% full activation;
+- <40% full activation;
 - <25% complete any previously missing non-DNS safeguard;
 - majority of abandoners say native controls are sufficient / UseSafeWeb adds work;
-- serious child-data/privacy incident;
-- supporter conversion <5% means supporter funding is weak as a primary model.
+- >30% require substantial live assistance after refinement;
+- >30% remove protection within 14 days because of blocking/compatibility/friction;
+- serious child-data/privacy incident → immediate stop.
 
-## Legal/data gate before real pilot
+## Current completion state
 
-Before processing real child-linked DNS data in a public/pilot service:
+- Business evaluation #1–#42: **COMPLETE**.
+- Validation Readiness design/documentation: **COMPLETE**.
+- Validation Readiness operational verification: **BLOCKED / OPEN**.
+- Experiment 1 protocol: **COMPLETE**.
+- Experiment 1 execution/recruitment: **NOT STARTED — prohibited until readiness PASS**.
+- Minimal MCP implementation: **NOT AUTHORISED until behavioral experiment passes**.
+- Full launch: **NOT AUTHORISED**.
 
-1. map data flows;
-2. complete a DPIA;
-3. document lawful basis per processing purpose;
-4. verify/minimise DNS logging/retention;
-5. publish clear privacy and protection-limit information;
-6. assess ICO fee requirement;
-7. verify processor/hosting/international-transfer position where relevant;
-8. re-check recurring-payment consumer-law obligations before enabling monthly support.
+## Exact next authoritative action
 
-Current assessment: UK legal/regulatory risk is material but manageable; the defined MCP does not currently appear to be an Online Safety Act regulated user-to-user/search/pornography service. Reopen if product scope changes.
-
-## External/scalability/moat conclusions
-
-- Material dependencies: Apple/Google control surfaces, cross-platform capability gaps, privacy/network technologies such as iCloud Private Relay, filter quality, UK policy changes and trusted distribution partners.
-- Scalability: **3/5** — plausible for a lean self-service utility; conventional staffed SaaS scaling unproven.
-- Defensibility: **2/5** — technology is easy to copy; potential soft moat is trust, school/transition distribution, maintained cross-platform setup knowledge and a recognised Protection Map standard.
-
-## What must not be built before validation
-
-No DNS admin dashboard, full parental-control suite, surveillance/history, location/message/social monitoring, child app/account, comprehensive screen-time suite, large service catalogue, GROW automation, AI parenting assistant, community/UGC, mobile app, school admin portal, paid acquisition system, complex paywall/subscription tiering, or premium features created merely to monetize.
-
-## Validation sequence
-
-1. **Legal/data readiness gate.**
-2. **Concierge behavioral test:** 20–30 qualified England first-phone parents; real settings changes, manual orchestration, measure intervention.
-3. Iterate once on observed friction.
-4. Kill/continue gate.
-5. Minimal real MCP only if behavior passes.
-6. 30–50-family real pilot.
-7. 14/30/90-day protection persistence.
-8. Real £20/year vs £2/month supporter payment test after value.
-9. School/search/referral channel repeatability test.
-10. Recalculate economics using observed support/payment/retention/CAC.
-11. Only then consider production UK launch.
-
-## Material unresolved evidence
-
-1. Exact-product behavioral adoption.
-2. Incremental safeguard completion in real users.
-3. Protection persistence at 14/30/90 days.
-4. Actual support minutes/ticket rate.
-5. Actual supporter conversion and renewal.
-6. Actual school/search/referral acquisition repeatability and CAC.
-7. Verified production AdGuard privacy/logging/capacity/full-cost posture.
-
-## Next authoritative step
-
-The **business-evaluation master plan is complete**. The next work is a new execution objective outside the evaluation scope:
-
-**Validation Readiness Gate → Experiment 1 (concierge behavioral validation).**
-
-Do not begin implementation/full launch automatically from this checkpoint. First satisfy the legal/data gate, then run the bounded behavioral experiment defined above. If the project remains explicitly in business-evaluation-only mode, stop here until behavioral evidence is produced.
+Close the operational evidence portion of the **Validation Readiness Gate** by inspecting/providing the minimum environment facts listed above. Once verified, finalise/approve the LIA/DPIA and mark the gate PASS. Only then begin Experiment 1 recruitment and real participant activation.
