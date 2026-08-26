@@ -2,7 +2,7 @@
 
 **Updated:** 2026-08-26  
 **Branch:** `main`  
-**Status authority:** This file is the current checkpoint and supersedes older status lines in `BUSINESS_EVALUATION.md` while preserving that file as the detailed record through phase 16. See `BUSINESS_PHASES_17_22.md` for the completed commercial/distribution/operations tranche.
+**Status authority:** This file is the current checkpoint. Detailed evidence is in `BUSINESS_EVALUATION.md`, `BUSINESS_PHASES_17_22.md`, and `BUSINESS_PHASES_23_42.md`.
 
 ## Frozen project identity
 
@@ -11,79 +11,142 @@
 - Initial market: **United Kingdom**; first behavioral validation concentrated in **England**.
 - Core segment: parent/caregiver around a child's first independently used smartphone, centered roughly ages 10–12.
 - Core JTBD: **SAFE INDEPENDENCE**.
-- Product: lightweight first-smartphone family digital-safety setup/orchestrator, not DNS software and not a surveillance suite.
-- MCP: registration-free guided setup coordinating native device safeguards + real AdGuard-backed baseline protection + one relevant external service safeguard + truthful Protection Map.
+- Product: lightweight first-phone family digital-safety setup/orchestration service, not DNS software and not a surveillance suite.
+- Customer-facing shape: **UseSafeWeb — First Phone Safety Setup**.
+- MCP: registration-free guided setup coordinating native device safeguards + real AdGuard-backed baseline protection + one relevant external-service safeguard + truthful Protection Map.
 - Trust posture: **Simple guardrails. Clear limits. No invasive monitoring.**
 
-## Master plan status
+## Business evaluation status
 
-1–16. **COMPLETE** — see `BUSINESS_EVALUATION.md`.
+**Phases 1–42: COMPLETE.**
 
-17. Customer Willingness-to-Pay / Free-Service Validation — **COMPLETE**
-18. Business Model & Revenue/Funding Options — **COMPLETE**
-19. Unit Economics & Cost Sustainability — **COMPLETE**
-20. Distribution & Customer-Acquisition Strategy — **COMPLETE**
-21. Retention, Engagement & Long-Term Value — **COMPLETE**
-22. Operational & Support Burden Assessment — **COMPLETE**
-23. Legal / Regulatory Business Risk Assessment — **NEXT**
-24–42. Pending
+The complete business evaluation is closed unless new material evidence requires reopening a specific phase.
 
-## New authoritative decisions from phases 17–22
+## Final authoritative business decision
 
-### Commercial model
+# **MODIFY — PROCEED TO VALIDATION, NOT FULL LAUNCH**
 
-- Do **not** paywall the MCP before demand is proven.
-- Strongest WTP hypothesis: full service remains free; after activation offer optional supporter contribution at **£20/year or £2/month**.
-- Actual completed payments, not survey intent, are required to validate WTP.
-- Selected initial business model: **free-to-use core + voluntary supporter funding**.
-- No core-safety feature gating during validation; no behavioral advertising or child-data monetisation.
+- The original broad “family DNS” proposition is not sufficiently differentiated and is superseded.
+- The surviving concept is a first-smartphone safety setup/orchestration utility with DNS invisible underneath.
+- Strong evidence supports the parent problem, first-phone trigger, parental use of controls and fragmentation problem.
+- Exact-product adoption, payment, retention, channel repeatability and support burden remain unvalidated.
+- Internal opportunity/readiness decision score: **64/100**. This is a project heuristic, not a probability of success.
+
+## Final recommended product/business shape
+
+### Product
+
+**UseSafeWeb — First Phone Safety Setup**
+
+1. accountless start;
+2. minimal age/stage, device, new/existing-phone and relevant-service intake;
+3. native Apple/Google safeguards first;
+4. real AdGuard-backed baseline protection;
+5. one genuinely relevant external-service safeguard;
+6. Protection Map: verified / parent-confirmed / action-needed / not-covered;
+7. quiet completion; no engagement-driven dashboard.
+
+### Market/distribution
+
+- Validate first in **England**.
+- Initial market after validation: **UK**.
+- Priority acquisition: school/primary-to-secondary transition distribution → organic first-phone search → family/friend referral.
+- Paid acquisition deferred.
+
+### Funding
+
+- Full core service free during validation.
+- After activation: optional **£20/year or £2/month supporter contribution**.
+- No behavioral advertising or child-data monetisation.
+- Institutional sponsorship/grants may be explored only after consumer-value validation.
 
 ### Economics
 
-- Current Stripe UK standard domestic-card fee: **1.5% + £0.20**.
-- £20 annual supporter payment nets approximately **£19.50** before tax/refunds/other costs.
-- Average net revenue per activation at £20/year: **£0.975 at 5% supporter conversion; £1.95 at 10%; £3.90 at 20%**.
-- Raw infrastructure is plausibly low-cost relative to support; a current UK VPS benchmark is £7.55/month incl. VAT for OVHcloud VPS-2, but this is not a production topology or capacity claim.
-- Primary economic risk: **human support/operations**, not basic VPS cost.
+- Stripe UK domestic-card benchmark: 1.5% + £0.20; £20 annual support nets ~£19.50 before tax/refunds/other costs.
+- At 10% supporter conversion, average net annual payment revenue is ~£1.95 per activation.
+- Primary economic risk is **human support/operations**, not basic DNS hosting.
+- >30% needing substantial live help, or routine support materially above ~5–10 active human minutes/activation around 10% supporter conversion, is a major warning.
 
-### Distribution
+## Market sizing
 
-Initial channel priority:
+- Broad UK 10–12 stage proxy: ~2.33M child-cohort places.
+- Central annual first-smartphone-transition proxy: ~201K child-events/year.
+- Heuristic behaviorally relevant envelope: ~70K–165K/year.
+- Exact obtainable UseSafeWeb market: **UNCONFIRMED**.
+- Plan initial expectations in hundreds to low-thousands of annual activations until distribution evidence proves more.
 
-1. **School / primary-to-secondary transition channel**.
-2. Organic first-phone-intent search/content.
-3. Family/friend referral.
-4. Trusted safety organisations/charities/public-information referrals after evidence exists.
-5. Social media only as a supporting parent channel.
-6. Paid performance acquisition deferred until monetisation can support it.
+## Final validation/kill gates
 
-England DfE 2026 evidence: primary parents would seek online-safety advice from schools 50%, family/friends 46%, government sites 45%, children's charities 21%, AI tools/apps 20%, social media 16%.
+Promising evidence:
 
-### Retention
+- ≥60% qualified-starter full activation;
+- ≥50% configure at least one previously missing native/external safeguard;
+- ≥70% baseline protection active after 14 days;
+- ≤25% abandon primarily because UseSafeWeb adds/duplicates work;
+- ≥80% understand at least two major coverage gaps;
+- ≤30% require substantial live assistance after basic refinement.
 
-- Optimize for **protection persistence**, not app engagement/MAU.
-- Existing MCP threshold remains: ≥70% of activated users still have baseline protection enabled after 14 days.
-- Measure 30/90-day persistence and 12-month supporter renewal, but do not invent thresholds before real data.
-- GROW remains deferred until SET UP + PROTECT demand/persistence are proven.
+Strong pivot/no-go evidence:
 
-### Operations/support
+- after two materially improved tests, <40% full activation;
+- <25% complete any previously missing non-DNS safeguard;
+- majority of abandoners say native controls are sufficient / UseSafeWeb adds work;
+- serious child-data/privacy incident;
+- supporter conversion <5% means supporter funding is weak as a primary model.
 
-- MCP must be self-service by default; pilot human assistance is diagnostic and must be measured.
-- Existing red flag: >30% of users requiring substantial live intervention after basic usability refinement.
-- Economic red flag: if routine activation/support consumes materially more than about **5–10 active human minutes per activation** while supporter conversion remains around 10% at £20/year, supporter-only economics are not plausible without automation, higher/other funding, or model change.
+## Legal/data gate before real pilot
 
-## Open uncertainties
+Before processing real child-linked DNS data in a public/pilot service:
 
-1. Exact-product behavioral adoption is still unvalidated.
-2. Actual supporter conversion and preferred monthly/annual option are unvalidated.
-3. Actual production AdGuard capacity and full operating cost remain unverified.
-4. Real CAC is unmeasured.
-5. 30/90/365-day retention is unmeasured.
-6. Actual support minutes/ticket rate are unmeasured.
-7. UK legal/regulatory applicability and business risk for the exact MCP remain to be assessed in phase 23.
+1. map data flows;
+2. complete a DPIA;
+3. document lawful basis per processing purpose;
+4. verify/minimise DNS logging/retention;
+5. publish clear privacy and protection-limit information;
+6. assess ICO fee requirement;
+7. verify processor/hosting/international-transfer position where relevant;
+8. re-check recurring-payment consumer-law obligations before enabling monthly support.
+
+Current assessment: UK legal/regulatory risk is material but manageable; the defined MCP does not currently appear to be an Online Safety Act regulated user-to-user/search/pornography service. Reopen if product scope changes.
+
+## External/scalability/moat conclusions
+
+- Material dependencies: Apple/Google control surfaces, cross-platform capability gaps, privacy/network technologies such as iCloud Private Relay, filter quality, UK policy changes and trusted distribution partners.
+- Scalability: **3/5** — plausible for a lean self-service utility; conventional staffed SaaS scaling unproven.
+- Defensibility: **2/5** — technology is easy to copy; potential soft moat is trust, school/transition distribution, maintained cross-platform setup knowledge and a recognised Protection Map standard.
+
+## What must not be built before validation
+
+No DNS admin dashboard, full parental-control suite, surveillance/history, location/message/social monitoring, child app/account, comprehensive screen-time suite, large service catalogue, GROW automation, AI parenting assistant, community/UGC, mobile app, school admin portal, paid acquisition system, complex paywall/subscription tiering, or premium features created merely to monetize.
+
+## Validation sequence
+
+1. **Legal/data readiness gate.**
+2. **Concierge behavioral test:** 20–30 qualified England first-phone parents; real settings changes, manual orchestration, measure intervention.
+3. Iterate once on observed friction.
+4. Kill/continue gate.
+5. Minimal real MCP only if behavior passes.
+6. 30–50-family real pilot.
+7. 14/30/90-day protection persistence.
+8. Real £20/year vs £2/month supporter payment test after value.
+9. School/search/referral channel repeatability test.
+10. Recalculate economics using observed support/payment/retention/CAC.
+11. Only then consider production UK launch.
+
+## Material unresolved evidence
+
+1. Exact-product behavioral adoption.
+2. Incremental safeguard completion in real users.
+3. Protection persistence at 14/30/90 days.
+4. Actual support minutes/ticket rate.
+5. Actual supporter conversion and renewal.
+6. Actual school/search/referral acquisition repeatability and CAC.
+7. Verified production AdGuard privacy/logging/capacity/full-cost posture.
 
 ## Next authoritative step
 
-**23 — Legal / Regulatory Business Risk Assessment.**
+The **business-evaluation master plan is complete**. The next work is a new execution objective outside the evaluation scope:
 
-Assess current UK/England legal and regulatory exposure specifically for the defined parent-facing, non-surveillance, AdGuard-backed MCP. Distinguish binding requirements from conservative product choices; cover UK GDPR/Data Protection Act, Children's Code applicability, child/parent data, DNS query data, consumer/safety claims, Online Safety Act implications where applicable, and the planned 2027 under-16 social-media regime. Do not move into technical implementation architecture.
+**Validation Readiness Gate → Experiment 1 (concierge behavioral validation).**
+
+Do not begin implementation/full launch automatically from this checkpoint. First satisfy the legal/data gate, then run the bounded behavioral experiment defined above. If the project remains explicitly in business-evaluation-only mode, stop here until behavioral evidence is produced.
