@@ -2,109 +2,106 @@
 
 **Updated:** 2026-08-26  
 **Branch:** `main`  
-**Status authority:** This file is the current checkpoint. Detailed business evidence is in `BUSINESS_EVALUATION.md`, `BUSINESS_PHASES_17_22.md`, and `BUSINESS_PHASES_23_42.md`. Validation readiness is governed by `VALIDATION_READINESS_GATE.md`; Experiment 1 is governed by `EXPERIMENT_01_CONCIERGE_VALIDATION.md`.
+**Status authority:** current checkpoint. Detailed business evidence remains in `BUSINESS_EVALUATION.md`, `BUSINESS_PHASES_17_22.md`, and `BUSINESS_PHASES_23_42.md`. Validation readiness is governed by `VALIDATION_READINESS_GATE.md`; Experiment 1 by `EXPERIMENT_01_CONCIERGE_VALIDATION.md`.
 
 ## Frozen project identity
 
 - Public domain: **UseSafeWeb.com**.
 - Backend: **AdGuard**, frozen unless verified critical blocker.
-- Initial market: **United Kingdom**; first behavioral validation concentrated in **England**.
-- Core segment: parent/caregiver around a child's first independently used smartphone, centered roughly ages 10–12.
-- Core JTBD: **SAFE INDEPENDENCE**.
-- Customer-facing product: **UseSafeWeb — First Phone Safety Setup**.
-- MCP: accountless guided setup coordinating native device safeguards + real AdGuard-backed baseline protection + one relevant external-service safeguard + truthful Protection Map.
+- Initial market: UK; first behavioral validation in England.
+- Core segment: parent/caregiver around a roughly 10–12-year-old child's first independently used smartphone.
+- Product: **UseSafeWeb — First Phone Safety Setup**.
 - Trust posture: **Simple guardrails. Clear limits. No invasive monitoring.**
-- Initial funding hypothesis: free core + optional £20/year or £2/month supporter contribution after value; no payment test in Experiment 1.
 
 ## Business evaluation
 
-**Phases 1–42: COMPLETE.**
+**Phases 1–42 COMPLETE.**
 
 Final decision: **MODIFY — PROCEED TO VALIDATION, NOT FULL LAUNCH.**
 
-Internal decision score: **64/100** (project heuristic, not probability).
+## Validation Readiness Gate
 
-The original broad family-DNS proposition is superseded. The surviving hypothesis is a lightweight first-phone safety orchestration utility with DNS invisible underneath.
+**Status: IN PROGRESS / BLOCKED ON TWO OWNER FACT SETS + DEPLOYMENT VERIFICATION.**
 
-## Validation objective
+### Newly resolved owner decisions
 
-### Validation Readiness Gate — IN PROGRESS / BLOCKED ON OPERATIONAL EVIDENCE
+- Future pilot/production AdGuard server must be deployed with the privacy-minimal configuration defined in `VALIDATION_READINESS_GATE.md`; old/test settings are not authoritative.
+- Production may use EU + USA hosting geography.
+- **England Experiment 1 uses the EU node only**; the US node is excluded from the participant child-data path.
+- No additional pilot CDN/proxy/email/scheduling/payment/analytics/research-data processor is currently selected.
+- Controller type: **individual**.
 
-Completed and persisted in `VALIDATION_READINESS_GATE.md`:
+### Upstream DNS decision
 
-- intended pilot data-flow map;
-- minimum data inventory;
-- provisional lawful-basis map;
-- draft legitimate-interests assessment;
-- draft DPIA/risk register;
-- mandatory DNS privacy/logging requirements;
-- parent/child transparency requirements;
-- ICO-fee assessment logic;
-- processor/international-transfer checklist;
-- decision to keep payment/marketing disabled in Experiment 1.
+Selected upstream for development, Experiment 1 and production baseline:
 
-The gate is **NOT PASS** and real child-linked DNS processing for the validation experiment is not authorised yet.
+`https://dns10.quad9.net/dns-query`
 
-### Blocking evidence required to close the gate
+- provider: Quad9, Swiss public-benefit foundation;
+- encrypted DoH;
+- no threat blocking, keeping AdGuard as the sole product filtering/policy layer;
+- DNSSEC validation enabled;
+- **ECS disabled** in AdGuard; do not use Quad9 ECS endpoints;
+- Quad9 June-2026 privacy policy states it does not collect or record user IP addresses;
+- Switzerland is covered by UK adequacy regulations.
 
-1. Directly verify deployed AdGuard Home settings for query logging, file logging, statistics, client exclusions and client-IP anonymisation.
-2. Identify the actual server/hosting provider and processing country/region.
-3. Identify the configured upstream DNS provider/resolver and its privacy/retention/role.
-4. Identify any CDN/proxy, experiment/contact-data store, email/scheduling provider or other processor used for the pilot.
-5. Establish the actual controller/legal-entity facts needed for the ICO data-protection-fee assessment (entity type, relevant staff/turnover band, exemption position).
-6. Set final retention periods from verified operational need.
-7. Insert items 1–6 into the LIA/DPIA and formally approve the residual-risk decision before the pilot.
+### Mandatory pilot AdGuard target configuration
 
-No matching deployed-environment configuration or provider facts were found in the canonical repository, and prior recoverable project context did not establish them.
+Before first real participant, directly verify:
 
-## Required experiment privacy posture
+- persistent identifiable query logging OFF;
+- file query logging OFF;
+- identifiable per-client statistics OFF/excluded unless specifically justified;
+- IP anonymisation ON wherever operational records can contain addresses;
+- EDNS Client Subnet OFF;
+- upstream = `https://dns10.quad9.net/dns-query`;
+- no browsing-history/top-domain product or experiment metric;
+- diagnostic logs only when necessary, time-boxed and deleted after resolution.
 
-For participant child devices in Experiment 1:
+These are deployment acceptance requirements, not claims about any current/test server.
 
-- persistent identifiable query logging: OFF;
-- file query logging: OFF;
-- identifiable per-client statistics: OFF/excluded unless a necessary non-identifying aggregate is justified;
-- client-IP anonymisation: ON wherever an operational log/statistic can still contain addresses;
-- no browsing-history/top-domain product or research metric;
-- exceptional diagnostic logging only when necessary, time-boxed and deleted after resolution;
-- GitHub contains only aggregate/anonymised experiment results, never participant identities or child browsing data.
+### Remaining owner facts
 
-AdGuard Home supports these relevant controls, but the deployed instance has not yet been inspected and therefore compliance is not claimed.
+Only the following facts are still needed before the legal/processor assessment can be finalised:
 
-## Experiment 1 protocol
+1. **EU pilot hosting provider name/legal entity**.
+2. **Controller country/main establishment**.
+3. **Approximate staff count**.
+4. **Approximate annual turnover band**.
 
-`EXPERIMENT_01_CONCIERGE_VALIDATION.md` is **READY AS A PROTOCOL but BLOCKED FROM EXECUTION until the readiness gate passes**.
+Controller country is especially material because an individual controller outside the UK who offers services to UK users may have UK territorial/representative obligations; no country will be inferred from residence/nationality.
 
-Planned cohort: **20–30 qualified England parents/caregivers** around the first-smartphone transition.
+### Work after those facts
 
-Primary existing decision gates:
-
-- ≥60% qualified-starter full activation;
-- ≥50% configure at least one previously missing native/external safeguard;
-- ≥70% baseline protection active after 14 days;
-- ≤25% abandon primarily because UseSafeWeb adds/duplicates work;
-- ≥80% understand at least two major coverage gaps;
-- ≤30% require substantial live assistance after basic refinement.
-
-Strong failure evidence after one materially improved iteration:
-
-- <40% full activation;
-- <25% complete any previously missing non-DNS safeguard;
-- majority of abandoners say native controls are sufficient / UseSafeWeb adds work;
-- >30% require substantial live assistance after refinement;
-- >30% remove protection within 14 days because of blocking/compatibility/friction;
-- serious child-data/privacy incident → immediate stop.
+1. review hosting processor terms/subprocessors/transfer position;
+2. resolve ICO fee and any UK-representative requirement;
+3. finalise LIA/DPIA territorial/processor sections;
+4. deploy/configure the EU pilot node;
+5. directly verify mandatory AdGuard settings;
+6. approve residual risks and mark Validation Readiness PASS;
+7. only then begin Experiment 1 recruitment/activation.
 
 ## Current completion state
 
 - Business evaluation #1–#42: **COMPLETE**.
-- Validation Readiness design/documentation: **COMPLETE**.
-- Validation Readiness operational verification: **BLOCKED / OPEN**.
+- Validation-readiness design: **COMPLETE**.
+- Upstream DNS selection: **COMPLETE**.
+- Pilot data-geography decision: **COMPLETE**.
+- Controller type: **COMPLETE — individual**.
+- Hosting-provider/controller-territory facts: **OPEN**.
+- Deployment/config verification: **NOT STARTED**.
 - Experiment 1 protocol: **COMPLETE**.
-- Experiment 1 execution/recruitment: **NOT STARTED — prohibited until readiness PASS**.
-- Minimal MCP implementation: **NOT AUTHORISED until behavioral experiment passes**.
+- Experiment 1 execution: **NOT STARTED / NOT AUTHORISED until readiness PASS**.
+- MCP implementation: **NOT AUTHORISED until behavioral validation passes**.
 - Full launch: **NOT AUTHORISED**.
 
 ## Exact next authoritative action
 
-Close the operational evidence portion of the **Validation Readiness Gate** by inspecting/providing the minimum environment facts listed above. Once verified, finalise/approve the LIA/DPIA and mark the gate PASS. Only then begin Experiment 1 recruitment and real participant activation.
+Obtain the four remaining factual values from the owner:
+
+- EU pilot hosting provider;
+- controller country/main establishment;
+- approximate staff count;
+- approximate annual turnover band.
+
+Then continue autonomously through processor/ICO/representative analysis and the deploy-and-verify readiness work.
