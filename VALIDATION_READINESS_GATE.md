@@ -1,7 +1,7 @@
 # UseSafeWeb.com — Validation Readiness Gate
 
 **Date:** 2026-08-26  
-**Status:** IN PROGRESS — most design decisions resolved; two human/environment facts remain.  
+**Status:** IN PROGRESS — owner/environment facts substantially resolved; remaining blockers are minimum UK representation/fee handling plus deployment verification.  
 **Purpose:** prerequisite to Experiment 1. No real child-linked DNS processing is authorised until this gate is PASS.
 
 ## 1. Gate completion criteria
@@ -17,18 +17,25 @@ PASS requires:
 7. hosting/upstream/other recipients and transfers reviewed;
 8. payments/marketing disabled for Experiment 1.
 
-## 2. Owner-approved decisions now resolved
+## 2. Owner-approved operating decisions
 
-- **AdGuard privacy posture:** the pilot/production server will be configured to the privacy-minimal settings in this gate; an old/test server configuration is not treated as authoritative.
-- **Production hosting geography:** EU + USA may exist in production.
-- **Experiment 1 geography decision:** England-pilot child-linked DNS traffic will use the **EU node only**. The US node is excluded from the Experiment-1 child-data path because it adds no validation value and would add avoidable transfer/contract complexity.
-- **Other pilot processors/services:** none selected/planned at this stage beyond the server host and upstream DNS. Payments and marketing are disabled.
-- **Controller type:** **individual**.
+- **AdGuard privacy posture:** the pilot/production server will be deployed to the privacy-minimal settings in this gate; old/test settings are not authoritative.
+- **Production hosting geography:** EU + USA may exist later in production.
+- **Experiment 1:** England-pilot child-linked DNS traffic uses the **EU node only**; the US node is excluded from the pilot data path.
+- **Hosting provider:** Microsoft Azure.
+- **EU pilot Azure region:** **West Europe (`westeurope`), Netherlands**. Microsoft currently identifies West Europe as a Netherlands Azure region.
+- **Other pilot processors/services:** none selected/planned beyond Microsoft Azure and the upstream DNS provider. Payments, marketing, CDN/proxy, third-party analytics and separate research-data SaaS are not part of Experiment 1.
+- **Controller:** individual, main establishment **Netherlands**.
+- **Current turnover:** **0 / pre-revenue**.
+- **Staff information:** intentionally not recorded at this stage. It is not needed to identify the lowest ICO fee tier because turnover is already below the current Tier-1 threshold if a fee is due.
+- **Owner simplicity objective:** run the early stage as a lean friends/family validation project and defer non-essential commercial/organisational formalisation until **500 active users**.
+- **500-user clarification:** this is an internal scale-up review milestone, **not a legal threshold**. Minimum GDPR/UK-GDPR duties that apply to the pilot cannot be deferred merely because the service is free, pre-revenue, friends/family, or below 500 users.
 
-Still required from the owner before PASS:
-
-1. **hosting provider name** for the EU pilot server;
-2. **controller country/main establishment**, plus approximate staff count and annual-turnover band sufficient to resolve ICO fee/UK-representative applicability.
+Primary sources:
+- Azure regions: https://learn.microsoft.com/en-us/azure/reliability/regions-list
+- Microsoft DPA: https://www.microsoft.com/licensing/docs/view/microsoft-products-and-services-data-protection-addendum-dpa
+- EU GDPR applicability: https://commission.europa.eu/law/law-topic/data-protection/information-business-and-organisations/application-gdpr_en
+- UK GDPR territorial scope: https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/personal-information-what-is-it/who-does-the-uk-gdpr-apply-to/
 
 ## 3. Upstream DNS — authoritative selection
 
@@ -39,17 +46,17 @@ Still required from the owner before PASS:
 Configuration principle:
 
 - AdGuard Home remains the sole product filtering/policy layer;
-- Quad9 is used only for recursive DNS + DNSSEC, avoiding hidden/double malware filtering that would complicate attribution and false-positive debugging;
-- **EDNS Client Subnet (ECS) must be disabled** in AdGuard Home so participant/client subnet information is not intentionally forwarded upstream;
+- Quad9 supplies recursive DNS + DNSSEC only, avoiding hidden/double malware filtering;
+- **EDNS Client Subnet (ECS) must be disabled** in AdGuard Home;
 - do not use Quad9 ECS endpoints (`dns11`/`dns12`) for the pilot.
 
 Why Quad9:
 
-- Quad9 is a Swiss public-benefit foundation;
-- its June 2026 privacy policy states it does not collect or record user IP addresses;
-- its current service matrix provides a no-threat-blocking, non-ECS endpoint;
-- as of June 15, 2026, DNSSEC validation is enabled across all Quad9 service endpoints;
-- Switzerland is covered by UK adequacy regulations, simplifying the transfer position compared with an unnecessary US upstream relationship.
+- Swiss public-benefit foundation;
+- June-2026 privacy policy states it does not collect or record user IP addresses;
+- current service matrix provides a no-threat-blocking, non-ECS endpoint;
+- DNSSEC validation is enabled across Quad9 service endpoints;
+- Switzerland is covered by UK adequacy regulations.
 
 Primary sources:
 - https://quad9.net/privacy/policy/
@@ -61,7 +68,7 @@ Primary sources:
 
 Parent browser → UseSafeWeb setup journey → pseudonymous experiment record.
 
-Child device → encrypted UseSafeWeb/AdGuard DNS endpoint on **EU pilot server** → Quad9 `dns10` DoH upstream → DNS response → child device.
+Child device → encrypted UseSafeWeb/AdGuard DNS endpoint on **Azure West Europe (Netherlands)** → Quad9 `dns10` DoH → DNS response → child device.
 
 No US node is in the Experiment-1 child-data path.
 
@@ -87,17 +94,17 @@ Do not collect by default:
 
 GitHub receives only aggregate/anonymised experiment results.
 
-## 5. Provisional lawful basis / LIA
+## 5. Lawful basis / LIA
 
-**Provisional UK GDPR Article 6(1)(f) legitimate interests**, subject to final LIA/DPIA approval against the actual controller and hosting environment.
+**Provisional basis:** legitimate interests under Article 6(1)(f), subject to final LIA/DPIA approval immediately before live participant processing.
 
-Purpose: provide parent-requested first-phone setup and baseline DNS protection.
+Purpose: provide parent-requested first-phone setup and baseline DNS protection while testing whether the service removes more work than it creates.
 
 Necessary:
 - minimal setup-routing inputs;
 - transient DNS processing required to resolve/filter requests;
 - minimum service-security data;
-- pseudonymous experiment metrics needed to decide whether the product should exist.
+- pseudonymous experiment metrics required by the validation plan.
 
 Not necessary and prohibited for Experiment 1:
 - persistent identifiable DNS/browsing history;
@@ -118,7 +125,18 @@ Balancing safeguards:
 - minimal retention;
 - EU-only pilot data plane.
 
-**LIA state:** draft substantively complete; final territorial/controller section remains blocked on controller country and hosting provider.
+### Territorial position
+
+- The controller is established in the **Netherlands**, so EU GDPR applies to the controller's relevant processing.
+- The pilot intentionally offers a service to families in **England**, so UK GDPR also applies to that UK-targeted processing even though the controller is outside the UK.
+- The personal/household exemption cannot safely be used for this product-validation service. Official EU/UK guidance limits that exemption to purely personal/household activity without professional/commercial connection; the project is explicitly testing a service intended for later public use/funding.
+- There is no 500-user exemption or delayed-compliance threshold.
+
+Primary sources:
+- https://commission.europa.eu/law/law-topic/data-protection/information-business-and-organisations/application-gdpr_en
+- https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/personal-information-what-is-it/who-does-the-uk-gdpr-apply-to/
+
+**LIA state:** substantively complete; final approval remains tied to deployment verification and the UK representative/fee decision below.
 
 ## 6. Mandatory AdGuard configuration for pilot/production
 
@@ -137,9 +155,40 @@ For Experiment-1 participant traffic:
 9. diagnostic logging only when genuinely necessary, time-boxed and deleted after resolution;
 10. no WHOIS/rDNS/client-enrichment solely for analytics.
 
-**Verification rule:** before the first real participant, inspect the deployed configuration and confirm these requirements directly. A planned setting is not execution evidence.
+**Verification rule:** before the first real participant, inspect the deployed configuration and confirm every requirement directly. Planned settings are not execution evidence.
 
-## 7. DPIA risk status
+## 7. Hosting / processor / transfer review
+
+### Microsoft Azure
+
+Selected provider: **Microsoft Azure**. Pilot region: **West Europe, Netherlands**.
+
+Microsoft's current Products and Services Data Protection Addendum provides the standard processor/data-protection terms for Azure, and Microsoft documents that Azure customer data can be provisioned at rest within selected geographic regions, subject to the DPA/Product Terms and service-specific exceptions. Microsoft also provides contractual transfer safeguards for relevant cross-border processing.
+
+This is sufficient for the **design-stage processor selection**, but deployment acceptance still requires verifying that the actual pilot VM/resources are created in `westeurope` and that no optional service added to the pilot creates an unreviewed data flow.
+
+Primary sources:
+- https://learn.microsoft.com/en-us/compliance/regulatory/gdpr-dpia-azure
+- https://www.microsoft.com/licensing/docs/view/microsoft-products-and-services-data-protection-addendum-dpa
+- https://learn.microsoft.com/en-us/compliance/regulatory/offering-eu-model-clauses
+
+### Quad9
+
+Quad9 remains the selected upstream as documented above.
+
+### Other processors
+
+None currently selected. If CDN/proxy, third-party analytics, email/scheduling, payment or separate research-data services are later added, this gate must be updated before use.
+
+## 8. Retention policy for Experiment 1
+
+- identifiable DNS/domain history: **not retained**;
+- diagnostic DNS logs: only if genuinely required for a specific fault, time-boxed and deleted immediately after resolution;
+- parent contact details needed for the 14-day follow-up: keep only until follow-up is completed, then delete promptly and no later than 30 days after that participant's follow-up;
+- participant-level pseudonymous experiment metrics: retain only through experiment analysis/decision, then aggregate/anonymise and delete participant-level records no later than 90 days after Experiment 1 closes;
+- aggregate/anonymised business findings may remain in the canonical repository.
+
+## 9. DPIA risk status
 
 | Risk | Required mitigation | State |
 |---|---|---|
@@ -147,16 +196,45 @@ For Experiment-1 participant traffic:
 | client/IP statistics | exclude/disable + anonymise | design resolved; deployment verification pending |
 | client subnet disclosed upstream | ECS off | resolved requirement; deployment verification pending |
 | upstream privacy/retention | Quad9 `dns10`; privacy policy reviewed; Swiss adequacy | RESOLVED |
-| US transfer during England pilot | EU-only pilot node | RESOLVED |
+| US transfer during England pilot | EU-only Azure node | RESOLVED |
+| Azure hosting processor | West Europe + Microsoft DPA/transfer terms | design RESOLVED; deployment region verification pending |
 | extra pilot processors | none currently selected | RESOLVED subject to no scope change |
-| hosting processor terms/location | identify actual EU host/provider and terms | BLOCKED on provider name |
-| controller territorial/ICO/representative position | determine from controller country/main establishment | BLOCKED on controller facts |
+| UK representative | resolve before pilot unless a defensible Article-27 exception is established | OPEN/BLOCKING |
+| ICO fee | zero turnover means Tier 1 if fee due; applicability/self-assessment still to close | OPEN, low burden |
 | false safety confidence | verified/confirmed/action-needed/not-covered states | READY |
 | overblocking | sensible baseline + remedy + measure removals | READY |
 | child transparency | age-appropriate explanation | READY |
 | sensitive inference | no profiling/inference from DNS | READY |
 
-## 8. Parent/child transparency minimum
+## 10. UK representative / ICO position
+
+### UK representative
+
+Current ICO guidance states that a controller based outside the UK with no UK establishment that offers goods/services to people in the UK must appoint a UK representative unless the processing is **only occasional, low risk**, and does not involve large-scale special-category/criminal data.
+
+UseSafeWeb should **not rely on that exception without specialist confirmation**: the pilot deliberately targets England, processes child-linked DNS traffic, and the DPIA already treats identifiable DNS exposure as potentially high impact. Therefore the safe gate is:
+
+> **Before the first real England participant, appoint a UK representative or obtain a defensible documented conclusion that the Article-27 exception applies.**
+
+A UK representative can be a person, company or organisation established in the UK and must be authorised in writing. This can remain operationally simple; no large compliance structure is required.
+
+Primary source:
+- https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/international-transfers/receiving-personal-information-from-the-eea/
+
+### ICO data-protection fee
+
+Current turnover is **0**, so if the UK data-protection fee is due the controller falls within the current **Tier 1 (£52)** turnover threshold. Staff information is therefore unnecessary for tier selection.
+
+The service should not treat friends/family status or fewer than 500 users as a fee exemption. ICO guidance says controllers must pay unless an exemption applies and provides a specific extraterritorial-organisations assessment route. The personal/household exemption is not a safe fit for this service-validation activity.
+
+**Gate rule:** complete the ICO fee self-assessment before the first real England participant and record the result; if due, pay the Tier-1 fee. This is a one-time low-burden compliance action, not a reason to create a company or formal staff structure.
+
+Primary sources:
+- https://ico.org.uk/for-organisations/data-protection-fee/data-protection-fee/
+- https://ico.org.uk/for-organisations/data-protection-fee/paying-a-data-protection-fee-what-do-you-need-to-know/extraterritorial-organisations/
+- https://ico.org.uk/for-organisations/data-protection-fee/paying-a-data-protection-fee-what-do-you-need-to-know/activities-of-households-sector/
+
+## 11. Parent/child transparency minimum
 
 Before activation state plainly:
 
@@ -168,73 +246,43 @@ Before activation state plainly:
 - explain experiment data, purpose, retention, recipients and deletion/withdrawal handling;
 - provide a child-readable explanation of what filtering does and does not monitor.
 
-Do not claim generic “no logs”; state the specific verified retention/logging posture after deployment verification.
+Do not make a generic “no logs” claim; state the specific verified logging/retention posture after deployment verification.
 
-## 9. Controller / ICO / UK-representative assessment
-
-Resolved: controller type = **individual**.
-
-Still unknown: controller country/main establishment and staff/turnover band.
-
-This is material because:
-- UK GDPR can apply to overseas controllers offering services to people in the UK;
-- an overseas controller without a UK establishment may need a UK representative unless a narrow exception applies;
-- ICO fee applicability/tier depends on the controller circumstances and exemptions.
-
-No assumption will be made from the owner’s residence or nationality; the controller facts must be explicitly confirmed.
-
-Primary sources:
-- https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/international-transfers/receiving-personal-information-from-the-eea/
-- https://ico.org.uk/for-organisations/data-protection-fee/data-protection-fee/data-protection-fee-faqs/
-
-## 10. Hosting / transfers
-
-Owner-approved production geography: **EU + USA**.
-
-Experiment-1 rule: **EU server only**.
-
-The actual EU hosting provider remains unknown. Before PASS:
-- record provider legal entity and EU processing region;
-- review processor/data-protection terms and subprocessors;
-- confirm whether any provider-controlled access/transfer leaves the UK-adequate region;
-- if the provider uses a US legal entity/US subprocessors, assess the actual transfer mechanism rather than assuming geographic EU hosting alone removes transfer obligations.
-
-No CDN/proxy, email/scheduling, payment, analytics, or separate research-data processor is currently selected. If one is added, this gate must be updated before use.
-
-## 11. Payment gate
+## 12. Payment gate
 
 No £2/month or £20/year supporter payment in Experiment 1. Payment willingness is tested only after behavioral value is demonstrated; subscription-law obligations are re-checked at that later stage.
 
-## 12. Current gate result
+## 13. Current gate result
 
-**NOT READY FOR REAL PARTICIPANTS YET, but the blocker is now narrow.**
+**NOT READY FOR REAL PARTICIPANTS YET, but owner/environment fact collection is complete.**
 
 Resolved:
 - data flow/data minimisation;
 - privacy-minimal AdGuard target configuration;
+- Azure as hosting provider;
+- Azure West Europe (Netherlands) as the pilot region;
 - EU-only England-pilot data plane;
-- upstream provider and exact DoH endpoint;
-- ECS off;
+- Quad9 `dns10` upstream and ECS-off requirement;
 - no extra pilot processors;
-- controller type = individual;
+- controller = individual established in Netherlands;
+- turnover = 0 / pre-revenue;
+- staff information not required at this stage;
 - draft LIA/DPIA substance;
+- retention rules;
 - transparency requirements;
-- payment exclusion.
+- payment exclusion;
+- 500 active users retained only as an internal formalisation/scale-review milestone, not a legal threshold.
 
 Remaining before PASS:
-1. hosting provider name/legal entity for the EU pilot server;
-2. controller country/main establishment + approximate staff count/turnover band;
-3. review the resulting processor/territorial/ICO/UK-representative implications;
-4. deploy the pilot server to the mandatory configuration and directly verify it;
-5. insert the verified environment facts into the LIA/DPIA and approve residual risks.
+1. complete ICO fee self-assessment and pay Tier 1 if the assessment says a fee is due;
+2. appoint a UK representative, or obtain a defensible documented Article-27 exception conclusion;
+3. deploy/configure the Azure West Europe pilot node to the mandatory AdGuard requirements;
+4. directly verify the deployed Azure region and AdGuard privacy/upstream/ECS settings;
+5. issue the final parent/child privacy notice with the actual controller/UK-representative contact information;
+6. approve final LIA/DPIA residual risks after steps 1–5.
 
-## 13. Exact next evidence needed from owner
+## 14. Exact next authoritative step
 
-Reply with only:
+The next human-only issue is **UK representation**. The simplest compliant path is to nominate a trusted person/entity established in the UK to act as the pilot's UK representative under a short written authorisation, while keeping the project otherwise informal and pre-revenue.
 
-- **EU pilot hosting provider:** [name]
-- **Controller country/main establishment:** [country]
-- **Approximate staff count:** [number/band]
-- **Approximate annual turnover:** [band; exact figure not required]
-
-No credentials or secrets are required.
+In parallel, all technical readiness work may proceed: provision an Azure `westeurope` pilot VM, deploy AdGuard to the mandatory settings, then inspect and record the resulting configuration evidence.
