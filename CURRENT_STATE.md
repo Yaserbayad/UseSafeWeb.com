@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-27T22:53:37Z  
+**Updated:** 2026-08-27T22:56:11Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -42,6 +42,7 @@ GitHub is the active execution bridge for eligible AUTO_ALLOWED host work. Repos
 - `TSK-0205` — identifiable per-client statistics disabled — evidence: `TSK_0205_CLIENT_STATS_PRIVACY_EVIDENCE_2026-08-27.md`, blob `47fb0e0e6b64ceab965b2ca0ee259b40a98032c6`.
 - `TSK-0206` — client-IP anonymisation enabled while query logging/statistics remain disabled — evidence: `TSK_0206_CLIENT_IP_ANONYMIZATION_EVIDENCE_2026-08-27.md`, blob `5905136433d930c2325a877e10a45e8540ac6a80`.
 - `TSK-0483` — resolver abuse/amplification protections verified — evidence: `TSK_0483_RESOLVER_ABUSE_PROTECTION_EVIDENCE_2026-08-27.md`, blob `8a6426707fe9c9c8cd08f6b55e25d6b48bb8b28c`.
+- `TSK-0407` — exact Quad9 dns10 DoH upstream with ECS disabled verified — evidence: `TSK_0407_QUAD9_DNS10_ECS_EVIDENCE_2026-08-27.md`, blob `7afeca58e9205234a230d2de702b99648b35347d`.
 
 ### TSK-0206 accepted stable state
 
@@ -83,20 +84,33 @@ Direct target evidence:
 
 ACC-0483 is fully satisfied for the current pre-public target. This PASS does not authorize opening resolver ports, widening bind addresses, changing Azure NSG rules, or public launch; any later exposure change must preserve and re-verify the controls under the applicable downstream task/gate.
 
+### TSK-0407 accepted stable state
+
+The canonical WBS row was read directly from `Plans/Master/WBS/master-wbs.csv`: `A3`, `AUTO_ALLOWED`, HIGH priority, critical path, hard predecessors `TSK-0203`, `TSK-0405`, `TSK-0011`, acceptance `ACC-0407`.
+
+No resolver mutation was required. Read-only preflight run `33124332533` / job `98698691502`: **PASS**. A first independent audit run `33124383023` / job `98698868690` was not accepted because its verifier compared AdGuard's normalized explicit `:443` test result literally against the configured default-port URL. The verifier was corrected without changing resolver state. Corrected independent audit run `33124417228` / job `98698974470`: **PASS**.
+
+Direct target evidence:
+
+- runtime API upstream is exactly `https://dns10.quad9.net/dns-query` and no other upstream is configured;
+- upstream file is empty and fallback count is zero;
+- ECS is disabled and no dns11/dns12 ECS endpoint is present;
+- AdGuard's built-in upstream test for dns10 returns `OK` (reported as equivalent normalized `https://dns10.quad9.net:443/dns-query`);
+- persisted `AdGuardHome.yaml` matches the exact dns10/ECS-off runtime state;
+- fresh randomized synthetic resolution succeeded with `rcode=0`;
+- query logging remained disabled, client-IP anonymisation remained enabled, and statistics remained disabled.
+
+Current Quad9 documentation still identifies dns10 as the no-ECS service. Quad9 changed dns10's DNSSEC behavior effective 15 June 2026 so it now validates DNSSEC; current project requirements require exact dns10 + ECS-off and do not require DNSSEC validation to be disabled, so no requirement conflict was found.
+
+ACC-0407 is fully satisfied.
+
 ### Selected next
 
-`TSK-0407` — configure Quad9 `dns10` DoH and disable ECS: **TODO / selected**.
+No later task is claimed selected yet. TSK-0407 completion has been persisted first; deterministic next-task recomputation from current WBS/dependencies/gates is the immediate runtime action.
 
-Deterministic selection evidence:
+### Known eligible candidate pending recomputation
 
-- exact WBS row: `A3`, `AUTO_ALLOWED`, HIGH, critical path, `ACC-0407`;
-- hard predecessors: `TSK-0203` (runtime PASS), `TSK-0405` (canonical completed-record PASS), and `TSK-0011` (publication/read-back condition satisfied);
-- competing `TSK-0429` is also HIGH/critical-path and eligible through `TSK-0437` + `TSK-0011`, but it occurs later in WBS order and does not supersede the current resolver-path configuration work;
-- TSK-0407 acceptance requires the configured upstream to exactly match `https://dns10.quad9.net/dns-query`, ECS disabled, and test evidence proving no ECS endpoint is used.
-
-### Subsequent eligible current-gate work
-
-- `TSK-0429` — define privacy-minimal backup scope: eligible after TSK-0407 unless a newly verified higher-priority gate/security constraint intervenes.
+- `TSK-0429` — define privacy-minimal backup scope: previously verified HIGH/critical-path and dependency-eligible through `TSK-0437` + `TSK-0011`, but a full current recomputation must consider tasks newly unlocked by TSK-0407 before selection.
 
 ### External provider boundary
 
@@ -112,4 +126,4 @@ Deterministic selection evidence:
 
 ## Exact next authoritative step
 
-Execute `TSK-0407`: first verify the current official Quad9/AdGuard endpoint semantics and inspect the live AdGuard upstream/ECS configuration. If the live state already exactly matches the frozen `dns10`/ECS-off contract, verify it without mutation; otherwise apply the smallest reversible configuration correction, preserve the verified privacy/abuse controls, test resolution and endpoint selection, persist privacy-safe evidence, read back the evidence/runtime state, and then recompute the next eligible task.
+Recompute the highest-priority eligible current-gate task from the canonical WBS using current runtime PASS evidence. Include tasks newly unlocked by TSK-0407 as well as TSK-0429, then apply current safety/security/gate/dependency priority and WBS order. Select and persist only the actual next task; do not infer readiness from the frozen planning snapshot alone.
