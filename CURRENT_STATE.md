@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-27T22:57:55Z  
+**Updated:** 2026-08-27T23:17:28Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -43,6 +43,7 @@ GitHub is the active execution bridge for eligible AUTO_ALLOWED host work. Repos
 - `TSK-0206` — client-IP anonymisation enabled while query logging/statistics remain disabled — evidence: `TSK_0206_CLIENT_IP_ANONYMIZATION_EVIDENCE_2026-08-27.md`, blob `5905136433d930c2325a877e10a45e8540ac6a80`.
 - `TSK-0483` — resolver abuse/amplification protections verified — evidence: `TSK_0483_RESOLVER_ABUSE_PROTECTION_EVIDENCE_2026-08-27.md`, blob `8a6426707fe9c9c8cd08f6b55e25d6b48bb8b28c`.
 - `TSK-0407` — exact Quad9 dns10 DoH upstream with ECS disabled verified — evidence: `TSK_0407_QUAD9_DNS10_ECS_EVIDENCE_2026-08-27.md`, blob `7afeca58e9205234a230d2de702b99648b35347d`.
+- `TSK-0406` — conservative versioned filtering baseline, narrow exception path and exact rollback verified — policy: `infrastructure/adguard-server/filter-policy-v1.yaml`, blob `333a4ef8cd34719d66056aa608ab19473f839634`; evidence: `TSK_0406_FILTERING_POLICY_EVIDENCE_2026-08-27.md`, blob `bb4514b4af7c1c5e616b7875f98e86962fee0325`.
 
 ### TSK-0206 accepted stable state
 
@@ -104,21 +105,39 @@ Current Quad9 documentation still identifies dns10 as the no-ECS service. Quad9 
 
 ACC-0407 is fully satisfied.
 
+### TSK-0406 accepted stable state
+
+The canonical WBS defines TSK-0406 as `A3`, `AUTO_ALLOWED`, HIGH priority, critical path, hard predecessors `TSK-0407` + `TSK-0011`, acceptance `ACC-0406`.
+
+The read-only baseline inspection found filtering already enabled with exactly one active maintained list: AdGuard DNS filter (`filter_1.txt`, 178285 rules at inspection), while AdAway remained configured but disabled. There were zero whitelist filters and zero user rules, `blocking_mode=default`, and normal `example.com` resolution worked. Existing dns10/ECS-off and privacy controls remained intact.
+
+Policy v1.0.0 was created and read back at `infrastructure/adguard-server/filter-policy-v1.yaml`. It records the one-list conservative rationale, the existing privacy-safe false-positive intake as the exception path, a narrow reversible allow-rule mechanism, exact rollback, the Protection Claims Checklist as the claims boundary, explicit no-complete-safety wording, and governed change control.
+
+First acceptance run `33125650171` / job `98703037668` was **not accepted**: after submitting a temporary randomized `.invalid` block rule, the immediate `check_host` observation had not yet converged. A pre-armed restore trap executed. Mandatory recovery audit run `33125686361` / job `98703159125`: **PASS**, directly proving API and persisted user rules returned to zero, list state was unchanged, privacy/upstream invariants were preserved, and normal resolution remained functional.
+
+The verifier was then materially corrected to poll for observed rule-engine convergence while keeping rollback armed until restoration itself was observed. Corrected acceptance run `33125736588` / job `98703328392`: **PASS**.
+
+Direct acceptance evidence:
+
+- baseline randomized `.invalid` name: `NotFilteredNotFound`;
+- temporary exact block: `FilteredBlackList`, convergence on poll attempt 2;
+- matching narrow allow exception: `NotFilteredWhiteList`, convergence on poll attempt 2;
+- exact restoration of the pre-test empty rule set: `NotFilteredNotFound`, convergence on poll attempt 3;
+- API user-rule set restored exactly to `[]`;
+- filter-list enabled/disabled state and whitelist state unchanged;
+- persisted policy still matches v1 with zero user rules;
+- dns10 upstream, ECS-off, query-log-off, anonymisation-on and statistics-off invariants preserved;
+- direct post-rollback `example.com` resolution returned 2 answers.
+
+No permanent resolver filtering mutation was required. The temporary synthetic rules were completely rolled back. ACC-0406 is fully satisfied.
+
 ### Selected next
 
-`TSK-0406` — configure sensible baseline filtering policy: **TODO / selected**.
+No later task is claimed selected yet. TSK-0406 completion has been persisted first; deterministic next-task recomputation from current WBS/dependencies/gates is the immediate runtime action.
 
-Deterministic selection evidence:
+### Known eligible candidate pending recomputation
 
-- queue-delta inspection after TSK-0407 found `TSK-0406` as the only direct successor newly unlocked by TSK-0407;
-- exact WBS row: `A3`, `AUTO_ALLOWED`, HIGH, critical path, `ACC-0406`;
-- hard predecessors: `TSK-0407` (runtime PASS) and `TSK-0011` (publication/read-back condition satisfied);
-- `ACC-0406` requires a documented policy rationale, low-risk allowlist/exception path, no unsupported complete-safety promise, and versioned configuration;
-- independently eligible `TSK-0429` is also HIGH/critical-path, but TSK-0406 precedes it in the current WBS/dependency sequence and is therefore selected first.
-
-### Subsequent eligible current-gate work
-
-- `TSK-0429` — define privacy-minimal backup scope: eligible after TSK-0406 unless a newly verified higher-priority safety/security/gate constraint intervenes.
+- `TSK-0429` — define privacy-minimal backup scope: previously verified HIGH/critical-path and dependency-eligible through `TSK-0437` + `TSK-0011`, but recomputation must first consider tasks newly unlocked by TSK-0406.
 
 ### External provider boundary
 
@@ -134,4 +153,4 @@ Deterministic selection evidence:
 
 ## Exact next authoritative step
 
-Begin `TSK-0406`. Read its linked requirements/constraint/interface/risk plus the current live AdGuard filtering configuration and any existing versioned filter-policy artifact. Detect existing policy state before mutation. Then establish the conservative baseline rationale, allowlist/exception path, claims boundary, and versioned configuration; run allowed/blocked and rollback checks with privacy-safe synthetic domains; persist/read back evidence and runtime state before selecting later work.
+Recompute the highest-priority eligible current-gate task from the canonical WBS using current PASS evidence. Include direct successors newly unlocked by TSK-0406 plus the already-eligible TSK-0429, resolve their hard predecessors/gates/action authority, then select and persist only the actual next task before execution.
