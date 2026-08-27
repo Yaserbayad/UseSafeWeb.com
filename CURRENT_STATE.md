@@ -36,6 +36,7 @@ Latest explicit owner instruction at `2026-08-27T20:17:22Z`: routine status, rem
 - Hosting provider: Microsoft Azure.
 - Experiment-1 DNS region: Azure West Europe (`westeurope`), Netherlands.
 - Selected upstream: `https://dns10.quad9.net/dns-query`; ECS off; AdGuard remains the filtering/policy layer.
+- Selected client resolver endpoint: `https://dns.usesafeweb.com/dns-query`.
 
 ## Business/product decision
 
@@ -120,6 +121,35 @@ Stable result semantics:
 - `OVERALL=WAITING_REBOOT` → patches/configuration are retained as valid partial work; reboot the VM, reconnect, run `sudo bash harden-host.sh --audit`, and promote only after clean PASS.
 - `OVERALL=FAIL` → do not continue dependent host work; preserve the non-secret output, classify the exact failure, and correct only the proven cause.
 
+### TSK-0440 — select pilot encrypted-DNS hostname and path
+
+**State: PASS.**
+
+Selected endpoint:
+
+- hostname: `dns.usesafeweb.com`
+- canonical DoH URL: `https://dns.usesafeweb.com/dns-query`
+- path: `/dns-query`
+- HTTPS port: 443
+- `srv.usesafeweb.com` remains a separate host/administrative identity.
+
+Durable decision/evidence:
+
+- `infrastructure/adguard-server/DNS_ENDPOINT_DECISION.md`
+- GitHub commit: `7d88c598e367f75a1bf2c4f8960ea41e5c066c21`
+- GitHub blob: `9e0f15d0e1f11c892cf51317b705ac21c9563e53`
+- local pre-publication SHA-256: `db029e1525cc83d9c50a5997da88bb6cd13c74ddaeb64d0d7339a94668ffac14`
+
+Current AdGuard Home documentation was reviewed for the native `/dns-query` DoH route, TLS/certificate-name compatibility, HTTPS/DoH behavior, and reverse-proxy mode. A security adversarial review identified that AdGuard's documented HTTPS port may serve both web UI and DoH; the decision was corrected before publication so TSK-0440 selects only the stable client identity/path and does **not** force a TLS-termination architecture that could expose administration. Downstream deployment must keep the admin surface non-public: direct AdGuard TLS is acceptable only if that is proven; otherwise a same-host path-limited reverse proxy may expose only `/dns-query` and forward to loopback AdGuard DoH mode.
+
+Additional boundary:
+
+- the resolver DNS record is DNS-only/direct to the Azure resolver, not website-CDN/proxy fronted;
+- no AAAA record until public IPv6 is verified;
+- no user-specific ClientID hostname/path for the accountless Experiment-1 baseline.
+
+ACC-0440 is fully satisfied: uniqueness, documentation, certificate compatibility, AdGuard compatibility, Network Engineering review and Security review all PASS.
+
 ## Preserved PASS preparation evidence
 
 - `TSK-0434`, `TSK-0436` — owner-control-plane exclusions verified; actual host/security verification remains separate.
@@ -137,10 +167,12 @@ Stable result semantics:
 
 - `TSK-0435`: PASS.
 - `TSK-0438`: PASS.
-- `TSK-0437`: WAITING only for execution/verification of the already-published target hardening artifact.
-- `TSK-0440` — select pilot encrypted-DNS hostname/path: **TODO / eligible**; VM and domain prerequisites are satisfied and this task is independent of the TSK-0437 target execution wait.
-- `TSK-0439`, `TSK-0441`, `TSK-0442`, `TSK-0443`: remain dependency-driven downstream work.
-- `TSK-0483` — resolver abuse/amplification protection: target environment exists, but current selection still follows security/dependency/gate semantics.
+- `TSK-0440`: PASS.
+- `TSK-0437`: WAITING only for target execution/verification of the published hardening artifact.
+- `TSK-0439` — define supported pilot device configuration methods: TODO / eligible.
+- `TSK-0441` — create public DNS records for the pilot endpoint: TODO / eligible, but actual DNS-provider mutation requires an available provider execution path.
+- `TSK-0483` — implement resolver abuse/amplification protections: dependencies are satisfied, but implementation requires the resolver service/configuration surface to exist; do not fabricate live implementation before AdGuard is installed/configurable.
+- Later TLS/deployment tasks remain dependency-driven.
 
 ## Runtime safeguards
 
@@ -153,4 +185,4 @@ Stable result semantics:
 
 ## Current execution direction
 
-While TSK-0437 awaits target execution, continue the independently eligible TSK-0440 encrypted-DNS hostname/path selection. After every durable result, recompute WBS eligibility before selecting later work.
+TSK-0437 target execution remains the highest-priority security action. While it waits on that platform action, continue independently executable technical preparation in dependency order, with TSK-0439 preferred over fabricating DNS-provider or not-yet-installed resolver mutations. Recompute eligibility after every durable state change.
