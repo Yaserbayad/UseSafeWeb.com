@@ -68,25 +68,34 @@ Owner explicitly confirmed the domain-side owner task is complete, `UseSafeWeb.c
 
 ### TSK-0435 — owner-provided Azure `westeurope` pilot VM handoff
 
-**Owner handoff condition: SATISFIED. Task acceptance: WAITING ON DIRECT TARGET VERIFICATION.**
+**Owner handoff condition: SATISFIED. Task acceptance: WAITING ON ONE DEPLOYMENT-PATH CHECK.**
 
 Owner explicitly confirmed the fresh Ubuntu 24.04 LTS Azure VM has been created/completed and supplied hostname `srv.UseSafeWeb.com`. The owner-created-resource condition is no longer pending.
 
-Direct acceptance still requires target evidence for Ubuntu baseline, Azure `westeurope` metadata, intended role/network exposure, and reachability through the actual deployment path.
-
-Partial evidence now completed:
+Verifier artifact and pre-target evidence:
 
 - `infrastructure/adguard-server/verify-handoff.sh` published on `main` in commit `982da5f4ec00f8670bf7c8ebadf7db8e9a38b132`.
-- Exact GitHub read-back blob: `0264b6ad15554fd289f4bdbf0ee49b9e959e7843`.
-- Local pre-publication syntax check: `bash -n` PASS against byte-identical content.
-- Local fail-closed test on a non-Azure/non-Ubuntu environment returned non-zero and correctly reported OS, IMDS, DNS, and remote-session failures instead of producing a false PASS.
-- Microsoft Azure IMDS usage in the script follows the current documented `169.254.169.254` endpoint, `Metadata:true`, `--noproxy '*'`, and API version `2025-04-07`.
+- Exact verifier GitHub blob: `0264b6ad15554fd289f4bdbf0ee49b9e959e7843`.
+- Local syntax/fail-closed tests passed before publication.
 
-The verifier is read-only. It checks Ubuntu 24.04, Azure IMDS region/Linux metadata, expected hostname DNS mapping to the VM public address when available, current listener exposure, and SSH-session evidence. It deliberately omits subscription/resource identifiers and process/PID details from its output.
+Direct target run at `2026-08-27T20:34:37Z`, durably recorded in `TSK_0435_HANDOFF_EVIDENCE_2026-08-27.md` (commit `a85bda7ca724c27f5544c02777b677b6311fb8b1`, blob `4c477aa5d7bf3bc0dae8574aa6573b8f3be2e11b`), proved:
 
-Current execution limitation: no supported Azure/SSH/server connector is available in this ChatGPT toolset, and the shell environment cannot currently resolve external hosts. That local resolver failure is a tool/environment limitation, not contradictory evidence about `srv.UseSafeWeb.com`.
+- Ubuntu `24.04`: PASS.
+- Azure IMDS reachable and parsed: PASS.
+- Azure location `westeurope`: PASS.
+- Azure OS type Linux: PASS.
+- VM identity `adguardvm`, size `Standard_B2ls_v2`: recorded.
+- `srv.UseSafeWeb.com` resolved on-target to `52.157.109.120`: PASS.
+- Handoff listener inventory exposed only SSH publicly (`0.0.0.0:22`, `[::]:22`) plus local/system listeners; no AdGuard listener exists yet, consistent with a fresh pre-installation handoff.
+- IMDS returned no public IPv4, so DNS-to-IMDS-public-IP correlation was not applicable and produced a warning only.
 
-`TSK-0435` remains `WAITING` only for execution of the published verifier through an actual target access path; no additional planning/design work is needed for this task.
+The single failed assertion was `SSH_CONNECTION is absent`. The owner ran the read-only verifier as `sudo bash verify-handoff.sh`; the elevated invocation did not preserve the user-session SSH environment variable used by the verifier. The target run correctly stayed fail-closed with `OVERALL=FAIL failures=1 warnings=1`. This does not invalidate the proven Ubuntu/Azure/DNS/exposure evidence; it leaves only explicit approved deployment-path reachability unproven by the script.
+
+**Deterministic resolution check:** from the same remote user shell, run the read-only verifier without `sudo`:
+
+`bash verify-handoff.sh srv.UseSafeWeb.com`
+
+If it reports `PASS  verification is executing through an SSH session` and `OVERALL=PASS`, TSK-0435 can be promoted to PASS after durable result/read-back reconciliation.
 
 ## Preserved PASS preparation evidence
 
@@ -106,11 +115,11 @@ The following current preparation work remains PASS and durably evidenced:
 ## Newly unlocked dependency state
 
 - `TSK-0438`: PASS.
-- `TSK-0435`: WAITING only for direct target verification/executable access.
+- `TSK-0435`: WAITING only for the non-privileged verifier rerun proving the SSH deployment path.
 - `TSK-0437` — apply host security baseline: remains WAITING because hard predecessor `TSK-0435` is not yet PASS.
-- `TSK-0440` — select pilot encrypted-DNS hostname/path: remains WAITING because hard predecessor `TSK-0435` is not yet PASS; domain-side predecessor `TSK-0438` is now satisfied.
+- `TSK-0440` — select pilot encrypted-DNS hostname/path: remains WAITING because hard predecessor `TSK-0435` is not yet PASS; domain-side predecessor `TSK-0438` is satisfied.
 - `TSK-0439`, `TSK-0441`, `TSK-0442`, `TSK-0443`: remain dependency-waiting downstream.
-- `TSK-0483` — resolver abuse/amplification protection: remains WAITING for a reachable target environment.
+- `TSK-0483` — resolver abuse/amplification protection: remains WAITING for a fully accepted reachable target environment.
 
 ## Runtime safeguards
 
@@ -123,6 +132,6 @@ The following current preparation work remains PASS and durably evidenced:
 
 ## Exact next execution path
 
-1. Execute `infrastructure/adguard-server/verify-handoff.sh srv.UseSafeWeb.com` through an actual approved server access path.
-2. If and only if it returns `OVERALL=PASS`, persist/read-back `TSK-0435` PASS with the target output as TEST_RESULT evidence.
-3. Recompute eligibility immediately; expected next work is `TSK-0437` and `TSK-0440`, followed by DNS/TLS and resolver-security tasks in dependency order.
+1. From the current remote user shell on `srv.UseSafeWeb.com`, run `bash verify-handoff.sh srv.UseSafeWeb.com` without `sudo`.
+2. If the result is `OVERALL=PASS`, persist/read-back TSK-0435 PASS with the new target TEST_RESULT evidence.
+3. Recompute eligibility immediately; expected next work is TSK-0437 and TSK-0440, followed by DNS/TLS and resolver-security tasks in dependency order.
