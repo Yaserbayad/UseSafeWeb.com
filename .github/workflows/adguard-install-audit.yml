@@ -1,0 +1,79 @@
+name: Audit AdGuard Home installation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/adguard-install-audit.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 10
+    steps:
+      - name: Independently audit TSK-0203 stable state
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          [[ "${GITHUB_EVENT_NAME}" == "push" ]]
+          [[ "${GITHUB_REF}" == "refs/heads/main" ]]
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          [[ "$(id -un)" == "azureusr" ]]
+          sudo -n true
+
+          binary='/opt/AdGuardHome/AdGuardHome'
+          [[ -x "${binary}" ]]
+
+          version="$(${binary} --version 2>/dev/null || true)"
+          printf 'installed_version=%s\n' "${version}"
+          [[ "${version}" == *'v0.107.79'* ]]
+
+          binary_sha="$(sha256sum "${binary}" | awk '{print $1}')"
+          echo "installed_binary_sha256=${binary_sha}"
+
+          systemctl is-enabled --quiet AdGuardHome.service
+          systemctl is-active --quiet AdGuardHome.service
+          echo 'service_enabled_active=PASS'
+
+          exec_start="$(systemctl show AdGuardHome.service -p ExecStart --value)"
+          echo "service_exec_start=${exec_start}"
+          [[ "${exec_start}" == *'/opt/AdGuardHome/AdGuardHome'* ]]
+
+          ufw_verbose="$(sudo ufw status verbose)"
+          grep -q '^Status: active' <<<"${ufw_verbose}"
+          grep -q '^Default: deny (incoming), allow (outgoing)' <<<"${ufw_verbose}"
+          while IFS= read -r line; do
+            [[ "${line}" == *ALLOW* ]] || continue
+            [[ "${line}" == 22/tcp* ]] || {
+              echo "unexpected_ufw_allow=${line}"
+              exit 1
+            }
+          done <<<"$(sudo ufw status)"
+          echo 'ufw_only_ssh=PASS'
+
+          listeners="$(sudo ss -H -lntup | grep 'AdGuardHome' || true)"
+          printf 'adguard_listener_inventory_begin\n%s\nadguard_listener_inventory_end\n' "${listeners}"
+          [[ -n "${listeners}" ]]
+          grep -q ':3000 ' <<<"${listeners}"
+          ! grep -Eq ':(53|80|443|853) ' <<<"${listeners}"
+
+          code="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --max-time 5 http://127.0.0.1:3000/)"
+          echo "local_setup_http_code=${code}"
+          [[ "${code}" =~ ^(200|301|302|307|308)$ ]]
+
+          runner_unit="$(systemctl list-unit-files 'actions.runner.*.service' --no-legend 2>/dev/null | awk 'NR==1 {print $1}' || true)"
+          [[ -n "${runner_unit}" ]]
+          systemctl is-enabled --quiet "${runner_unit}"
+          systemctl is-active --quiet "${runner_unit}"
+          echo 'runner_service=PASS'
+
+          echo 'FRESH_INSTALL_AUDIT=PASS'
