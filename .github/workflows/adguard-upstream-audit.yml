@@ -68,11 +68,20 @@ jobs:
           unset password
           python3 - <<'PY'
           import json
+          from urllib.parse import urlsplit
           r=json.load(open('/tmp/usw-upstream-test-result.json',encoding='utf-8'))
-          exact='https://dns10.quad9.net/dns-query'
-          assert r.get(exact) == 'OK', r
-          assert not any('dns11.quad9.net' in k or 'dns12.quad9.net' in k for k in r)
+          expected_host='dns10.quad9.net'
+          assert len(r)==1, r
+          tested,status=next(iter(r.items()))
+          u=urlsplit(tested)
+          assert u.scheme=='https', tested
+          assert u.hostname==expected_host, tested
+          assert (u.port in (None,443)), tested
+          assert u.path=='/dns-query', tested
+          assert status=='OK', r
+          assert 'dns11.quad9.net' not in tested and 'dns12.quad9.net' not in tested
           print('api_dns10_upstream_test=OK')
+          print('api_test_endpoint_normalized_to_dns10=true')
           print('api_tested_ecs_endpoint=false')
           PY
 
@@ -101,7 +110,7 @@ jobs:
           PY
 
           python3 - <<'PY'
-          import random, socket, struct, time
+          import random, socket, struct
           label='usesafeweb-' + format(random.randrange(1,1<<32),'x')
           name=label + '.example.com'
           q=b''.join(bytes([len(x)])+x.encode() for x in name.split('.'))+b'\x00'
