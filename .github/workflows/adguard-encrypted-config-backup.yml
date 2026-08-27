@@ -1,0 +1,63 @@
+name: Create encrypted AdGuard configuration backup
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/adguard-encrypted-config-backup.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact main commit
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Install pinned Ubuntu age package if required
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == 'adguardvm' ]]
+          sudo -n true
+          expected='1.1.1-1ubuntu0.24.04.3'
+          candidate="$(apt-cache policy age | awk '/Candidate:/{print $2; exit}')"
+          [[ "$candidate" == "$expected" ]]
+          if ! command -v age >/dev/null 2>&1; then
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "age=$expected"
+          fi
+          dpkg-query -W -f='${Version}\n' age | grep -qx "$expected"
+          age --version
+          echo 'AGE_TOOLING=PASS'
+
+      - name: Create privacy-minimal owner-encrypted backup
+        shell: bash
+        env:
+          EXPECTED_SCRIPT_BLOB: 6b2642515b9c345f2ec3b47cbf5d7f0ec5c87e51
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == 'adguardvm' ]]
+          [[ "$(id -un)" == 'azureusr' ]]
+          sudo -n true
+          script='infrastructure/adguard-server/create-encrypted-config-backup.sh'
+          [[ "$(git hash-object "$script")" == "$EXPECTED_SCRIPT_BLOB" ]]
+          bash -n "$script"
+          set +e
+          bash "$script" | tee /tmp/usesafeweb-tsk-0430.log
+          rc=${PIPESTATUS[0]}
+          set -e
+          [[ "$rc" -eq 0 ]]
+          grep -q '^TSK_0430_BACKUP_CREATE=PASS$' /tmp/usesafeweb-tsk-0430.log
+          rm -f /tmp/usesafeweb-tsk-0430.log
+          echo 'TSK_0430_WORKFLOW=PASS'
