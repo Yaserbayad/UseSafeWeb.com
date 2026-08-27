@@ -42,6 +42,7 @@ jobs:
           filters=s.get('filters') or []
           whitelists=s.get('whitelist_filters') or []
           rules=s.get('user_rules') or []
+          assert rules == [], 'user rules were not restored to the pre-test baseline'
           print('api_filtering_enabled='+str(bool(s.get('enabled'))).lower())
           print('api_filter_count='+str(len(filters)))
           print('api_enabled_filter_count='+str(sum(bool(x.get('enabled')) for x in filters)))
@@ -54,6 +55,7 @@ jobs:
               print(f"api_filter_{i}_url={x.get('url','')}")
               if 'rules_count' in x:
                   print(f"api_filter_{i}_rules_count={x.get('rules_count')}")
+          print('post_failure_user_rules_restored=true')
           PY
 
           sudo python3 - /opt/AdGuardHome/AdGuardHome.yaml <<'PY'
@@ -65,6 +67,7 @@ jobs:
           whitelists=d.get('whitelist_filters') or []
           rules=d.get('user_rules') or []
           exact='https://dns10.quad9.net/dns-query'
+          assert rules == [], 'persisted user rules were not restored'
           print('persisted_protection_enabled='+str(bool(fs.get('protection_enabled'))).lower())
           print('persisted_filtering_enabled='+str(bool(fs.get('filtering_enabled'))).lower())
           print('persisted_blocking_mode='+str(fs.get('blocking_mode')))
@@ -99,4 +102,4 @@ jobs:
           PY
 
           rm -f /tmp/usw-filter-status.json
-          echo 'TSK_0406_PREFLIGHT=PASS'
+          echo 'TSK_0406_RECOVERY_AUDIT=PASS'
