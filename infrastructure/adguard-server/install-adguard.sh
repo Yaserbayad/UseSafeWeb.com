@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-VERSION="v0.107.79"
+ADGUARD_VERSION="v0.107.79"
 EXPECTED_SHA256="c48f4a43000665484c5ec28177de11a004759b620dae8f77b2aabefc9ef3687f"
 ASSET="AdGuardHome_linux_amd64.tar.gz"
-BASE_URL="https://github.com/AdguardTeam/AdGuardHome/releases/download/${VERSION}"
+BASE_URL="https://github.com/AdguardTeam/AdGuardHome/releases/download/${ADGUARD_VERSION}"
 INSTALL_DIR="/opt/AdGuardHome"
 BINARY="${INSTALL_DIR}/AdGuardHome"
 
@@ -25,7 +25,7 @@ sudo -n true || fail "non-interactive sudo unavailable"
 
 version_matches() {
   local output="$1"
-  [[ "$output" == *"${VERSION}"* ]]
+  [[ "$output" == *"${ADGUARD_VERSION}"* ]]
 }
 
 # Never overwrite an unrecognized installation.
@@ -56,9 +56,6 @@ else
     || fail "official checksums.txt does not match pinned GitHub asset digest"
   pass "official checksums.txt agrees with pinned digest"
 
-  # Reject absolute/path-traversal archive members before extraction. The
-  # official archive prefixes members with './', which is normalized only
-  # after rejecting an absolute path.
   while IFS= read -r raw_member; do
     [[ "$raw_member" != /* ]] || fail "unsafe absolute archive member: $raw_member"
     member="${raw_member#./}"
@@ -82,8 +79,6 @@ else
     fi
   done
 
-  # Use AdGuard Home's supported built-in service installer. UFW remains
-  # default-deny and no public DNS/admin port is opened by this task.
   if ! (cd "$INSTALL_DIR" && sudo "$BINARY" -s install); then
     (cd "$INSTALL_DIR" && sudo "$BINARY" -s uninstall) >/dev/null 2>&1 || true
     sudo rm -rf "$INSTALL_DIR"
@@ -102,10 +97,8 @@ printf 'installed_version_quoted=%q\n' "$version_out"
 version_matches "$version_out" || fail "installed version mismatch: $version_out"
 echo "installed_version=${version_out}"
 
-# Keep administration and resolver service unexposed until later tasks.
 ufw_status="$(sudo ufw status verbose)"
 grep -q '^Status: active' <<<"$ufw_status" || fail "UFW is not active"
-# At this stage only SSH may be allowed inbound.
 while IFS= read -r line; do
   [[ "$line" == *ALLOW* ]] || continue
   [[ "$line" == 22/tcp* ]] || fail "unexpected UFW allow rule after install: $line"
@@ -116,8 +109,6 @@ printf 'adguard_listener_inventory_begin\n'
 sudo ss -H -lntup | awk '/AdGuardHome/ {print}' | sort -u || true
 printf 'adguard_listener_inventory_end\n'
 
-# Fresh install should expose the setup/admin listener locally on the host but
-# it remains blocked by UFW from inbound networks until later authorized tasks.
 if ! sudo ss -H -lntp | grep -q 'AdGuardHome'; then
   fail "AdGuard Home has no TCP listener after service start"
 fi
