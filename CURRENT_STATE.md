@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-27T22:56:11Z  
+**Updated:** 2026-08-27T22:57:55Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -106,11 +106,19 @@ ACC-0407 is fully satisfied.
 
 ### Selected next
 
-No later task is claimed selected yet. TSK-0407 completion has been persisted first; deterministic next-task recomputation from current WBS/dependencies/gates is the immediate runtime action.
+`TSK-0406` — configure sensible baseline filtering policy: **TODO / selected**.
 
-### Known eligible candidate pending recomputation
+Deterministic selection evidence:
 
-- `TSK-0429` — define privacy-minimal backup scope: previously verified HIGH/critical-path and dependency-eligible through `TSK-0437` + `TSK-0011`, but a full current recomputation must consider tasks newly unlocked by TSK-0407 before selection.
+- queue-delta inspection after TSK-0407 found `TSK-0406` as the only direct successor newly unlocked by TSK-0407;
+- exact WBS row: `A3`, `AUTO_ALLOWED`, HIGH, critical path, `ACC-0406`;
+- hard predecessors: `TSK-0407` (runtime PASS) and `TSK-0011` (publication/read-back condition satisfied);
+- `ACC-0406` requires a documented policy rationale, low-risk allowlist/exception path, no unsupported complete-safety promise, and versioned configuration;
+- independently eligible `TSK-0429` is also HIGH/critical-path, but TSK-0406 precedes it in the current WBS/dependency sequence and is therefore selected first.
+
+### Subsequent eligible current-gate work
+
+- `TSK-0429` — define privacy-minimal backup scope: eligible after TSK-0406 unless a newly verified higher-priority safety/security/gate constraint intervenes.
 
 ### External provider boundary
 
@@ -126,4 +134,4 @@ No later task is claimed selected yet. TSK-0407 completion has been persisted fi
 
 ## Exact next authoritative step
 
-Recompute the highest-priority eligible current-gate task from the canonical WBS using current runtime PASS evidence. Include tasks newly unlocked by TSK-0407 as well as TSK-0429, then apply current safety/security/gate/dependency priority and WBS order. Select and persist only the actual next task; do not infer readiness from the frozen planning snapshot alone.
+Begin `TSK-0406`. Read its linked requirements/constraint/interface/risk plus the current live AdGuard filtering configuration and any existing versioned filter-policy artifact. Detect existing policy state before mutation. Then establish the conservative baseline rationale, allowlist/exception path, claims boundary, and versioned configuration; run allowed/blocked and rollback checks with privacy-safe synthetic domains; persist/read back evidence and runtime state before selecting later work.
