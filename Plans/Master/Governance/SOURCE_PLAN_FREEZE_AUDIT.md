@@ -119,3 +119,19 @@ All deterministic, completeness, authority, legacy-reconciliation, dependency, a
 This conclusion concerns the quality/readiness of the **candidate planning artifact**. It does not publish, canonize, execute, or approve the project.
 
 READY_FOR_OWNER_FREEZE
+
+## Post-audit owner amendment — 2026-08-27
+
+The prior audited modular package remains historical source/audit evidence, but the current candidate has since received an explicit owner-approved **technical/commercial amendment before freeze**. The amendment incorporates the completed 39/39 ContextFlow technical-architecture interview plus the owner-confirmed multi-currency supporter/payment and repository/deployment decisions.
+
+This amendment does **not** constitute TSK-0017 owner freeze and does not make the candidate canonical. The post-amendment candidate must be deterministically rebuilt, checksumed, validated, read back from GitHub, and then presented for explicit owner freeze.
+
+Conflict reconciliation applied under project authority:
+
+- direct-host deployment supersedes the earlier bundled Docker wording;
+- Azure base VMs are owner-provided, and automated responsibility begins after VM handoff;
+- root-capable deployment/bootstrap is a technical capability only, with normal service least privilege and no expansion of action authority;
+- the interview choice permitting encrypted secrets in Git is rejected by the higher project security safeguard: production secrets/tokens/private keys remain outside Git;
+- AdGuard restore/rebuild remains required because the owner selected the complete deployment lifecycle and the existing recovery baseline already requires it;
+- English/Turkish/Arabic first-release language capability is separated from official non-UK market activation, which remains LG-16 gated.
+

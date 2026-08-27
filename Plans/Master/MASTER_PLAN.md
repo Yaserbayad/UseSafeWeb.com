@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Modular Master Planning System
 
-> **Authority state:** This is a lossless modularization of `UseSafeWeb_Master_Plan_FINAL.md`; it does not publish to GitHub or convert the source candidate into canonical repository state. The source plan's own status remains **ready for owner review/freeze / not yet canonical** unless separately changed by owner authority and persisted.
+> **Authority state:** This modular system remains a **candidate / not yet owner-frozen or canonical**. The 2026-08-27 owner technical/commercial amendment is incorporated before freeze; it changes candidate content but does not itself execute TSK-0017, authorize project build/launch/payment, or synchronize runtime `CURRENT_STATE.md`.
 >
 > **Migration and reconciliation scope:** The modular architecture remains a storage/retrieval migration. This pre-canonicalization audit additionally corrects only (a) migration defects and (b) stale lower-authority text that contradicted explicit higher-authority owner decisions already present in the source, especially DEC-0042/EXC-0001. No new product strategy, scope expansion, stable ID renumbering, or dependency redesign was introduced. The bounded corrections are enumerated in `VALIDATION_REPORT.md`.
 

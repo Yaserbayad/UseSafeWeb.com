@@ -192,3 +192,72 @@ These are real project execution/authority actions and therefore intentionally r
 **Recommendation: ACCEPT THE CORRECTED/AUDITED PACKAGE FOR OWNER FREEZE.**
 
 Do **not** use the previously delivered ZIP. Use only the final ZIP produced after this report, final checksum generation, packaged-validator PASS and an additional independent post-package verification. After owner acceptance, upload the complete `Plans/` tree exactly; then perform read-back before treating it as canonical.
+
+---
+
+## 2026-08-27 Owner Technical/Commercial Amendment Audit
+
+### Scope and authority
+
+This audit validates the **post-interview candidate amendment**, not owner freeze, launch, deployment, payment enablement, or runtime-state synchronization. The amendment basis is:
+
+- completed ContextFlow technical-architecture interview: **39/39 answered, 100% complete**, submission `d647d1ea-6c24-40d2-8121-5665dcd02d76`;
+- owner-accepted fixed supporter pricing/currency/payment defaults: GBP £2/month or £20/year, EUR €2/month or €20/year, USD $2/month or $20/year; Stripe + PayPal; no live FX; auto-suggest plus manual selector; recurring monthly/annual; cancel anytime; core remains free;
+- owner-confirmed lean architecture, one TypeScript + Next.js full-stack application, `/website`, dedicated `/infrastructure/adguard-server`, owner-provided Azure VMs, separate web/DNS VMs, one initial AdGuard node, direct-host deployment, self-service/AI-autonomy direction, multilingual first release, CMS/UI/analytics/observability/backup/security/CI/CD/operations boundaries.
+
+### Surgical-change result
+
+The amendment preserves the existing five-layer/package/WBS architecture and stable IDs. It updates existing authoritative entities rather than creating a duplicate technical plan. Task count, dependencies and relationship topology are unchanged; the relationship index therefore requires no semantic rewrite.
+
+Conflict reconciliation is explicit:
+
+1. **Direct host wins** over the earlier bundled Docker wording; Docker/Kubernetes are not default dependencies.
+2. **Azure VM creation is owner-managed**; project automation starts from a reachable owner-provided VM.
+3. **Root-capable bootstrap/deployment is capability, not authority**; normal services remain least privilege and A1/A2 boundaries remain intact.
+4. **No production secrets/tokens/private keys in Git**, even encrypted; this higher project safeguard overrides the interview option that would have permitted encrypted Git secrets.
+5. **Restore/rebuild remains mandatory** as part of the complete deployment/recovery lifecycle.
+6. **First public release is multilingual (English/Turkish/Arabic + RTL)** while official non-UK market activation/legal/support/channel claims remain LG-16 gated.
+7. **Persistent staging is not a baseline environment**; CI/ephemeral pre-production environments are used unless evidence opens a staging need.
+8. **Public status is trigger-based**, not an unconditional first-year service.
+
+### Deterministic structural validation
+
+`Tools/rebuild_master_plan.py` completed and `Tools/validate_master_plan.py` returned:
+
+```text
+VALIDATION PASS
+assembly_modules=25
+tasks=641
+dependency_edges=849
+relationship_entities=5178
+relationship_targets=20463
+broken_links=0
+generated_missing_task_ids=0
+```
+
+### Targeted semantic audit
+
+A separate contradiction/coverage check tested **39 material technical/commercial decisions and reconciliations** across Layer 1, Layer 2, Layer 5, requirements, constraints, decisions, interfaces, risks, WBS and synchronized ACC/VER/EVD registry. Result:
+
+```text
+SEMANTIC_CHECKS 39 / 39 PASS
+TARGETED_WBS_INVARIANTS PASS
+```
+
+The targeted checks cover: gated AI autonomy; owner-provided Azure VM boundary; Next.js; no database by default; separate web/DNS VMs; single initial DNS node; backup/restore; server-managed AdGuard config; scoped root capability; risk-based production automation; Stripe/PayPal source-of-truth; privacy-minimal analytics; lean observability; Azure-native backup direction; no Git secrets; balanced automated test gate; simple rollback-first rollout; component library; lightweight CMS; multilingual/RTL; minimal private admin; monorepo paths; ephemeral environments; direct-host deployment; Cloudflare website edge separation; hostname separation; newsletter-only app email automation; WCAG 2.2 AA; autonomous tested reversible upgrades; Telegram + email alerts; public API/queue/Kubernetes/microservices/active-active exclusions; conditional status page; fixed three-currency payment offer; and payment absence from Experiment 1.
+
+### Scope-control / unchanged-authority result
+
+- No new planning layer, WBS, checkpoint or runtime state store was created.
+- No task ID or dependency edge was added/removed.
+- `RELATIONSHIP_INDEX.yaml` remains unchanged because relationship semantics did not change.
+- `CURRENT_STATE.md` is intentionally untouched; runtime remains governed by the existing pre-freeze state.
+- `Generated/MASTER_PLAN_FULL.md` is rebuilt derived output only.
+- `Plans/SHA256SUMS.txt` is regenerated after the final candidate files are complete.
+
+### Audit outcome
+
+**POST-AMENDMENT CANDIDATE VALIDATION: PASS.**
+
+The candidate is technically/commercially amended and internally consistent for owner review. It remains **NOT OWNER-FROZEN / NOT CANONICAL**. The next authority action after GitHub publication/read-back of this amended candidate remains `TSK-0017`: explicit owner freeze or bounded return for rework.
+

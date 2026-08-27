@@ -4,7 +4,7 @@ canonical_root: Plans/Master
 source_plan:
   name: UseSafeWeb_Master_Plan_FINAL.md
   sha256: 04fe68fe4e922322cb878c3c35f97e0b5b4862a333df4c313cbfc2b359ebfc1e
-  status: 2.0-final-candidate / READY_FOR_OWNER_FREEZE / not yet canonical per source
+  status: 2.0-final-candidate / OWNER_TECHNICAL_COMMERCIAL_AMENDMENT_APPLIED / post-amendment deterministic validation PASS / not yet owner-frozen or canonical
 migration_prompt:
   name: UseSafeWeb_Master_Plan_Modularization_Prompt(1).txt
   sha256: 49031063a84f9b56ed98b5b07782f1d9818b01b84e0761d3c48018fc07ef5e5b
@@ -300,6 +300,20 @@ modules:
   authority: non_authoritative_tooling
   owns: []
   generated: false
+candidate_amendment:
+  date: '2026-08-27'
+  status: owner-approved technical/commercial amendment applied and deterministically validated; not an owner freeze
+  basis:
+  - completed ContextFlow technical architecture interview 39/39 (submission d647d1ea-6c24-40d2-8121-5665dcd02d76)
+  - owner-accepted GBP/EUR/USD fixed supporter pricing with Stripe + PayPal
+  - owner repository/deployment and AI-autonomy decisions 2026-08-27
+  conflict_reconciliation:
+  - direct host overrides bundled Docker wording
+  - Azure VMs are owner-provided; automation starts post-VM
+  - production secrets/tokens/private keys remain outside Git
+  - root-capable bootstrap does not expand action authority
+  - first-release multilingual capability is separate from official market activation
+
 pre_canonicalization_audit:
   date: '2026-08-27'
   status: pre-canonicalization audit PASS; corrected candidate not canonical until owner freeze, GitHub publication, and read-back

@@ -9,7 +9,7 @@
 | Area | State | Evidence/meaning |
 | --- | --- | --- |
 | Business/product evaluation | PASS / phases 1-42 complete | Authoritative project record; MODIFY - proceed to validation, not launch. |
-| Final planning architecture | Candidate complete and audited | This file; not yet owner-frozen or canonical. |
+| Final planning architecture | Candidate amended and deterministically revalidated | 2026-08-27 owner technical/commercial decisions incorporated; structural validator and targeted semantic audit PASS; still not owner-frozen or canonical until explicit TSK-0017 owner freeze. |
 | Validation readiness LG-03 | IN PROGRESS / WAITING behind plan freeze | Legal/ICO and Azure/AdGuard/endpoint/final notice/DPIA evidence remain. |
 | Experiment 1 protocol | Designed | Execution/recruitment unauthorized until LG-03 and LG-04 PASS. |
 | Integrated product definition/build | WAITING | Requires positive LG-05, then LG-06/LG-07. |
@@ -19,7 +19,7 @@
 
 ### 8.2 Exact immediate action
 
-**TSK-0017 - Review and freeze or return the final candidate for bounded rework.** This is HUMAN_ONLY. No GitHub publication, tracker rebuild, real participant activation, product build, payment, paid acquisition, or launch is authorized by the candidate itself.
+**TSK-0017 - Review and freeze or return the fully amended final candidate for bounded rework.** This is HUMAN_ONLY. The 2026-08-27 technical/commercial amendment does not itself freeze, launch, deploy product code, enable supporter payments, activate real participants, rebuild trackers, or authorize paid acquisition.
 
 ### 8.3 Exact post-freeze sequence
 

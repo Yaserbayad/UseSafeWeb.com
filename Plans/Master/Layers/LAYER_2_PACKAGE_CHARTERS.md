@@ -142,7 +142,7 @@
 | Startup relevance | Core direct customer value |
 | Purpose | Turn the product into a near-zero-friction, self-service, truthful, accessible end-to-end experience. |
 | Business/customer outcome | A normal parent can discover, configure, verify, understand, recover, and remove protection with minimal choices and no routine human support. |
-| Scope | Journey/service blueprint; information architecture; onboarding; routing; setup; Protection Map; troubleshooting/recovery/removal; prototype; usability/comprehension; content system; accessibility; localization/RTL readiness. |
+| Scope | Journey/service blueprint; information architecture; onboarding; routing; setup; Protection Map; troubleshooting/recovery/removal; prototype; usability/comprehension; content system; accessibility; first-release English/Turkish/Arabic localization and RTL, while official non-UK market activation remains separately gated. |
 | Explicit out of scope | Brand identity PKG-05; code PKG-07; DNS mechanics PKG-08; support operations PKG-16; campaigns PKG-14. |
 | Responsibility boundaries | Owns experience contract and content; engineering owns implementation; QA independently verifies acceptance. |
 | Mandatory deliverable families | Journey maps; service blueprint; interaction/content requirements; prototypes; usability reports; design system components; instruction/help catalogue; accessibility/i18n specification. |
@@ -153,7 +153,7 @@
 | Primary owner/authority | UX / Service Design / Content |
 | AI autonomy target | A3 for synthesis, design, content, and test support; A1 for owner taste and real-user study authorization |
 | Human authority boundaries | Owner approval of major experience/taste choices; real-user research; material safety-language decisions. |
-| Quality requirements | Every interaction justified; one-to-three meaningful actions where technically possible; verified vs confirmed truth; WCAG-oriented; mobile-first; maintainable/localizable content. |
+| Quality requirements | Every interaction justified; one-to-three meaningful actions where technically possible; verified vs confirmed truth; WCAG 2.2 AA target; responsive mobile-first; current mainstream browsers; maintainable/localizable English/Turkish/Arabic content with tested RTL. |
 | Acceptance/success criteria | Critical journeys pass usability/comprehension/accessibility testing; no false verification; recovery/removal works; content is versioned and platform-current. |
 | KPIs/decision signals | Steps/time; abandonment; assistance; comprehension; accessibility defects; stale guidance; self-service resolution. |
 | Risks | Friction, cognitive overload, false confidence, inaccessible UI, documentation drift, premature visual polish, unsupported cross-platform assumptions. |
@@ -167,27 +167,27 @@
 | Charter field | Definition |
 | --- | --- |
 | Startup relevance | Direct customer value after validation |
-| Purpose | Implement the public website and product/setup experience as secure, accessible, maintainable, accountless-by-default software. |
-| Business/customer outcome | The two distinct surfaces - public discovery and product setup - perform their jobs reliably while sharing one design system and minimal data model. |
-| Scope | Public website; setup application; accountless session/state; routing; native/service guidance; DNS activation/verification UI; Protection Map; help/recovery; APIs; optional future persistence only after trigger; CI/CD integration. |
+| Purpose | Implement one secure, accessible, maintainable, accountless-first TypeScript + Next.js full-stack application under `/website` for both the public website and product/setup experience. |
+| Business/customer outcome | Public discovery and product setup remain distinct customer journeys but ship from one codebase/deployment, using a mature accessible component library with light customization, browser-editable lightweight CMS content, and no application database unless a concrete requirement justifies one. |
+| Scope | `/website` monorepo area; TypeScript + Next.js public/setup application; accountless session/state; multilingual routing/content; lightweight CMS integration; mature component library; native/service guidance; DNS activation/verification UI; Protection Map; help/recovery; minimal private operator UI where useful; provider webhooks/server functions strictly as needed; CI/CD and direct-host deployment. |
 | Explicit out of scope | DNS engine PKG-08; cloud platform PKG-09; security policy PKG-10; analytics definitions PKG-11; independent QA PKG-12. |
 | Responsibility boundaries | Implements approved requirements and interfaces; does not invent major product/UX or add mandatory accounts during coding. |
-| Mandatory deliverable families | Application architecture; public site; setup app; minimal APIs/state; integrations; tests; release artifacts; technical documentation. |
+| Mandatory deliverable families | Application architecture; `/website` source; public/setup surfaces; CMS/content model; minimal server functions/state; integrations; tests; direct-host release/rollback artifacts; technical documentation. |
 | Lifecycle obligations | Conditional before validation; required for definition/prototyping, build, verification, pilot, launch, and Year-1 maintenance. |
 | Interfaces | Consumes product/UX/brand/legal/DNS/platform/security/data specifications; publishes deployable releases and runtime contracts. |
 | Inputs | Frozen requirements, validated UI/content, API contracts, environment/config, security controls, test plan. |
 | Outputs | Versioned source/builds, deployed surfaces, API/interface evidence, automated tests, rollback artifacts. |
 | Primary owner/authority | Software / Frontend / Backend Engineering |
-| AI autonomy target | A4 in tested non-production delivery; A2 for production deployment/data changes; A1 for irreversible external actions |
-| Human authority boundaries | Production release authorization, credentials/domain/provider actions, destructive migrations, optional-account scope decision. |
-| Quality requirements | Small vertical slices; secure defaults; no unnecessary auth/data; accessibility/performance; explicit failures; testable interfaces; rollback. |
+| AI autonomy target | A4 for tested delivery and explicitly low-risk reversible production releases after gates; A2 for material infrastructure/security/data production changes; A1 for irreversible external actions |
+| Human authority boundaries | Material/high-impact infrastructure, security or data production actions; credentials/domain/provider ownership; destructive migrations; optional-account scope decision; first consequential payment/public-launch enablement. Low-risk reversible releases may be automated only when the governing task explicitly permits it and all test/rollback gates pass. |
+| Quality requirements | Small vertical slices; secure defaults; no unnecessary auth/data/database/public API/queue; WCAG 2.2 AA; mobile-first; multilingual/RTL; performance; explicit failures; testable interfaces; direct-host rollback; production secrets outside Git. |
 | Acceptance/success criteria | All in-scope journeys and non-goals trace to code/tests; accountless value works; no unauthorized data/surveillance; release/rollback verified. |
 | KPIs/decision signals | Critical journey success; error/performance; accessibility defects; escaped defects; deployment/recovery success; code/contract drift. |
 | Risks | Premature build, auth/dashboard overbuild, IDOR if persistence added, inaccessible UI, coupling to AdGuard admin API, untested migrations. |
 | Triggers | Positive behavioral gate; approved requirements/architecture; product/platform changes; defects/incidents. |
 | Dependencies | PKG-02/04/05/06/08/09/10/11; PKG-12 acceptance. |
 | Evidence requirements | Repository commit, CI results, release manifest, E2E evidence, security/accessibility/performance reports. |
-| Condition for deliberate minimalism | Static/server-rendered public site plus lightweight accountless setup app and only necessary server functions; no conventional SaaS shell. |
+| Condition for deliberate minimalism | One Next.js full-stack codebase, one lightweight CMS integration, one component library, and only necessary server functions; no conventional SaaS shell, separate backend service, public API platform, queue/broker, persistent database, Docker/Kubernetes, or account system unless a validated trigger requires it. |
 
 ### PKG-08 - DNS / AdGuard Service Engineering
 
@@ -196,10 +196,10 @@
 | Startup relevance | Core technical customer value |
 | Purpose | Provide real, privacy-minimal, encrypted baseline DNS protection and technically correct platform-specific installation. |
 | Business/customer outcome | Supported devices use the canonical UseSafeWeb DNS identity, filtering works, limits are truthful, and no identifiable browsing-history product exists. |
-| Scope | AdGuard release/config; DoH endpoint; upstream Quad9 dns10; ECS off; privacy settings; filters/allowlists; client configuration methods; verification; abuse controls coordination; config export/versioning; recovery integration. |
+| Scope | AdGuard release/config; DoH/DoT endpoint where supported; upstream Quad9 dns10; ECS off; privacy settings; filters/allowlists; client configuration methods; verification; abuse controls coordination; server-managed runtime configuration; secure export/backup; direct-host deployment/recovery integration under `/infrastructure/adguard-server`. |
 | Explicit out of scope | Host/cloud PKG-09; security controls PKG-10; UX instructions PKG-06; application UI PKG-07; operations PKG-13. |
 | Responsibility boundaries | Owns DNS service behavior/config; does not own parent identity, surveillance analytics, or unrestricted admin UI. |
-| Mandatory deliverable families | DNS architecture; approved config; endpoint/cert contract; platform profiles/instructions; filter baseline; test sets; versioned recovery config. |
+| Mandatory deliverable families | DNS architecture; approved runtime config baseline; endpoint/cert contract; platform profiles/instructions; filter baseline; test sets; deployment scripts/non-secret templates in Git; secured runtime-config backup/export and restore evidence. |
 | Lifecycle obligations | Required from feasibility through all live stages; depth increases at pilot/production. |
 | Interfaces | Consumes host/security/privacy/product requirements; supplies endpoint, configuration, verification, failure and recovery contracts. |
 | Inputs | Frozen technical decisions, supported platforms, privacy requirements, filter evidence, environment/network/TLS. |
@@ -207,7 +207,7 @@
 | Primary owner/authority | Network / DNS Engineering |
 | AI autonomy target | A4 for tested configuration generation/verification/recovery; A2 for production DNS/filter changes |
 | Human authority boundaries | Production endpoint/filter policy approval when material, credentials/provider/domain actions, critical service disablement. |
-| Quality requirements | Encrypted DNS; exact upstream; ECS disabled; query/file logging off; identifiable statistics off; anonymization where records exist; low false positives; reproducible config. |
+| Quality requirements | Encrypted DNS; exact upstream; ECS disabled; query/file logging off; identifiable statistics off; anonymization where records exist; low false positives; reproducible deployment and recoverable server-managed configuration without secrets/private keys in Git. |
 | Acceptance/success criteria | External supported-device tests pass; configuration inspection proves privacy invariants; allowed/blocked/removal/recovery tests pass. |
 | KPIs/decision signals | Resolution success/latency; filter regressions; false positives; persistence; configuration drift; recovery time. |
 | Risks | Outage, abuse, overblocking, bypass/compatibility, stale AdGuard behavior, logging drift, certificate failure. |
@@ -221,26 +221,26 @@
 | Charter field | Definition |
 | --- | --- |
 | Startup relevance | Mandatory enabling control |
-| Purpose | Provide the smallest secure Azure platform and a reproducible fresh-server recovery path within the accepted outage window. |
+| Purpose | Operate the smallest secure self-managed Azure VM platform after owner-provided VM handoff, with reproducible direct-host deployment/recovery inside the accepted outage window. |
 | Business/customer outcome | UseSafeWeb can be deployed, rebuilt, restored, observed, and cost-controlled without premature high availability. |
-| Scope | Azure topology; Ubuntu 24.04 LTS host baseline; network/firewall; TLS/domain automation; IaC/configuration; secrets integration; deployment/recovery Bash script; environments; backups; capacity/cost; drift. |
+| Scope | Verification/handoff of owner-provided Azure VMs; Ubuntu 24.04 LTS host baseline; post-VM network/firewall/TLS/domain/server configuration; externally injected secrets; direct-host deployment/recovery Bash automation; production/pilot plus CI/ephemeral tests; Azure-native backup integration; capacity/cost/drift. Azure VM/subscription/resource creation itself is owner-managed and outside project automation. |
 | Explicit out of scope | AdGuard behavior PKG-08; application code PKG-07; security policy PKG-10; operations PKG-13. |
 | Responsibility boundaries | Owns platform and automation; does not choose product scope or invent expensive HA without evidence. |
-| Mandatory deliverable families | Architecture/ADR; Azure resources; hardened host; network/TLS; production-grade recovery script; backup/restore; environment/deployment pipeline; capacity/cost model. |
+| Mandatory deliverable families | Architecture/ADR; owner-VM handoff/verification; hardened direct-host baseline; network/TLS; production-grade AdGuard deployment/recovery system; Azure-native backup/restore verification; environment/deployment pipeline; capacity/cost model. |
 | Lifecycle obligations | Required from validation readiness through Year 1; feasibility stages remain minimal. |
 | Interfaces | Consumes application/DNS/security/privacy/operations requirements; supplies stable runtime, deployment, recovery and environment contracts. |
 | Inputs | Approved topology, Ubuntu version, configs, secrets, domain/DNS, budgets, RTO/RPO, test plan. |
-| Outputs | Provisioned environments, versioned automation, recovery evidence, resource inventory, drift/cost reports. |
+| Outputs | Verified owner-provided environments, versioned post-VM automation, direct-host deployments, recovery/restore evidence, resource inventory, drift/cost reports. |
 | Primary owner/authority | Cloud / Platform Engineering |
-| AI autonomy target | A4 for IaC and rehearsed recovery in non-production; A2 for production provision/change/destroy |
-| Human authority boundaries | Cloud account/billing/credential actions, production deploy/destroy, domain/registrar changes, material spend/topology decisions. |
-| Quality requirements | Fresh Ubuntu 24.04 LTS to verified service in approximately 30 minutes end-to-end; idempotent; fail-closed; versioned; secret-safe; no unreviewed services. |
-| Acceptance/success criteria | Clean-server drill provisions all required components and passes DNS/TLS/privacy/security/health tests inside accepted window; rollback/retry tested. |
+| AI autonomy target | A4 for post-VM automation, tested reversible upgrades, monitoring and rehearsed recovery; A2 for material production topology/security/data changes or destructive actions |
+| Human authority boundaries | Azure account/billing/base-VM provisioning, credential ownership, domain/registrar actions, material spend/topology decisions, and high-impact/destructive production changes. |
+| Quality requirements | Reachable owner-provided fresh Ubuntu 24.04 LTS to verified service in approximately 30 minutes end-to-end; direct-host; idempotent; fail-closed; versioned; secret-safe; no secrets/private keys in Git; no unreviewed services or default container/orchestrator dependency. |
+| Acceptance/success criteria | Clean owner-provided server drill configures all required components and passes DNS/TLS/privacy/security/health plus backup/restore tests inside accepted window; rollback/retry tested. |
 | KPIs/decision signals | Measured RTO/RPO; deployment success; config drift; cost; patch state; backup/restore success; capacity headroom. |
 | Risks | Non-reproducible recovery, hidden manual step, secret leakage, Azure region drift, cost creep, premature HA, dependency failure. |
 | Triggers | Environment build/rebuild; release; incident; platform/OS change; capacity/cost threshold; recovery rehearsal cadence. |
 | Dependencies | PKG-07/08/10/12/13/15. |
-| Evidence requirements | IaC/script source hash, dry-run/clean-server transcript, timings, config/test report, Azure metadata, cost record. |
+| Evidence requirements | Script/config source hash, owner-VM metadata/handoff, dry-run/clean-server transcript, timings, backup/restore/config/test report, Azure metadata, cost record. |
 | Condition for deliberate minimalism | Single appropriately sized node/topology initially; invest in HA only when measured impact/risk justifies complexity/cost. |
 
 ### PKG-10 - Security & Abuse Protection
@@ -261,7 +261,7 @@
 | Primary owner/authority | Security |
 | AI autonomy target | A4 for scanning/monitoring and bounded remediation; A2 for access/secret/network production changes; A1 for material residual-risk acceptance |
 | Human authority boundaries | Credential ownership, access approval, material risk acceptance, external notifications, irreversible emergency actions. |
-| Quality requirements | Least privilege; no public admin; secret isolation; input validation; rate/abuse controls; timely patching; tested incident recovery. |
+| Quality requirements | Least-privilege service runtime; no public admin; secret isolation outside Git; input validation; rate/abuse controls; timely patching; tested incident recovery. Deployment/bootstrap automation may use root-capable execution only on owner-provided hosts where required, through a scoped auditable path; normal services must not run with unnecessary privilege. |
 | Acceptance/success criteria | No unresolved critical/high blocker; attack paths/control tests pass; access/secrets are justified; incident runbook rehearsed. |
 | KPIs/decision signals | Critical/high findings; remediation age; unauthorized access; abuse/cost anomalies; patch lag; control-test failures. |
 | Risks | Open-resolver abuse, admin compromise, secret exposure, supply chain, injection/IDOR if accounts added, unsafe fail-open. |
@@ -277,7 +277,7 @@
 | Startup relevance | Decision-enabling, privacy-minimal |
 | Purpose | Measure product value, quality, operations, acquisition, cost, and decisions with the minimum non-surveillance data. |
 | Business/customer outcome | Every important decision has trustworthy definitions, denominators, sources, uncertainty, and privacy-safe evidence. |
-| Scope | Measurement framework; event catalogue; validation/pilot datasets; product/operational/channel/cost metrics; data quality; dashboards; analysis; retention/deletion coordination; no browsing-history metrics. |
+| Scope | Measurement framework; privacy-minimal aggregate website/product analytics; validation/pilot datasets; product/operational/channel/cost metrics; data quality; dashboards; analysis; retention/deletion coordination; no invasive cross-site profiling or browsing-history metrics. |
 | Explicit out of scope | Privacy authority PKG-04; product decisions PKG-02; research protocols PKG-03; telemetry implementation PKG-07/09/13. |
 | Responsibility boundaries | Defines and validates measurement; does not collect data merely because available or optimize addictive engagement. |
 | Mandatory deliverable families | Metric dictionary; event/data contracts; experiment/pilot schema; dashboards/reports; data-quality controls; decision analyses. |
@@ -315,7 +315,7 @@
 | Primary owner/authority | QA / Release Acceptance |
 | AI autonomy target | A4 for automated verification; A3 for test design/analysis; A1 for final owner acceptance where consequential |
 | Human authority boundaries | Owner accepts material residual defects/risks; real-device/manual usability/accessibility judgement where automation is insufficient. |
-| Quality requirements | Reproducible, target-environment, risk-based, independent, current to exact version/config, negative/failure/recovery coverage. |
+| Quality requirements | Reproducible, target-environment, risk-based, independent and current to exact version/config; default release gate includes lint/type/static checks, unit tests for logic, critical-flow integration tests, focused end-to-end smoke tests, security/dependency checks, plus negative/failure/recovery coverage where material. |
 | Acceptance/success criteria | All critical requirements have passing evidence; no unresolved severity-1/2 or control blocker; evidence version matches release. |
 | KPIs/decision signals | Escaped defects; flaky tests; requirement coverage; defect age; acceptance rework; recovery/compatibility pass rates. |
 | Risks | False PASS, local-only evidence, missing negative path, stale tests, inflated coverage, producer self-certification. |
@@ -331,7 +331,7 @@
 | Startup relevance | Mandatory enabling control |
 | Purpose | Keep the service observable, recoverable, maintained, and diagnosable with exceptional technical escalation rather than routine staffed support. |
 | Business/customer outcome | Ordinary failures are prevented or self-recovered; incidents are detected, contained, communicated, restored, and converted into verified corrective actions. |
-| Scope | SLIs/SLOs; monitoring/alerts; runbooks; incident/change/release operations; backup/restore/DR; recovery rehearsal; patch/filter/cert/vendor operations; exceptional diagnostics; status communication coordination. |
+| Scope | External uptime/endpoint checks; application/DNS health; basic CPU/memory/disk/availability metrics; actionable certificate/storage/resource/service alerts; runbooks; incident/change/release operations; Azure-native backup/restore/DR; recovery rehearsal; patch/filter/cert/vendor operations; exceptional diagnostics; status communication only after its trigger. Centralized logging platforms and APM/distributed tracing are not mandatory without evidence. |
 | Explicit out of scope | Customer lifecycle/self-service PKG-16; engineering fixes PKG-07/08/09; legal incident obligations PKG-04. |
 | Responsibility boundaries | Technical operations and exceptional escalation only; repeated ordinary user help is a product/UX automation defect. |
 | Mandatory deliverable families | Observability; runbooks; incident/change/release system; backup/restore/DR; maintenance; capacity; technical knowledge; post-incident actions. |
@@ -340,9 +340,9 @@
 | Inputs | Architecture, service inventory, SLIs, runbooks, access, releases, alerts, vendor status, recovery artifacts. |
 | Outputs | Service state, incident/recovery evidence, maintenance records, capacity/cost signals, corrective actions. |
 | Primary owner/authority | SRE / Operations |
-| AI autonomy target | A4 for monitoring, diagnosis, runbook execution, safe recovery; A2 for production remediation; A1 for service-disable/incident authority where material |
+| AI autonomy target | A4 for monitoring, diagnosis, tested reversible maintenance/upgrades, runbook execution and safe recovery; A2 for material/high-impact production remediation; A1 for service-disable/incident authority where material |
 | Human authority boundaries | Major service disablement, public incident statements, regulator/user notification, irreversible recovery decisions, emergency credential actions. |
-| Quality requirements | Actionable privacy-safe telemetry; no browsing history; tested runbooks; measured end-to-end recovery; owner/backup; proportional postmortem. |
+| Quality requirements | Actionable privacy-safe telemetry at the lean mandatory floor; no browsing history; urgent alerts route to Telegram and durable notices/reports to email; tested runbooks; measured end-to-end recovery; owner/backup; proportional postmortem. |
 | Acceptance/success criteria | Critical probes/alerts/routes work; clean restore/rebuild passes; accepted RTO achieved; incident/change records reconcile to state. |
 | KPIs/decision signals | Availability/error/latency; MTTD/MTTR; recovery drill time; alert quality; maintenance failures; repeat incidents. |
 | Risks | Silent outage, alert fatigue, hidden manual recovery, key-person dependency, diagnostic privacy leakage, unsafe fail-open. |
@@ -358,7 +358,7 @@
 | Startup relevance | Direct growth value after product evidence |
 | Purpose | Earn trusted, low-cost distribution and communicate the product accurately without spreading effort across unproven channels. |
 | Business/customer outcome | One evidence-backed primary acquisition engine and at most one serious challenger produce qualified activations within budget and trust constraints. |
-| Scope | Channel strategy/tests; schools/transition; organic high-intent content/SEO; referrals; trusted organizations; brand handles; public/incident communications; bounded paid experiments; localization GTM. |
+| Scope | Channel strategy/tests; schools/transition; organic high-intent content/SEO; referrals; trusted organizations; brand handles; opt-in newsletter/marketing automation; public/incident communications; bounded paid experiments; localization GTM. |
 | Explicit out of scope | Brand system PKG-05; product content/UX PKG-06; product decisions PKG-02; customer support PKG-16; finance control PKG-15. |
 | Responsibility boundaries | Does not fabricate evidence/claims, mass-produce low-quality AI SEO, or launch every social channel. |
 | Mandatory deliverable families | Channel hypotheses/tests; primary-engine decision; partner/outreach packs; high-value content; referral; communication plans; performance reports. |
@@ -385,7 +385,7 @@
 | Startup relevance | Mandatory lean control |
 | Purpose | Keep cash, costs, vendors, payments, records, renewals, and formalization decisions controlled with minimal administration. |
 | Business/customer outcome | The bootstrapped service remains financially visible and sustainable without fundraising work or unnecessary corporate overhead. |
-| Scope | Budget/scenarios; cost alerts; bookkeeping/reconciliation; supporter model/payment operations; vendors/procurement/renewals/exit; tax/admin/insurance assessment; asset ownership; formalization triggers. |
+| Scope | Budget/scenarios; cost alerts; bookkeeping/reconciliation; supporter model/payment operations using Stripe + PayPal; fixed GBP/EUR/USD supporter pricing; vendors/procurement/renewals/exit; tax/admin/insurance assessment; asset ownership; formalization triggers. |
 | Explicit out of scope | GTM execution PKG-14; vendor security/privacy assessment PKG-04/10; architecture choices PKG-09; product model PKG-02. |
 | Responsibility boundaries | No fundraising program for first two years absent new owner decision; no assumed revenue; no procurement without actual need. |
 | Mandatory deliverable families | Budget/cost model; financial controls; vendor register/renewals; supporter/payment operation; accounting/tax/admin records; formalization review. |
@@ -396,7 +396,7 @@
 | Primary owner/authority | Project Owner / Finance |
 | AI autonomy target | A3 for budgets/reconciliation/research; A2 for vendor configuration; A0/A1 for payments, contracts, tax filings, identity and banking |
 | Human authority boundaries | Bank/payment identity, payments/refunds, contracts, tax/legal filings, large spend, insurance purchase, organizational formalization. |
-| Quality requirements | Every number sourced/calculated; cash vs owner time separate; scenarios not forecasts; renewals/exit known; spend tied to value/control. |
+| Quality requirements | Every number sourced/calculated; cash vs owner time separate; scenarios not forecasts; renewals/exit known; spend tied to value/control; Stripe/PayPal remain billing source of truth; only minimum local payment references; recurring pricing/cancellation/refunds reconcile by provider, currency and cadence. |
 | Acceptance/success criteria | Transactions/costs reconcile; alerts/thresholds work; no unknown critical vendor/renewal; supporter terms/refunds correct; Year-1 close complete. |
 | KPIs/decision signals | Monthly spend/cash; cost per activation/active user; support cost; supporter net/renewal; vendor anomalies; budget variance. |
 | Risks | Cost creep, hidden owner labor, weak supporter economics, missed renewal/tax, vendor lock-in, payment friction, premature formalization. |
