@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-27T23:23:30Z  
+**Updated:** 2026-08-27T23:28:15Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -38,32 +38,24 @@ GitHub is the active execution bridge for eligible AUTO_ALLOWED host work. Repos
 - `TSK-0440` — encrypted-DNS hostname/path — evidence blob `9e0f15d0e1f11c892cf51317b705ac21c9563e53`.
 - `TSK-0203` — supported AdGuard release installed — evidence blob `382b70ca971739712ff8ad5668d03841d5493d62`.
 - `TSK-0201` — restricted authenticated administration/change path — evidence blob `ae06672e1cebdf87d006b85b80e5a7977f4e69b9`.
+- `TSK-0204` — persistent query logging and file query logging explicitly disabled — corrected evidence: `TSK_0204_QUERYLOG_PRIVACY_EVIDENCE_2026-08-27.md`, blob `aa84d93d33d789fe4ff74ea12bcc2e5ffccd5b06`.
 - `TSK-0205` — identifiable per-client statistics disabled — evidence: `TSK_0205_CLIENT_STATS_PRIVACY_EVIDENCE_2026-08-27.md`, blob `47fb0e0e6b64ceab965b2ca0ee259b40a98032c6`.
 - `TSK-0206` — client-IP anonymisation enabled while query logging/statistics remain disabled — evidence: `TSK_0206_CLIENT_IP_ANONYMIZATION_EVIDENCE_2026-08-27.md`, blob `5905136433d930c2325a877e10a45e8540ac6a80`.
 - `TSK-0483` — resolver abuse/amplification protections verified — evidence: `TSK_0483_RESOLVER_ABUSE_PROTECTION_EVIDENCE_2026-08-27.md`, blob `8a6426707fe9c9c8cd08f6b55e25d6b48bb8b28c`.
 - `TSK-0407` — exact Quad9 dns10 DoH upstream with ECS disabled verified — evidence: `TSK_0407_QUAD9_DNS10_ECS_EVIDENCE_2026-08-27.md`, blob `7afeca58e9205234a230d2de702b99648b35347d`.
 - `TSK-0406` — conservative versioned filtering baseline, narrow exception path and exact rollback verified — policy: `infrastructure/adguard-server/filter-policy-v1.yaml`, blob `333a4ef8cd34719d66056aa608ab19473f839634`; evidence: `TSK_0406_FILTERING_POLICY_EVIDENCE_2026-08-27.md`, blob `bb4514b4af7c1c5e616b7875f98e86962fee0325`.
 
-### Reopened TODO — TSK-0204
+### TSK-0204 corrected stable state
 
-`TSK-0204` — disable persistent query and file logging: **TODO / reopened on contradictory current target evidence**.
+Downstream read-only TSK-0202 inspection exposed a previously unverified latent configuration: global `querylog.enabled=false`, but persisted `querylog.file_enabled=true`. Official AdGuard documentation defines these as separate controls. Current AdGuard implementation returns before adding records when global logging is disabled, so no active query-history leakage was evidenced; nevertheless the file-write capability contradicted the frozen project requirement and stale TSK-0204 PASS was correctly reopened.
 
-The earlier PASS remains valid evidence that global query logging was disabled, prior history was cleared, fresh synthetic queries were not retained, and no non-empty `querylog.json*` file existed. However, its mutation/audit checked only `querylog.enabled=false` and file absence; neither verified the separate persisted `querylog.file_enabled` setting.
+The canonical control script was hardened to manage the separate persisted scalar while AdGuard is stopped, with a root-only target-local rollback copy, post-restart API readiness polling, exact invariant checks, and a corrected privileged rollback guard. Final script blob: `3018fedb5292c5c302a74ff8b42cada18aec26b5`.
 
-During the read-only TSK-0202 safe export, corrected run `33126066177` / job `98704396731` directly read current `AdGuardHome.yaml` and found:
+First corrective run `33126239702` / job `98704969927` reached persisted `enabled=false` + `file_enabled=false` but failed on a transient HTTP 404 during immediate post-restart API verification and was not accepted. A separate read-only audit run `33126279381` / job `98705094275` then proved the desired state was stable: both persisted settings false, control API/query-log endpoints HTTP 200, synthetic query not retained, zero query-log items, zero non-empty `querylog.json*` files, and dns10/ECS/anonymisation/statistics/filter invariants preserved.
 
-- `querylog.enabled=false`;
-- `querylog.file_enabled=true`;
-- no persistent clients;
-- no secrets or query history were exported.
+After hardening rollback and API-readiness handling, final pinned control run `33126344825` / job `98705307945`: **PASS**. It detected `file_enabled=false` already in place, made no second direct YAML edit, cleared historical query-log state, re-proved both persisted controls false, API `enabled=false`, anonymisation enabled, fresh synthetic query retained `false`, query-log item count `0`, no non-empty query-log file, and unchanged upstream/privacy/filter invariants.
 
-Current official AdGuard documentation defines `querylog.enabled` as query-log status and `querylog.file_enabled` separately as whether query logs are written to a file. The current implementation returns before adding a query-log record when global logging is disabled, so this is not evidence of current query-history leakage. It is nevertheless contrary to the frozen project configuration requirement that persistent query **and file** logging be off, and ACC-0204 requires configuration inspection showing query/file logging disabled. Therefore the historical TSK-0204 PASS is stale for the complete current acceptance contract and is reopened rather than silently relied upon.
-
-### Blocked by reopened predecessor
-
-`TSK-0202` — export and version the approved AdGuard configuration: **BLOCKED** solely on the reopened hard predecessor `TSK-0204`.
-
-The read-only safe-export verifier itself succeeded after one linter-only correction and produced no target mutation. No versioned approved-settings artifact has been created and no TSK-0202 PASS is claimed. TSK-0202 must resume only after TSK-0204 is corrected, independently verified, evidenced and republished as PASS.
+ACC-0204 is now fully satisfied at the stronger evidence level.
 
 ### TSK-0406 accepted stable state
 
@@ -91,9 +83,27 @@ Direct acceptance evidence:
 
 No permanent resolver filtering mutation was required. The temporary synthetic rules were completely rolled back. ACC-0406 is fully satisfied.
 
+### Selected next / partial work already performed
+
+`TSK-0202` — export and version the approved AdGuard configuration: **TODO / selected**.
+
+Eligibility remains direct and complete: hard predecessors `TSK-0204`, `TSK-0205`, `TSK-0206`, `TSK-0406`, `TSK-0201`, and `TSK-0011` are now all satisfied. Exact WBS metadata remains `A3`, `AUTO_ALLOWED`, HIGH, critical path, `ACC-0202`.
+
+ACC-0202 requires a versioned artifact that reproduces approved settings, excludes secrets and query history, and links to deployment evidence.
+
+Partial read-only work already completed safely:
+
+- `.github/workflows/adguard-approved-config-export.yml` was created to export only an explicit safe-field allowlist from live `AdGuardHome.yaml`;
+- the first run failed only its own overbroad sensitive-key linter and made no target change;
+- the linter was corrected to reject exact sensitive field names;
+- corrected run `33126066177` / job `98704396731` passed the safe-field guard and exposed the TSK-0204 `file_enabled=true` contradiction that has now been corrected;
+- no approved-settings artifact was created from the stale pre-correction export, and no TSK-0202 PASS was claimed.
+
+TSK-0202's requirement references include `REQ-0022`. That legal requirement remains intentionally unresolved under owner-deferred DEC-0021/DEC-0022 work until 2027-08-27 or earlier explicit reactivation; this technical task does not satisfy, waive, reopen, or infer non-applicability of that legal condition, and no real England participant activation is authorized by completing TSK-0202.
+
 ### Subsequent eligible current-gate work
 
-- `TSK-0429` — define privacy-minimal backup scope: independently eligible, but current safety/privacy blocker priority requires resolving reopened TSK-0204 first.
+- `TSK-0429` — define privacy-minimal backup scope: independently eligible after TSK-0202 unless a newly verified higher-priority safety/security/gate constraint intervenes.
 
 ### External/provider and legal boundaries
 
@@ -105,10 +115,10 @@ No permanent resolver filtering mutation was required. The temporary synthetic r
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
 - PASS requires all applicable current acceptance criteria with durable/reconstructable proof.
 - Current contradictory direct evidence reopens stale PASS rather than being ignored.
-- No secrets, credentials, private keys, unnecessary personal data, or raw DNS query history in GitHub.
+- No secrets, credentials, password hashes, private keys, unnecessary personal data, or raw DNS query history may be exported to GitHub.
 - Public resolver ports remain closed until exact privacy/security/abuse/TLS controls are verified.
 - Azure control-plane remains owner-managed; runner autonomy applies to the handed-off VM and repository-authorized tasks.
 
 ## Exact next authoritative step
 
-Correct reopened `TSK-0204` under its existing `A3/AUTO_ALLOWED` authority. Preserve global logging disabled, stop AdGuard before any direct YAML edit that is required because the current query-log API does not expose `file_enabled`, set only `querylog.file_enabled=false`, retain a root-only rollback copy on the target until verification succeeds, restart service, clear any historical query-log file, and independently prove both `enabled=false` and `file_enabled=false`, no retained synthetic query, no non-empty query-log file, service health, and unchanged dns10/ECS/statistics/anonymisation/filter-policy invariants. Persist/read back corrected evidence and runtime PASS before resuming TSK-0202.
+Resume `TSK-0202` from the corrected target state. Re-run the read-only safe-field export so its fingerprint reflects `querylog.enabled=false` **and** `querylog.file_enabled=false`; create the versioned approved-settings artifact from that current allowlisted output only; link it to AdGuard v0.107.79 and the deployment/privacy/filter evidence; independently regenerate the safe allowlist from the target and require exact equality/checksum with the artifact while verifying no credentials/password hashes/private keys/query history/client identifiers/volatile data are present. Persist/read back EVD-0202 and runtime PASS before moving to the next WBS task.
