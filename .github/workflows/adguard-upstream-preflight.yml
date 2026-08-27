@@ -1,0 +1,70 @@
+name: Inspect AdGuard Quad9 upstream and ECS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/adguard-upstream-preflight.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  inspect:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - name: Read-only TSK-0407 preflight
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          sudo -n true
+          systemctl is-active --quiet AdGuardHome.service
+
+          sudo python3 - /opt/AdGuardHome/AdGuardHome.yaml <<'PY'
+          import sys, yaml
+          with open(sys.argv[1],encoding='utf-8') as f: d=yaml.safe_load(f)
+          dns=d.get('dns') or {}
+          upstream=list(dns.get('upstream_dns') or [])
+          fallback=list(dns.get('fallback_dns') or [])
+          upstream_file=str(dns.get('upstream_dns_file') or '')
+          ecs=dns.get('edns_client_subnet') or {}
+          exact='https://dns10.quad9.net/dns-query'
+          print('schema_version='+str(d.get('schema_version')))
+          print('upstream_count='+str(len(upstream)))
+          print('upstream_exact_dns10_only='+str(upstream==[exact]).lower())
+          print('upstream_contains_dns10='+str(exact in upstream).lower())
+          print('upstream_contains_dns11='+str(any('dns11.quad9.net' in x for x in upstream)).lower())
+          print('upstream_contains_dns12='+str(any('dns12.quad9.net' in x for x in upstream)).lower())
+          print('upstream_file_empty='+str(upstream_file=='').lower())
+          print('fallback_count='+str(len(fallback)))
+          print('fallback_contains_dns11='+str(any('dns11.quad9.net' in x for x in fallback)).lower())
+          print('fallback_contains_dns12='+str(any('dns12.quad9.net' in x for x in fallback)).lower())
+          print('ecs_enabled='+str(bool(ecs.get('enabled'))).lower())
+          print('ecs_use_custom='+str(bool(ecs.get('use_custom'))).lower())
+          print('ecs_custom_ip_empty='+str(not bool(ecs.get('custom_ip'))).lower())
+          q=d.get('querylog') or {}; s=d.get('statistics') or {}
+          print('querylog_enabled='+str(bool(q.get('enabled'))).lower())
+          print('anonymize_client_ip='+str(bool(dns.get('anonymize_client_ip'))).lower())
+          print('statistics_enabled='+str(bool(s.get('enabled'))).lower())
+          PY
+
+          python3 - <<'PY'
+          import random, socket, struct
+          name='usesafeweb-upstream-preflight.invalid'
+          q=b''.join(bytes([len(x)])+x.encode() for x in name.split('.'))+b'\x00'
+          pkt=struct.pack('!HHHHHH',random.randrange(0,65536),0x0100,1,0,0,0)+q+struct.pack('!HH',1,1)
+          s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.settimeout(4); s.sendto(pkt,('127.0.0.1',53))
+          r,_=s.recvfrom(4096); s.close()
+          flags=struct.unpack('!H',r[2:4])[0]
+          print('synthetic_resolution_response=true')
+          print('synthetic_resolution_rcode='+str(flags & 0xF))
+          PY
+
+          echo 'TSK_0407_PREFLIGHT=PASS'
