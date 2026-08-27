@@ -60,7 +60,7 @@ jobs:
             'Azure West Europe (`westeurope`), Netherlands',
             'at most two generations',
             'plaintext staging copies are deleted immediately',
-            'provider-side deletion is owner-controlled',
+            'provider-side retention/deletion is owner-controlled',
             'no more than those two verified generations may remain',
             'Adding a new backup service/provider/location',
             'Current raw `AdGuardHome.yaml` + non-secret verification manifest only',
