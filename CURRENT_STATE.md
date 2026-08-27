@@ -49,7 +49,7 @@ No integrated product build is authorised before the applicable behavioral/produ
 
 ### LG-03 — Validation Readiness
 
-**State: IN PROGRESS / TARGET VERIFICATION ACTIVE.**
+**State: IN PROGRESS / TECHNICAL TARGET ACTIVE.**
 
 Current preserved readiness facts:
 
@@ -58,50 +58,41 @@ Current preserved readiness facts:
 - mandatory AdGuard privacy target remains: persistent identifiable query logging off, file query logging off, identifiable per-client statistics off/excluded unless justified, IP anonymisation where operational records can contain addresses, ECS off, selected Quad9 DoH upstream, no browsing-history/top-domain product metric, diagnostics necessary/time-boxed/deleted;
 - Experiment 1 protocol remains designed but execution/recruitment is not authorised until the applicable gates PASS.
 
-## Owner inputs reconciled — 2026-08-27T20:17:22Z
+## Owner inputs reconciled
 
 ### TSK-0438 — UseSafeWeb.com registrar/DNS control and renewal state
 
 **State: PASS.**
 
-Owner explicitly confirmed the domain-side owner task is complete, `UseSafeWeb.com` is registered, the current control/renewal responsibility is complete, and no screenshot is required. This is recorded as the current Project Owner evidence for the owner-controlled condition; no further screenshot request is permitted unless the owner later reopens the task.
+Project Owner explicitly confirmed the domain-side task is complete and `UseSafeWeb.com` is registered/currently controlled. This owner-controlled condition requires no further screenshot unless explicitly reopened.
 
 ### TSK-0435 — owner-provided Azure `westeurope` pilot VM handoff
 
-**Owner handoff condition: SATISFIED. Task acceptance: WAITING ON ONE DEPLOYMENT-PATH CHECK.**
+**State: PASS.**
 
-Owner explicitly confirmed the fresh Ubuntu 24.04 LTS Azure VM has been created/completed and supplied hostname `srv.UseSafeWeb.com`. The owner-created-resource condition is no longer pending.
+Target: `srv.UseSafeWeb.com` / Azure VM `adguardvm`.
 
-Verifier artifact and pre-target evidence:
+Acceptance evidence is durably recorded in `TSK_0435_HANDOFF_EVIDENCE_2026-08-27.md`, final blob `57de1a4187288870da7655973ac09bf907674d89`, following target runs at `2026-08-27T20:34:37Z` and `2026-08-27T20:41:57Z` with verifier `infrastructure/adguard-server/verify-handoff.sh` blob `0264b6ad15554fd289f4bdbf0ee49b9e959e7843`.
 
-- `infrastructure/adguard-server/verify-handoff.sh` published on `main` in commit `982da5f4ec00f8670bf7c8ebadf7db8e9a38b132`.
-- Exact verifier GitHub blob: `0264b6ad15554fd289f4bdbf0ee49b9e959e7843`.
-- Local syntax/fail-closed tests passed before publication.
-
-Direct target run at `2026-08-27T20:34:37Z`, durably recorded in `TSK_0435_HANDOFF_EVIDENCE_2026-08-27.md` (commit `a85bda7ca724c27f5544c02777b677b6311fb8b1`, blob `4c477aa5d7bf3bc0dae8574aa6573b8f3be2e11b`), proved:
+Final accepted result:
 
 - Ubuntu `24.04`: PASS.
 - Azure IMDS reachable and parsed: PASS.
 - Azure location `westeurope`: PASS.
 - Azure OS type Linux: PASS.
 - VM identity `adguardvm`, size `Standard_B2ls_v2`: recorded.
-- `srv.UseSafeWeb.com` resolved on-target to `52.157.109.120`: PASS.
-- Handoff listener inventory exposed only SSH publicly (`0.0.0.0:22`, `[::]:22`) plus local/system listeners; no AdGuard listener exists yet, consistent with a fresh pre-installation handoff.
-- IMDS returned no public IPv4, so DNS-to-IMDS-public-IP correlation was not applicable and produced a warning only.
+- Approved SSH deployment path: PASS on the non-privileged rerun.
+- `srv.UseSafeWeb.com` resolves on-target to `52.157.109.120`: PASS.
+- Fresh-handoff exposure inventory: only SSH externally listening (`0.0.0.0:22`, `[::]:22`) plus expected loopback/system listeners; no AdGuard listener yet.
+- IMDS public IPv4 field absent: warning/not-applicable only, not an acceptance failure.
+- Final verifier status: **`OVERALL=PASS failures=0 warnings=1`**.
+- Evidence contains no credential, token, private key, subscription/resource ID, or raw DNS history.
 
-The single failed assertion was `SSH_CONNECTION is absent`. The owner ran the read-only verifier as `sudo bash verify-handoff.sh`; the elevated invocation did not preserve the user-session SSH environment variable used by the verifier. The target run correctly stayed fail-closed with `OVERALL=FAIL failures=1 warnings=1`. This does not invalidate the proven Ubuntu/Azure/DNS/exposure evidence; it leaves only explicit approved deployment-path reachability unproven by the script.
-
-**Deterministic resolution check:** from the same remote user shell, run the read-only verifier without `sudo`:
-
-`bash verify-handoff.sh srv.UseSafeWeb.com`
-
-If it reports `PASS  verification is executing through an SSH session` and `OVERALL=PASS`, TSK-0435 can be promoted to PASS after durable result/read-back reconciliation.
+ACC-0435 is fully satisfied. The earlier sudo-run SSH-environment failure is retained in the evidence artifact for auditability and is superseded for acceptance by the clean rerun.
 
 ## Preserved PASS preparation evidence
 
-The following current preparation work remains PASS and durably evidenced:
-
-- `TSK-0434`, `TSK-0436` — owner-control-plane exclusions verified; these do not prove live host security.
+- `TSK-0434`, `TSK-0436` — owner-control-plane exclusions verified; actual host/security verification remains separate.
 - `TSK-0166` — participant metric schema — `EXPERIMENT_01_CONCIERGE_VALIDATION.md`.
 - `TSK-0168` — qualification screener — `EXPERIMENT_01_CONCIERGE_VALIDATION.md`.
 - `TSK-0225` — protection-claims checklist — `PROTECTION_CLAIMS_CHECKLIST.md`, blob `4bfc83421318fe761d06f9a63e052e3bff36070a`.
@@ -112,14 +103,16 @@ The following current preparation work remains PASS and durably evidenced:
 - `TSK-0169` — support/false-positive intake — `EXPERIMENT_01_SUPPORT_FALSE_POSITIVE_INTAKE.md`, blob `9fab42f97e3e96023de89a8ed266acc21c0f06ab`.
 - Current recurring governance checkpoint evidence remains in `LG_03_CHECKPOINT_2026-08-27.md`.
 
-## Newly unlocked dependency state
+## Newly unlocked technical state
 
+- `TSK-0435`: PASS.
 - `TSK-0438`: PASS.
-- `TSK-0435`: WAITING only for the non-privileged verifier rerun proving the SSH deployment path.
-- `TSK-0437` — apply host security baseline: remains WAITING because hard predecessor `TSK-0435` is not yet PASS.
-- `TSK-0440` — select pilot encrypted-DNS hostname/path: remains WAITING because hard predecessor `TSK-0435` is not yet PASS; domain-side predecessor `TSK-0438` is satisfied.
-- `TSK-0439`, `TSK-0441`, `TSK-0442`, `TSK-0443`: remain dependency-waiting downstream.
-- `TSK-0483` — resolver abuse/amplification protection: remains WAITING for a fully accepted reachable target environment.
+- `TSK-0437` — apply host security baseline: **TODO / eligible**; target is now accepted and reachable.
+- `TSK-0440` — select pilot encrypted-DNS hostname/path: **TODO / eligible**; VM and domain prerequisites are satisfied.
+- `TSK-0439`, `TSK-0441`, `TSK-0442`, `TSK-0443`: remain dependency-driven downstream work.
+- `TSK-0483` — resolver abuse/amplification protection: target-environment prerequisite is now available; execute when its remaining WBS dependencies permit.
+
+Security/host hardening takes precedence over endpoint design under the project priority rules.
 
 ## Runtime safeguards
 
@@ -130,8 +123,6 @@ The following current preparation work remains PASS and durably evidenced:
 - No public launch until later production/launch gates pass.
 - No Azure control-plane mutation by project automation under the current owner handoff boundary.
 
-## Exact next execution path
+## Current execution direction
 
-1. From the current remote user shell on `srv.UseSafeWeb.com`, run `bash verify-handoff.sh srv.UseSafeWeb.com` without `sudo`.
-2. If the result is `OVERALL=PASS`, persist/read-back TSK-0435 PASS with the new target TEST_RESULT evidence.
-3. Recompute eligibility immediately; expected next work is TSK-0437 and TSK-0440, followed by DNS/TLS and resolver-security tasks in dependency order.
+Proceed with `TSK-0437` host-security baseline first, persisting a stable outcome before selecting the next eligible task. Then recompute eligibility; `TSK-0440` is independently available unless a new current security/technical blocker changes priority.
