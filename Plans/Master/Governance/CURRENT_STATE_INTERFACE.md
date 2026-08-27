@@ -9,8 +9,8 @@
 | Area | State | Evidence/meaning |
 | --- | --- | --- |
 | Business/product evaluation | PASS / phases 1-42 complete | Authoritative project record; MODIFY - proceed to validation, not launch. |
-| Final planning architecture | Candidate amended and deterministically revalidated | 2026-08-27 owner technical/commercial decisions incorporated; structural validator and targeted semantic audit PASS; still not owner-frozen or canonical until explicit TSK-0017 owner freeze. |
-| Validation readiness LG-03 | IN PROGRESS / WAITING behind plan freeze | Legal/regulatory/compliance work is OWNER-DEFERRED until 2027-08-27 or earlier explicit reactivation; technical Azure/AdGuard/endpoint/privacy/security readiness may continue after freeze. The legal hold is not PASS and does not by itself authorize real participants. |
+| Final planning architecture | OWNER-FROZEN | Owner freeze recorded 2026-08-27 under TSK-0017 against the exact reviewed tree/digest in MANIFEST.yaml. Canonical runtime activation requires TSK-0009 publication + TSK-0011 exact read-back, followed by CURRENT_STATE rebaseline. |
+| Validation readiness LG-03 | IN PROGRESS / publication handoff | Legal/regulatory/compliance work is OWNER-DEFERRED until 2027-08-27 or earlier explicit reactivation; technical Azure/AdGuard/endpoint/privacy/security readiness may continue after canonical publication/read-back. The legal hold is not PASS and does not by itself authorize real participants. |
 | Experiment 1 protocol | Designed | Execution/recruitment unauthorized until LG-03 and LG-04 PASS. |
 | Integrated product definition/build | WAITING | Requires positive LG-05, then LG-06/LG-07. |
 | Integrated pilot | WAITING | Requires LG-09. |
@@ -19,7 +19,7 @@
 
 ### 8.2 Exact immediate action
 
-**TSK-0017 - Review and freeze or return the fully amended final candidate for bounded rework.** This is HUMAN_ONLY. The 2026-08-27 technical/commercial amendment does not itself freeze, launch, deploy product code, enable supporter payments, activate real participants, rebuild trackers, or authorize paid acquisition.
+**TSK-0017 — PASS / OWNER FREEZE RECORDED 2026-08-27.** The owner explicitly accepted the complete audited/amended plan and authorized execution; MANIFEST.yaml records the exact reviewed artifact identity. Freeze does not itself launch, deploy product code, enable supporter payments, activate real participants, rebuild trackers, or authorize paid acquisition. The next controlled handoff is TSK-0009 publication, TSK-0011 read-back, then TSK-0010 runtime rebaseline.
 
 
 ### 8.2A Owner legal/regulatory/compliance work hold
@@ -28,7 +28,7 @@ Effective 2026-08-27, the owner explicitly placed identified legal/regulatory/co
 
 ### 8.3 Exact post-freeze sequence
 
-1. `TSK-0017` - Owner freezes the exact audited modular planning system, identified by ZIP/tree SHA-256, manifest schema/version, and accepted audit result.
+1. `TSK-0017` - **PASS 2026-08-27:** owner froze the exact audited modular planning system identified by the MANIFEST canonicalization record.
 2. `TSK-0009` - After explicit publication authority, publish the complete approved `Plans/` tree to GitHub `main` without altering unrelated state.
 3. `TSK-0011` - Fetch/read back the published `Plans/` tree, compare the complete file set and every checksum in `Plans/SHA256SUMS.txt`, and capture commit/tree evidence. Any mismatch blocks ordinary execution.
 4. `TSK-0010` - Update canonical `CURRENT_STATE.md` to reference `Plans/Master/MASTER_PLAN.md`, `Plans/Master/MANIFEST.yaml`, the publication commit/checksum set, the accountless/recovery decisions, and the actual LG-03 (legacy G-02) execution state.
@@ -41,7 +41,7 @@ Effective 2026-08-27, the owner explicitly placed identified legal/regulatory/co
 
 Do not maintain a second task-status/acceptance table here. The authoritative task definitions and candidate planning states are in [WBS/master-wbs.csv](../WBS/master-wbs.csv); dependency traversal is in [RELATIONSHIP_INDEX.yaml](../RELATIONSHIP_INDEX.yaml); gate semantics are in [GATES.md](../Registers/GATES.md). After publication, canonical repository `CURRENT_STATE.md` is the authority for volatile execution state.
 
-For this pre-freeze candidate only, `TSK-0017` is the sole `TODO` owner action. The publication/read-back/rebaseline sequence is defined in Section 8.3 above.
+At the owner-freeze baseline, WBS task state records the TSK-0017 owner action as PASS. TSK-0009/TSK-0011/TSK-0010 remain distinct publication/read-back/runtime-rebaseline outcomes. After canonical activation, volatile execution truth belongs to repository `CURRENT_STATE.md`; this planning snapshot must not be used as a second runtime database.
 
 ### 8.5 Owner Azure handoff boundary — 2026-08-27
 

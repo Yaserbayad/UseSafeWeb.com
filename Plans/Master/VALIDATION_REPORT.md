@@ -7,6 +7,8 @@
 **Previously delivered ZIP SHA-256:** `72c8f9de37e0812ddca23769c90933dad42be1d62361ac291d90f2243d8eeeb5`  
 **Repository writes performed by this audit:** **NONE**  
 
+> **Post-audit owner disposition — 2026-08-27:** owner freeze is now **APPROVED/RECORDED** under TSK-0017. Reviewed evidence: main `21fabcb64a17f4f1dbe79e3be61d769c0fbab574`, Git tree `afc300b23ee63eead391eef0ae139c6fb8e7d9fc`, deterministic Plans ZIP SHA-256 `f5076ca88b625bb1f2512ebad7831f23ed4bf2c8e7477e92626bc2d4aed5f32c`, manifest schema `usesafeweb.master-planning-system.v1.1`. All corrections, disclosed limitations, the one-year owner legal hold, and the Azure owner-handoff boundary are accepted. Complete `Plans/` publication is explicitly authorized. The report text below remains the historical pre-canonicalization audit and is not rewritten to imply that publication/read-back had already occurred when the audit ran.
+
 ## 1. Executive verdict
 
 **Corrected planning-system integrity: PASS.**  

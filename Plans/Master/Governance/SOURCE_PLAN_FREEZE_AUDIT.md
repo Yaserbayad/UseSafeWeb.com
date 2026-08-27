@@ -2,6 +2,9 @@
 
 > This preserves the monolithic source plan's own pre-migration completeness/freeze-readiness audit. It is not the modularization validation report and does not by itself make the repository canonical.
 
+> **Post-audit disposition — 2026-08-27:** the owner subsequently accepted the complete amended/audited modular system and authorized execution. TSK-0017 is therefore recorded PASS. Exact reviewed evidence is recorded in `MANIFEST.yaml`: pre-freeze main `21fabcb64a17f4f1dbe79e3be61d769c0fbab574`, Git tree `afc300b23ee63eead391eef0ae139c6fb8e7d9fc`, deterministic Plans ZIP SHA-256 `f5076ca88b625bb1f2512ebad7831f23ed4bf2c8e7477e92626bc2d4aed5f32c`. The historical `READY_FOR_OWNER_FREEZE` text below is retained as audit history. Canonical activation still requires verified GitHub publication/read-back and root `CURRENT_STATE.md` rebaseline.
+
+
 > **Historical audit warning (pre-canonicalization review 2026-08-27):** This file is retained verbatim as the source plan's historical self-audit except for this warning. A later independent audit found that its accountless-reconciliation and final-freeze claims were too strong: active future tasks still contained stale dashboard/authentication requirements, and the first modular reconstruction had generation/link defects. Those defects are corrected in the audited modular system. **`VALIDATION_REPORT.md` supersedes this file for current acceptance.**
 >
 

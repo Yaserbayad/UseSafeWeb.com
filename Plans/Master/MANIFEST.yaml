@@ -4,7 +4,7 @@ canonical_root: Plans/Master
 source_plan:
   name: UseSafeWeb_Master_Plan_FINAL.md
   sha256: 04fe68fe4e922322cb878c3c35f97e0b5b4862a333df4c313cbfc2b359ebfc1e
-  status: 2.0-final-candidate / OWNER_TECHNICAL_COMMERCIAL_AMENDMENT_APPLIED / OWNER_LEGAL_HOLD_APPLIED_2026-08-27 / OWNER_AZURE_HANDOFF_BOUNDARY_APPLIED_2026-08-27 / post-override deterministic validation PASS / not yet owner-frozen or canonical
+  status: 2.0-owner-frozen / OWNER_FREEZE_2026-08-27 / OWNER_TECHNICAL_COMMERCIAL_AMENDMENT_APPLIED / OWNER_LEGAL_HOLD_ACTIVE_TO_2027-08-27 / OWNER_AZURE_HANDOFF_BOUNDARY_APPLIED_2026-08-27 / deterministic validation PASS / canonical activation requires verified GitHub main publication-readback and CURRENT_STATE rebaseline
 migration_prompt:
   name: UseSafeWeb_Master_Plan_Modularization_Prompt(1).txt
   sha256: 49031063a84f9b56ed98b5b07782f1d9818b01b84e0761d3c48018fc07ef5e5b
@@ -323,6 +323,19 @@ pre_canonicalization_audit:
   - EXC-0001
   - modularization contract
   report: VALIDATION_REPORT.md
+canonicalization:
+  owner_freeze: true
+  owner_freeze_time_utc: '2026-08-27T19:38:36Z'
+  owner_authority: explicit owner instruction "I accept everything, begin execution"; freeze performed because TSK-0017 is a critical execution prerequisite
+  manifest_schema_at_freeze: usesafeweb.master-planning-system.v1.1
+  reviewed_pre_freeze_main_commit: 21fabcb64a17f4f1dbe79e3be61d769c0fbab574
+  reviewed_pre_freeze_repository_tree_git_sha1: afc300b23ee63eead391eef0ae139c6fb8e7d9fc
+  reviewed_plans_deterministic_zip_sha256: f5076ca88b625bb1f2512ebad7831f23ed4bf2c8e7477e92626bc2d4aed5f32c
+  audit_result_accepted: PASS
+  accepted_corrections_risks_and_limitations: all current audited corrections and disclosed residual limitations, including OWNER_LEGAL_HOLD_2026-08-27 and the owner-managed Azure control-plane handoff boundary
+  publication_authority: complete owner-frozen Plans/ tree may be published to Yaserbayad/UseSafeWeb.com main without unrelated changes
+  canonical_activation_condition: TSK-0009 publication PASS plus TSK-0011 exact GitHub read-back PASS; volatile execution state is then rebaselined in repository CURRENT_STATE.md under TSK-0010
+
 generated_assembly_contract:
   output: Generated/MASTER_PLAN_FULL.md
   markdown_modules: concatenate in deterministic_assembly_order with relative links rebased from Generated/
