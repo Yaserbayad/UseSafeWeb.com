@@ -1,0 +1,152 @@
+name: Audit encrypted AdGuard configuration backup
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/adguard-encrypted-config-backup-audit.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact main commit
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Independently audit retained encrypted backup
+        shell: bash
+        env:
+          EXPECTED_ARCHIVE_NAME: usesafeweb-adguard-config-20260827T235612Z.tar.age
+          EXPECTED_ARCHIVE_SHA256: bd5cad421a44efb27a669a0119f6247f456e1e8e97a0f23bb628933e6208ccde
+          EXPECTED_ARCHIVE_SIZE: '21121'
+          EXPECTED_CREATED_UTC: '2026-08-27T23:56:12Z'
+          EXPECTED_RECIPIENT_FP: 'SHA256:682Jbw3baP6jxs57+1c5lchlkrNMELcvDk8bauEl51U'
+          EXPECTED_SOURCE_COMMIT: 87a00336ca05387db706d268d8a8e3c7fd608e7c
+          EXPECTED_POLICY_BLOB: e62b48a3e746b1be90881bbffab3b7680384cc16
+          EXPECTED_SCRIPT_BLOB: 6b2642515b9c345f2ec3b47cbf5d7f0ec5c87e51
+          EXPECTED_CREATE_WORKFLOW_BLOB: 5bd12413a6dec63ddea54915f953be5bb5553dac
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == 'adguardvm' ]]
+          sudo -n true
+          systemctl is-active --quiet AdGuardHome.service
+          dpkg-query -W -f='${Version}\n' age | grep -qx '1.1.1-1ubuntu0.24.04.3'
+
+          [[ "$(git hash-object infrastructure/adguard-server/BACKUP_SCOPE_POLICY.md)" == "$EXPECTED_POLICY_BLOB" ]]
+          [[ "$(git hash-object infrastructure/adguard-server/create-encrypted-config-backup.sh)" == "$EXPECTED_SCRIPT_BLOB" ]]
+          [[ "$(git hash-object .github/workflows/adguard-encrypted-config-backup.yml)" == "$EXPECTED_CREATE_WORKFLOW_BLOB" ]]
+          [[ "$(git hash-object infrastructure/adguard-server/approved-adguard-config-v1.json)" == 'ea85830b5ef9de7f2772e5467570d52013228b0b' ]]
+
+          dir='/var/backups/usesafeweb/adguard'
+          archive="$dir/$EXPECTED_ARCHIVE_NAME"
+          meta="$archive.meta.json"
+          [[ "$(sudo stat -c '%a %U:%G' "$dir")" == '700 root:root' ]]
+          sudo test -s "$archive"
+          sudo test -s "$meta"
+          [[ "$(sudo stat -c '%a %U:%G' "$archive")" == '600 root:root' ]]
+          [[ "$(sudo stat -c '%a %U:%G' "$meta")" == '600 root:root' ]]
+          [[ "$(sudo stat -c '%s' "$archive")" == "$EXPECTED_ARCHIVE_SIZE" ]]
+          [[ "$(sudo sha256sum "$archive" | awk '{print $1}')" == "$EXPECTED_ARCHIVE_SHA256" ]]
+          sudo head -c 21 "$archive" | grep -a -q '^age-encryption.org/v1'
+
+          sudo python3 - "$meta" <<'PY'
+          import json,os,sys
+          d=json.load(open(sys.argv[1],encoding='utf-8'))
+          expected={
+            'backup_format':'usesafeweb.adguard-encrypted-config.v1',
+            'created_utc':os.environ['EXPECTED_CREATED_UTC'],
+            'encrypted_archive':os.environ['EXPECTED_ARCHIVE_NAME'],
+            'encrypted_archive_sha256':os.environ['EXPECTED_ARCHIVE_SHA256'],
+            'encrypted_archive_size_bytes':int(os.environ['EXPECTED_ARCHIVE_SIZE']),
+            'owner_recipient_fingerprint':os.environ['EXPECTED_RECIPIENT_FP'],
+            'source_git_commit':os.environ['EXPECTED_SOURCE_COMMIT'],
+            'location_class':'root-only same-VM encrypted staging/recovery artifact; not proof of node-loss resilience',
+          }
+          assert d == expected, (d,expected)
+          print('sidecar_exact_match=PASS')
+          PY
+
+          auth='/home/azureusr/.ssh/authorized_keys'
+          [[ "$(sudo stat -c '%a %U:%G' "$auth")" == '600 azureusr:azureusr' ]]
+          key_count="$(sudo awk 'NF && $1 !~ /^#/{n++} END{print n+0}' "$auth")"
+          [[ "$key_count" == '1' ]]
+          read -r bits current_fp < <(sudo ssh-keygen -lf "$auth" | awk '{print $1,$2}')
+          [[ "$bits" == '3072' ]]
+          [[ "$current_fp" == "$EXPECTED_RECIPIENT_FP" ]]
+          echo 'owner_recipient_continuity=PASS'
+
+          # No dedicated server-side backup decryption secret is allowed.
+          sudo test ! -e /var/lib/usesafeweb/adguard/backup-encryption.key
+          sudo test ! -e /var/lib/usesafeweb/adguard/backup-recipient.txt
+          root_sec="$(sudo gpg --homedir /root/.gnupg --batch --with-colons --list-secret-keys 2>/dev/null | awk -F: '$1=="sec"{n++} END{print n+0}')"
+          user_sec="$(gpg --homedir /home/azureusr/.gnupg --batch --with-colons --list-secret-keys 2>/dev/null | awk -F: '$1=="sec"{n++} END{print n+0}')"
+          [[ "$root_sec" == '0' && "$user_sec" == '0' ]]
+          echo 'server_backup_decryption_key_store_absent=PASS'
+
+          mapfile -t backups < <(sudo find "$dir" -maxdepth 1 -type f -name 'usesafeweb-adguard-config-*.tar.age' -print)
+          ((${#backups[@]} == 1))
+          mapfile -t stages < <(sudo find "$dir" -maxdepth 1 -type d -name '.stage.*' -print)
+          ((${#stages[@]} == 0))
+          mapfile -t tmps < <(sudo find "$dir" -maxdepth 1 -type f -name '*.tmp' -print)
+          ((${#tmps[@]} == 0))
+          echo 'retained_encrypted_generation_count=1'
+          echo 'plaintext_or_temp_stage_count=0'
+
+          # Re-prove current privacy and approved settings remained unchanged.
+          sudo python3 - /opt/AdGuardHome/AdGuardHome.yaml infrastructure/adguard-server/approved-adguard-config-v1.json <<'PY'
+          import json,sys,yaml
+          config_path,approved_path=sys.argv[1:3]
+          with open(config_path,encoding='utf-8') as f: d=yaml.safe_load(f)
+          with open(approved_path,encoding='utf-8') as f: approved=json.load(f)['settings']
+          dns=d.get('dns') or {}; filtering=d.get('filtering') or {}; querylog=d.get('querylog') or {}
+          stats=d.get('statistics') or {}; http=d.get('http') or {}; tls=d.get('tls') or {}; dhcp=d.get('dhcp') or {}
+          filters=d.get('filters') or []; edns=dns.get('edns_client_subnet') or {}
+          assert querylog.get('enabled') is False and querylog.get('file_enabled') is False
+          assert stats.get('enabled') is False
+          assert dns.get('anonymize_client_ip') is True
+          assert ((d.get('clients') or {}).get('persistent') or []) == []
+          assert (d.get('user_rules') or []) == []
+          assert (d.get('whitelist_filters') or []) == []
+          assert not (tls.get('private_key') or tls.get('private_key_path'))
+          assert not (tls.get('certificate_chain') or tls.get('certificate_chain_path'))
+          live={
+           'schema_version':d.get('schema_version'),'http':{'address':http.get('address')},
+           'dns':{'bind_hosts':list(dns.get('bind_hosts') or []),'port':dns.get('port'),'upstream_dns':list(dns.get('upstream_dns') or []),
+             'upstream_dns_file':str(dns.get('upstream_dns_file') or ''),'bootstrap_dns':list(dns.get('bootstrap_dns') or []),
+             'fallback_dns':list(dns.get('fallback_dns') or []),'private_upstream':list(dns.get('private_upstream') or []),
+             'upstream_mode':dns.get('upstream_mode'),'ratelimit':dns.get('ratelimit'),'ratelimit_subnet_len_ipv4':dns.get('ratelimit_subnet_len_ipv4'),
+             'ratelimit_subnet_len_ipv6':dns.get('ratelimit_subnet_len_ipv6'),'ratelimit_whitelist':list(dns.get('ratelimit_whitelist') or []),
+             'refuse_any':bool(dns.get('refuse_any')),'edns_client_subnet':{'enabled':bool(edns.get('enabled')),'use_custom':bool(edns.get('use_custom')),
+             'custom_ip_configured':bool(edns.get('custom_ip'))},'anonymize_client_ip':bool(dns.get('anonymize_client_ip')),
+             'cache_size':dns.get('cache_size'),'cache_ttl_min':dns.get('cache_ttl_min'),'cache_ttl_max':dns.get('cache_ttl_max'),
+             'cache_optimistic':bool(dns.get('cache_optimistic'))},
+           'filtering':{'protection_enabled':bool(filtering.get('protection_enabled')),'filtering_enabled':bool(filtering.get('filtering_enabled')),
+             'blocking_mode':filtering.get('blocking_mode'),'interval':filtering.get('interval'),'safebrowsing_enabled':bool(filtering.get('safebrowsing_enabled')),
+             'parental_enabled':bool(filtering.get('parental_enabled')),'safesearch_enabled':bool(filtering.get('safesearch_enabled'))},
+           'filters':[{'name':x.get('name'),'url':x.get('url'),'enabled':bool(x.get('enabled'))} for x in filters],
+           'whitelist_filters':[],'user_rules':[],
+           'querylog':{'enabled':bool(querylog.get('enabled')),'file_enabled':bool(querylog.get('file_enabled')),'interval':querylog.get('interval')},
+           'statistics':{'enabled':bool(stats.get('enabled')),'interval':stats.get('interval')},
+           'tls':{'enabled':bool(tls.get('enabled')),'server_name':tls.get('server_name'),'force_https':bool(tls.get('force_https')),
+             'port_https':tls.get('port_https'),'port_dns_over_tls':tls.get('port_dns_over_tls'),'port_dns_over_quic':tls.get('port_dns_over_quic')},
+           'dhcp':{'enabled':bool(dhcp.get('enabled'))}}
+          assert live == approved
+          print('live_privacy_and_approved_settings_unchanged=PASS')
+          PY
+          mapfile -t qfiles < <(sudo find /opt/AdGuardHome -type f -name 'querylog.json*' -size +0c -print 2>/dev/null || true)
+          ((${#qfiles[@]} == 0))
+          echo 'live_nonempty_querylog_files=0'
+
+          echo 'TSK_0430_INDEPENDENT_AUDIT=PASS'
