@@ -49,7 +49,7 @@ No MCP/integrated product build is authorised before the applicable behavioral/p
 
 ### LG-03 — Validation Readiness (legacy G-02)
 
-**State: IN PROGRESS.** Technical/privacy/security/operational readiness may proceed. LG-03 cannot PASS for real-participant activation while required legal evidence remains unresolved unless current verified evidence establishes non-applicability.
+**State: IN PROGRESS / WAITING ON EXTERNAL CONDITIONS.** Technical/privacy/security/operational preparation completed in this execution may be retained, but LG-03 cannot PASS for real-participant activation while required legal evidence or target-environment evidence remains unresolved unless current verified evidence establishes non-applicability.
 
 Current preserved readiness facts:
 
@@ -84,6 +84,25 @@ Current preserved readiness facts:
 - `TSK-0165` — create facilitator script and intervention taxonomy: **PASS**. Evidence: `EXPERIMENT_01_FACILITATOR_GUIDE.md` commit `3236c556fb1bbb30a6be826c1d43aac32771d66d`, blob `7d80c1338acc1a5a4c1ff30c020ca39021d8dcb3`, read back 2026-08-27. The guide preserves the frozen hypothesis and journey, requires intervention duration/reason, separates usability help, safety/privacy correction and safeguarding escalation, and prohibits silent facilitator completion; participant actions and any facilitator-performed action are explicitly recorded. Predecessors `TSK-0166` and `TSK-0228` are PASS. Deviations: none against ACC-0165.
 - `TSK-0169` — create pilot support and false-positive intake process: **PASS**. Evidence: `EXPERIMENT_01_SUPPORT_FALSE_POSITIVE_INTAKE.md` commit `f89a3865c083bec669bf494fa2ea2a0614c472f2`, blob `9fab42f97e3e96023de89a8ed266acc21c0f06ab`, read back 2026-08-27. Every issue requires pseudonymous participant ID, category, severity, intervention minutes, privacy-safe evidence, action, outcome and closure; exceptional request-level diagnostics route through TSK-0227, false positives use narrow/reversible correction and re-test, and safeguarding routes through TSK-0228. Predecessors `TSK-0227` and `TSK-0165` are PASS. Deviations: none against ACC-0169.
 
+## Current recurring governance checkpoint
+
+Evidence artifact: `LG_03_CHECKPOINT_2026-08-27.md` commit `263033929d46d38964c47dcf2e75e58ebd3b3354`, blob `dcfa79627711b332fcaf4fd3e270920451176284`, read back 2026-08-27.
+
+- `TSK-0021` — operate decision and trigger register: **PASS for the current occurrence; PLANNED_RECURRING remains active.** Current material decisions contain state, trigger/evidence, owner, related work and source; superseded decisions remain traceable. Reopen on the next material decision/trigger change.
+- `TSK-0024` — enforce pre-validation non-goals: **PASS for the current occurrence; PLANNED_RECURRING remains active.** No work outside the authorised validation sequence was implemented/activated; DEC-0042 / EXC-0001 accountless-first boundaries remain intact. Reopen on material scope/implementation change.
+- `TSK-0023` — validation-readiness checkpoint review: **PASS for the current occurrence; PLANNED_RECURRING remains active.** The checkpoint records completed evidence, blockers, owner/technical actions, active risks and explicit recruitment prohibition. **LG-03 itself remains IN PROGRESS.**
+
+## Current execution boundary
+
+A fresh WBS eligibility recomputation after the evidence above found **no remaining autonomous substantive L2 task**. Only the recurring governance controls above remain event-driven.
+
+Execution is therefore correctly **WAITING**, not BLOCKED globally, on these external conditions:
+
+1. `TSK-0435` — owner-provided fresh reachable Ubuntu 24.04 LTS AdGuard/DNS VM in Azure `westeurope`.
+2. `TSK-0438` — current provider-authorised UseSafeWeb.com registrar/DNS control and renewal/expiry evidence.
+3. `TSK-0483` and dependent live infrastructure work — actual reachable resolver/target environment.
+4. The explicit 26-task owner legal-work hold remains deferred through 2027-08-27 unless reactivated earlier; it still prevents LG-03 PASS for real-participant activation where the held evidence is required.
+
 ## Runtime safeguards
 
 - Runtime states are only `TODO`, `WAITING`, `BLOCKED`, `PASS`; no persistent RUNNING/claim/lease state.
@@ -95,7 +114,4 @@ Current preserved readiness facts:
 
 ## Exact next execution path
 
-1. Continue independent eligible non-deferred LG-03 preparation while `TSK-0435`, `TSK-0438` and target-environment work wait.
-2. Reconcile existing canonical artifacts before creating duplicates; mark PASS only where every current acceptance criterion is directly evidenced.
-3. Recompute eligibility after every confirmed durable mutation.
-4. Do not recruit/activate real participants until LG-03 and LG-04 PASS.
+Resume governed execution when any waiting condition changes. Highest-priority technical resume condition is the `TSK-0435` owner VM handoff; domain-control evidence for `TSK-0438` may be provided independently. On resume, reread this runtime checkpoint, MANIFEST/WBS/dependencies and the new target/provider evidence, then recompute eligibility before mutation.
