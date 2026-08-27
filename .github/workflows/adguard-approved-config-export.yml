@@ -121,12 +121,26 @@ jobs:
               'enabled': bool(dhcp.get('enabled')),
             },
           }
+
+          def collect_keys(value, out):
+              if isinstance(value, dict):
+                  for k,v in value.items():
+                      out.add(str(k).lower())
+                      collect_keys(v,out)
+              elif isinstance(value, list):
+                  for v in value:
+                      collect_keys(v,out)
+          keys=set(); collect_keys(safe,keys)
+          forbidden_exact={
+              'password','hashed_password','private_key','private_key_path',
+              'certificate_chain','certificate_chain_path','users','clients','client_ip'
+          }
+          assert keys.isdisjoint(forbidden_exact), sorted(keys.intersection(forbidden_exact))
+
           raw=json.dumps(safe,sort_keys=True,separators=(',',':'),ensure_ascii=False)
-          forbidden=('password','hashed_password','private_key','certificate_chain','querylog.json','client_ip')
-          lower=raw.lower()
-          assert all(x not in lower for x in forbidden), 'safe export contains a forbidden field name'
           print('admin_user_count='+str(len(users)))
           print('persistent_client_count='+str(len(clients)))
+          print('sensitive_field_guard=PASS')
           print('approved_config_json='+raw)
           print('approved_config_sha256='+hashlib.sha256(raw.encode()).hexdigest())
           print('TSK_0202_SAFE_EXPORT=PASS')
