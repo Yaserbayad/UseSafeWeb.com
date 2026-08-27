@@ -49,7 +49,7 @@ LG-03 Azure/AdGuard/DNS/TLS/privacy acceptance -> DNS endpoint/platform mechanis
 
 ## 4.6 Legal/safety gate path
 
-UK representative/Article-27 and ICO route -> actual data flow/configuration -> final LIA/DPIA/notices -> Experiment 1 authorization -> post-validation product data model -> architecture privacy/security controls -> integrated privacy/security acceptance -> pilot/production updates -> incident/rights/retention/vendor/legal monitoring -> locale/market-specific LG-16 -> Year-1 reconciliation.
+OWNER LEGAL HOLD (2026-08-27 to 2027-08-27 unless reactivated earlier): UK representative/Article-27, ICO, DPIA/LIA/legal-notice/terms/tax-regulatory work is DEFERRED/WAITING while eligible technical privacy/security/infrastructure readiness continues. Real-participant Experiment 1 authorization still requires LG-03 PASS, so unresolved mandatory legal evidence remains a gate blocker rather than being treated as complete. After reactivation/resolution: Experiment 1 authorization -> post-validation product data model -> architecture privacy/security controls -> integrated privacy/security acceptance -> pilot/production updates -> incident/rights/retention/vendor/legal monitoring -> locale/market-specific LG-16 -> Year-1 reconciliation.
 
 ## 4.7 Parallel work rules
 

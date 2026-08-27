@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | Business/product evaluation | PASS / phases 1-42 complete | Authoritative project record; MODIFY - proceed to validation, not launch. |
 | Final planning architecture | Candidate amended and deterministically revalidated | 2026-08-27 owner technical/commercial decisions incorporated; structural validator and targeted semantic audit PASS; still not owner-frozen or canonical until explicit TSK-0017 owner freeze. |
-| Validation readiness LG-03 | IN PROGRESS / WAITING behind plan freeze | Legal/ICO and Azure/AdGuard/endpoint/final notice/DPIA evidence remain. |
+| Validation readiness LG-03 | IN PROGRESS / WAITING behind plan freeze | Legal/regulatory/compliance work is OWNER-DEFERRED until 2027-08-27 or earlier explicit reactivation; technical Azure/AdGuard/endpoint/privacy/security readiness may continue after freeze. The legal hold is not PASS and does not by itself authorize real participants. |
 | Experiment 1 protocol | Designed | Execution/recruitment unauthorized until LG-03 and LG-04 PASS. |
 | Integrated product definition/build | WAITING | Requires positive LG-05, then LG-06/LG-07. |
 | Integrated pilot | WAITING | Requires LG-09. |
@@ -21,13 +21,18 @@
 
 **TSK-0017 - Review and freeze or return the fully amended final candidate for bounded rework.** This is HUMAN_ONLY. The 2026-08-27 technical/commercial amendment does not itself freeze, launch, deploy product code, enable supporter payments, activate real participants, rebuild trackers, or authorize paid acquisition.
 
+
+### 8.2A Owner legal/regulatory/compliance work hold
+
+Effective 2026-08-27, the owner explicitly placed identified legal/regulatory/compliance planning tasks on hold through 2027-08-27 unless explicitly reactivated earlier. In the WBS these tasks use `Plan_Status=DEFERRED` and `Execution_State=WAITING` and carry the tag `OWNER_LEGAL_HOLD_2026-08-27`. Historical `PASS` evidence is not rewritten. Technical privacy, security, safeguarding, reliability, and infrastructure controls remain active. The hold is a planning/timing instruction only; it is not completion, exemption evidence, a waiver, or legal-clearance proof. Any gate that actually requires unresolved legal evidence remains unable to PASS for the corresponding real-participant/public action until the evidence is resolved or current verified evidence establishes non-applicability.
+
 ### 8.3 Exact post-freeze sequence
 
 1. `TSK-0017` - Owner freezes the exact audited modular planning system, identified by ZIP/tree SHA-256, manifest schema/version, and accepted audit result.
 2. `TSK-0009` - After explicit publication authority, publish the complete approved `Plans/` tree to GitHub `main` without altering unrelated state.
 3. `TSK-0011` - Fetch/read back the published `Plans/` tree, compare the complete file set and every checksum in `Plans/SHA256SUMS.txt`, and capture commit/tree evidence. Any mismatch blocks ordinary execution.
 4. `TSK-0010` - Update canonical `CURRENT_STATE.md` to reference `Plans/Master/MASTER_PLAN.md`, `Plans/Master/MANIFEST.yaml`, the publication commit/checksum set, the accountless/recovery decisions, and the actual LG-03 (legacy G-02) execution state.
-5. Recompute eligibility from the verified canonical modular system and current checkpoint; resume only already-authorized LG-03 readiness work.
+5. Recompute eligibility from the verified canonical modular system and current checkpoint; resume eligible non-legal LG-03 technical/privacy/security/operational readiness work while OWNER_LEGAL_HOLD_2026-08-27 tasks remain DEFERRED/WAITING until 2027-08-27 or earlier explicit owner reactivation. The hold itself does not satisfy LG-03 real-participant legal evidence.
 6. `TSK-0012` / `TSK-0013` - Regenerate/reconcile ClickUp and optional Monday only after canonical publication/read-back; they remain derived.
 
 `Generated/MASTER_PLAN_FULL.md` is never the publication authority by itself and must not be used as a substitute for the modular source set.

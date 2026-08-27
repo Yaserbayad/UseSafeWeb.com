@@ -261,3 +261,11 @@ The targeted checks cover: gated AI autonomy; owner-provided Azure VM boundary; 
 
 The candidate is technically/commercially amended and internally consistent for owner review. It remains **NOT OWNER-FROZEN / NOT CANONICAL**. The next authority action after GitHub publication/read-back of this amended candidate remains `TSK-0017`: explicit owner freeze or bounded return for rework.
 
+## Owner legal/regulatory/compliance work hold — 2026-08-27
+
+- Explicit owner instruction: place identified legal/regulatory/compliance planning work on hold for one year, through **2027-08-27**, unless explicitly reactivated earlier.
+- WBS representation: affected current/future tasks use `Plan_Status=DEFERRED` and `Execution_State=WAITING`; no task is marked PASS merely because it is deferred.
+- Historical completed legal/privacy analysis remains preserved as historical PASS; evidence is not fabricated or invalidated solely by the hold.
+- Technical privacy/security/safeguarding/reliability/infrastructure work remains active.
+- Gate preservation: LG-03 and other real-participant/public-action gates do not treat the owner hold as legal evidence or clearance; where current legal evidence is actually required, the gate remains unresolved until evidence or verified non-applicability exists.
+- Automatic review point: 2027-08-27, implemented in the WBS annual review timing and task notes.

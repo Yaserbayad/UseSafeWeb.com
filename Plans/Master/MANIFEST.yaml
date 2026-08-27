@@ -4,7 +4,7 @@ canonical_root: Plans/Master
 source_plan:
   name: UseSafeWeb_Master_Plan_FINAL.md
   sha256: 04fe68fe4e922322cb878c3c35f97e0b5b4862a333df4c313cbfc2b359ebfc1e
-  status: 2.0-final-candidate / OWNER_TECHNICAL_COMMERCIAL_AMENDMENT_APPLIED / post-amendment deterministic validation PASS / not yet owner-frozen or canonical
+  status: 2.0-final-candidate / OWNER_TECHNICAL_COMMERCIAL_AMENDMENT_APPLIED / OWNER_LEGAL_HOLD_APPLIED_2026-08-27 / post-hold deterministic validation PASS / not yet owner-frozen or canonical
 migration_prompt:
   name: UseSafeWeb_Master_Plan_Modularization_Prompt(1).txt
   sha256: 49031063a84f9b56ed98b5b07782f1d9818b01b84e0761d3c48018fc07ef5e5b
