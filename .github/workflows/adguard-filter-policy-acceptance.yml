@@ -1,0 +1,175 @@
+name: Verify AdGuard filtering policy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/adguard-filter-policy-acceptance.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - name: Verify TSK-0406 policy, exception, and rollback
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          sudo -n true
+          systemctl is-active --quiet AdGuardHome.service
+
+          secret='/var/lib/usesafeweb/adguard/admin.env'
+          [[ "$(sudo stat -c '%a %U:%G' "$secret")" == '600 root:root' ]]
+          username="$(sudo awk -F= '$1=="ADGUARD_ADMIN_USER" {sub(/^[^=]*=/,""); print; exit}' "$secret")"
+          password="$(sudo awk -F= '$1=="ADGUARD_ADMIN_PASSWORD" {sub(/^[^=]*=/,""); print; exit}' "$secret")"
+          [[ -n "$username" && -n "$password" ]]
+          base='http://127.0.0.1:3000/control'
+
+          curl --silent --show-error --fail --max-time 10 --user "$username:$password" "$base/filtering/status" -o /tmp/usw-filter-before.json
+          python3 - <<'PY'
+          import json
+          s=json.load(open('/tmp/usw-filter-before.json',encoding='utf-8'))
+          active=[x.get('url') for x in (s.get('filters') or []) if x.get('enabled')]
+          inactive=[x.get('url') for x in (s.get('filters') or []) if not x.get('enabled')]
+          assert s.get('enabled') is True, s.get('enabled')
+          assert active == ['https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt'], active
+          assert 'https://adguardteam.github.io/HostlistsRegistry/assets/filter_2.txt' in inactive, inactive
+          assert (s.get('whitelist_filters') or []) == [], s.get('whitelist_filters')
+          assert (s.get('user_rules') or []) == [], 'unexpected pre-existing user rules'
+          json.dump({'rules':s.get('user_rules') or []},open('/tmp/usw-filter-restore.json','w',encoding='utf-8'),separators=(',',':'))
+          print('baseline_filtering_enabled=true')
+          print('baseline_active_filter_count=1')
+          print('baseline_active_filter=AdGuard_DNS_filter')
+          print('baseline_whitelist_filter_count=0')
+          print('baseline_user_rule_count=0')
+          PY
+
+          test_domain="usesafeweb-policy-$RANDOM-$RANDOM.invalid"
+          printf '%s' "$test_domain" > /tmp/usw-filter-test-domain
+
+          check_host() {
+            curl --silent --show-error --fail --max-time 10 --user "$username:$password" \
+              --get --data-urlencode "name=$test_domain" --data-urlencode 'qtype=A' \
+              "$base/filtering/check_host" -o "$1"
+          }
+
+          check_host /tmp/usw-filter-check-baseline.json
+          python3 - <<'PY'
+          import json
+          r=json.load(open('/tmp/usw-filter-check-baseline.json',encoding='utf-8'))
+          assert r.get('reason') == 'NotFilteredNotFound', r
+          print('synthetic_baseline_reason=NotFilteredNotFound')
+          PY
+
+          python3 - <<'PY'
+          import json
+          d=open('/tmp/usw-filter-test-domain',encoding='utf-8').read().strip()
+          json.dump({'rules':['||'+d+'^']},open('/tmp/usw-filter-block.json','w',encoding='utf-8'),separators=(',',':'))
+          json.dump({'rules':['||'+d+'^','@@||'+d+'^']},open('/tmp/usw-filter-allow.json','w',encoding='utf-8'),separators=(',',':'))
+          PY
+
+          mutated=0
+          cleanup() {
+            if [[ "$mutated" == '1' ]]; then
+              curl --silent --show-error --fail --max-time 10 --user "$username:$password" \
+                --header 'Content-Type: application/json' --data-binary @/tmp/usw-filter-restore.json \
+                "$base/filtering/set_rules" >/dev/null 2>&1 || true
+            fi
+            rm -f /tmp/usw-filter-before.json /tmp/usw-filter-restore.json /tmp/usw-filter-test-domain \
+              /tmp/usw-filter-check-baseline.json /tmp/usw-filter-block.json /tmp/usw-filter-allow.json \
+              /tmp/usw-filter-check-block.json /tmp/usw-filter-check-allow.json /tmp/usw-filter-check-restored.json \
+              /tmp/usw-filter-after.json
+          }
+          trap cleanup EXIT
+
+          mutated=1
+          curl --silent --show-error --fail --max-time 10 --user "$username:$password" \
+            --header 'Content-Type: application/json' --data-binary @/tmp/usw-filter-block.json \
+            "$base/filtering/set_rules" >/dev/null
+          check_host /tmp/usw-filter-check-block.json
+          python3 - <<'PY'
+          import json
+          r=json.load(open('/tmp/usw-filter-check-block.json',encoding='utf-8'))
+          assert r.get('reason') == 'FilteredBlackList', r
+          print('synthetic_block_reason=FilteredBlackList')
+          PY
+
+          curl --silent --show-error --fail --max-time 10 --user "$username:$password" \
+            --header 'Content-Type: application/json' --data-binary @/tmp/usw-filter-allow.json \
+            "$base/filtering/set_rules" >/dev/null
+          check_host /tmp/usw-filter-check-allow.json
+          python3 - <<'PY'
+          import json
+          r=json.load(open('/tmp/usw-filter-check-allow.json',encoding='utf-8'))
+          assert r.get('reason') == 'NotFilteredWhiteList', r
+          print('synthetic_exception_reason=NotFilteredWhiteList')
+          PY
+
+          curl --silent --show-error --fail --max-time 10 --user "$username:$password" \
+            --header 'Content-Type: application/json' --data-binary @/tmp/usw-filter-restore.json \
+            "$base/filtering/set_rules" >/dev/null
+          mutated=0
+          check_host /tmp/usw-filter-check-restored.json
+          curl --silent --show-error --fail --max-time 10 --user "$username:$password" "$base/filtering/status" -o /tmp/usw-filter-after.json
+          unset password
+
+          python3 - <<'PY'
+          import json
+          before=json.load(open('/tmp/usw-filter-before.json',encoding='utf-8'))
+          after=json.load(open('/tmp/usw-filter-after.json',encoding='utf-8'))
+          restored=json.load(open('/tmp/usw-filter-check-restored.json',encoding='utf-8'))
+          assert restored.get('reason') == 'NotFilteredNotFound', restored
+          assert (after.get('user_rules') or []) == (before.get('user_rules') or []) == []
+          assert after.get('enabled') is True
+          assert [(x.get('url'),bool(x.get('enabled'))) for x in after.get('filters') or []] == [(x.get('url'),bool(x.get('enabled'))) for x in before.get('filters') or []]
+          assert (after.get('whitelist_filters') or []) == (before.get('whitelist_filters') or []) == []
+          print('synthetic_rollback_reason=NotFilteredNotFound')
+          print('user_rules_restored_exactly=true')
+          print('filter_list_state_unchanged=true')
+          PY
+
+          sudo python3 - /opt/AdGuardHome/AdGuardHome.yaml <<'PY'
+          import sys, yaml
+          with open(sys.argv[1],encoding='utf-8') as f: d=yaml.safe_load(f)
+          dns=d.get('dns') or {}; fs=d.get('filtering') or {}
+          filters=d.get('filters') or []
+          active=[x.get('url') for x in filters if x.get('enabled')]
+          assert fs.get('protection_enabled') is True
+          assert fs.get('filtering_enabled') is True
+          assert fs.get('blocking_mode') == 'default'
+          assert active == ['https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt'], active
+          assert (d.get('whitelist_filters') or []) == []
+          assert (d.get('user_rules') or []) == []
+          assert list(dns.get('upstream_dns') or []) == ['https://dns10.quad9.net/dns-query']
+          assert bool((dns.get('edns_client_subnet') or {}).get('enabled')) is False
+          assert (d.get('querylog') or {}).get('enabled') is False
+          assert dns.get('anonymize_client_ip') is True
+          assert (d.get('statistics') or {}).get('enabled') is False
+          print('persisted_policy_matches_v1=true')
+          print('privacy_upstream_invariants_preserved=true')
+          PY
+
+          python3 - <<'PY'
+          import random, socket, struct
+          name='example.com'
+          q=b''.join(bytes([len(x)])+x.encode() for x in name.split('.'))+b'\x00'
+          pkt=struct.pack('!HHHHHH',random.randrange(0,65536),0x0100,1,0,0,0)+q+struct.pack('!HH',1,1)
+          s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.settimeout(4); s.sendto(pkt,('127.0.0.1',53))
+          r,_=s.recvfrom(4096); s.close()
+          rcode=struct.unpack('!H',r[2:4])[0] & 0xF
+          answers=struct.unpack('!H',r[6:8])[0]
+          assert rcode == 0 and answers > 0, (rcode,answers)
+          print('post_rollback_example_resolution=true')
+          print('post_rollback_example_answer_count='+str(answers))
+          PY
+
+          echo 'TSK_0406_ACCEPTANCE=PASS'
