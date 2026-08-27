@@ -90,6 +90,36 @@ Final accepted result:
 
 ACC-0435 is fully satisfied. The earlier sudo-run SSH-environment failure is retained in the evidence artifact for auditability and is superseded for acceptance by the clean rerun.
 
+### TSK-0437 — apply host security baseline
+
+**State: WAITING — target execution required; design/artifact complete.**
+
+The exact frozen WBS row is `A3 / AUTO_ALLOWED`, HIGH, critical-path, and requires idempotent/reversible execution. ACC-0437 requires: only required ports/services exposed; restricted admin access; current patches applied; baseline evidence captured.
+
+Prepared artifact:
+
+- `infrastructure/adguard-server/harden-host.sh`
+- GitHub commit: `60f1ab7eec5ca1ba232868594ac53bf945aee7e0`
+- GitHub blob: `fa93e592d8fd2ad4cd81cb4531dbfd6e3191fe30`
+- Local SHA-256 of byte-identical tested content: `3bf342d7181126d8cafd43b5a41b4e10447ae10241b1f1adef9aa8e2733b4313`
+- `bash -n`: PASS.
+- Negative/fail-closed sandbox test: PASS — the script refused a non-target environment instead of applying changes.
+- ShellCheck was not available in the sandbox; an attempted sandbox install exceeded the tool execution window, so no ShellCheck result is claimed.
+
+The script is grounded in current Ubuntu documentation for UFW, unattended security updates and OpenSSH configuration. It is intentionally bounded: it applies available Ubuntu upgrades; enables scheduled unattended security updates; requires proof that the current SSH session authenticated with a public key before disabling password/keyboard-interactive/direct-root SSH; uses an early OpenSSH drop-in with syntax/effective-value checks and rollback on SSH/UFW application failure; enables UFW default-deny inbound/default-allow outbound while retaining SSH only; disables UFW logging at this stage; audits effective SSH settings, UFW rules, pending upgrades and external listeners. It refuses to layer UFW when `nftables.service` is active.
+
+**Deterministic target action:** from the existing non-root SSH session, execute:
+
+`bash harden-host.sh --apply`
+
+Do **not** prepend `sudo`; the wrapper intentionally captures the original SSH session context and then elevates only the bounded apply stage.
+
+Stable result semantics:
+
+- `OVERALL=PASS` → bind output as target evidence and promote TSK-0437 to PASS after GitHub persistence/read-back.
+- `OVERALL=WAITING_REBOOT` → patches/configuration are retained as valid partial work; reboot the VM, reconnect, run `sudo bash harden-host.sh --audit`, and promote only after clean PASS.
+- `OVERALL=FAIL` → do not continue dependent host work; preserve the non-secret output, classify the exact failure, and correct only the proven cause.
+
 ## Preserved PASS preparation evidence
 
 - `TSK-0434`, `TSK-0436` — owner-control-plane exclusions verified; actual host/security verification remains separate.
@@ -103,16 +133,14 @@ ACC-0435 is fully satisfied. The earlier sudo-run SSH-environment failure is ret
 - `TSK-0169` — support/false-positive intake — `EXPERIMENT_01_SUPPORT_FALSE_POSITIVE_INTAKE.md`, blob `9fab42f97e3e96023de89a8ed266acc21c0f06ab`.
 - Current recurring governance checkpoint evidence remains in `LG_03_CHECKPOINT_2026-08-27.md`.
 
-## Newly unlocked technical state
+## Current technical state
 
 - `TSK-0435`: PASS.
 - `TSK-0438`: PASS.
-- `TSK-0437` — apply host security baseline: **TODO / eligible**; target is now accepted and reachable.
-- `TSK-0440` — select pilot encrypted-DNS hostname/path: **TODO / eligible**; VM and domain prerequisites are satisfied.
+- `TSK-0437`: WAITING only for execution/verification of the already-published target hardening artifact.
+- `TSK-0440` — select pilot encrypted-DNS hostname/path: **TODO / eligible**; VM and domain prerequisites are satisfied and this task is independent of the TSK-0437 target execution wait.
 - `TSK-0439`, `TSK-0441`, `TSK-0442`, `TSK-0443`: remain dependency-driven downstream work.
-- `TSK-0483` — resolver abuse/amplification protection: target-environment prerequisite is now available; execute when its remaining WBS dependencies permit.
-
-Security/host hardening takes precedence over endpoint design under the project priority rules.
+- `TSK-0483` — resolver abuse/amplification protection: target environment exists, but current selection still follows security/dependency/gate semantics.
 
 ## Runtime safeguards
 
@@ -125,4 +153,4 @@ Security/host hardening takes precedence over endpoint design under the project 
 
 ## Current execution direction
 
-Proceed with `TSK-0437` host-security baseline first, persisting a stable outcome before selecting the next eligible task. Then recompute eligibility; `TSK-0440` is independently available unless a new current security/technical blocker changes priority.
+While TSK-0437 awaits target execution, continue the independently eligible TSK-0440 encrypted-DNS hostname/path selection. After every durable result, recompute WBS eligibility before selecting later work.
