@@ -19,7 +19,7 @@ jobs:
     runs-on: [self-hosted, linux, x64]
     timeout-minutes: 5
     steps:
-      - name: Export only governed non-sensitive settings
+      - name: Export only governed non-sensitive approved settings
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -49,10 +49,30 @@ jobs:
           for value in binds:
               ip=ipaddress.ip_address(value)
               assert ip.is_loopback, f'non-loopback bind is outside current approved pre-public baseline: {value}'
-          assert (dns.get('ratelimit_whitelist') or []) == [], 'rate-limit whitelist must stay empty for approved baseline'
-          assert whitelists == [], 'whitelist filters must stay empty for approved baseline'
-          assert rules == [], 'baseline user rules must stay empty for approved baseline'
-          assert clients == [], 'persistent client identifiers are not part of approved exported baseline'
+
+          # Current approved pre-public invariants from direct PASS evidence.
+          assert http.get('address') == '127.0.0.1:3000', http.get('address')
+          assert list(dns.get('upstream_dns') or []) == ['https://dns10.quad9.net/dns-query']
+          assert str(dns.get('upstream_dns_file') or '') == ''
+          assert list(dns.get('fallback_dns') or []) == []
+          assert bool((dns.get('edns_client_subnet') or {}).get('enabled')) is False
+          assert bool(dns.get('anonymize_client_ip')) is True
+          assert int(dns.get('ratelimit')) == 20
+          assert int(dns.get('ratelimit_subnet_len_ipv4')) == 24
+          assert int(dns.get('ratelimit_subnet_len_ipv6')) == 56
+          assert (dns.get('ratelimit_whitelist') or []) == []
+          assert bool(dns.get('refuse_any')) is True
+          assert filtering.get('protection_enabled') is True
+          assert filtering.get('filtering_enabled') is True
+          assert filtering.get('blocking_mode') == 'default'
+          assert querylog.get('enabled') is False
+          assert querylog.get('file_enabled') is False
+          assert statistics.get('enabled') is False
+          assert whitelists == []
+          assert rules == []
+          assert clients == []
+          active=[x.get('url') for x in filters if x.get('enabled')]
+          assert active == ['https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt'], active
 
           edns=dns.get('edns_client_subnet') or {}
           safe={
@@ -140,6 +160,7 @@ jobs:
           raw=json.dumps(safe,sort_keys=True,separators=(',',':'),ensure_ascii=False)
           print('admin_user_count='+str(len(users)))
           print('persistent_client_count='+str(len(clients)))
+          print('approved_invariants=PASS')
           print('sensitive_field_guard=PASS')
           print('approved_config_json='+raw)
           print('approved_config_sha256='+hashlib.sha256(raw.encode()).hexdigest())
