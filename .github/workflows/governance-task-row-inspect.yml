@@ -25,24 +25,28 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Print candidate rows and direct predecessors
+      - name: Print TSK-0407 successors and TSK-0429 comparison
         shell: bash
         run: |
           set -Eeuo pipefail
           [[ "$(hostname -s)" == "adguardvm" ]]
           python3 - <<'PY'
-          import csv, json
+          import csv, json, re
           path='Plans/Master/WBS/master-wbs.csv'
           with open(path, newline='', encoding='utf-8-sig') as f:
               rows=list(csv.DictReader(f))
           by_id={r.get('Task_ID','').strip():r for r in rows if r.get('Task_ID','').strip()}
-          wanted={'TSK-0407','TSK-0429'}
-          for task_id in list(wanted):
-              r=by_id[task_id]
-              for dep in (r.get('Dependencies') or '').split(';'):
-                  dep=dep.strip()
-                  if dep: wanted.add(dep)
+          successor=[]
+          for r in rows:
+              deps=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
+              if 'TSK-0407' in deps:
+                  successor.append(r)
+          wanted={'TSK-0429'}
+          for r in successor:
+              wanted.add(r['Task_ID'].strip())
+              wanted.update(x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip())
           for task_id in sorted(wanted):
               assert task_id in by_id, task_id
               print(task_id.replace('-','_')+'_WBS_ROW='+json.dumps(by_id[task_id], sort_keys=True, ensure_ascii=False))
+          print('TSK_0407_DIRECT_SUCCESSOR_IDS='+','.join(r['Task_ID'].strip() for r in successor))
           PY
