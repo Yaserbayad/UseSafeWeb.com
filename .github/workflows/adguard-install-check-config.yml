@@ -1,0 +1,50 @@
+name: Diagnose AdGuard initial configuration
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/adguard-install-check-config.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - name: Probe documented install/check_config without mutation
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          payload='{"web":{"ip":"127.0.0.1","port":3000,"autofix":false},"dns":{"ip":"127.0.0.1","port":53,"autofix":false},"set_static_ip":false,"language":"en"}'
+          code="$(curl --silent --show-error --output /tmp/agh-check-config.json --write-out '%{http_code}' \
+            --max-time 10 --header 'Content-Type: application/json' --data-binary "$payload" \
+            http://127.0.0.1:3000/control/install/check_config || true)"
+          echo "check_config_http=${code}"
+          python3 - <<'PY'
+          import json
+          p='/tmp/agh-check-config.json'
+          try:
+              data=json.load(open(p,encoding='utf-8'))
+          except Exception as e:
+              print('check_config_body_unparseable='+type(e).__name__)
+          else:
+              # Response contains address/status diagnostics only; redact any
+              # unexpected key that looks credential-like before printing.
+              def scrub(v):
+                  if isinstance(v,dict):
+                      return {k: ('[REDACTED]' if any(x in k.lower() for x in ('password','token','secret')) else scrub(val)) for k,val in v.items()}
+                  if isinstance(v,list): return [scrub(x) for x in v]
+                  return v
+              print(json.dumps(scrub(data),sort_keys=True,separators=(',',':')))
+          PY
+          [[ "$code" == '200' ]]
+          echo 'CHECK_CONFIG=PASS'
