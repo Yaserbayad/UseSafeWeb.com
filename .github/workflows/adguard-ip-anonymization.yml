@@ -28,7 +28,7 @@ jobs:
       - name: Execute TSK-0206 IP anonymisation
         shell: bash
         env:
-          EXPECTED_SCRIPT_BLOB: c6881b1c08b2ba7c70546f9d89547ec70ba661fd
+          EXPECTED_SCRIPT_BLOB: 6ef152c02b154d4aaba4e851aa43f8e13f15e823
         run: |
           set -Eeuo pipefail
           [[ "$(hostname -s)" == "adguardvm" ]]
