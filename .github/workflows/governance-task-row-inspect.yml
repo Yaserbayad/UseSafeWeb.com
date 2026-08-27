@@ -25,7 +25,7 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Print TSK-0406 successors and TSK-0429 comparison
+      - name: Print TSK-0202 contract, dependencies, and direct successors
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -36,18 +36,19 @@ jobs:
           with open(path, newline='', encoding='utf-8-sig') as f:
               rows=list(csv.DictReader(f))
           by_id={r.get('Task_ID','').strip():r for r in rows if r.get('Task_ID','').strip()}
+          target='TSK-0202'
+          assert target in by_id, target
           successor=[]
           for r in rows:
               deps=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
-              if 'TSK-0406' in deps:
+              if target in deps:
                   successor.append(r)
-          wanted={'TSK-0429'}
+          wanted={target,'TSK-0429'}
+          wanted.update(x.strip() for x in (by_id[target].get('Dependencies') or '').split(';') if x.strip())
           for r in successor:
               wanted.add(r['Task_ID'].strip())
-              wanted.update(x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip())
-          wanted.update(x.strip() for x in (by_id['TSK-0429'].get('Dependencies') or '').split(';') if x.strip())
           for task_id in sorted(wanted):
               assert task_id in by_id, task_id
               print(task_id.replace('-','_')+'_WBS_ROW='+json.dumps(by_id[task_id], sort_keys=True, ensure_ascii=False))
-          print('TSK_0406_DIRECT_SUCCESSOR_IDS='+','.join(r['Task_ID'].strip() for r in successor))
+          print('TSK_0202_DIRECT_SUCCESSOR_IDS='+','.join(r['Task_ID'].strip() for r in successor))
           PY
