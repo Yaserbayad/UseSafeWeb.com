@@ -1,0 +1,102 @@
+name: Inspect AdGuard filtering baseline
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/adguard-filter-policy-preflight.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  inspect:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - name: Read-only TSK-0406 filtering preflight
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          sudo -n true
+          systemctl is-active --quiet AdGuardHome.service
+
+          secret='/var/lib/usesafeweb/adguard/admin.env'
+          [[ "$(sudo stat -c '%a %U:%G' "$secret")" == '600 root:root' ]]
+          username="$(sudo awk -F= '$1=="ADGUARD_ADMIN_USER" {sub(/^[^=]*=/,""); print; exit}' "$secret")"
+          password="$(sudo awk -F= '$1=="ADGUARD_ADMIN_PASSWORD" {sub(/^[^=]*=/,""); print; exit}' "$secret")"
+          [[ -n "$username" && -n "$password" ]]
+          base='http://127.0.0.1:3000/control'
+          curl --silent --show-error --fail --max-time 10 --user "$username:$password" "$base/filtering/status" -o /tmp/usw-filter-status.json
+          unset password
+
+          python3 - <<'PY'
+          import json
+          s=json.load(open('/tmp/usw-filter-status.json',encoding='utf-8'))
+          filters=s.get('filters') or []
+          whitelists=s.get('whitelist_filters') or []
+          rules=s.get('user_rules') or []
+          print('api_filtering_enabled='+str(bool(s.get('enabled'))).lower())
+          print('api_filter_count='+str(len(filters)))
+          print('api_enabled_filter_count='+str(sum(bool(x.get('enabled')) for x in filters)))
+          print('api_whitelist_filter_count='+str(len(whitelists)))
+          print('api_user_rule_count='+str(len(rules)))
+          print('api_filter_refresh_interval='+str(s.get('interval')))
+          for i,x in enumerate(filters,1):
+              print(f"api_filter_{i}_enabled={str(bool(x.get('enabled'))).lower()}")
+              print(f"api_filter_{i}_name={x.get('name','')}")
+              print(f"api_filter_{i}_url={x.get('url','')}")
+              if 'rules_count' in x:
+                  print(f"api_filter_{i}_rules_count={x.get('rules_count')}")
+          PY
+
+          sudo python3 - /opt/AdGuardHome/AdGuardHome.yaml <<'PY'
+          import sys, yaml
+          with open(sys.argv[1],encoding='utf-8') as f: d=yaml.safe_load(f)
+          dns=d.get('dns') or {}
+          fs=d.get('filtering') or {}
+          filters=d.get('filters') or []
+          whitelists=d.get('whitelist_filters') or []
+          rules=d.get('user_rules') or []
+          exact='https://dns10.quad9.net/dns-query'
+          print('persisted_protection_enabled='+str(bool(fs.get('protection_enabled'))).lower())
+          print('persisted_filtering_enabled='+str(bool(fs.get('filtering_enabled'))).lower())
+          print('persisted_blocking_mode='+str(fs.get('blocking_mode')))
+          print('persisted_filter_count='+str(len(filters)))
+          print('persisted_enabled_filter_count='+str(sum(bool(x.get('enabled')) for x in filters)))
+          print('persisted_whitelist_filter_count='+str(len(whitelists)))
+          print('persisted_user_rule_count='+str(len(rules)))
+          for i,x in enumerate(filters,1):
+              print(f"persisted_filter_{i}_enabled={str(bool(x.get('enabled'))).lower()}")
+              print(f"persisted_filter_{i}_name={x.get('name','')}")
+              print(f"persisted_filter_{i}_url={x.get('url','')}")
+          assert list(dns.get('upstream_dns') or []) == [exact]
+          assert bool((dns.get('edns_client_subnet') or {}).get('enabled')) is False
+          assert bool((d.get('querylog') or {}).get('enabled')) is False
+          assert bool(dns.get('anonymize_client_ip')) is True
+          assert bool((d.get('statistics') or {}).get('enabled')) is False
+          print('privacy_upstream_invariants_preserved=true')
+          PY
+
+          python3 - <<'PY'
+          import random, socket, struct
+          name='example.com'
+          q=b''.join(bytes([len(x)])+x.encode() for x in name.split('.'))+b'\x00'
+          pkt=struct.pack('!HHHHHH',random.randrange(0,65536),0x0100,1,0,0,0)+q+struct.pack('!HH',1,1)
+          s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.settimeout(4); s.sendto(pkt,('127.0.0.1',53))
+          r,_=s.recvfrom(4096); s.close()
+          flags=struct.unpack('!H',r[2:4])[0]
+          ancount=struct.unpack('!H',r[6:8])[0]
+          print('baseline_example_response=true')
+          print('baseline_example_rcode='+str(flags & 0xF))
+          print('baseline_example_answer_count='+str(ancount))
+          PY
+
+          rm -f /tmp/usw-filter-status.json
+          echo 'TSK_0406_PREFLIGHT=PASS'
