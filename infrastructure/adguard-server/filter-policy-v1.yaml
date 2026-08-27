@@ -1,0 +1,67 @@
+schema: usesafeweb.adguard.filter-policy/v1
+policy_version: 1.0.0
+status: active-baseline
+owner_task: TSK-0406
+acceptance_id: ACC-0406
+service: UseSafeWeb DNS
+
+rationale: >-
+  Use one maintained general-purpose DNS filter as the initial conservative baseline.
+  Do not stack additional blocklists without validation evidence because broader list
+  coverage increases false-positive and maintenance risk. DNS filtering is one safety
+  layer only and must not be represented as complete online safety.
+
+adguard:
+  protection_enabled: true
+  filtering_enabled: true
+  blocking_mode: default
+  refresh_interval_hours: 24
+  active_filters:
+    - name: AdGuard DNS filter
+      url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt
+  configured_but_inactive_filters:
+    - name: AdAway Default Blocklist
+      url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_2.txt
+      reason: Not part of conservative baseline v1; leave disabled unless later evidence justifies expansion.
+  whitelist_filters: []
+  baseline_user_rules: []
+
+privacy_and_upstream_invariants:
+  upstream: https://dns10.quad9.net/dns-query
+  ecs_enabled: false
+  persistent_query_logging_enabled: false
+  identifiable_client_statistics_enabled: false
+  client_ip_anonymization_enabled: true
+
+exception_path:
+  intake: EXPERIMENT_01_SUPPORT_FALSE_POSITIVE_INTAKE.md
+  rule: >-
+    Reproduce with privacy-safe evidence, confirm UseSafeWeb filtering is the cause,
+    apply the narrowest reversible allow exception only when needed, state the reduced
+    protection scope, retest the legitimate path and a blocked regression path, and
+    record closure without browsing history or raw query logs.
+  implementation: >-
+    Use an explicit AdGuard allow rule scoped to the minimum necessary domain/service
+    through the restricted authenticated administration path. Never disable the whole
+    filtering baseline to resolve one false positive.
+  rollback: Remove the exception and verify the prior user-rule set is restored exactly.
+
+claims_boundary:
+  checklist: PROTECTION_CLAIMS_CHECKLIST.md
+  prohibited_claim: complete safety
+  required_meaning: >-
+    DNS filtering operates at domain-resolution level; it does not inspect harmful
+    content inside an allowed site/app and does not replace parental, native, service,
+    safeguarding, or emergency-response controls.
+
+verification:
+  allowed_regression: Resolve example.com successfully with baseline state.
+  blocked_regression: Temporarily add an exact test block rule for example.com and verify it is filtered.
+  exception_regression: Add a narrower allow exception for the same test and verify normal resolution returns.
+  rollback_regression: Restore the exact pre-test user-rule set and verify normal resolution plus baseline invariants.
+  privacy: Do not enable query logging/statistics or retain participant DNS history for tests.
+
+change_control: >-
+  Changes to active lists, broad allowlists, protection/filtering enablement, blocking
+  behavior, privacy invariants, or the frozen upstream require the applicable governed
+  task, acceptance evidence, rollback proof, and canonical state update before reliance.
