@@ -70,13 +70,23 @@ Owner explicitly confirmed the domain-side owner task is complete, `UseSafeWeb.c
 
 **Owner handoff condition: SATISFIED. Task acceptance: WAITING ON DIRECT TARGET VERIFICATION.**
 
-Owner explicitly confirmed the fresh Ubuntu 24.04 LTS Azure VM has been created/completed and supplied hostname:
+Owner explicitly confirmed the fresh Ubuntu 24.04 LTS Azure VM has been created/completed and supplied hostname `srv.UseSafeWeb.com`. The owner-created-resource condition is no longer pending.
 
-`srv.UseSafeWeb.com`
+Direct acceptance still requires target evidence for Ubuntu baseline, Azure `westeurope` metadata, intended role/network exposure, and reachability through the actual deployment path.
 
-The owner-created-resource condition is no longer pending. Before `TSK-0435` can become PASS, the frozen acceptance still requires direct target evidence for Ubuntu baseline, Azure `westeurope` metadata, intended role/network exposure, and reachability through the actual deployment path. Current shell/network tooling in this ChatGPT environment could not independently resolve external hostnames, so that local resolver failure is classified as a tool/environment limitation and **not** contradictory evidence about `srv.UseSafeWeb.com`.
+Partial evidence now completed:
 
-No supported Azure/SSH/server connector is currently available in the connected toolset. `TSK-0435` therefore remains `WAITING` only for an executable target-verification path, not for owner provisioning.
+- `infrastructure/adguard-server/verify-handoff.sh` published on `main` in commit `982da5f4ec00f8670bf7c8ebadf7db8e9a38b132`.
+- Exact GitHub read-back blob: `0264b6ad15554fd289f4bdbf0ee49b9e959e7843`.
+- Local pre-publication syntax check: `bash -n` PASS against byte-identical content.
+- Local fail-closed test on a non-Azure/non-Ubuntu environment returned non-zero and correctly reported OS, IMDS, DNS, and remote-session failures instead of producing a false PASS.
+- Microsoft Azure IMDS usage in the script follows the current documented `169.254.169.254` endpoint, `Metadata:true`, `--noproxy '*'`, and API version `2025-04-07`.
+
+The verifier is read-only. It checks Ubuntu 24.04, Azure IMDS region/Linux metadata, expected hostname DNS mapping to the VM public address when available, current listener exposure, and SSH-session evidence. It deliberately omits subscription/resource identifiers and process/PID details from its output.
+
+Current execution limitation: no supported Azure/SSH/server connector is available in this ChatGPT toolset, and the shell environment cannot currently resolve external hosts. That local resolver failure is a tool/environment limitation, not contradictory evidence about `srv.UseSafeWeb.com`.
+
+`TSK-0435` remains `WAITING` only for execution of the published verifier through an actual target access path; no additional planning/design work is needed for this task.
 
 ## Preserved PASS preparation evidence
 
@@ -113,6 +123,6 @@ The following current preparation work remains PASS and durably evidenced:
 
 ## Exact next execution path
 
-1. Produce the smallest target-side verification artifact for `TSK-0435` so Ubuntu version, Azure region/metadata, hostname, exposure, and required service reachability can be checked without storing secrets.
-2. Execute that verification as soon as a supported target execution path exists; then persist/read-back `TSK-0435` PASS only if all acceptance criteria succeed.
-3. Immediately recompute eligibility; expected next tasks are `TSK-0437` and `TSK-0440`, followed by DNS/TLS and live resolver-security work in dependency order.
+1. Execute `infrastructure/adguard-server/verify-handoff.sh srv.UseSafeWeb.com` through an actual approved server access path.
+2. If and only if it returns `OVERALL=PASS`, persist/read-back `TSK-0435` PASS with the target output as TEST_RESULT evidence.
+3. Recompute eligibility immediately; expected next work is `TSK-0437` and `TSK-0440`, followed by DNS/TLS and resolver-security tasks in dependency order.
