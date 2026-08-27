@@ -1,0 +1,29 @@
+schema: usesafeweb.autonomy-policy-projection.v1
+authority: DERIVED_NON_AUTHORITATIVE
+governing_source: Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md
+task_authority_source: WBS/master-wbs.csv
+governing_loop:
+- UNDERSTAND
+- VERIFY_PREREQUISITES
+- EXECUTE
+- TEST
+- VERIFY
+- RECORD_EVIDENCE
+- UPDATE_STATE
+- CONTINUE
+failure_loop:
+- DIAGNOSE
+- CORRECT
+- RETEST
+- REVERIFY
+capability_counts:
+  A1: 57
+  A2: 49
+  A3: 497
+  A4: 38
+action_authority_counts:
+  AUTO_ALLOWED: 535
+  HUMAN_APPROVAL_REQUIRED: 49
+  HUMAN_ONLY: 57
+human_boundary: Owner/legal/strategic/identity/contract/spend/material-risk/irreversible actions remain bounded by Layer 5
+  and task Action_Authority.

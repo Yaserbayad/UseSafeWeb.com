@@ -1,0 +1,133 @@
+## 5. Layer 5 - AI Execution, Evidence & State Control
+
+### 5.1 Normal governed operating loop
+
+**READ CANONICAL STATE -> APPLY LATEST OWNER AUTHORITY -> DERIVE ELIGIBLE TASK -> CHECK DEPENDENCIES/GATE/TRIGGER -> CHECK ACTION AUTHORITY -> LOAD INPUTS/INTERFACES -> EXECUTE BOUNDED UNIT -> VERIFY ALL ACCEPTANCE -> CAPTURE DURABLE EVIDENCE -> ASSIGN TODO/PASS/WAITING/BLOCKED -> UPDATE CANONICAL STATE WHEN AUTHORIZED -> FETCH/REREAD/COMPARE -> RECONCILE PARENTS/DEPENDENCIES/TRACKER -> SELECT NEXT TASK.**
+
+No hidden chain-of-thought is evidence. Useful evidence is a source-cited analysis, artifact/version/checksum, observed target-environment output, test/review result, decision/approval, or read-back comparison that another authorized reviewer can inspect.
+
+### 5.2 AI capability and action authority
+
+| AI capability | Meaning |
+| --- | --- |
+| A0 | Human-only; AI may not perform. |
+| A1 | AI prepares/analyzes; human performs or approves the authoritative act. |
+| A2 | AI can execute preparation/technical action, but consequential action requires human authorization. |
+| A3 | AI executes and reports verified durable evidence. |
+| A4 | AI executes, verifies, recovers, and updates authorized state autonomously. |
+
+| Action authority | Meaning | Typical examples |
+| --- | --- | --- |
+| AUTO_ALLOWED | AI may act within current scope/access and must verify/report. | Research, drafts, code/tests in non-production, monitoring, analysis, reversible state computation. |
+| HUMAN_APPROVAL_REQUIRED | AI can prepare and may execute only after explicit approval for the specific consequential action. | Production deploy/change, public publishing/outreach, payment enablement, destructive data operation, domain/cloud consequential change. |
+| HUMAN_ONLY | The human/authorized professional performs or decides. | Owner freeze, strategic/pivot/stop/launch authorization, legal attestation/signature, contracts, identity/credentials/consent, material residual risk, large spend. |
+
+### 5.3 Deterministic eligibility rule
+
+- Use the latest owner decision and canonical current checkpoint; flag any required repository synchronization.
+- Consider only executable tasks whose lifecycle is active or whose explicit trigger allows preparation, whose hard dependencies PASS, and whose gate/authority/preconditions are satisfied.
+- Do not select WAITING/deferred/conditional work merely because it is valid future work.
+- Order eligible work by safety/legal/security blocker, current gate constraint, dependency-chain constraint, high customer value, then priority.
+- Execute one bounded task or coherent serial unit; verify and persist evidence before recomputing state.
+- A completed-evidence-incomplete predecessor cannot satisfy a successor demanding direct evidence.
+
+### 5.4 Evidence and PASS rules
+
+- Each task has VER-xxxx, EVD-xxxx and ACC-xxxx identifiers.
+- PASS requires every applicable acceptance criterion and interface contract to be supported by exact current evidence.
+- Evidence records source/environment/version/config/release/date/verifier/method/result/deviation/disposition and excludes secrets/personal/raw DNS data.
+- Producer self-evidence is independently checked where risk/quality warrants it.
+- If new evidence contradicts PASS, reopen the task/gate immediately; current target-environment evidence outranks old prose or local assumptions.
+- Historical completed-evidence-incomplete records remain traceable but do not become fabricated direct proof.
+
+
+### 5.4.1 Historical/disposition state clarifications
+
+- A historical task may retain execution `PASS` when its own completion is independently authoritative even if a historical predecessor is `COMPLETED_EVIDENCE_INCOMPLETE`/`WAITING`; that historical PASS does **not** transitively satisfy a future successor that requires direct predecessor evidence. New/future PASS decisions still require all applicable hard predecessor conditions and direct evidence.
+- `Plan_Status=NOT_APPLICABLE` with `Execution_State=PASS` means the **exclusion/disposition itself was verified**, not that the excluded capability was implemented.
+- Current `LG-xx` identifiers are authoritative gate identifiers. Any `G-xx` wording retained in legacy references is a historical alias only and must be resolved through the Gate Register before execution.
+
+### 5.5 Retry, idempotency, reversibility and recovery
+
+| Control | Rule |
+| --- | --- |
+| Retry | Classify permanent vs transient vs input/permission/dependency/acceptance failure. Retry only with new cause evidence; use bounded backoff for transient faults; no materially equivalent infinite retries. |
+| Idempotency | Detect existing state before change; repeat should be safe or explicitly rejected. Canonical writes, deployments, recovery, migrations, deletions and tracker sync require idempotency/reconciliation design. |
+| Reversibility | Classify reversible, controlled-reversible, or irreversible. Public/production/data/legal/spend actions need approval, backup/rollback/impact plan as applicable. |
+| Partial failure | Stop propagation, preserve evidence, restore safe state or mark uncertain/disabled, and never claim PASS. |
+| Recovery | Use approved rollback/restore/rebuild/runbook. For DNS platform failure, the production Ubuntu recovery path is the authoritative rebuild route after acceptance. |
+| Escalation | Trigger on authority gap, critical/high unresolved risk, source contradiction, irreversible action, material cost/privacy/security/scope impact, or acceptance failure after bounded diagnostic work. |
+
+### 5.6 Canonical write and checkpoint behavior
+
+- Before write: reread current canonical branch/path/revision; compare owner decision and expected base; refuse silent overwrite on conflict.
+- Write only when authority permits; use atomic or revision-checked update where available; include source/checksum/change record.
+- After write: fetch from GitHub, verify exact path/commit/blob/content/checksum, then update current state/parents/dependencies.
+- A checkpoint is a stable durable state, not a persistent RUNNING claim. It identifies program/lifecycle/gate, completed evidence, TODO/WAITING/BLOCKED work, risks/decisions, and next eligible task.
+- If a write/read-back fails, canonical state is not updated. Retain local evidence, classify failure, and retry/recover within authority.
+
+### 5.7 Derived-system control
+
+ClickUp is generated only after owner freeze/canonical publication. Import/read-back must verify task count, IDs, hierarchy, statuses, dependencies, source SHA, parent rollups, and no unexpected items. Monday is optional and cannot define execution. A derived mismatch is a reconciliation incident, not authority to alter GitHub.
+
+### 5.8 Human authority boundaries
+
+| Task | Lifecycle | Title | Owner | Trigger | Why human-only |
+| --- | --- | --- | --- | --- | --- |
+| TSK-0017 | L2 | Review and freeze or return the final modular planning system for bounded rework | Project Owner | Final candidate and both audit passes are available. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0027 | L2 | Decide G-02 PASS, FAIL, or DEFER | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0037 | L3 | Authorise or deny Experiment-1 recruitment | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0039 | L3 | Decide continue to minimal MCP, modify/repeat, pivot, or stop | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0049 | L5 | Complete LG-07 architecture, privacy, security, and operations approval component (legacy G-06) | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0051 | L5 | Decide LG-07 architecture and delivery readiness (legacy G-07) | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0052 | L5 | Decide LG-06 product, brand and experience freeze (legacy G-05) | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0053 | L7 | Complete LG-09 integrated acceptance component (legacy G-09) | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0055 | L7 | Decide LG-08 build and integration complete (legacy G-08) | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0056 | L7 | Decide LG-09 controlled-pilot readiness (legacy G-10) | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0065 | L9 | Decide G-11 proceed to UK launch preparation, modify/repeat, pivot, or stop | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0067 | L10 | Decide G-12 production readiness | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0069 | L11 | Decide G-13 UK launch go/no-go | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0072 | L11 | Decide G-14 post-launch stability and normal-operation transition | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0081 | L12 | Decide quarterly continue, adjust, scale, reduce, pause, or stop priorities | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0085 | L12 | Decide G-16 geographic expansion readiness | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0092 | L13 | Decide G-16 Year-1 outcome and Year-2 strategic direction | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0095 | L1 | Complete Phase 17 — Customer Willingness-to-Pay / Free-Service Validation | Product Strategy | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0148 | L4 | Apply the owner-approved optimization order to product and roadmap decisions | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0153 | L10 | Design staged UK launch cohorts and traffic/user ramp | Release Engineering | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0161 | L12 | Decide whether optional persistence/account capability is genuinely justified | Project Owner | Observed recurring need cannot be met safely and simply with accountless mechanisms, plus owner authorization and architecture/privacy/security review. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0210 | L2 | Pay ICO Tier 1 fee if assessment requires it | Finance/Admin | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0217 | L2 | Approve final LIA/DPIA residual risks | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0221 | L2 | Approve and release the Experiment-1 notice | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0232 | L5 | Design minimal parent/device model and ownership authorization boundary | Architecture | Validated need for persistence/multi-device/recovery/supporter capability, approved privacy/security architecture, and explicit owner scope authorization. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0233 | L5 | Design minimal accountless data model, storage, retention, and deletion flows | Privacy Engineering | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0234 | L5 | Design auth, datastore and AdGuard partial-failure, deletion and migration flows | Architecture | Validated need for persistence/multi-device/recovery/supporter capability, approved privacy/security architecture, and explicit owner scope authorization. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0250 | L7 | Approve final pilot DPIA/LIA and notices against the release candidate | Privacy/Legal | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0259 | L10 | Update and approve production DPIA/LIA, data inventory, processing record, retention, and rights procedures | Privacy/Legal | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0261 | L10 | Approve child-safeguarding, parental authority, support escalation, and protection-claims policy | Privacy/Legal | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0266 | L10 | Approve production security, privacy, safeguarding, and legal residual risk | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0292 | L13 | Approve exact pause, pivot, transfer, maintenance, or closure scope and authority | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0301 | L4 | Finalize logo system, typography, color, imagery, iconography, visual language, and layout principles | Project Owner / Brand | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0308 | L4 | Create the shared responsive design system for public and product surfaces | UX | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0317 | L4 | Design the simplest technically correct install, verification, removal, and recovery path for each supported platform | UX | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0318 | L4 | Design the public website IA and product/setup IA as distinct but connected systems | UX | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0319 | L4 | Design automated verification, issue-specific troubleshooting, safe reset/reinstall/remove, and point-of-need help | UX | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0321 | L4 | Review design and content against accessibility requirements | Accessibility | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0329 | L4 | Design Google sign-in, account/session, minimal intake and dashboard-entry interactions | UX/UI | Validated need for persistence/multi-device/recovery/supporter capability, approved privacy/security architecture, and explicit owner scope authorization. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0330 | L4 | Design Phone → Internet → Services setup flows | UX/UI | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0331 | L4 | Design account/device deletion, reinstall, revoke, replacement and recovery flows | UX/UI | Validated need for persistence/multi-device/recovery/supporter capability, approved privacy/security architecture, and explicit owner scope authorization. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0332 | L4 | Design lightweight parent dashboard and device-management interactions | UX/UI | Validated need for persistence/multi-device/recovery/supporter capability, approved privacy/security architecture, and explicit owner scope authorization. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0334 | L4 | Design support, false-positive, removal, and reconfiguration flows | UX/UI | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0335 | L4 | Design Protection Map and coverage-limit interactions | UX/UI | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0354 | L5 | Design the accountless public/setup application architecture and data boundary | Software | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0410 | L5 | Design allowlisted server-side AdGuard adapter and ClientID lifecycle contract | Architecture | Validated need for persistence/multi-device/recovery/supporter capability, approved privacy/security architecture, and explicit owner scope authorization. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0411 | L5 | Design DNS service topology and client configuration model | Network Engineering | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0444 | L5 | Design dev, test, staging, pilot, and production environment model | Cloud/DevOps | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0445 | L5 | Design the production-grade Bash deployment/recovery script structure, modules, configuration inputs, logging, errors, retries, rollback, and verification hooks | Cloud | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0539 | L5 | Design privacy-safe logs, metrics, traces, dashboards, and alerts | SRE/Operations | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0562 | L8 | Decide whether product behavior is promising enough for channel testing | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0587 | L5 | Approve development resource, cost, and tool envelope | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0588 | L8 | Decide whether pilot behavior is promising enough to test supporter payments | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0591 | L8 | Approve supporter payment experiment release | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0596 | L8 | Design the optional supporter experiment so full core value is delivered first and payment changes no safety outcome | Project Owner | Behavioral value passes and the applicable pilot funding gate authorizes payment testing. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0609 | L12 | Reconcile bank/payment/provider, supporter, refunds/cancellations, fees, Azure/vendor expenses, receipts, and budget | Finance/Admin | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+| TSK-0618 | L12 | Approve, defer, or reject bounded funding applications/partnership negotiations | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
