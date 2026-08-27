@@ -19,7 +19,7 @@
 - Publication verification: the GitHub `main` `Plans/` subtree tree SHA exactly matched the validated publication kit tree SHA, proving identical paths, modes and blob bytes; branch/read-back comparison after fast-forward was identical.
 - **TSK-0009: PASS** — owner-frozen `Plans/` tree published to `main` with no unrelated publication changes.
 - **TSK-0011: PASS** — canonical GitHub publication/read-back identity verified against the approved local package.
-- **TSK-0010: PASS on confirmed read-back of this rebaseline** — runtime checkpoint now references the frozen modular authority and actual LG-03 state.
+- **TSK-0010: PASS** — runtime checkpoint references the frozen modular authority and actual LG-03 state; exact GitHub read-back confirmed.
 
 The planning freeze does **not** imply deployment, legal clearance, participant activation, supporter-payment activation or public launch.
 
@@ -68,14 +68,15 @@ Current preserved readiness facts:
 - The hold is not a waiver, exemption, legal-clearance proof or LG-03 evidence.
 - Real England participant activation remains blocked if required legal evidence is still unresolved when activation is considered.
 
-## Current technical execution state
+## Current technical and preparation execution state
 
 - Azure control-plane creation/configuration: **owner-managed / outside project execution**.
 - `TSK-0434` and `TSK-0436`: **NOT_APPLICABLE + PASS** as verified exclusions only; they are not proof of live Azure implementation/security.
 - `TSK-0435` — verify owner-provided Azure `westeurope` pilot VM handoff: **WAITING** until the fresh Ubuntu 24.04 LTS AdGuard/DNS VM exists, is reachable and approved access metadata is available without exposing secrets.
-- `TSK-0438` — verify current UseSafeWeb.com DNS/registrar control and renewal state: **TODO / highest-priority currently selected independent LG-03 work**. PASS requires provider-authorised control evidence plus registrar/DNS ownership path and renewal/expiry evidence; public DNS/WHOIS evidence alone cannot prove account control.
+- `TSK-0438` — verify current UseSafeWeb.com DNS/registrar control and renewal state: **WAITING**. Current repository/history preserves that the domain was acquired but does not contain direct current registrar account-control, renewal/expiry or authorised DNS-zone control evidence; no connected registrar/DNS account integration is available. Deterministic resolution check: provider-authorised read/change evidence or equivalent registrar/DNS control evidence must show the ownership path, current renewal/expiry state and responsible owner without exposing credentials/secrets.
 - `TSK-0483` — resolver abuse/amplification protection: **WAITING** for an actual reachable resolver/target environment even though its planning predecessor exclusions are satisfied.
-- Preparatory LG-03 work whose hard predecessors are already satisfied may proceed after higher-priority target/access constraints are dispositioned, including `TSK-0166`, `TSK-0168`, `TSK-0225`, `TSK-0227` and `TSK-0228`, subject to their exact task authority and current inputs.
+- `TSK-0166` — create pseudonymous participant record and metric schema: **PASS**. Evidence: `EXPERIMENT_01_CONCIERGE_VALIDATION.md` blob `bc801da11d7a7f2a5315d1cdca4f0d134afe7805`, §5 Mandatory measurements plus §9/§11 privacy/aggregate rules, reviewed 2026-08-27 against ACC-0166 / REQ-0013, REQ-0014, REQ-0015, CON-0025, CON-0009 and INT-0005. It contains participant ID, qualification, device/path, safeguard state, activation, time, assistance, abandonment, comprehension, false-positive and 14-day fields; it expressly excludes browsing/domain-history metrics. Predecessors `TSK-0223` and `TSK-0164` are PASS. Deviations: none against ACC-0166.
+- `TSK-0168` — create qualification screener: **PASS**. Evidence: `EXPERIMENT_01_CONCIERGE_VALIDATION.md` blob `bc801da11d7a7f2a5315d1cdca4f0d134afe7805`, §2 Cohort qualification, reviewed 2026-08-27 against ACC-0168 / REQ-0013, REQ-0014, REQ-0017, CON-0025, CON-0009 and INT-0005. It covers caregiver responsibility, first-phone age/stage, phone timing, iPhone/Android platform, willingness to make real safety-setting changes and non-surveillance fit; it does not require exact DOB or child name. Predecessor `TSK-0164` is PASS. Deviations: none against ACC-0168.
 
 ## Runtime safeguards
 
@@ -88,8 +89,7 @@ Current preserved readiness facts:
 
 ## Exact next execution path
 
-1. Execute `TSK-0438` as far as current authorised tooling/evidence permits; retain public registrar/DNS evidence separately from proof of account control.
-2. Keep `TSK-0435` in WAITING until the owner provides the fresh reachable Ubuntu 24.04 LTS AdGuard/DNS VM handoff.
-3. Execute other eligible non-legal LG-03 preparation while target-environment tasks wait.
-4. Recompute eligibility after every confirmed durable mutation.
-5. Do not recruit/activate real participants until LG-03 and LG-04 PASS.
+1. Continue independent eligible non-legal LG-03 preparation while `TSK-0435`, `TSK-0438` and target-environment work wait.
+2. Reconcile existing canonical artifacts before creating duplicates; mark PASS only where every current acceptance criterion is directly evidenced.
+3. Recompute eligibility after every confirmed durable mutation.
+4. Do not recruit/activate real participants until LG-03 and LG-04 PASS.
