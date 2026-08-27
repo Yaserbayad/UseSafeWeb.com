@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-27T23:41:49Z  
+**Updated:** 2026-08-27T23:43:43Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -98,16 +98,19 @@ EVD-0202 was then created and read back at `TSK_0202_ADGUARD_CONFIG_EXPORT_EVIDE
 
 ACC-0202 is fully satisfied. Its `REQ-0022` reference remains intentionally unresolved under owner-deferred UK representative/ICO work until 2027-08-27 or earlier explicit reactivation; TSK-0202 PASS does not satisfy, waive, or reopen that legal condition and does not authorize real England participant activation.
 
-### Queue recomputation required
+### Selected next
 
-The exact WBS inspection shows direct successors of TSK-0202 are `TSK-0430`, `TSK-0511`, and `TSK-0514`. Their additional dependencies must be evaluated against the already-eligible `TSK-0429` before selecting later work. No successor is treated as selected merely because TSK-0202 passed.
+`TSK-0429` — define privacy-minimal backup scope: **TODO / selected**.
 
-Known dependency facts from the current WBS read:
+Queue recomputation run `33127287940` / job `98708339992` directly re-read the affected WBS rows after TSK-0202 PASS:
 
-- `TSK-0430` additionally requires `TSK-0429` + `TSK-0011`;
-- `TSK-0511` additionally requires `TSK-0514` + `TSK-0011`;
-- `TSK-0514` additionally requires `TSK-0443` + `TSK-0011`;
-- `TSK-0429` is independently HIGH/critical-path/AUTO_ALLOWED with dependencies `TSK-0437` + `TSK-0011` already satisfied by current direct evidence.
+- TSK-0429: A3, AUTO_ALLOWED, HIGH, critical path; hard deps `TSK-0437` + `TSK-0011`, both currently satisfied; ACC-0429 requires included/excluded data, encryption, retention, access, location, and deletion to be documented and aligned with the DPIA.
+- TSK-0430 remains blocked on TSK-0429.
+- TSK-0514 remains blocked on TSK-0443.
+- TSK-0443 remains blocked on TSK-0442, which is downstream of external-provider-bound TSK-0441.
+- TSK-0511 remains blocked on TSK-0514.
+
+Therefore TSK-0429 is the deterministic eligible task in the affected current queue; no blocked successor was promoted merely because TSK-0202 passed.
 
 ### External/provider and legal boundaries
 
@@ -125,4 +128,4 @@ Known dependency facts from the current WBS read:
 
 ## Exact next authoritative step
 
-Recompute the eligible queue from current WBS/runtime authority after TSK-0202 PASS, comparing the already-eligible TSK-0429 against newly affected direct successors TSK-0430, TSK-0511, and TSK-0514 and their unresolved hard dependencies. Select only the highest-authority eligible task; persist/read back the selection before material execution.
+Execute TSK-0429 within its AUTO_ALLOWED documentation/control scope: load REQ-0049, REQ-0050, CON-0004, CON-0005, INT-0014, RSK-0048 and the authoritative current DPIA/data-flow/retention sources; define the smallest privacy-minimal backup scope with explicit included/excluded data, encryption, retention, authorized access, approved location and deletion behavior; do not invent retention periods or secret-storage mechanisms that are not supported by authority. Verify the artifact against the linked sources, persist/read back EVD-0429, update runtime only if ACC-0429 is fully satisfied, then recompute the queue before TSK-0430.
