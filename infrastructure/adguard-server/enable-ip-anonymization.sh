@@ -49,19 +49,19 @@ sudo python3 - /opt/AdGuardHome/AdGuardHome.yaml <<'PY'
 from pathlib import Path
 import sys
 lines=Path(sys.argv[1]).read_text(encoding='utf-8').splitlines()
-inside=False; enabled=None; anon=None
+section=None
+querylog_enabled=None
+anonymize_client_ip=None
 for line in lines:
     if line and not line[0].isspace():
-        inside=line.rstrip()=='querylog:'
+        section=line.rstrip(':') if line.endswith(':') else None
         continue
-    if inside and line.startswith('  enabled:'):
-        enabled=line.split(':',1)[1].strip().lower()
-    if inside and line.startswith('  anonymize_client_ip:'):
-        anon=line.split(':',1)[1].strip().lower()
-    if inside and enabled is not None and anon is not None:
-        break
-assert enabled=='false', enabled
-assert anon=='true', anon
+    if section=='querylog' and line.startswith('  enabled:'):
+        querylog_enabled=line.split(':',1)[1].strip().lower()
+    elif section=='dns' and line.startswith('  anonymize_client_ip:'):
+        anonymize_client_ip=line.split(':',1)[1].strip().lower()
+assert querylog_enabled=='false', querylog_enabled
+assert anonymize_client_ip=='true', anonymize_client_ip
 print('persisted_querylog_enabled=false')
 print('persisted_anonymize_client_ip=true')
 PY
