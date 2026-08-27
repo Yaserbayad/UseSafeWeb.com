@@ -1,0 +1,81 @@
+name: Inspect AdGuard backup scope inputs
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/adguard-backup-scope-preflight.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  inspect:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact main commit
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Inspect recovery-critical state without exposing secrets
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          sudo -n true
+          systemctl is-active --quiet AdGuardHome.service
+
+          config='/opt/AdGuardHome/AdGuardHome.yaml'
+          secret='/var/lib/usesafeweb/adguard/admin.env'
+          old_rollback='/var/lib/usesafeweb/adguard/AdGuardHome.pre-loopback.yaml'
+
+          sudo test -f "$config"
+          sudo test -f "$secret"
+          echo "config_mode_owner=$(sudo stat -c '%a %U:%G' "$config")"
+          echo "admin_secret_mode_owner=$(sudo stat -c '%a %U:%G' "$secret")"
+          echo "old_initialization_rollback_exists=$(sudo test -f "$old_rollback" && echo true || echo false)"
+          if sudo test -f "$old_rollback"; then
+            echo "old_initialization_rollback_mode_owner=$(sudo stat -c '%a %U:%G' "$old_rollback")"
+          fi
+
+          sudo python3 - "$config" <<'PY'
+          import sys,yaml
+          with open(sys.argv[1],encoding='utf-8') as f: d=yaml.safe_load(f)
+          q=d.get('querylog') or {}; s=d.get('statistics') or {}; dns=d.get('dns') or {}; tls=d.get('tls') or {}
+          clients=(d.get('clients') or {}).get('persistent') or []
+          users=d.get('users') or []
+          print('schema_version='+str(d.get('schema_version')))
+          print('querylog_enabled='+str(bool(q.get('enabled'))).lower())
+          print('querylog_file_enabled='+str(bool(q.get('file_enabled'))).lower())
+          print('statistics_enabled='+str(bool(s.get('enabled'))).lower())
+          print('anonymize_client_ip='+str(bool(dns.get('anonymize_client_ip'))).lower())
+          print('persistent_client_count='+str(len(clients)))
+          print('user_rule_count='+str(len(d.get('user_rules') or [])))
+          print('admin_user_count='+str(len(users)))
+          print('tls_enabled='+str(bool(tls.get('enabled'))).lower())
+          print('tls_private_key_configured='+str(bool(tls.get('private_key') or tls.get('private_key_path'))).lower())
+          print('tls_certificate_configured='+str(bool(tls.get('certificate_chain') or tls.get('certificate_chain_path'))).lower())
+          assert q.get('enabled') is False
+          assert q.get('file_enabled') is False
+          assert s.get('enabled') is False
+          assert dns.get('anonymize_client_ip') is True
+          assert clients == []
+          assert (d.get('user_rules') or []) == []
+          PY
+
+          mapfile -t qfiles < <(sudo find /opt/AdGuardHome -type f -name 'querylog.json*' -size +0c -print 2>/dev/null || true)
+          echo "nonempty_querylog_file_count=${#qfiles[@]}"
+          ((${#qfiles[@]} == 0))
+
+          [[ "$(git hash-object infrastructure/adguard-server/approved-adguard-config-v1.json)" == 'ea85830b5ef9de7f2772e5467570d52013228b0b' ]]
+          [[ "$(git hash-object infrastructure/adguard-server/filter-policy-v1.yaml)" == '333a4ef8cd34719d66056aa608ab19473f839634' ]]
+          echo 'versioned_nonsecret_recovery_inputs_verified=true'
+          echo 'TSK_0429_PREFLIGHT=PASS'
