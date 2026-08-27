@@ -1,0 +1,126 @@
+name: Audit AdGuard privacy-minimal backup scope
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/adguard-backup-scope-audit.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact main commit
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Independently audit TSK-0429 policy against sources and live state
+        shell: bash
+        env:
+          EXPECTED_POLICY_BLOB: e62b48a3e746b1be90881bbffab3b7680384cc16
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          sudo -n true
+          systemctl is-active --quiet AdGuardHome.service
+
+          policy='infrastructure/adguard-server/BACKUP_SCOPE_POLICY.md'
+          [[ "$(git hash-object "$policy")" == "$EXPECTED_POLICY_BLOB" ]]
+          [[ "$(git hash-object VALIDATION_READINESS_GATE.md)" == 'b3b0efd0cc0f40faa1ecab190c7469b8dff12ec1' ]]
+          [[ "$(git hash-object RETENTION_DELETION_EXECUTION_CHECKLIST.md)" == '5c2d6edbfbabe9ed0fb9c309e7afca8c96fa9c9f' ]]
+          [[ "$(git hash-object PILOT_PRIVACY_NOTICE.md)" == '331f263388dfacfa73b6e9e556277d4230864ce8' ]]
+          [[ "$(git hash-object infrastructure/adguard-server/initialize-admin.sh)" == '0fa0b3481d9b7173649c72606b40642c278e9c32' ]]
+          [[ "$(git hash-object infrastructure/adguard-server/approved-adguard-config-v1.json)" == 'ea85830b5ef9de7f2772e5467570d52013228b0b' ]]
+          [[ "$(git hash-object infrastructure/adguard-server/filter-policy-v1.yaml)" == '333a4ef8cd34719d66056aa608ab19473f839634' ]]
+
+          python3 - "$policy" <<'PY'
+          import pathlib,sys
+          text=pathlib.Path(sys.argv[1]).read_text(encoding='utf-8')
+          required=[
+            '**Task:** TSK-0429',
+            '**Acceptance:** ACC-0429',
+            '**Policy version:** 1.0.0',
+            '/opt/AdGuardHome/AdGuardHome.yaml',
+            '/var/lib/usesafeweb/adguard/admin.env',
+            'querylog.json*',
+            'participant/contact/research records',
+            'confidentiality plus integrity/authentication',
+            'owner-authorised recovery path',
+            'Azure West Europe (`westeurope`), Netherlands',
+            'at most two generations',
+            'plaintext staging copies are deleted immediately',
+            'provider-side deletion is owner-controlled',
+            'no more than those two verified generations may remain',
+            'Adding a new backup service/provider/location',
+            'Current raw `AdGuardHome.yaml` + non-secret verification manifest only',
+          ]
+          for token in required:
+              assert token in text, token
+          forbidden=[
+            'ADGUARD_ADMIN_PASSWORD=',
+            '-----BEGIN PRIVATE KEY-----',
+          ]
+          for token in forbidden:
+              assert token not in text, token
+          print('policy_acceptance_dimensions_present=PASS')
+          print('policy_secret_material_absent=PASS')
+          PY
+
+          python3 - <<'PY'
+          from pathlib import Path
+          gate=Path('VALIDATION_READINESS_GATE.md').read_text(encoding='utf-8')
+          retention=Path('RETENTION_DELETION_EXECUTION_CHECKLIST.md').read_text(encoding='utf-8')
+          notice=Path('PILOT_PRIVACY_NOTICE.md').read_text(encoding='utf-8')
+          init=Path('infrastructure/adguard-server/initialize-admin.sh').read_text(encoding='utf-8')
+          assert 'West Europe (`westeurope`), Netherlands' in gate
+          assert 'No US node is in the Experiment-1 child-data path.' in gate
+          assert 'identifiable DNS/domain history: **not retained**' in gate
+          assert 'no later than **30 days after that participant\'s follow-up**' in retention
+          assert 'no later than **90 days after Experiment 1 closes**' in retention
+          assert 'only aggregate/anonymised findings may be retained in the project repository' in notice
+          assert 'openssl rand -hex 24' in init
+          assert 'admin credential file created' in init
+          print('dpia_retention_location_source_alignment=PASS')
+          print('admin_secret_regeneration_source_alignment=PASS')
+          PY
+
+          config='/opt/AdGuardHome/AdGuardHome.yaml'
+          secret='/var/lib/usesafeweb/adguard/admin.env'
+          old_rollback='/var/lib/usesafeweb/adguard/AdGuardHome.pre-loopback.yaml'
+          [[ "$(sudo stat -c '%a %U:%G' "$config")" == '600 root:root' ]]
+          [[ "$(sudo stat -c '%a %U:%G' "$secret")" == '600 root:root' ]]
+          sudo test -f "$old_rollback"
+          [[ "$(sudo stat -c '%a %U:%G' "$old_rollback")" == '600 root:root' ]]
+
+          sudo python3 - "$config" <<'PY'
+          import sys,yaml
+          with open(sys.argv[1],encoding='utf-8') as f: d=yaml.safe_load(f)
+          q=d.get('querylog') or {}; s=d.get('statistics') or {}; dns=d.get('dns') or {}; tls=d.get('tls') or {}
+          assert q.get('enabled') is False
+          assert q.get('file_enabled') is False
+          assert s.get('enabled') is False
+          assert dns.get('anonymize_client_ip') is True
+          assert ((d.get('clients') or {}).get('persistent') or []) == []
+          assert (d.get('user_rules') or []) == []
+          assert tls.get('enabled') is False
+          assert not (tls.get('private_key') or tls.get('private_key_path'))
+          assert not (tls.get('certificate_chain') or tls.get('certificate_chain_path'))
+          print('live_backup_scope_privacy_invariants=PASS')
+          print('live_tls_private_material_absent=true')
+          PY
+
+          mapfile -t qfiles < <(sudo find /opt/AdGuardHome -type f -name 'querylog.json*' -size +0c -print 2>/dev/null || true)
+          ((${#qfiles[@]} == 0))
+          echo 'live_nonempty_querylog_files=0'
+          echo 'TSK_0429_INDEPENDENT_AUDIT=PASS'
