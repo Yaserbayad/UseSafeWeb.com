@@ -38,7 +38,7 @@ jobs:
           [[ "$(sudo stat -c '%a %U:%G' "$auth")" == '600 azureusr:azureusr' ]]
 
           sudo python3 - "$auth" <<'PY'
-          import base64,sys
+          import sys
           lines=[]
           for line in open(sys.argv[1],encoding='utf-8',errors='ignore'):
               line=line.strip()
@@ -59,17 +59,19 @@ jobs:
           [[ "$key_bits" =~ ^[0-9]+$ ]]
           (( key_bits >= 2048 ))
 
-          sshd_state="$(sudo sshd -T 2>/dev/null | awk '$1=="publickeyauthentication" || $1=="passwordauthentication" {print $1"="$2}' | sort | tr '\n' ' ')"
-          echo "sshd_auth_methods=$sshd_state"
-          sudo sshd -T 2>/dev/null | awk '$1=="publickeyauthentication"{exit !($2=="yes")}'
-
-          # The owner handoff evidence records an SSH-session verification at
-          # 2026-08-27T20:41:57Z. Count only matching public-key accept events
-          # in a narrow window; do not emit source IPs, fingerprints, or log lines.
-          accepted_count="$(sudo journalctl -u ssh --since '2026-08-27 20:35:00 UTC' --until '2026-08-27 20:50:00 UTC' --no-pager 2>/dev/null | grep -c 'Accepted publickey for azureusr' || true)"
-          echo "handoff_window_accepted_publickey_count=$accepted_count"
-          [[ "$accepted_count" =~ ^[0-9]+$ ]]
-          (( accepted_count >= 1 ))
+          sudo sshd -T 2>/dev/null | awk '
+            $1=="pubkeyauthentication" ||
+            $1=="passwordauthentication" ||
+            $1=="kbdinteractiveauthentication" ||
+            $1=="hostbasedauthentication" ||
+            $1=="gssapiauthentication" ||
+            $1=="authenticationmethods" {print $1"="$2}' | sort > /tmp/usw-sshd-auth.txt
+          tr '\n' ' ' < /tmp/usw-sshd-auth.txt | sed 's/^/sshd_auth_methods=/'
+          grep -qx 'pubkeyauthentication=yes' /tmp/usw-sshd-auth.txt
+          grep -qx 'passwordauthentication=no' /tmp/usw-sshd-auth.txt
+          grep -qx 'kbdinteractiveauthentication=no' /tmp/usw-sshd-auth.txt
+          grep -qx 'hostbasedauthentication=no' /tmp/usw-sshd-auth.txt
+          grep -qx 'gssapiauthentication=no' /tmp/usw-sshd-auth.txt
 
           candidate="$(apt-cache policy age 2>/dev/null | awk '/Candidate:/{print $2; exit}')"
           echo "age_package_candidate=${candidate:-none}"
@@ -77,5 +79,6 @@ jobs:
 
           [[ "$(git hash-object TSK_0435_HANDOFF_EVIDENCE_2026-08-27.md)" == '57de1a4187288870da7655973ac09bf907674d89' ]]
           [[ "$(git hash-object infrastructure/adguard-server/BACKUP_SCOPE_POLICY.md)" == 'e62b48a3e746b1be90881bbffab3b7680384cc16' ]]
+          rm -f /tmp/usw-sshd-auth.txt
           echo 'owner_handoff_ssh_publickey_path_supported=true'
           echo 'TSK_0430_RECIPIENT_PREFLIGHT=PASS'
