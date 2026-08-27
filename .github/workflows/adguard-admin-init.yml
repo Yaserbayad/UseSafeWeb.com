@@ -28,7 +28,7 @@ jobs:
       - name: Initialize TSK-0201 restricted administration
         shell: bash
         env:
-          EXPECTED_SCRIPT_BLOB: c3d6a62be2f4fb3dce26db654339ff553c4b5195
+          EXPECTED_SCRIPT_BLOB: 0fa0b3481d9b7173649c72606b40642c278e9c32
         run: |
           set -Eeuo pipefail
           [[ "${GITHUB_EVENT_NAME}" == "push" ]]
