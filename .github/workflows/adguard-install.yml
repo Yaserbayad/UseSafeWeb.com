@@ -28,7 +28,7 @@ jobs:
       - name: Validate artifact and execute TSK-0203
         shell: bash
         env:
-          EXPECTED_SCRIPT_SHA256: ecc6c4685ef34a5175599186e7770b45d5ef7a317f5d7b0c0f4ccaa8be095022
+          EXPECTED_SCRIPT_SHA256: ca3f3827353837f6494e6875e30e0f6cb459d5960c8e97a76bd2f4aa52b527fc
         run: |
           set -Eeuo pipefail
 
