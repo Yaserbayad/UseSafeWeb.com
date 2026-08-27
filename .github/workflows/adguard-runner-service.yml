@@ -15,80 +15,37 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  install-service:
+  diagnose-runner-root:
     runs-on: [self-hosted, linux, x64]
     timeout-minutes: 5
     steps:
-      - name: Install persistent runner service and schedule handoff
+      - name: Diagnose runner installation root without mutation
         shell: bash
         run: |
           set -Eeuo pipefail
-
           [[ "${GITHUB_EVENT_NAME}" == "push" ]]
           [[ "${GITHUB_REF}" == "refs/heads/main" ]]
-          [[ "${RUNNER_OS}" == "Linux" ]]
-          [[ "${RUNNER_ARCH}" == "X64" ]]
           [[ "$(hostname -s)" == "adguardvm" ]]
           [[ "$(id -un)" == "azureusr" ]]
-          sudo -n true
 
-          runner_root="$(dirname "$(dirname "${RUNNER_TEMP}")")"
-          [[ -x "${runner_root}/svc.sh" ]]
-          [[ -x "${runner_root}/runsvc.sh" ]]
-          [[ -x "${runner_root}/run.sh" ]]
+          echo "RUNNER_TEMP=${RUNNER_TEMP}"
+          echo "RUNNER_WORKSPACE=${RUNNER_WORKSPACE}"
+          echo "PWD=${PWD}"
 
-          existing_unit="$(systemctl list-unit-files 'actions.runner.*.service' --no-legend 2>/dev/null | awk 'NR==1 {print $1}')"
-          if [[ -z "${existing_unit}" ]]; then
-            sudo "${runner_root}/svc.sh" install azureusr
-          fi
+          candidate_from_temp="$(dirname "$(dirname "${RUNNER_TEMP}")")"
+          candidate_from_workspace="$(dirname "$(dirname "${RUNNER_WORKSPACE}")")"
+          echo "candidate_from_temp=${candidate_from_temp}"
+          echo "candidate_from_workspace=${candidate_from_workspace}"
 
-          unit="$(systemctl list-unit-files 'actions.runner.*.service' --no-legend 2>/dev/null | awk 'NR==1 {print $1}')"
-          [[ -n "${unit}" ]]
-          echo "runner_service=${unit}"
-
-          # GitHub's current Linux guidance recommends excluding the runner
-          # service from needrestart-driven restarts during a workflow job.
-          printf '%s\n' '$nrconf{override_rc}{qr(^actions\.runner\..+\.service$)} = 0;' \
-            | sudo tee /etc/needrestart/conf.d/actions_runner_services.conf >/dev/null
-
-          sudo tee /usr/local/sbin/usesafeweb-runner-service-handoff >/dev/null <<'HANDOFF'
-          #!/usr/bin/env bash
-          set -Eeuo pipefail
-          unit="$1"
-          runner_root="$2"
-
-          # Stop only the manually launched foreground listener for this runner.
-          mapfile -t pids < <(pgrep -u azureusr -f "${runner_root}/bin/Runner.Listener run" || true)
-          for pid in "${pids[@]}"; do
-            kill -TERM "${pid}" 2>/dev/null || true
+          for candidate in "${candidate_from_temp}" "${candidate_from_workspace}" /home/azureusr/t/actions-runner; do
+            echo "candidate=${candidate}"
+            for f in svc.sh runsvc.sh run.sh .runner; do
+              if [[ -e "${candidate}/${f}" ]]; then
+                stat -c '%A %U:%G %n' "${candidate}/${f}"
+              else
+                echo "MISSING ${candidate}/${f}"
+              fi
+            done
           done
 
-          for _ in $(seq 1 20); do
-            if ! pgrep -u azureusr -f "${runner_root}/bin/Runner.Listener run" >/dev/null 2>&1; then
-              break
-            fi
-            sleep 0.5
-          done
-
-          systemctl start "${unit}"
-          sleep 4
-          if systemctl is-active --quiet "${unit}"; then
-            exit 0
-          fi
-
-          # Fail-safe: restore the previously working foreground mode if the
-          # systemd service cannot become active.
-          sudo -u azureusr nohup "${runner_root}/run.sh" \
-            >>"${runner_root}/_diag/usesafeweb-runner-fallback.log" 2>&1 &
-          exit 1
-          HANDOFF
-          sudo chmod 0755 /usr/local/sbin/usesafeweb-runner-service-handoff
-
-          # Execute only after this Actions job has had time to finish and
-          # release the current foreground listener.
-          sudo systemd-run \
-            --unit=usesafeweb-runner-service-handoff \
-            --on-active=8s \
-            /usr/local/sbin/usesafeweb-runner-service-handoff "${unit}" "${runner_root}"
-
-          echo "SERVICE_HANDOFF=SCHEDULED"
+          echo "RUNNER_ROOT_DIAGNOSTIC=PASS"
