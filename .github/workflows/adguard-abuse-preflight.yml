@@ -28,11 +28,20 @@ jobs:
           systemctl is-active --quiet AdGuardHome.service
 
           sudo python3 - /opt/AdGuardHome/AdGuardHome.yaml <<'PY'
-          import sys, yaml
+          import ipaddress, sys, yaml
           p=sys.argv[1]
           with open(p,encoding='utf-8') as f: d=yaml.safe_load(f)
           dns=d.get('dns') or {}
           def b(v): return str(bool(v)).lower()
+          binds=dns.get('bind_hosts') or []
+          nonloop=[]
+          for x in binds:
+              try:
+                  a=ipaddress.ip_address(x)
+                  if a.version==4 and not a.is_loopback and not a.is_unspecified:
+                      nonloop.append(x)
+              except ValueError:
+                  pass
           print('dns_port='+str(dns.get('port')))
           print('ratelimit='+str(dns.get('ratelimit')))
           print('ratelimit_subnet_len_ipv4='+str(dns.get('ratelimit_subnet_len_ipv4')))
@@ -41,39 +50,75 @@ jobs:
           print('refuse_any='+b(dns.get('refuse_any')))
           print('allowed_clients_count='+str(len(dns.get('allowed_clients') or [])))
           print('disallowed_clients_count='+str(len(dns.get('disallowed_clients') or [])))
-          binds=dns.get('bind_hosts') or []
+          print('bind_host_count='+str(len(binds)))
           print('binds_wildcard_ipv4='+b('0.0.0.0' in binds))
           print('binds_wildcard_ipv6='+b('::' in binds))
+          print('nonloopback_ipv4_bind_present='+b(nonloop))
           q=d.get('querylog') or {}; s=d.get('statistics') or {}
           print('querylog_enabled='+b(q.get('enabled')))
           print('anonymize_client_ip='+b(dns.get('anonymize_client_ip')))
           print('statistics_enabled='+b(s.get('enabled')))
+          with open('/tmp/usw-abuse-target','w',encoding='utf-8') as f:
+              f.write(nonloop[0] if nonloop else '127.0.0.1')
           PY
 
-          sudo ufw status verbose 2>/dev/null | python3 -c "import sys; t=sys.stdin.read().lower(); print('ufw_active='+str('status: active' in t).lower()); print('ufw_dns_rule_mentions='+str(sum(1 for x in t.splitlines() if ('53/' in x or x.strip().startswith('53 ')))); print('ufw_dot_rule_mentions='+str(sum(1 for x in t.splitlines() if ('853/' in x or x.strip().startswith('853 '))))"
+          sudo ufw status verbose > /tmp/usw-ufw-status.txt 2>/dev/null || true
+          python3 - <<'PY'
+          t=open('/tmp/usw-ufw-status.txt',encoding='utf-8',errors='replace').read().lower()
+          lines=t.splitlines()
+          print('ufw_active='+str('status: active' in t).lower())
+          print('ufw_default_incoming_deny='+str(('default: deny (incoming)' in t) or ('default: deny (incoming),' in t)).lower())
+          print('ufw_dns_rule_mentions='+str(sum(1 for x in lines if ('53/' in x or x.strip().startswith('53 ')))))
+          print('ufw_dot_rule_mentions='+str(sum(1 for x in lines if ('853/' in x or x.strip().startswith('853 ')))))
+          PY
 
           python3 - <<'PY'
           import random, socket, struct, time
-          def packet(qtype):
-              name='usesafeweb-abuse-preflight.invalid'
-              q=b''.join(bytes([len(x)])+x.encode() for x in name.split('.'))+b'\x00'
-              return struct.pack('!HHHHHH',random.randrange(0,65536),0x0100,1,0,0,0)+q+struct.pack('!HH',qtype,1)
-          def one(dst,qtype,timeout=.35):
+          target=open('/tmp/usw-abuse-target',encoding='utf-8').read().strip()
+          name='usesafeweb-abuse-preflight.invalid'
+          qname=b''.join(bytes([len(x)])+x.encode() for x in name.split('.'))+b'\x00'
+          def packet(qtype,tid=None):
+              if tid is None: tid=random.randrange(0,65536)
+              return struct.pack('!HHHHHH',tid,0x0100,1,0,0,0)+qname+struct.pack('!HH',qtype,1)
+          def one(qtype,timeout=1):
               s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.settimeout(timeout)
-              p=packet(qtype); s.sendto(p,(dst,53))
+              p=packet(qtype); s.sendto(p,(target,53))
               try:
                   r,_=s.recvfrom(4096)
                   return True, len(p), len(r), (struct.unpack('!H',r[2:4])[0] & 0xF)
               except socket.timeout:
                   return False, len(p), 0, None
               finally: s.close()
-          ok,qs,rs,rcode=one('127.0.0.1',1,1)
-          print('local_normal_query_response='+str(ok).lower())
-          print('local_normal_query_rcode='+str(rcode))
-          ok,qs,rs,rcode=one('127.0.0.1',255,1)
-          print('local_any_response='+str(ok).lower())
-          print('local_any_rcode='+str(rcode))
-          print('local_any_response_to_query_size_ratio='+('{:.2f}'.format(rs/qs) if qs else '0'))
+          ok,qs,rs,rcode=one(1)
+          print('normal_query_response='+str(ok).lower())
+          print('normal_query_rcode='+str(rcode))
+          ok,qs,rs,rcode=one(255)
+          print('any_query_response='+str(ok).lower())
+          print('any_query_rcode='+str(rcode))
+          print('any_response_to_query_size_ratio='+('{:.2f}'.format(rs/qs) if qs else '0'))
+
+          total=80
+          s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.setblocking(False)
+          tids=[]
+          start=time.monotonic()
+          for i in range(total):
+              tid=(1000+i) & 0xffff; tids.append(tid); s.sendto(packet(1,tid),(target,53))
+          send_elapsed=time.monotonic()-start
+          deadline=time.monotonic()+1.25
+          got=set()
+          while time.monotonic()<deadline:
+              try:
+                  r,_=s.recvfrom(4096)
+                  if len(r)>=2: got.add(struct.unpack('!H',r[:2])[0])
+              except BlockingIOError:
+                  time.sleep(.005)
+          s.close()
+          received=len(got.intersection(tids))
+          print('ratelimit_burst_sent='+str(total))
+          print('ratelimit_burst_received='+str(received))
+          print('ratelimit_burst_dropped='+str(total-received))
+          print('ratelimit_burst_send_elapsed_ms='+str(round(send_elapsed*1000,1)))
           PY
 
+          rm -f /tmp/usw-abuse-target /tmp/usw-ufw-status.txt
           echo 'TSK_0483_PREFLIGHT=PASS'
