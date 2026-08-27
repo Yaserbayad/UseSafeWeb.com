@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-27T22:51:24Z  
+**Updated:** 2026-08-27T22:53:37Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -85,12 +85,18 @@ ACC-0483 is fully satisfied for the current pre-public target. This PASS does no
 
 ### Selected next
 
-No later task is claimed selected yet. TSK-0483 completion has been persisted first; deterministic next-task recomputation from current WBS/dependencies/gates is the immediate runtime action.
+`TSK-0407` — configure Quad9 `dns10` DoH and disable ECS: **TODO / selected**.
 
-### Candidate current-gate work pending recomputation
+Deterministic selection evidence:
 
-- `TSK-0407` — configure Quad9 dns10 / ECS off: previously identified as the next technical candidate after immediate privacy/security controls, subject to current WBS/dependency verification.
-- `TSK-0429` — privacy-minimal backup scope: previously identified as independently eligible, subject to current WBS/dependency verification.
+- exact WBS row: `A3`, `AUTO_ALLOWED`, HIGH, critical path, `ACC-0407`;
+- hard predecessors: `TSK-0203` (runtime PASS), `TSK-0405` (canonical completed-record PASS), and `TSK-0011` (publication/read-back condition satisfied);
+- competing `TSK-0429` is also HIGH/critical-path and eligible through `TSK-0437` + `TSK-0011`, but it occurs later in WBS order and does not supersede the current resolver-path configuration work;
+- TSK-0407 acceptance requires the configured upstream to exactly match `https://dns10.quad9.net/dns-query`, ECS disabled, and test evidence proving no ECS endpoint is used.
+
+### Subsequent eligible current-gate work
+
+- `TSK-0429` — define privacy-minimal backup scope: eligible after TSK-0407 unless a newly verified higher-priority gate/security constraint intervenes.
 
 ### External provider boundary
 
@@ -106,4 +112,4 @@ No later task is claimed selected yet. TSK-0483 completion has been persisted fi
 
 ## Exact next authoritative step
 
-Recompute the next eligible current-gate task from the canonical WBS and current runtime evidence. Verify each candidate's hard predecessors, gate/lifecycle, action authority, acceptance/evidence bindings, and relevant constraints/interfaces before selection. If `TSK-0407` remains eligible and highest priority, execute its bounded Quad9 `dns10` / ECS-off configuration and target verification; otherwise select the actual highest-priority eligible task without inference.
+Execute `TSK-0407`: first verify the current official Quad9/AdGuard endpoint semantics and inspect the live AdGuard upstream/ECS configuration. If the live state already exactly matches the frozen `dns10`/ECS-off contract, verify it without mutation; otherwise apply the smallest reversible configuration correction, preserve the verified privacy/abuse controls, test resolution and endpoint selection, persist privacy-safe evidence, read back the evidence/runtime state, and then recompute the next eligible task.
