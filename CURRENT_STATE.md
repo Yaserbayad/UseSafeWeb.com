@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-27T23:17:28Z  
+**Updated:** 2026-08-27T23:19:51Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -133,11 +133,21 @@ No permanent resolver filtering mutation was required. The temporary synthetic r
 
 ### Selected next
 
-No later task is claimed selected yet. TSK-0406 completion has been persisted first; deterministic next-task recomputation from current WBS/dependencies/gates is the immediate runtime action.
+`TSK-0202` — export and version the approved AdGuard configuration: **TODO / selected**.
 
-### Known eligible candidate pending recomputation
+Deterministic selection evidence:
 
-- `TSK-0429` — define privacy-minimal backup scope: previously verified HIGH/critical-path and dependency-eligible through `TSK-0437` + `TSK-0011`, but recomputation must first consider tasks newly unlocked by TSK-0406.
+- queue-delta inspection after TSK-0406 found TSK-0202 as the only direct successor newly unlocked by TSK-0406;
+- exact WBS row: `A3`, `AUTO_ALLOWED`, HIGH, critical path, `ACC-0202`;
+- hard predecessors: `TSK-0204`, `TSK-0205`, `TSK-0206`, `TSK-0406`, `TSK-0201`, and `TSK-0011`; all are satisfied by current direct PASS/publication-readback evidence;
+- ACC-0202 requires a versioned artifact that reproduces approved settings, excludes secrets and query history, and links to deployment evidence;
+- independently eligible `TSK-0429` is also HIGH/critical-path, but TSK-0202 is the direct newly unlocked resolver-chain task and occurs earlier in WBS order.
+
+TSK-0202's requirement references include `REQ-0022`. That legal requirement remains intentionally unresolved under owner-deferred DEC-0021/DEC-0022 work until 2027-08-27 or earlier explicit reactivation; this technical task does not satisfy, waive, reopen, or infer non-applicability of that legal condition, and no real England participant activation is authorized by completing TSK-0202.
+
+### Subsequent eligible current-gate work
+
+- `TSK-0429` — define privacy-minimal backup scope: independently eligible after TSK-0202 unless a newly verified higher-priority safety/security/gate constraint intervenes.
 
 ### External provider boundary
 
@@ -150,7 +160,8 @@ No later task is claimed selected yet. TSK-0406 completion has been persisted fi
 - No secrets, credentials, private keys, unnecessary personal data, or raw DNS query history in GitHub.
 - Public resolver ports remain closed until exact privacy/security/abuse/TLS controls are verified.
 - Azure control-plane remains owner-managed; runner autonomy applies to the handed-off VM and repository-authorized tasks.
+- Owner-deferred UK representative/ICO fee planning remains unresolved; technical task PASS does not imply validation-readiness legal gate PASS.
 
 ## Exact next authoritative step
 
-Recompute the highest-priority eligible current-gate task from the canonical WBS using current PASS evidence. Include direct successors newly unlocked by TSK-0406 plus the already-eligible TSK-0429, resolve their hard predecessors/gates/action authority, then select and persist only the actual next task before execution.
+Execute `TSK-0202` within the technical scope only: inspect the current live AdGuard configuration through an explicit safe-field allowlist; generate and version a reproducible approved-settings artifact that excludes credentials/password hashes/private keys, query history, client-identifying data and volatile runtime data; link it to the deployed version/evidence; independently compare the artifact back to live safe fields and current privacy/upstream/filter/security invariants; then persist/read back EVD-0202 and runtime state. Do not reopen or mark the deferred legal requirements satisfied.
