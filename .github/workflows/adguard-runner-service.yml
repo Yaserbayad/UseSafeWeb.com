@@ -39,7 +39,7 @@ jobs:
 
           existing_unit="$(systemctl list-unit-files 'actions.runner.*.service' --no-legend 2>/dev/null | awk 'NR==1 {print $1}' || true)"
           if [[ -z "${existing_unit}" ]]; then
-            sudo "${runner_root}/svc.sh" install azureusr
+            (cd "${runner_root}" && sudo ./svc.sh install azureusr)
           fi
 
           [[ -x "${runner_root}/runsvc.sh" ]]
