@@ -25,19 +25,24 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Print canonical dependency rows for TSK-0483
+      - name: Print candidate rows and direct predecessors
         shell: bash
         run: |
           set -Eeuo pipefail
           [[ "$(hostname -s)" == "adguardvm" ]]
           python3 - <<'PY'
           import csv, json
-          wanted=['TSK-0011','TSK-0203','TSK-0436','TSK-0483']
           path='Plans/Master/WBS/master-wbs.csv'
           with open(path, newline='', encoding='utf-8-sig') as f:
-              reader=csv.DictReader(f)
-              by_id={r.get('Task_ID','').strip():r for r in reader if r.get('Task_ID','').strip() in wanted}
-          assert set(by_id)==set(wanted), (set(wanted)-set(by_id))
-          for task_id in wanted:
+              rows=list(csv.DictReader(f))
+          by_id={r.get('Task_ID','').strip():r for r in rows if r.get('Task_ID','').strip()}
+          wanted={'TSK-0407','TSK-0429'}
+          for task_id in list(wanted):
+              r=by_id[task_id]
+              for dep in (r.get('Dependencies') or '').split(';'):
+                  dep=dep.strip()
+                  if dep: wanted.add(dep)
+          for task_id in sorted(wanted):
+              assert task_id in by_id, task_id
               print(task_id.replace('-','_')+'_WBS_ROW='+json.dumps(by_id[task_id], sort_keys=True, ensure_ascii=False))
           PY
