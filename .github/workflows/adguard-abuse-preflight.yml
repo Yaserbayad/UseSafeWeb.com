@@ -1,4 +1,4 @@
-name: Inspect AdGuard abuse protections
+name: Verify AdGuard abuse protections
 
 on:
   push:
@@ -15,11 +15,11 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  inspect:
+  verify:
     runs-on: [self-hosted, linux, x64]
     timeout-minutes: 5
     steps:
-      - name: Read-only TSK-0483 preflight
+      - name: Verify TSK-0483 existing bounded controls
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -32,7 +32,6 @@ jobs:
           p=sys.argv[1]
           with open(p,encoding='utf-8') as f: d=yaml.safe_load(f)
           dns=d.get('dns') or {}
-          def b(v): return str(bool(v)).lower()
           binds=dns.get('bind_hosts') or []
           nonloop=[]
           for x in binds:
@@ -42,22 +41,29 @@ jobs:
                       nonloop.append(x)
               except ValueError:
                   pass
+          ratelimit=int(dns.get('ratelimit') or 0)
+          refuse_any=bool(dns.get('refuse_any'))
+          whitelist=dns.get('ratelimit_whitelist') or []
+          q=d.get('querylog') or {}; s=d.get('statistics') or {}
+          assert ratelimit > 0, ratelimit
+          assert refuse_any is True, refuse_any
+          assert len(whitelist)==0, len(whitelist)
+          assert q.get('enabled') is False, q.get('enabled')
+          assert dns.get('anonymize_client_ip') is True, dns.get('anonymize_client_ip')
+          assert s.get('enabled') is False, s.get('enabled')
+          assert '0.0.0.0' not in binds and '::' not in binds, binds
           print('dns_port='+str(dns.get('port')))
-          print('ratelimit='+str(dns.get('ratelimit')))
+          print('ratelimit='+str(ratelimit))
           print('ratelimit_subnet_len_ipv4='+str(dns.get('ratelimit_subnet_len_ipv4')))
           print('ratelimit_subnet_len_ipv6='+str(dns.get('ratelimit_subnet_len_ipv6')))
-          print('ratelimit_whitelist_count='+str(len(dns.get('ratelimit_whitelist') or [])))
-          print('refuse_any='+b(dns.get('refuse_any')))
-          print('allowed_clients_count='+str(len(dns.get('allowed_clients') or [])))
-          print('disallowed_clients_count='+str(len(dns.get('disallowed_clients') or [])))
+          print('ratelimit_whitelist_count=0')
+          print('refuse_any=true')
           print('bind_host_count='+str(len(binds)))
-          print('binds_wildcard_ipv4='+b('0.0.0.0' in binds))
-          print('binds_wildcard_ipv6='+b('::' in binds))
-          print('nonloopback_ipv4_bind_present='+b(nonloop))
-          q=d.get('querylog') or {}; s=d.get('statistics') or {}
-          print('querylog_enabled='+b(q.get('enabled')))
-          print('anonymize_client_ip='+b(dns.get('anonymize_client_ip')))
-          print('statistics_enabled='+b(s.get('enabled')))
+          print('public_wildcard_bind=false')
+          print('nonloopback_ipv4_bind_present='+str(bool(nonloop)).lower())
+          print('querylog_enabled=false')
+          print('anonymize_client_ip=true')
+          print('statistics_enabled=false')
           with open('/tmp/usw-abuse-target','w',encoding='utf-8') as f:
               f.write(nonloop[0] if nonloop else '127.0.0.1')
           PY
@@ -66,21 +72,29 @@ jobs:
           python3 - <<'PY'
           t=open('/tmp/usw-ufw-status.txt',encoding='utf-8',errors='replace').read().lower()
           lines=t.splitlines()
-          print('ufw_active='+str('status: active' in t).lower())
-          print('ufw_default_incoming_deny='+str(('default: deny (incoming)' in t) or ('default: deny (incoming),' in t)).lower())
-          print('ufw_dns_rule_mentions='+str(sum(1 for x in lines if ('53/' in x or x.strip().startswith('53 ')))))
-          print('ufw_dot_rule_mentions='+str(sum(1 for x in lines if ('853/' in x or x.strip().startswith('853 ')))))
+          active='status: active' in t
+          deny=('default: deny (incoming)' in t) or ('default: deny (incoming),' in t)
+          dns_rules=sum(1 for x in lines if ('53/' in x or x.strip().startswith('53 ')))
+          dot_rules=sum(1 for x in lines if ('853/' in x or x.strip().startswith('853 ')))
+          assert active, 'ufw inactive'
+          assert deny, 'ufw incoming policy not default deny'
+          assert dns_rules==0, dns_rules
+          assert dot_rules==0, dot_rules
+          print('ufw_active=true')
+          print('ufw_default_incoming_deny=true')
+          print('ufw_dns_rule_mentions=0')
+          print('ufw_dot_rule_mentions=0')
           PY
 
           python3 - <<'PY'
           import random, socket, struct, time
           target=open('/tmp/usw-abuse-target',encoding='utf-8').read().strip()
-          name='usesafeweb-abuse-preflight.invalid'
+          name='usesafeweb-abuse-acceptance.invalid'
           qname=b''.join(bytes([len(x)])+x.encode() for x in name.split('.'))+b'\x00'
           def packet(qtype,tid=None):
               if tid is None: tid=random.randrange(0,65536)
               return struct.pack('!HHHHHH',tid,0x0100,1,0,0,0)+qname+struct.pack('!HH',qtype,1)
-          def one(qtype,timeout=1):
+          def one(qtype,timeout=.75):
               s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.settimeout(timeout)
               p=packet(qtype); s.sendto(p,(target,53))
               try:
@@ -89,20 +103,30 @@ jobs:
               except socket.timeout:
                   return False, len(p), 0, None
               finally: s.close()
-          ok,qs,rs,rcode=one(1)
-          print('normal_query_response='+str(ok).lower())
-          print('normal_query_rcode='+str(rcode))
-          ok,qs,rs,rcode=one(255)
-          print('any_query_response='+str(ok).lower())
-          print('any_query_rcode='+str(rcode))
-          print('any_response_to_query_size_ratio='+('{:.2f}'.format(rs/qs) if qs else '0'))
 
+          low_sent=8; low_received=0
+          for _ in range(low_sent):
+              ok,_,_,_=one(1)
+              low_received += int(ok)
+              time.sleep(.16)
+          assert low_received==low_sent, (low_sent,low_received)
+          print('pilot_low_rate_sent='+str(low_sent))
+          print('pilot_low_rate_received='+str(low_received))
+
+          ok,qs,rs,rcode=one(255)
+          assert ok and rcode==4, (ok,rcode)
+          ratio=(rs/qs) if qs else 999
+          assert ratio <= 1.5, ratio
+          print('any_query_rcode='+str(rcode))
+          print('any_response_to_query_size_ratio='+'{:.2f}'.format(ratio))
+
+          time.sleep(1.1)
           total=80
           s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.setblocking(False)
           tids=[]
           start=time.monotonic()
           for i in range(total):
-              tid=(1000+i) & 0xffff; tids.append(tid); s.sendto(packet(1,tid),(target,53))
+              tid=(2000+i) & 0xffff; tids.append(tid); s.sendto(packet(1,tid),(target,53))
           send_elapsed=time.monotonic()-start
           deadline=time.monotonic()+1.25
           got=set()
@@ -114,11 +138,15 @@ jobs:
                   time.sleep(.005)
           s.close()
           received=len(got.intersection(tids))
+          dropped=total-received
+          assert received > 0, received
+          assert dropped >= total//2, (received,dropped)
           print('ratelimit_burst_sent='+str(total))
           print('ratelimit_burst_received='+str(received))
-          print('ratelimit_burst_dropped='+str(total-received))
+          print('ratelimit_burst_dropped='+str(dropped))
           print('ratelimit_burst_send_elapsed_ms='+str(round(send_elapsed*1000,1)))
           PY
 
-          rm -f /tmp/usw-abuse-target /tmp/usw-ufw-status.txt
-          echo 'TSK_0483_PREFLIGHT=PASS'
+          sudo rm -f /tmp/usw-abuse-target
+          rm -f /tmp/usw-ufw-status.txt
+          echo 'TSK_0483_ACCEPTANCE=PASS'
