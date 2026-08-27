@@ -1,0 +1,118 @@
+name: Audit AdGuard Quad9 upstream and ECS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/adguard-upstream-audit.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - name: Independently verify TSK-0407 runtime and persisted state
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          sudo -n true
+          systemctl is-active --quiet AdGuardHome.service
+
+          secret='/var/lib/usesafeweb/adguard/admin.env'
+          [[ "$(sudo stat -c '%a %U:%G' "$secret")" == '600 root:root' ]]
+          username="$(sudo awk -F= '$1=="ADGUARD_ADMIN_USER" {sub(/^[^=]*=/,""); print; exit}' "$secret")"
+          password="$(sudo awk -F= '$1=="ADGUARD_ADMIN_PASSWORD" {sub(/^[^=]*=/,""); print; exit}' "$secret")"
+          [[ -n "$username" && -n "$password" ]]
+          base='http://127.0.0.1:3000/control'
+
+          curl --silent --show-error --fail --max-time 10 --user "$username:$password" "$base/dns_info" -o /tmp/usw-dns-info.json
+          python3 - <<'PY'
+          import json
+          info=json.load(open('/tmp/usw-dns-info.json',encoding='utf-8'))
+          exact='https://dns10.quad9.net/dns-query'
+          up=info.get('upstream_dns') or []
+          fb=info.get('fallback_dns') or []
+          assert up == [exact], up
+          assert (info.get('upstream_dns_file') or '') == '', info.get('upstream_dns_file')
+          assert fb == [], fb
+          assert info.get('edns_cs_enabled') is False, info.get('edns_cs_enabled')
+          assert not any('dns11.quad9.net' in x or 'dns12.quad9.net' in x for x in up+fb)
+          print('api_upstream_exact_dns10_only=true')
+          print('api_upstream_file_empty=true')
+          print('api_fallback_count=0')
+          print('api_ecs_enabled=false')
+          print('api_ecs_endpoint_present=false')
+          payload={
+              'upstream_dns': up,
+              'upstream_dns_file': '',
+              'bootstrap_dns': info.get('bootstrap_dns') or [],
+              'fallback_dns': fb,
+              'private_upstream': info.get('private_upstream') or [],
+              'upstream_mode': info.get('upstream_mode') or '',
+          }
+          open('/tmp/usw-upstream-test.json','w',encoding='utf-8').write(json.dumps(payload,separators=(',',':')))
+          PY
+
+          curl --silent --show-error --fail --max-time 15 --user "$username:$password" \
+            --header 'Content-Type: application/json' --data-binary @/tmp/usw-upstream-test.json \
+            "$base/test_upstream_dns" -o /tmp/usw-upstream-test-result.json
+          unset password
+          python3 - <<'PY'
+          import json
+          r=json.load(open('/tmp/usw-upstream-test-result.json',encoding='utf-8'))
+          exact='https://dns10.quad9.net/dns-query'
+          assert r.get(exact) == 'OK', r
+          assert not any('dns11.quad9.net' in k or 'dns12.quad9.net' in k for k in r)
+          print('api_dns10_upstream_test=OK')
+          print('api_tested_ecs_endpoint=false')
+          PY
+
+          sudo python3 - /opt/AdGuardHome/AdGuardHome.yaml <<'PY'
+          import sys, yaml
+          with open(sys.argv[1],encoding='utf-8') as f: d=yaml.safe_load(f)
+          dns=d.get('dns') or {}
+          exact='https://dns10.quad9.net/dns-query'
+          up=list(dns.get('upstream_dns') or [])
+          fb=list(dns.get('fallback_dns') or [])
+          ecs=dns.get('edns_client_subnet') or {}
+          assert up == [exact], up
+          assert str(dns.get('upstream_dns_file') or '') == ''
+          assert fb == [], fb
+          assert ecs.get('enabled') is False, ecs
+          assert not any('dns11.quad9.net' in x or 'dns12.quad9.net' in x for x in up+fb)
+          assert (d.get('querylog') or {}).get('enabled') is False
+          assert dns.get('anonymize_client_ip') is True
+          assert (d.get('statistics') or {}).get('enabled') is False
+          print('persisted_upstream_exact_dns10_only=true')
+          print('persisted_upstream_file_empty=true')
+          print('persisted_fallback_count=0')
+          print('persisted_ecs_enabled=false')
+          print('persisted_ecs_endpoint_present=false')
+          print('privacy_invariants_preserved=true')
+          PY
+
+          python3 - <<'PY'
+          import random, socket, struct, time
+          label='usesafeweb-' + format(random.randrange(1,1<<32),'x')
+          name=label + '.example.com'
+          q=b''.join(bytes([len(x)])+x.encode() for x in name.split('.'))+b'\x00'
+          pkt=struct.pack('!HHHHHH',random.randrange(0,65536),0x0100,1,0,0,0)+q+struct.pack('!HH',1,1)
+          s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.settimeout(4); s.sendto(pkt,('127.0.0.1',53))
+          r,_=s.recvfrom(4096); s.close()
+          rcode=struct.unpack('!H',r[2:4])[0] & 0xF
+          assert rcode in (0,3), rcode
+          print('fresh_synthetic_resolution_response=true')
+          print('fresh_synthetic_resolution_rcode='+str(rcode))
+          PY
+
+          rm -f /tmp/usw-dns-info.json /tmp/usw-upstream-test.json /tmp/usw-upstream-test-result.json
+          echo 'TSK_0407_ACCEPTANCE=PASS'
