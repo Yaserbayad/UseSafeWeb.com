@@ -1,0 +1,43 @@
+name: AdGuard runner service verify
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/adguard-runner-service-verify.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  verify-service:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - name: Verify persistent runner service
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "${GITHUB_EVENT_NAME}" == "push" ]]
+          [[ "${GITHUB_REF}" == "refs/heads/main" ]]
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          [[ "$(id -un)" == "azureusr" ]]
+          sudo -n true
+
+          unit="$(systemctl list-unit-files 'actions.runner.*.service' --no-legend 2>/dev/null | awk 'NR==1 {print $1}' || true)"
+          [[ -n "${unit}" ]]
+          systemctl is-enabled --quiet "${unit}"
+          systemctl is-active --quiet "${unit}"
+
+          main_pid="$(systemctl show "${unit}" -p MainPID --value)"
+          [[ "${main_pid}" =~ ^[1-9][0-9]*$ ]]
+
+          echo "runner_name=${RUNNER_NAME}"
+          echo "runner_service=${unit}"
+          echo "runner_service_main_pid=${main_pid}"
+          echo "RUNNER_SERVICE=PASS"
