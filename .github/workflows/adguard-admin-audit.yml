@@ -1,0 +1,74 @@
+name: Audit restricted AdGuard administration
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/adguard-admin-audit.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - name: Independently audit TSK-0201 stable state
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          [[ "$(id -un)" == "azureusr" ]]
+          sudo -n true
+
+          secret='/var/lib/usesafeweb/adguard/admin.env'
+          [[ "$(sudo stat -c '%a %U:%G' "$secret")" == '600 root:root' ]]
+          username="$(sudo awk -F= '$1=="ADGUARD_ADMIN_USER" {sub(/^[^=]*=/,""); print; exit}' "$secret")"
+          password="$(sudo awk -F= '$1=="ADGUARD_ADMIN_PASSWORD" {sub(/^[^=]*=/,""); print; exit}' "$secret")"
+          [[ "$username" == 'usesafeweb-admin' && -n "$password" ]]
+
+          auth_code="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --max-time 5 \
+            --user "$username:$password" http://127.0.0.1:3000/control/status)"
+          unauth_code="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --max-time 5 \
+            http://127.0.0.1:3000/control/status || true)"
+          unset password
+          echo "authenticated_status_http=${auth_code}"
+          echo "unauthenticated_status_http=${unauth_code}"
+          [[ "$auth_code" == '200' ]]
+          [[ "$unauth_code" == '401' || "$unauth_code" == '403' ]]
+
+          admin="$(sudo ss -H -lntp | awk '/AdGuardHome/ && $4 ~ /:3000$/ {print $4}')"
+          echo "admin_listener=${admin}"
+          [[ "$admin" == '127.0.0.1:3000' || "$admin" == '[::1]:3000' ]]
+
+          dns="$(sudo ss -H -lntup | awk '/AdGuardHome/ && $5 ~ /:53$/ {print $1, $5}' | sort)"
+          printf 'dns_listeners_begin\n%s\ndns_listeners_end\n' "$dns"
+          grep -q '^tcp 127\.0\.0\.1:53$' <<<"$dns"
+          grep -q '^udp 127\.0\.0\.1:53$' <<<"$dns"
+          ! grep -Ev '^(tcp|udp) 127\.0\.0\.1:53$' <<<"$dns" | grep -q .
+
+          ufw_verbose="$(sudo ufw status verbose)"
+          grep -q '^Status: active' <<<"$ufw_verbose"
+          grep -q '^Default: deny (incoming), allow (outgoing)' <<<"$ufw_verbose"
+          while IFS= read -r line; do
+            [[ "$line" == *ALLOW* ]] || continue
+            [[ "$line" == 22/tcp* ]] || { echo "unexpected_ufw_allow=${line}"; exit 1; }
+          done <<<"$(sudo ufw status)"
+          echo 'ufw_only_ssh=PASS'
+
+          systemctl is-enabled --quiet AdGuardHome.service
+          systemctl is-active --quiet AdGuardHome.service
+          echo 'adguard_service=PASS'
+
+          runner_unit="$(systemctl list-unit-files 'actions.runner.*.service' --no-legend 2>/dev/null | awk 'NR==1 {print $1}' || true)"
+          [[ -n "$runner_unit" ]]
+          systemctl is-active --quiet "$runner_unit"
+          echo 'runner_service=PASS'
+
+          echo 'FRESH_ADMIN_AUDIT=PASS'
