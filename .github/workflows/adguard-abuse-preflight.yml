@@ -1,0 +1,79 @@
+name: Inspect AdGuard abuse protections
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/adguard-abuse-preflight.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  inspect:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - name: Read-only TSK-0483 preflight
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          sudo -n true
+          systemctl is-active --quiet AdGuardHome.service
+
+          sudo python3 - /opt/AdGuardHome/AdGuardHome.yaml <<'PY'
+          import sys, yaml
+          p=sys.argv[1]
+          with open(p,encoding='utf-8') as f: d=yaml.safe_load(f)
+          dns=d.get('dns') or {}
+          def b(v): return str(bool(v)).lower()
+          print('dns_port='+str(dns.get('port')))
+          print('ratelimit='+str(dns.get('ratelimit')))
+          print('ratelimit_subnet_len_ipv4='+str(dns.get('ratelimit_subnet_len_ipv4')))
+          print('ratelimit_subnet_len_ipv6='+str(dns.get('ratelimit_subnet_len_ipv6')))
+          print('ratelimit_whitelist_count='+str(len(dns.get('ratelimit_whitelist') or [])))
+          print('refuse_any='+b(dns.get('refuse_any')))
+          print('allowed_clients_count='+str(len(dns.get('allowed_clients') or [])))
+          print('disallowed_clients_count='+str(len(dns.get('disallowed_clients') or [])))
+          binds=dns.get('bind_hosts') or []
+          print('binds_wildcard_ipv4='+b('0.0.0.0' in binds))
+          print('binds_wildcard_ipv6='+b('::' in binds))
+          q=d.get('querylog') or {}; s=d.get('statistics') or {}
+          print('querylog_enabled='+b(q.get('enabled')))
+          print('anonymize_client_ip='+b(dns.get('anonymize_client_ip')))
+          print('statistics_enabled='+b(s.get('enabled')))
+          PY
+
+          sudo ufw status verbose 2>/dev/null | python3 -c "import sys; t=sys.stdin.read().lower(); print('ufw_active='+str('status: active' in t).lower()); print('ufw_dns_rule_mentions='+str(sum(1 for x in t.splitlines() if ('53/' in x or x.strip().startswith('53 ')))); print('ufw_dot_rule_mentions='+str(sum(1 for x in t.splitlines() if ('853/' in x or x.strip().startswith('853 '))))"
+
+          python3 - <<'PY'
+          import random, socket, struct, time
+          def packet(qtype):
+              name='usesafeweb-abuse-preflight.invalid'
+              q=b''.join(bytes([len(x)])+x.encode() for x in name.split('.'))+b'\x00'
+              return struct.pack('!HHHHHH',random.randrange(0,65536),0x0100,1,0,0,0)+q+struct.pack('!HH',qtype,1)
+          def one(dst,qtype,timeout=.35):
+              s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.settimeout(timeout)
+              p=packet(qtype); s.sendto(p,(dst,53))
+              try:
+                  r,_=s.recvfrom(4096)
+                  return True, len(p), len(r), (struct.unpack('!H',r[2:4])[0] & 0xF)
+              except socket.timeout:
+                  return False, len(p), 0, None
+              finally: s.close()
+          ok,qs,rs,rcode=one('127.0.0.1',1,1)
+          print('local_normal_query_response='+str(ok).lower())
+          print('local_normal_query_rcode='+str(rcode))
+          ok,qs,rs,rcode=one('127.0.0.1',255,1)
+          print('local_any_response='+str(ok).lower())
+          print('local_any_rcode='+str(rcode))
+          print('local_any_response_to_query_size_ratio='+('{:.2f}'.format(rs/qs) if qs else '0'))
+          PY
+
+          echo 'TSK_0483_PREFLIGHT=PASS'
