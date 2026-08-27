@@ -1,0 +1,36 @@
+name: Inspect governed task row
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/governance-task-row-inspect.yml
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Checkout exact main commit
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Print canonical TSK-0483 WBS row
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import csv, json
+          path='Plans/Master/WBS/master-wbs.csv'
+          with open(path, newline='', encoding='utf-8-sig') as f:
+              reader=csv.DictReader(f)
+              rows=[r for r in reader if any((v or '').strip()=='TSK-0483' for v in r.values())]
+          assert len(rows)==1, f'expected one TSK-0483 row, got {len(rows)}'
+          print('TSK_0483_WBS_ROW='+json.dumps(rows[0], sort_keys=True, ensure_ascii=False))
+          PY
