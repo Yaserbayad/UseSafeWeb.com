@@ -1,112 +1,95 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-26  
+**Updated:** 2026-08-27  
 **Branch:** `main`  
-**Status authority:** current checkpoint. Detailed business evidence remains in `BUSINESS_EVALUATION.md`, `BUSINESS_PHASES_17_22.md`, and `BUSINESS_PHASES_23_42.md`. Validation readiness is governed by `VALIDATION_READINESS_GATE.md`; Experiment 1 by `EXPERIMENT_01_CONCIERGE_VALIDATION.md`.
+**Mode:** `SERIAL LIGHT`  
+**Runtime authority:** this file owns volatile execution state. Planning authority is the owner-frozen modular system rooted at `Plans/Master/MASTER_PLAN.md` and mapped by `Plans/Master/MANIFEST.yaml`. The WBS owns task definitions/dependencies; the relationship index owns traversal; Layer 5 owns execution/evidence rules. Generated views and external trackers are non-authoritative.
 
-## Frozen project identity
+## Canonical planning activation
 
-- Public domain: **UseSafeWeb.com**.
-- Backend: **AdGuard**, frozen unless verified critical blocker.
-- Initial market: UK; first behavioral validation in England.
-- Core segment: parent/caregiver around a roughly 10–12-year-old child's first independently used smartphone.
+**Status: ACTIVE / OWNER-FROZEN / PUBLISHED / READ-BACK VERIFIED.**
+
+- Owner freeze: **PASS — TSK-0017**, explicit owner acceptance at `2026-08-27T19:38:36Z`.
+- Manifest schema: `usesafeweb.master-planning-system.v1.1`.
+- Frozen planning publication commit on `main`: `fce408f34470c0a0883ab978685b5265fdec4b97`.
+- Repository tree at that publication commit: `937818821a6e537fba36ac39f740d3efa5b36499`.
+- Canonical `Plans/` subtree Git tree: `e6c78a67a191e04ea85fbb68caf18b854067c3de`.
+- `Plans/SHA256SUMS.txt` SHA-256: `8d34fc3389898d3543124d80ee596220ad80d098f565283046c186511d8f4b26`.
+- Deterministic planning validation: **PASS — 641 tasks, 849 dependency edges, 0 broken links, 51/51 checksum entries**.
+- Publication verification: the GitHub `main` `Plans/` subtree tree SHA exactly matched the validated publication kit tree SHA, proving identical paths, modes and blob bytes; branch/read-back comparison after fast-forward was identical.
+- **TSK-0009: PASS** — owner-frozen `Plans/` tree published to `main` with no unrelated publication changes.
+- **TSK-0011: PASS** — canonical GitHub publication/read-back identity verified against the approved local package.
+- **TSK-0010: PASS on confirmed read-back of this rebaseline** — runtime checkpoint now references the frozen modular authority and actual LG-03 state.
+
+The planning freeze does **not** imply deployment, legal clearance, participant activation, supporter-payment activation or public launch.
+
+## Frozen project/product identity
+
+- Public brand/domain: **UseSafeWeb / UseSafeWeb.com**.
 - Product: **UseSafeWeb — First Phone Safety Setup**.
+- Initial customer: parent/caregiver around a roughly 10–12-year-old child's first independently used smartphone.
+- Initial validation market: England / UK.
 - Trust posture: **Simple guardrails. Clear limits. No invasive monitoring.**
-
-## Business evaluation
-
-**Phases 1–42 COMPLETE.**
-
-Final decision: **MODIFY — PROCEED TO VALIDATION, NOT FULL LAUNCH.**
-
-## Validation Readiness Gate
-
-**Status: IN PROGRESS — OWNER/ENVIRONMENT FACT COLLECTION COMPLETE; UK REPRESENTATION/ICO + DEPLOYMENT VERIFICATION REMAIN.**
-
-### Authoritative environment/owner decisions
-
-- Future pilot/production AdGuard must be deployed to the privacy-minimal requirements in `VALIDATION_READINESS_GATE.md`; old/test settings are not authoritative.
+- Backend: **AdGuard Home**, frozen unless a verified critical blocker requires reopening.
+- Core product baseline: **accountless-first** under `DEC-0042`; no mandatory UseSafeWeb account, persistent parent identity/dashboard or customer-facing AdGuard control plane unless `EXC-0001` is explicitly activated after validated need and owner approval.
+- Recovery/topology baseline under `DEC-0043`: one AdGuard node initially; owner supplies two separate fresh Ubuntu 24.04 LTS Azure VMs (AdGuard/DNS and web/app); Azure control-plane provisioning/configuration is owner-managed; direct-host Bash deployment/recovery; approximately 30-minute recovery accepted; tested rebuild/restore required.
 - Hosting provider: **Microsoft Azure**.
-- Production may later use EU + USA geography.
-- **Experiment 1 uses Azure West Europe (`westeurope`), Netherlands only** for child-linked DNS processing; the US node is excluded from the pilot path.
-- No additional pilot CDN/proxy/email/scheduling/payment/analytics/separate-research-data processor is currently selected.
-- Controller: **individual, main establishment Netherlands**.
-- Current turnover: **0 / pre-revenue**.
-- Staff information is intentionally not recorded at this stage and is not needed for the current fee-tier determination because turnover is below the Tier-1 threshold if a fee is due.
-- Owner intends to keep the first stage as a simple friends/family project and use **500 active users** as the point for broader organisational/commercial formalisation.
-- **500 users is an internal scale-review milestone only, not a GDPR/UK-GDPR threshold.** Minimum legal/privacy duties applicable to the pilot cannot be deferred on that basis.
+- Experiment-1 child-linked DNS region: **Azure West Europe (`westeurope`), Netherlands**.
+- Selected upstream: `https://dns10.quad9.net/dns-query`; ECS off; AdGuard remains the filtering/policy layer.
 
-### Upstream DNS
+## Business/product decision
 
-Selected upstream for development, Experiment 1 and production baseline:
+Business evaluation phases 1–42 remain complete.
 
-`https://dns10.quad9.net/dns-query`
+**Decision: MODIFY — PROCEED TO VALIDATION, NOT FULL LAUNCH.**
 
-- encrypted DoH;
-- no threat blocking, keeping AdGuard as the sole product filtering/policy layer;
-- DNSSEC validation;
-- **ECS disabled** in AdGuard; do not use Quad9 ECS endpoints;
-- Swiss upstream with published no-user-IP-recording posture.
+No MCP/integrated product build is authorised before the applicable behavioral/product gates. Full launch remains unauthorised.
 
-### Mandatory pilot AdGuard target configuration
+## Current gate
 
-Before first real participant, directly verify:
+### LG-03 — Validation Readiness (legacy G-02)
 
-- persistent identifiable query logging OFF;
-- file query logging OFF;
-- identifiable per-client statistics OFF/excluded unless specifically justified;
-- IP anonymisation ON wherever operational records can contain addresses;
-- EDNS Client Subnet OFF;
-- upstream = `https://dns10.quad9.net/dns-query`;
-- no browsing-history/top-domain product or experiment metric;
-- diagnostic logs only when necessary, time-boxed and deleted after resolution.
+**State: IN PROGRESS.** Technical/privacy/security/operational readiness may proceed. LG-03 cannot PASS for real-participant activation while required legal evidence remains unresolved unless current verified evidence establishes non-applicability.
 
-### Territorial/compliance result
+Current preserved readiness facts:
 
-- Netherlands establishment means EU GDPR applies to relevant processing.
-- Deliberately offering the pilot to England brings the UK-targeted processing within UK GDPR territorial scope.
-- The friends/family or personal/household exemption is not relied upon for this product-validation service.
-- A Netherlands-based controller with no UK establishment should not rely on the UK-representative exception without specialist confirmation because the exception requires processing to be only occasional and low risk; the project DPIA treats child-linked DNS exposure as materially sensitive/high-impact if mishandled.
-- Safe gate: **appoint a UK representative before first real England participant, or obtain a defensible documented conclusion that the Article-27 exception applies.**
-- With turnover 0, if the UK data-protection fee is due the controller falls within the current **Tier 1 (£52)** turnover threshold. Complete the ICO self-assessment before the first real participant; pay if required.
+- owner/environment fact collection completed;
+- Azure West Europe selected for Experiment 1;
+- controller facts remain individual / Netherlands / pre-revenue;
+- mandatory AdGuard privacy target remains: persistent identifiable query logging off, file query logging off, identifiable per-client statistics off/excluded unless justified, IP anonymisation where operational records can contain addresses, ECS off, selected Quad9 DoH upstream, no browsing-history/top-domain product metric, diagnostics necessary/time-boxed/deleted;
+- Experiment 1 protocol remains designed but execution/recruitment is not authorised until LG-03 and LG-04 PASS.
 
-### Azure processor position
+## Owner legal-work hold
 
-- Pilot region selected: **West Europe, Netherlands**.
-- Microsoft Azure is accepted as the design-stage hosting processor under Microsoft's current Products and Services Data Protection Addendum and transfer safeguards.
-- Deployment must still verify that the actual pilot resources are provisioned in `westeurope` and that no optional service creates an unreviewed data flow.
+`OWNER_LEGAL_HOLD_2026-08-27` remains active through **2027-08-27** unless the owner explicitly reactivates it earlier.
 
-### Experiment-1 retention
+- Exactly **26** WBS tasks remain `Plan_Status=DEFERRED` + runtime `WAITING` under this hold.
+- Historical legal/privacy/compliance evidence is preserved; the hold does not rewrite prior PASS evidence.
+- The hold is not a waiver, exemption, legal-clearance proof or LG-03 evidence.
+- Real England participant activation remains blocked if required legal evidence is still unresolved when activation is considered.
 
-- identifiable DNS/domain history: not retained;
-- fault diagnostics: only when necessary, time-boxed, deleted after resolution;
-- participant contact details: only through the 14-day follow-up, then delete promptly and no later than 30 days after that participant's follow-up;
-- pseudonymous participant metrics: only through analysis/decision, then aggregate/anonymise and delete participant-level records within 90 days after Experiment 1 closes;
-- canonical GitHub retains aggregate/anonymised findings only.
+## Current technical execution state
 
-## Current completion state
+- Azure control-plane creation/configuration: **owner-managed / outside project execution**.
+- `TSK-0434` and `TSK-0436`: **NOT_APPLICABLE + PASS** as verified exclusions only; they are not proof of live Azure implementation/security.
+- `TSK-0435` — verify owner-provided Azure `westeurope` pilot VM handoff: **WAITING** until the fresh Ubuntu 24.04 LTS AdGuard/DNS VM exists, is reachable and approved access metadata is available without exposing secrets.
+- `TSK-0438` — verify current UseSafeWeb.com DNS/registrar control and renewal state: **TODO / highest-priority currently selected independent LG-03 work**. PASS requires provider-authorised control evidence plus registrar/DNS ownership path and renewal/expiry evidence; public DNS/WHOIS evidence alone cannot prove account control.
+- `TSK-0483` — resolver abuse/amplification protection: **WAITING** for an actual reachable resolver/target environment even though its planning predecessor exclusions are satisfied.
+- Preparatory LG-03 work whose hard predecessors are already satisfied may proceed after higher-priority target/access constraints are dispositioned, including `TSK-0166`, `TSK-0168`, `TSK-0225`, `TSK-0227` and `TSK-0228`, subject to their exact task authority and current inputs.
 
-- Business evaluation #1–#42: **COMPLETE**.
-- Validation-readiness design: **COMPLETE**.
-- Owner/environment fact collection: **COMPLETE**.
-- Hosting provider/region selection: **COMPLETE — Azure West Europe, Netherlands**.
-- Upstream DNS selection: **COMPLETE — Quad9 `dns10` DoH**.
-- Controller facts: **COMPLETE — individual, Netherlands, turnover 0**.
-- Staff information: **not required / intentionally omitted**.
-- UK representative decision/action: **OPEN / BLOCKING before England pilot**.
-- ICO fee self-assessment: **OPEN / low-burden pre-pilot action**.
-- Pilot Azure/AdGuard deployment: **NOT STARTED**.
-- Deployment/config verification: **NOT STARTED**.
-- Experiment 1 protocol: **COMPLETE**.
-- Experiment 1 execution: **NOT STARTED / NOT AUTHORISED until readiness PASS**.
-- MCP implementation: **NOT AUTHORISED until behavioral validation passes**.
-- Full launch: **NOT AUTHORISED**.
+## Runtime safeguards
 
-## Exact next authoritative action
+- Runtime states are only `TODO`, `WAITING`, `BLOCKED`, `PASS`; no persistent RUNNING/claim/lease state.
+- PASS requires all applicable current acceptance criteria with durable/reconstructable evidence.
+- Secrets, tokens, credentials, private keys and unnecessary personal/raw DNS data must not be committed to GitHub.
+- No real participant activation until LG-03 and LG-04 permit it.
+- No public launch until the later production/launch gates pass.
+- No Azure control-plane mutation by project automation under the current owner handoff boundary.
 
-Two branches may proceed without changing product scope:
+## Exact next execution path
 
-1. **Human-only legal minimum:** nominate a person/entity established in the UK as the pilot UK representative, or obtain specialist confirmation that the Article-27 exception applies; complete the ICO fee self-assessment and pay Tier 1 if required.
-2. **Technical readiness:** provision the Azure `westeurope` pilot node, deploy AdGuard with the mandatory privacy configuration, and directly verify region/logging/statistics/anonymisation/ECS/upstream settings.
-
-After both branches pass, issue the final privacy notice with actual contact details, approve the LIA/DPIA residual risk, mark Validation Readiness PASS, and begin Experiment 1 recruitment/activation.
+1. Execute `TSK-0438` as far as current authorised tooling/evidence permits; retain public registrar/DNS evidence separately from proof of account control.
+2. Keep `TSK-0435` in WAITING until the owner provides the fresh reachable Ubuntu 24.04 LTS AdGuard/DNS VM handoff.
+3. Execute other eligible non-legal LG-03 preparation while target-environment tasks wait.
+4. Recompute eligibility after every confirmed durable mutation.
+5. Do not recruit/activate real participants until LG-03 and LG-04 PASS.
