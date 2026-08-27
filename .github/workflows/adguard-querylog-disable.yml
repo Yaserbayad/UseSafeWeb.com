@@ -28,7 +28,7 @@ jobs:
       - name: Execute TSK-0204 query-log privacy control
         shell: bash
         env:
-          EXPECTED_SCRIPT_BLOB: 770dcc466d0d0c569aa052105f8ff5c189c8e116
+          EXPECTED_SCRIPT_BLOB: 8028a17b2642e8b6a33b3b0a533258530586e130
         run: |
           set -Eeuo pipefail
           [[ "$(hostname -s)" == "adguardvm" ]]
