@@ -13,7 +13,7 @@ pass(){ printf 'PASS  %s\n' "$*"; }
 
 rollback(){
   rc=$?
-  if [[ "$config_changed" == '1' && "$success" != '1' && -n "$BACKUP" && -f "$BACKUP" ]]; then
+  if [[ "$config_changed" == '1' && "$success" != '1' && -n "$BACKUP" ]] && sudo test -f "$BACKUP"; then
     sudo systemctl stop AdGuardHome.service >/dev/null 2>&1 || true
     sudo cp --preserve=mode,ownership,timestamps "$BACKUP" "$CONFIG" >/dev/null 2>&1 || true
     sudo systemctl start AdGuardHome.service >/dev/null 2>&1 || true
@@ -35,6 +35,14 @@ password="$(sudo awk -F= '$1=="ADGUARD_ADMIN_PASSWORD" {sub(/^[^=]*=/,""); print
 [[ -n "$username" && -n "$password" ]] || fail 'admin credential unavailable'
 
 curl_auth(){ curl --silent --show-error --fail --max-time 10 --user "$username:$password" "$@"; }
+wait_control_api(){
+  for _ in $(seq 1 100); do
+    code="$(curl --silent --show-error --max-time 2 --user "$username:$password" -o /dev/null -w '%{http_code}' "$BASE/status" 2>/dev/null || true)"
+    [[ "$code" == '200' ]] && return 0
+    sleep 0.1
+  done
+  return 1
+}
 
 # Keep the supported runtime query-log API globally disabled and clear prior history.
 curl_auth "$BASE/querylog/config" -o /tmp/usw-qlog-config-before.json
@@ -99,6 +107,7 @@ os.replace(tmp,path)
 PY
   sudo systemctl start AdGuardHome.service
   systemctl is-active --quiet AdGuardHome.service || fail 'AdGuard Home did not restart after file logging correction'
+  wait_control_api || fail 'AdGuard control API did not become ready after restart'
   pass 'querylog.file_enabled changed to false with rollback protection'
 else
   pass 'querylog.file_enabled already false; no direct config edit required'
