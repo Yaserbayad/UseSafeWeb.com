@@ -1,0 +1,152 @@
+{
+  "artifact_schema": "usesafeweb.adguard-approved-config.v1",
+  "artifact_version": "1.0.0",
+  "task_id": "TSK-0202",
+  "acceptance_id": "ACC-0202",
+  "target": {
+    "host": "adguardvm",
+    "service_identity": "srv.UseSafeWeb.com",
+    "platform": "Ubuntu 24.04 LTS",
+    "azure_region": "westeurope",
+    "adguard_home_version": "v0.107.79"
+  },
+  "scope": "Secret-safe, version-controlled reproduction of the approved pre-public AdGuard settings. This is not a complete raw AdGuardHome.yaml backup and intentionally excludes authentication material, certificate private material, query history, client-identifying records, and volatile runtime data.",
+  "source_export": {
+    "workflow": ".github/workflows/adguard-approved-config-export.yml",
+    "workflow_blob": "a02dca9e536d7c036b44a5dadea19cd9cdb26a98",
+    "workflow_run": 33127050108,
+    "workflow_job": 98707574318,
+    "trigger_commit": "b977e55345c72ea7f9c4f42de194ab73589537e0",
+    "settings_sha256": "327c374d46fc40c03a847a57d7078df6035edc71710eb8725ce57c69ac8a93a8"
+  },
+  "linked_deployment_evidence": [
+    {
+      "task_id": "TSK-0203",
+      "path": "TSK_0203_ADGUARD_INSTALL_EVIDENCE_2026-08-27.md",
+      "blob": "382b70ca971739712ff8ad5668d03841d5493d62"
+    },
+    {
+      "task_id": "TSK-0201",
+      "path": "TSK_0201_ADGUARD_ADMIN_EVIDENCE_2026-08-27.md",
+      "blob": "ae06672e1cebdf87d006b85b80e5a7977f4e69b9"
+    },
+    {
+      "task_id": "TSK-0204",
+      "path": "TSK_0204_QUERYLOG_PRIVACY_EVIDENCE_2026-08-27.md",
+      "blob": "aa84d93d33d789fe4ff74ea12bcc2e5ffccd5b06"
+    },
+    {
+      "task_id": "TSK-0205",
+      "path": "TSK_0205_CLIENT_STATS_PRIVACY_EVIDENCE_2026-08-27.md",
+      "blob": "47fb0e0e6b64ceab965b2ca0ee259b40a98032c6"
+    },
+    {
+      "task_id": "TSK-0206",
+      "path": "TSK_0206_CLIENT_IP_ANONYMIZATION_EVIDENCE_2026-08-27.md",
+      "blob": "5905136433d930c2325a877e10a45e8540ac6a80"
+    },
+    {
+      "task_id": "TSK-0406",
+      "path": "TSK_0406_FILTERING_POLICY_EVIDENCE_2026-08-27.md",
+      "blob": "bb4514b4af7c1c5e616b7875f98e86962fee0325"
+    },
+    {
+      "task_id": "TSK-0407",
+      "path": "TSK_0407_QUAD9_DNS10_ECS_EVIDENCE_2026-08-27.md",
+      "blob": "7afeca58e9205234a230d2de702b99648b35347d"
+    },
+    {
+      "task_id": "TSK-0483",
+      "path": "TSK_0483_RESOLVER_ABUSE_PROTECTION_EVIDENCE_2026-08-27.md",
+      "blob": "8a6426707fe9c9c8cd08f6b55e25d6b48bb8b28c"
+    },
+    {
+      "task_id": "TSK-0437",
+      "path": "TSK_0437_HOST_HARDENING_EVIDENCE_2026-08-27.md",
+      "blob": "bb9221657a65c254975f61762af73b16a3e50241"
+    }
+  ],
+  "settings": {
+    "dhcp": {
+      "enabled": false
+    },
+    "dns": {
+      "anonymize_client_ip": true,
+      "bind_hosts": [
+        "127.0.0.1"
+      ],
+      "bootstrap_dns": [
+        "9.9.9.10",
+        "149.112.112.10",
+        "2620:fe::10",
+        "2620:fe::fe:10"
+      ],
+      "cache_optimistic": false,
+      "cache_size": 4194304,
+      "cache_ttl_max": 0,
+      "cache_ttl_min": 0,
+      "edns_client_subnet": {
+        "custom_ip_configured": false,
+        "enabled": false,
+        "use_custom": false
+      },
+      "fallback_dns": [],
+      "port": 53,
+      "private_upstream": [],
+      "ratelimit": 20,
+      "ratelimit_subnet_len_ipv4": 24,
+      "ratelimit_subnet_len_ipv6": 56,
+      "ratelimit_whitelist": [],
+      "refuse_any": true,
+      "upstream_dns": [
+        "https://dns10.quad9.net/dns-query"
+      ],
+      "upstream_dns_file": "",
+      "upstream_mode": "load_balance"
+    },
+    "filtering": {
+      "blocking_mode": "default",
+      "filtering_enabled": true,
+      "interval": null,
+      "parental_enabled": false,
+      "protection_enabled": true,
+      "safebrowsing_enabled": false,
+      "safesearch_enabled": false
+    },
+    "filters": [
+      {
+        "enabled": true,
+        "name": "AdGuard DNS filter",
+        "url": "https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt"
+      },
+      {
+        "enabled": false,
+        "name": "AdAway Default Blocklist",
+        "url": "https://adguardteam.github.io/HostlistsRegistry/assets/filter_2.txt"
+      }
+    ],
+    "http": {
+      "address": "127.0.0.1:3000"
+    },
+    "querylog": {
+      "enabled": false,
+      "file_enabled": false,
+      "interval": "90d"
+    },
+    "schema_version": 34,
+    "statistics": {
+      "enabled": false,
+      "interval": "1d"
+    },
+    "tls": {
+      "enabled": false,
+      "force_https": false,
+      "port_dns_over_quic": 853,
+      "port_dns_over_tls": 853,
+      "port_https": 443,
+      "server_name": ""
+    },
+    "user_rules": [],
+    "whitelist_filters": []
+  }
+}
