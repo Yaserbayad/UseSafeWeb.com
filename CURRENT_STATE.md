@@ -36,7 +36,9 @@ Latest explicit owner instruction at `2026-08-27T20:17:22Z`: routine status, rem
 - Hosting provider: Microsoft Azure.
 - Experiment-1 DNS region: Azure West Europe (`westeurope`), Netherlands.
 - Selected upstream: `https://dns10.quad9.net/dns-query`; ECS off; AdGuard remains the filtering/policy layer.
-- Selected client resolver endpoint: `https://dns.usesafeweb.com/dns-query`.
+- Selected client resolver identity: `dns.usesafeweb.com`.
+- Canonical iPhone DoH endpoint: `https://dns.usesafeweb.com/dns-query`.
+- Native Android pilot transport: DoT to `dns.usesafeweb.com` on TCP 853, under the frozen DoH/DoT-where-supported package boundary.
 
 ## Business/product decision
 
@@ -150,6 +152,26 @@ Additional boundary:
 
 ACC-0440 is fully satisfied: uniqueness, documentation, certificate compatibility, AdGuard compatibility, Network Engineering review and Security review all PASS.
 
+### TSK-0439 — define supported pilot device configuration methods
+
+**State: PASS.**
+
+Durable artifact/evidence:
+
+- `infrastructure/adguard-server/PILOT_DEVICE_DNS_CONFIGURATION_METHODS.md`
+- GitHub commit: `06f99c199e9bdec6600e25deb24e152fec50fb99`
+- GitHub blob: `f9af8b18cdc85bfe9b120661776172ab8581c2c9`
+- official Apple, Android/Google and AdGuard Home documentation reviewed 2026-08-27.
+
+Supported Experiment-1 phone methods:
+
+- **iPhone / iOS 14+** — manually installed Apple DNS Settings profile using DoH at `https://dns.usesafeweb.com/dns-query`.
+- **Android 9+ with a verifiable native Private DNS provider-hostname control** — DoT to `dns.usesafeweb.com` on TCP 853.
+
+The artifact provides explicit install, verification, removal/restore and known-limit procedures for each supported family. It explicitly excludes older unsupported OS versions, Android variants without the required native control, app/VPN DNS substitutes, plaintext DNS, user-specific ClientID paths, and non-phone device classes from the Experiment-1 baseline. Verification is defined as platform configuration state plus a privacy-safe synthetic allowed/blocked DNS test set; server-side encrypted-transport evidence remains separately required. No ordinary browsing-history logging is needed.
+
+ACC-0439 is fully satisfied: both supported platforms have install, verification, removal and known-limit methods; unsupported variants are explicit; the accountless/minimum-data and DoH/DoT-where-supported boundaries are preserved.
+
 ## Preserved PASS preparation evidence
 
 - `TSK-0434`, `TSK-0436` — owner-control-plane exclusions verified; actual host/security verification remains separate.
@@ -168,11 +190,15 @@ ACC-0440 is fully satisfied: uniqueness, documentation, certificate compatibilit
 - `TSK-0435`: PASS.
 - `TSK-0438`: PASS.
 - `TSK-0440`: PASS.
+- `TSK-0439`: PASS.
 - `TSK-0437`: WAITING only for target execution/verification of the published hardening artifact.
-- `TSK-0439` — define supported pilot device configuration methods: TODO / eligible.
-- `TSK-0441` — create public DNS records for the pilot endpoint: TODO / eligible, but actual DNS-provider mutation requires an available provider execution path.
-- `TSK-0483` — implement resolver abuse/amplification protections: dependencies are satisfied, but implementation requires the resolver service/configuration surface to exist; do not fabricate live implementation before AdGuard is installed/configurable.
+- `TSK-0441` — create public DNS records for the pilot endpoint: **WAITING on a supported DNS-provider execution path**. Desired record is not claimed created. Current tools expose no DNS-provider account connector/plugin.
+- `TSK-0483` — implement resolver abuse/amplification protections: **WAITING on an actual resolver service/configuration surface**. The fresh accepted VM currently has no AdGuard listener/service, so its implementation/test acceptance cannot truthfully be satisfied yet.
 - Later TLS/deployment tasks remain dependency-driven.
+
+## Material technical sequencing issue
+
+A current WBS dependency must be reconciled before the AdGuard installation chain can advance: `TSK-0203 — Install supported AdGuard release` currently depends on `TSK-0483`, while ACC-0483 requires implemented/tested resolver rate limiting/denial and amplification controls. The accepted fresh VM has no resolver service yet, so ACC-0483 cannot be executed/tested before a resolver exists. No false PASS is permitted. This is preserved as a technical dependency inconsistency to resolve through the smallest governed WBS correction before selecting TSK-0203/TSK-0483 execution.
 
 ## Runtime safeguards
 
@@ -183,6 +209,12 @@ ACC-0440 is fully satisfied: uniqueness, documentation, certificate compatibilit
 - No public launch until later production/launch gates pass.
 - No Azure control-plane mutation by project automation under the current owner handoff boundary.
 
-## Current execution direction
+## Current execution boundary
 
-TSK-0437 target execution remains the highest-priority security action. While it waits on that platform action, continue independently executable technical preparation in dependency order, with TSK-0439 preferred over fabricating DNS-provider or not-yet-installed resolver mutations. Recompute eligibility after every durable state change.
+The current LG-03/L2 autonomous tranche is now exhausted without fabricating external state:
+
+1. **TSK-0437** is highest priority and needs the published hardening script executed on `srv.UseSafeWeb.com` from the existing non-root SSH session.
+2. **TSK-0441** needs actual DNS-provider access/change execution; no supported connector is presently available.
+3. **TSK-0483** cannot meet its acceptance until a resolver service exists, exposing the WBS dependency inconsistency described above.
+
+Later L4/L5/L8/L12 tasks whose raw dependencies may already be PASS are not selected while the current LG-03/L2 technical gate has these unresolved conditions. Resume by reconciling the first changed condition, rereading current authority, and recomputing eligibility.
