@@ -1,0 +1,148 @@
+name: Apply owner pre-freeze plan update
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-owner-pre-freeze.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact triggering commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fail closed on concurrent main change
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$GITHUB_SHA"
+
+      - name: Reconstruct verified owner-update transformer
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'bcfba294dc2a13bb6b18ed89f32f15e4687bd2637969ca27f17b9fbdc1fa351b  .github/tmp-owner-update/chunk0' | sha256sum -c -
+          echo '81a564b8b40b6d6d3a395594172e377fd3907b77cb6d898c5eb072e881955d5b  .github/tmp-owner-update/chunk1' | sha256sum -c -
+          echo 'a6b9a379230742d5b2f31ec40714d529b74f53fd651afb9bc755b9f42dd61f6f  .github/tmp-owner-update/chunk2' | sha256sum -c -
+          echo '39c2b0addb77b560026a58c4e3797abff7656cceb33470ec98e30f7e4c0ae48a  .github/tmp-owner-update/chunk3' | sha256sum -c -
+          echo '048b3eae5dee76448c3f42e236f12398b01133e4e07e0070d796dbfeb1d5bae0  .github/tmp-owner-update/chunk4' | sha256sum -c -
+          cat .github/tmp-owner-update/chunk{0,1,2,3,4} > /tmp/apply.b64
+          echo '0927973a9cbe92e40f8d23785c1fa5754c52083ef5c57962b54b5114c7181aa2  /tmp/apply.b64' | sha256sum -c -
+          base64 -d /tmp/apply.b64 | gzip -d > /tmp/apply_owner_pre_freeze.py
+          echo '24fcbddd4c6857763e21d9dfa0dfb34604a4b6be167e2c5e7a445b86f5b58596  /tmp/apply_owner_pre_freeze.py' | sha256sum -c -
+
+      - name: Apply bounded owner decisions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 /tmp/apply_owner_pre_freeze.py
+
+      - name: Rebuild derived plan and checksum set
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 Plans/Master/Tools/rebuild_master_plan.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          root = Path('Plans/Master')
+          rows = []
+          for p in sorted((x for x in root.rglob('*') if x.is_file()), key=lambda x: x.as_posix()):
+              rows.append(f"{hashlib.sha256(p.read_bytes()).hexdigest()}  Master/{p.relative_to(root).as_posix()}")
+          Path('Plans/SHA256SUMS.txt').write_text('\n'.join(rows) + '\n', encoding='utf-8')
+          PY
+          test "$(wc -l < Plans/SHA256SUMS.txt)" -eq 51
+          echo 'aa1f2842f026da4f17e9b0d7db4cce05e3c9547bb8b8a6a7b676ea4c40b26374  Plans/SHA256SUMS.txt' | sha256sum -c -
+
+      - name: Run deterministic package validator
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 Plans/Master/Tools/validate_master_plan.py
+
+      - name: Run targeted semantic acceptance audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import csv, re
+
+          root = Path('Plans/Master')
+          decisions = (root/'Registers/DECISIONS_TRIGGERS.md').read_text(encoding='utf-8')
+          reqs = (root/'Registers/REQUIREMENTS.md').read_text(encoding='utf-8')
+          cons = (root/'Registers/CONSTRAINTS.md').read_text(encoding='utf-8')
+          interfaces = (root/'Registers/INTERFACES.md').read_text(encoding='utf-8')
+          layer1 = (root/'Layers/LAYER_1_PROGRAM_ARCHITECTURE_STRATEGIC_BASELINE.md').read_text(encoding='utf-8')
+          layer5 = (root/'Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md').read_text(encoding='utf-8')
+          manifest = (root/'MANIFEST.yaml').read_text(encoding='utf-8')
+          current_if = (root/'Governance/CURRENT_STATE_INTERFACE.md').read_text(encoding='utf-8')
+          audit = (root/'VALIDATION_REPORT.md').read_text(encoding='utf-8')
+          alltext = '\n'.join([decisions, reqs, cons, interfaces, layer1, layer5, manifest, current_if, audit])
+
+          assert len(re.findall(r'^\| DEC-\d{4} \|', decisions, flags=re.M)) == 48
+          assert 'DEC-0049' not in decisions and 'DEC-0050' not in decisions
+          for needle in [
+              '£2/month or £20/year', '€2/month or €20/year', '$2/month or $20/year',
+              'Stripe + PayPal', 'GBP/EUR/USD', 'TypeScript + Next.js', '/website',
+              '/infrastructure/adguard', 'WCAG 2.2 AA', 'English, Turkish and Arabic',
+              'direct-host', 'owner-provisioned', 'Azure-native backup', 'server-managed',
+              'Privacy-minimal aggregate analytics', 'Cloudflare'
+          ]:
+              assert needle in alltext, needle
+          for forbidden in ['DEC-0049', 'DEC-0050']:
+              assert forbidden not in alltext
+          assert 'Production secrets/tokens/private keys are not committed to Git, encrypted or plaintext.' in alltext
+          assert 'no public/customer api' in alltext.lower()
+          assert 'queue/broker/worker' in alltext
+          assert 'Kubernetes' in alltext and 'microservices' in alltext
+          assert 'not yet canonical' in manifest
+          assert 'TSK-0017' in current_if and 'HUMAN_ONLY' in current_if
+
+          with (root/'WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='') as f:
+              rows = list(csv.DictReader(f))
+          assert len(rows) == 641
+          by = {r['Task_ID']: r for r in rows}
+          assert by['TSK-0017']['Execution_State'] == 'TODO'
+          assert by['TSK-0017']['Action_Authority'] == 'HUMAN_ONLY'
+          assert by['TSK-0435']['Action_Authority'] == 'HUMAN_ONLY'
+          assert by['TSK-0444']['AI_Capability_A0_A4'] == 'A3'
+          assert by['TSK-0444']['Action_Authority'] == 'AUTO_ALLOWED'
+          assert by['TSK-0451']['Plan_Status'] == 'NOT_APPLICABLE'
+          assert by['TSK-0451']['Execution_State'] == 'PASS'
+          assert 'provision the azure vm' not in by['TSK-0451']['Acceptance_Criteria'].lower()
+          assert 'no automation claims to create the Azure VM' in by['TSK-0435']['Acceptance_Criteria']
+          assert 'never writes production secrets/tokens/private keys to Git (encrypted or plaintext)' in by['TSK-0457']['Acceptance_Criteria']
+          assert 'Telegram' in by['TSK-0541']['Acceptance_Criteria'] and 'email' in by['TSK-0541']['Acceptance_Criteria']
+          print('TARGETED SEMANTIC AUDIT PASS')
+          PY
+          git diff --exit-code -- CURRENT_STATE.md
+
+      - name: Commit only revised Plans and remove temporary tooling
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .github/tmp-owner-update
+          rm -f .github/workflows/apply-owner-pre-freeze.yml
+          git add -A Plans .github/tmp-owner-update .github/workflows/apply-owner-pre-freeze.yml
+          test -n "$(git diff --cached --name-only)"
+          if git diff --cached --name-only | grep -Ev '^(Plans/|\.github/tmp-owner-update/|\.github/workflows/apply-owner-pre-freeze\.yml$)' ; then
+            echo 'Unexpected staged path; refusing commit.' >&2
+            exit 1
+          fi
+          if git diff --cached --name-only | grep -qx 'CURRENT_STATE.md'; then
+            echo 'CURRENT_STATE.md must remain untouched before owner freeze.' >&2
+            exit 1
+          fi
+          git config user.name 'UseSafeWeb Plan Automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git commit -m 'Integrate owner technical and payment decisions into pre-freeze master plan'
+          git push origin HEAD:main
+          echo "PLAN_COMMIT=$(git rev-parse HEAD)"
