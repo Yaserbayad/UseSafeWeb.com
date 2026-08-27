@@ -1,0 +1,133 @@
+name: Export approved AdGuard configuration safely
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/adguard-approved-config-export.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  export:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - name: Export only governed non-sensitive settings
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          sudo -n true
+          systemctl is-active --quiet AdGuardHome.service
+          /opt/AdGuardHome/AdGuardHome --version | head -n 1
+
+          sudo python3 - /opt/AdGuardHome/AdGuardHome.yaml <<'PY'
+          import hashlib, ipaddress, json, sys, yaml
+          with open(sys.argv[1],encoding='utf-8') as f:
+              d=yaml.safe_load(f)
+          dns=d.get('dns') or {}
+          filtering=d.get('filtering') or {}
+          querylog=d.get('querylog') or {}
+          statistics=d.get('statistics') or {}
+          http=d.get('http') or {}
+          tls=d.get('tls') or {}
+          dhcp=d.get('dhcp') or {}
+          filters=d.get('filters') or []
+          whitelists=d.get('whitelist_filters') or []
+          rules=d.get('user_rules') or []
+          users=d.get('users') or []
+          clients=(d.get('clients') or {}).get('persistent') or []
+
+          binds=list(dns.get('bind_hosts') or [])
+          for value in binds:
+              ip=ipaddress.ip_address(value)
+              assert ip.is_loopback, f'non-loopback bind is outside current approved pre-public baseline: {value}'
+          assert (dns.get('ratelimit_whitelist') or []) == [], 'rate-limit whitelist must stay empty for approved baseline'
+          assert whitelists == [], 'whitelist filters must stay empty for approved baseline'
+          assert rules == [], 'baseline user rules must stay empty for approved baseline'
+          assert clients == [], 'persistent client identifiers are not part of approved exported baseline'
+
+          edns=dns.get('edns_client_subnet') or {}
+          safe={
+            'schema_version': d.get('schema_version'),
+            'http': {
+              'address': http.get('address'),
+            },
+            'dns': {
+              'bind_hosts': binds,
+              'port': dns.get('port'),
+              'upstream_dns': list(dns.get('upstream_dns') or []),
+              'upstream_dns_file': str(dns.get('upstream_dns_file') or ''),
+              'bootstrap_dns': list(dns.get('bootstrap_dns') or []),
+              'fallback_dns': list(dns.get('fallback_dns') or []),
+              'private_upstream': list(dns.get('private_upstream') or []),
+              'upstream_mode': dns.get('upstream_mode'),
+              'ratelimit': dns.get('ratelimit'),
+              'ratelimit_subnet_len_ipv4': dns.get('ratelimit_subnet_len_ipv4'),
+              'ratelimit_subnet_len_ipv6': dns.get('ratelimit_subnet_len_ipv6'),
+              'ratelimit_whitelist': [],
+              'refuse_any': bool(dns.get('refuse_any')),
+              'edns_client_subnet': {
+                'enabled': bool(edns.get('enabled')),
+                'use_custom': bool(edns.get('use_custom')),
+                'custom_ip_configured': bool(edns.get('custom_ip')),
+              },
+              'anonymize_client_ip': bool(dns.get('anonymize_client_ip')),
+              'cache_size': dns.get('cache_size'),
+              'cache_ttl_min': dns.get('cache_ttl_min'),
+              'cache_ttl_max': dns.get('cache_ttl_max'),
+              'cache_optimistic': bool(dns.get('cache_optimistic')),
+            },
+            'filtering': {
+              'protection_enabled': bool(filtering.get('protection_enabled')),
+              'filtering_enabled': bool(filtering.get('filtering_enabled')),
+              'blocking_mode': filtering.get('blocking_mode'),
+              'interval': filtering.get('interval'),
+              'safebrowsing_enabled': bool(filtering.get('safebrowsing_enabled')),
+              'parental_enabled': bool(filtering.get('parental_enabled')),
+              'safesearch_enabled': bool(filtering.get('safesearch_enabled')),
+            },
+            'filters': [
+              {'name':x.get('name'),'url':x.get('url'),'enabled':bool(x.get('enabled'))}
+              for x in filters
+            ],
+            'whitelist_filters': [],
+            'user_rules': [],
+            'querylog': {
+              'enabled': bool(querylog.get('enabled')),
+              'file_enabled': bool(querylog.get('file_enabled')),
+              'interval': querylog.get('interval'),
+            },
+            'statistics': {
+              'enabled': bool(statistics.get('enabled')),
+              'interval': statistics.get('interval'),
+            },
+            'tls': {
+              'enabled': bool(tls.get('enabled')),
+              'server_name': tls.get('server_name'),
+              'force_https': bool(tls.get('force_https')),
+              'port_https': tls.get('port_https'),
+              'port_dns_over_tls': tls.get('port_dns_over_tls'),
+              'port_dns_over_quic': tls.get('port_dns_over_quic'),
+            },
+            'dhcp': {
+              'enabled': bool(dhcp.get('enabled')),
+            },
+          }
+          raw=json.dumps(safe,sort_keys=True,separators=(',',':'),ensure_ascii=False)
+          forbidden=('password','hashed_password','private_key','certificate_chain','querylog.json','client_ip')
+          lower=raw.lower()
+          assert all(x not in lower for x in forbidden), 'safe export contains a forbidden field name'
+          print('admin_user_count='+str(len(users)))
+          print('persistent_client_count='+str(len(clients)))
+          print('approved_config_json='+raw)
+          print('approved_config_sha256='+hashlib.sha256(raw.encode()).hexdigest())
+          print('TSK_0202_SAFE_EXPORT=PASS')
+          PY
