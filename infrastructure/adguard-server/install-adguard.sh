@@ -45,7 +45,7 @@ else
 
   curl --fail --show-error --silent --location --proto '=https' --tlsv1.2 \
     "${BASE_URL}/checksums.txt" -o "${tmp}/checksums.txt"
-  upstream_sha="$(awk -v a="$ASSET" '$2==a {print $1}' "${tmp}/checksums.txt")"
+  upstream_sha="$(awk -v a="$ASSET" '{name=$2; sub(/^\.\//,"",name); if (name==a) {print $1; exit}}' "${tmp}/checksums.txt")"
   [[ -n "$upstream_sha" && "$upstream_sha" == "$EXPECTED_SHA256" ]] \
     || fail "official checksums.txt does not match pinned GitHub asset digest"
   pass "official checksums.txt agrees with pinned digest"
