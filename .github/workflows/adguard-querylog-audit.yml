@@ -1,0 +1,74 @@
+name: Audit AdGuard query logging privacy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/adguard-querylog-audit.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - name: Independently audit TSK-0204 stable state
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          sudo -n true
+          secret='/var/lib/usesafeweb/adguard/admin.env'
+          username="$(sudo awk -F= '$1=="ADGUARD_ADMIN_USER" {sub(/^[^=]*=/,""); print; exit}' "$secret")"
+          password="$(sudo awk -F= '$1=="ADGUARD_ADMIN_PASSWORD" {sub(/^[^=]*=/,""); print; exit}' "$secret")"
+          [[ -n "$username" && -n "$password" ]]
+          base='http://127.0.0.1:3000/control'
+
+          curl --silent --show-error --fail --max-time 10 --user "$username:$password" "$base/querylog/config" -o /tmp/qcfg.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/qcfg.json',encoding='utf-8'))
+          assert d.get('enabled') is False, d
+          print('querylog_enabled=false')
+          PY
+
+          # Fresh synthetic query after the mutation checkpoint.
+          python3 - <<'PY'
+          import random, socket, struct
+          name='usesafeweb-fresh-audit.invalid'
+          q=b''.join(bytes([len(x)])+x.encode() for x in name.split('.'))+b'\x00'
+          pkt=struct.pack('!HHHHHH',random.randrange(0,65536),0x0100,1,0,0,0)+q+struct.pack('!HH',1,1)
+          s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.settimeout(3); s.sendto(pkt,('127.0.0.1',53))
+          try: s.recvfrom(4096)
+          except socket.timeout: pass
+          PY
+          sleep 1
+
+          curl --silent --show-error --fail --max-time 10 --user "$username:$password" "$base/querylog?limit=20" -o /tmp/qlog.json
+          unset password
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/qlog.json',encoding='utf-8'))
+          items=d.get('data') or []
+          assert not any('usesafeweb-fresh-audit.invalid' in json.dumps(x,sort_keys=True) for x in items)
+          print('fresh_synthetic_query_retained=false')
+          print('querylog_items='+str(len(items)))
+          PY
+
+          mapfile -t files < <(sudo find /opt/AdGuardHome -type f -name 'querylog.json*' -size +0c -print 2>/dev/null || true)
+          ((${#files[@]} == 0))
+          echo 'persistent_querylog_files=0'
+
+          systemctl is-active --quiet AdGuardHome.service
+          runner_unit="$(systemctl list-unit-files 'actions.runner.*.service' --no-legend 2>/dev/null | awk 'NR==1 {print $1}' || true)"
+          [[ -n "$runner_unit" ]]
+          systemctl is-active --quiet "$runner_unit"
+          rm -f /tmp/qcfg.json /tmp/qlog.json
+          echo 'FRESH_QUERYLOG_AUDIT=PASS'
