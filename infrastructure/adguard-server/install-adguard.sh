@@ -23,10 +23,16 @@ command -v systemctl >/dev/null || fail "systemctl missing"
 command -v ufw >/dev/null || fail "ufw missing"
 sudo -n true || fail "non-interactive sudo unavailable"
 
+version_matches() {
+  local output="$1"
+  [[ "$output" == *"${VERSION}"* ]]
+}
+
 # Never overwrite an unrecognized installation.
 if [[ -x "$BINARY" ]]; then
   installed="$($BINARY --version 2>/dev/null || true)"
-  if grep -Fq "${VERSION#v}" <<<"$installed"; then
+  printf 'existing_version_quoted=%q\n' "$installed"
+  if version_matches "$installed"; then
     echo "installed_version=${installed}"
     pass "requested AdGuard Home version is already installed"
   else
@@ -64,7 +70,8 @@ else
   tar -xzf "${tmp}/${ASSET}" -C "$tmp"
   [[ -x "${tmp}/AdGuardHome/AdGuardHome" ]] || fail "release binary missing after extraction"
   extracted_version="$("${tmp}/AdGuardHome/AdGuardHome" --version 2>/dev/null || true)"
-  grep -Fq "${VERSION#v}" <<<"$extracted_version" || fail "extracted binary version mismatch: $extracted_version"
+  printf 'extracted_version_quoted=%q\n' "$extracted_version"
+  version_matches "$extracted_version" || fail "extracted binary version mismatch: $extracted_version"
   echo "extracted_version=${extracted_version}"
 
   sudo install -d -m 0755 -o root -g root "$INSTALL_DIR"
@@ -91,7 +98,8 @@ sudo systemctl is-active --quiet AdGuardHome.service || fail "AdGuardHome.servic
 pass "AdGuardHome.service is enabled and active"
 
 version_out="$($BINARY --version 2>/dev/null || true)"
-grep -Fq "${VERSION#v}" <<<"$version_out" || fail "installed version mismatch: $version_out"
+printf 'installed_version_quoted=%q\n' "$version_out"
+version_matches "$version_out" || fail "installed version mismatch: $version_out"
 echo "installed_version=${version_out}"
 
 # Keep administration and resolver service unexposed until later tasks.
