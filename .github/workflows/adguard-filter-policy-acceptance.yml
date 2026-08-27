@@ -62,6 +62,27 @@ jobs:
               "$base/filtering/check_host" -o "$1"
           }
 
+          wait_reason() {
+            expected="$1"
+            outfile="$2"
+            attempts=0
+            for i in $(seq 1 100); do
+              attempts="$i"
+              check_host "$outfile"
+              if EXPECTED="$expected" python3 - "$outfile" <<'PY'
+          import json, os, sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          raise SystemExit(0 if r.get('reason') == os.environ['EXPECTED'] else 1)
+          PY
+              then
+                printf '%s' "$attempts"
+                return 0
+              fi
+              sleep 0.1
+            done
+            return 1
+          }
+
           check_host /tmp/usw-filter-check-baseline.json
           python3 - <<'PY'
           import json
@@ -95,32 +116,22 @@ jobs:
           curl --silent --show-error --fail --max-time 10 --user "$username:$password" \
             --header 'Content-Type: application/json' --data-binary @/tmp/usw-filter-block.json \
             "$base/filtering/set_rules" >/dev/null
-          check_host /tmp/usw-filter-check-block.json
-          python3 - <<'PY'
-          import json
-          r=json.load(open('/tmp/usw-filter-check-block.json',encoding='utf-8'))
-          assert r.get('reason') == 'FilteredBlackList', r
-          print('synthetic_block_reason=FilteredBlackList')
-          PY
+          block_attempts="$(wait_reason FilteredBlackList /tmp/usw-filter-check-block.json)"
+          echo "synthetic_block_reason=FilteredBlackList"
+          echo "block_convergence_poll_attempts=$block_attempts"
 
           curl --silent --show-error --fail --max-time 10 --user "$username:$password" \
             --header 'Content-Type: application/json' --data-binary @/tmp/usw-filter-allow.json \
             "$base/filtering/set_rules" >/dev/null
-          check_host /tmp/usw-filter-check-allow.json
-          python3 - <<'PY'
-          import json
-          r=json.load(open('/tmp/usw-filter-check-allow.json',encoding='utf-8'))
-          assert r.get('reason') == 'NotFilteredWhiteList', r
-          print('synthetic_exception_reason=NotFilteredWhiteList')
-          PY
+          allow_attempts="$(wait_reason NotFilteredWhiteList /tmp/usw-filter-check-allow.json)"
+          echo "synthetic_exception_reason=NotFilteredWhiteList"
+          echo "exception_convergence_poll_attempts=$allow_attempts"
 
           curl --silent --show-error --fail --max-time 10 --user "$username:$password" \
             --header 'Content-Type: application/json' --data-binary @/tmp/usw-filter-restore.json \
             "$base/filtering/set_rules" >/dev/null
-          mutated=0
-          check_host /tmp/usw-filter-check-restored.json
+          rollback_attempts="$(wait_reason NotFilteredNotFound /tmp/usw-filter-check-restored.json)"
           curl --silent --show-error --fail --max-time 10 --user "$username:$password" "$base/filtering/status" -o /tmp/usw-filter-after.json
-          unset password
 
           python3 - <<'PY'
           import json
@@ -136,6 +147,9 @@ jobs:
           print('user_rules_restored_exactly=true')
           print('filter_list_state_unchanged=true')
           PY
+          echo "rollback_convergence_poll_attempts=$rollback_attempts"
+          mutated=0
+          unset password
 
           sudo python3 - /opt/AdGuardHome/AdGuardHome.yaml <<'PY'
           import sys, yaml
