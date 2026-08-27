@@ -1,0 +1,107 @@
+name: Audit AdGuard client IP anonymisation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/adguard-ip-anonymization-audit.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - name: Independently audit TSK-0206 stable state
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          sudo -n true
+          secret='/var/lib/usesafeweb/adguard/admin.env'
+          [[ "$(sudo stat -c '%a %U:%G' "$secret")" == '600 root:root' ]]
+          username="$(sudo awk -F= '$1=="ADGUARD_ADMIN_USER" {sub(/^[^=]*=/,""); print; exit}' "$secret")"
+          password="$(sudo awk -F= '$1=="ADGUARD_ADMIN_PASSWORD" {sub(/^[^=]*=/,""); print; exit}' "$secret")"
+          [[ -n "$username" && -n "$password" ]]
+          base='http://127.0.0.1:3000/control'
+
+          curl --silent --show-error --fail --max-time 10 --user "$username:$password" "$base/querylog/config" -o /tmp/ipanon-qcfg.json
+          curl --silent --show-error --fail --max-time 10 --user "$username:$password" "$base/stats/config" -o /tmp/ipanon-statscfg.json
+          python3 - <<'PY'
+          import json
+          q=json.load(open('/tmp/ipanon-qcfg.json',encoding='utf-8'))
+          s=json.load(open('/tmp/ipanon-statscfg.json',encoding='utf-8'))
+          assert q.get('enabled') is False, q
+          assert q.get('anonymize_client_ip') is True, q
+          assert s.get('enabled') is False, s
+          print('audit_querylog_enabled=false')
+          print('audit_anonymize_client_ip=true')
+          print('audit_statistics_enabled=false')
+          PY
+
+          sudo python3 - /opt/AdGuardHome/AdGuardHome.yaml <<'PY'
+          from pathlib import Path
+          import sys
+          lines=Path(sys.argv[1]).read_text(encoding='utf-8').splitlines()
+          section=None
+          q_enabled=None
+          anon=None
+          stats_enabled=None
+          for line in lines:
+              if line and not line[0].isspace():
+                  section=line.rstrip(':') if line.endswith(':') else None
+                  continue
+              if section=='querylog' and line.startswith('  enabled:'):
+                  q_enabled=line.split(':',1)[1].strip().lower()
+              elif section=='dns' and line.startswith('  anonymize_client_ip:'):
+                  anon=line.split(':',1)[1].strip().lower()
+              elif section=='statistics' and line.startswith('  enabled:'):
+                  stats_enabled=line.split(':',1)[1].strip().lower()
+          assert q_enabled=='false', q_enabled
+          assert anon=='true', anon
+          assert stats_enabled=='false', stats_enabled
+          print('audit_persisted_querylog_enabled=false')
+          print('audit_persisted_anonymize_client_ip=true')
+          print('audit_persisted_statistics_enabled=false')
+          PY
+
+          python3 - <<'PY'
+          import random, socket, struct
+          name='usesafeweb-ipanon-fresh-audit.invalid'
+          q=b''.join(bytes([len(x)])+x.encode() for x in name.split('.'))+b'\x00'
+          pkt=struct.pack('!HHHHHH',random.randrange(0,65536),0x0100,1,0,0,0)+q+struct.pack('!HH',1,1)
+          s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.settimeout(3); s.sendto(pkt,('127.0.0.1',53))
+          try: s.recvfrom(4096)
+          except socket.timeout: pass
+          PY
+          sleep 1
+
+          curl --silent --show-error --fail --max-time 10 --user "$username:$password" "$base/querylog?limit=20" -o /tmp/ipanon-qlog.json
+          curl --silent --show-error --fail --max-time 10 --user "$username:$password" "$base/stats" -o /tmp/ipanon-stats.json
+          unset password
+          python3 - <<'PY'
+          import json
+          q=json.load(open('/tmp/ipanon-qlog.json',encoding='utf-8'))
+          s=json.load(open('/tmp/ipanon-stats.json',encoding='utf-8'))
+          items=q.get('data') or []
+          assert not any('usesafeweb-ipanon-fresh-audit.invalid' in json.dumps(x,sort_keys=True) for x in items)
+          assert (s.get('top_clients') or []) == [], s.get('top_clients')
+          assert int(s.get('num_dns_queries') or 0) == 0, s.get('num_dns_queries')
+          print('audit_fresh_synthetic_query_retained=false')
+          print('audit_top_clients_count=0')
+          print('audit_stats_num_dns_queries=0')
+          PY
+
+          mapfile -t files < <(sudo find /opt/AdGuardHome -type f -name 'querylog.json*' -size +0c -print 2>/dev/null || true)
+          ((${#files[@]} == 0))
+          echo 'audit_persistent_querylog_files=0'
+          systemctl is-active --quiet AdGuardHome.service
+          rm -f /tmp/ipanon-qcfg.json /tmp/ipanon-statscfg.json /tmp/ipanon-qlog.json /tmp/ipanon-stats.json
+          echo 'FRESH_IP_ANONYMIZATION_AUDIT=PASS'
