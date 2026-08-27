@@ -10,9 +10,13 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
 jobs:
   inspect:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64]
     timeout-minutes: 3
     steps:
       - name: Checkout exact main commit
@@ -25,6 +29,7 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
           python3 - <<'PY'
           import csv, json
           path='Plans/Master/WBS/master-wbs.csv'
