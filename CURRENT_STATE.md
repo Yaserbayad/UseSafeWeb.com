@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-27T23:28:15Z  
+**Updated:** 2026-08-27T23:41:49Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -44,6 +44,7 @@ GitHub is the active execution bridge for eligible AUTO_ALLOWED host work. Repos
 - `TSK-0483` — resolver abuse/amplification protections verified — evidence: `TSK_0483_RESOLVER_ABUSE_PROTECTION_EVIDENCE_2026-08-27.md`, blob `8a6426707fe9c9c8cd08f6b55e25d6b48bb8b28c`.
 - `TSK-0407` — exact Quad9 dns10 DoH upstream with ECS disabled verified — evidence: `TSK_0407_QUAD9_DNS10_ECS_EVIDENCE_2026-08-27.md`, blob `7afeca58e9205234a230d2de702b99648b35347d`.
 - `TSK-0406` — conservative versioned filtering baseline, narrow exception path and exact rollback verified — policy: `infrastructure/adguard-server/filter-policy-v1.yaml`, blob `333a4ef8cd34719d66056aa608ab19473f839634`; evidence: `TSK_0406_FILTERING_POLICY_EVIDENCE_2026-08-27.md`, blob `bb4514b4af7c1c5e616b7875f98e86962fee0325`.
+- `TSK-0202` — secret-safe approved AdGuard settings exported/versioned and proven exactly equal to current live safe settings — artifact: `infrastructure/adguard-server/approved-adguard-config-v1.json`, blob `ea85830b5ef9de7f2772e5467570d52013228b0b`; settings SHA-256 `327c374d46fc40c03a847a57d7078df6035edc71710eb8725ce57c69ac8a93a8`; evidence: `TSK_0202_ADGUARD_CONFIG_EXPORT_EVIDENCE_2026-08-27.md`, blob `d885d3f8e53c052809620958d82eb3114d558b84`.
 
 ### TSK-0204 corrected stable state
 
@@ -55,7 +56,7 @@ First corrective run `33126239702` / job `98704969927` reached persisted `enable
 
 After hardening rollback and API-readiness handling, final pinned control run `33126344825` / job `98705307945`: **PASS**. It detected `file_enabled=false` already in place, made no second direct YAML edit, cleared historical query-log state, re-proved both persisted controls false, API `enabled=false`, anonymisation enabled, fresh synthetic query retained `false`, query-log item count `0`, no non-empty query-log file, and unchanged upstream/privacy/filter invariants.
 
-ACC-0204 is now fully satisfied at the stronger evidence level.
+ACC-0204 is fully satisfied at the stronger evidence level.
 
 ### TSK-0406 accepted stable state
 
@@ -83,27 +84,30 @@ Direct acceptance evidence:
 
 No permanent resolver filtering mutation was required. The temporary synthetic rules were completely rolled back. ACC-0406 is fully satisfied.
 
-### Selected next / partial work already performed
+### TSK-0202 accepted stable state
 
-`TSK-0202` — export and version the approved AdGuard configuration: **TODO / selected**.
+The exact WBS row was reread immediately before execution: `A3`, `AUTO_ALLOWED`, HIGH, critical path, hard predecessors `TSK-0204`, `TSK-0205`, `TSK-0206`, `TSK-0406`, `TSK-0201`, `TSK-0011`, acceptance `ACC-0202`.
 
-Eligibility remains direct and complete: hard predecessors `TSK-0204`, `TSK-0205`, `TSK-0206`, `TSK-0406`, `TSK-0201`, and `TSK-0011` are now all satisfied. Exact WBS metadata remains `A3`, `AUTO_ALLOWED`, HIGH, critical path, `ACC-0202`.
+Fresh corrected live export run `33127050108` / job `98707574318`: **PASS**. It first asserted the current approved pre-public resolver/privacy/filter/admin/abuse invariants, then emitted only an explicit non-sensitive allowlist from current `AdGuardHome.yaml`. The resulting canonical settings SHA-256 was `327c374d46fc40c03a847a57d7078df6035edc71710eb8725ce57c69ac8a93a8`.
 
-ACC-0202 requires a versioned artifact that reproduces approved settings, excludes secrets and query history, and links to deployment evidence.
+Versioned artifact `infrastructure/adguard-server/approved-adguard-config-v1.json` v1.0.0 was created and read back at Git blob `ea85830b5ef9de7f2772e5467570d52013228b0b`. It intentionally excludes administrator credentials/password hashes, certificate private material, query history, persistent client identifiers, and volatile runtime data; it is not a raw secret-bearing AdGuard backup.
 
-Partial read-only work already completed safely:
+Independent audit run `33127141644` / job `98707868115`: **PASS**. It pinned the artifact blob, independently canonicalized and hashed the artifact settings, checked sensitive-field exclusions, verified the exact Git blobs of all 9 linked deployment evidence files, rebuilt the same safe settings object directly from current `/opt/AdGuardHome/AdGuardHome.yaml`, and proved exact live-to-artifact equality at the same SHA-256. Persistent client count remained `0` and non-empty `querylog.json*` file count remained `0`.
 
-- `.github/workflows/adguard-approved-config-export.yml` was created to export only an explicit safe-field allowlist from live `AdGuardHome.yaml`;
-- the first run failed only its own overbroad sensitive-key linter and made no target change;
-- the linter was corrected to reject exact sensitive field names;
-- corrected run `33126066177` / job `98704396731` passed the safe-field guard and exposed the TSK-0204 `file_enabled=true` contradiction that has now been corrected;
-- no approved-settings artifact was created from the stale pre-correction export, and no TSK-0202 PASS was claimed.
+EVD-0202 was then created and read back at `TSK_0202_ADGUARD_CONFIG_EXPORT_EVIDENCE_2026-08-27.md`, blob `d885d3f8e53c052809620958d82eb3114d558b84`.
 
-TSK-0202's requirement references include `REQ-0022`. That legal requirement remains intentionally unresolved under owner-deferred DEC-0021/DEC-0022 work until 2027-08-27 or earlier explicit reactivation; this technical task does not satisfy, waive, reopen, or infer non-applicability of that legal condition, and no real England participant activation is authorized by completing TSK-0202.
+ACC-0202 is fully satisfied. Its `REQ-0022` reference remains intentionally unresolved under owner-deferred UK representative/ICO work until 2027-08-27 or earlier explicit reactivation; TSK-0202 PASS does not satisfy, waive, or reopen that legal condition and does not authorize real England participant activation.
 
-### Subsequent eligible current-gate work
+### Queue recomputation required
 
-- `TSK-0429` — define privacy-minimal backup scope: independently eligible after TSK-0202 unless a newly verified higher-priority safety/security/gate constraint intervenes.
+The exact WBS inspection shows direct successors of TSK-0202 are `TSK-0430`, `TSK-0511`, and `TSK-0514`. Their additional dependencies must be evaluated against the already-eligible `TSK-0429` before selecting later work. No successor is treated as selected merely because TSK-0202 passed.
+
+Known dependency facts from the current WBS read:
+
+- `TSK-0430` additionally requires `TSK-0429` + `TSK-0011`;
+- `TSK-0511` additionally requires `TSK-0514` + `TSK-0011`;
+- `TSK-0514` additionally requires `TSK-0443` + `TSK-0011`;
+- `TSK-0429` is independently HIGH/critical-path/AUTO_ALLOWED with dependencies `TSK-0437` + `TSK-0011` already satisfied by current direct evidence.
 
 ### External/provider and legal boundaries
 
@@ -121,4 +125,4 @@ TSK-0202's requirement references include `REQ-0022`. That legal requirement rem
 
 ## Exact next authoritative step
 
-Resume `TSK-0202` from the corrected target state. Re-run the read-only safe-field export so its fingerprint reflects `querylog.enabled=false` **and** `querylog.file_enabled=false`; create the versioned approved-settings artifact from that current allowlisted output only; link it to AdGuard v0.107.79 and the deployment/privacy/filter evidence; independently regenerate the safe allowlist from the target and require exact equality/checksum with the artifact while verifying no credentials/password hashes/private keys/query history/client identifiers/volatile data are present. Persist/read back EVD-0202 and runtime PASS before moving to the next WBS task.
+Recompute the eligible queue from current WBS/runtime authority after TSK-0202 PASS, comparing the already-eligible TSK-0429 against newly affected direct successors TSK-0430, TSK-0511, and TSK-0514 and their unresolved hard dependencies. Select only the highest-authority eligible task; persist/read back the selection before material execution.
