@@ -1,0 +1,46 @@
+name: Disable AdGuard persistent query logging
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/adguard-querylog-disable.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact main commit
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Execute TSK-0204 query-log privacy control
+        shell: bash
+        env:
+          EXPECTED_SCRIPT_BLOB: 770dcc466d0d0c569aa052105f8ff5c189c8e116
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          [[ "$(id -un)" == "azureusr" ]]
+          sudo -n true
+          script='infrastructure/adguard-server/disable-query-logging.sh'
+          [[ "$(git hash-object "$script")" == "${EXPECTED_SCRIPT_BLOB}" ]]
+          bash -n "$script"
+          set +e
+          bash "$script" | tee /tmp/usesafeweb-tsk-0204.log
+          rc=${PIPESTATUS[0]}
+          set -e
+          [[ "$rc" -eq 0 ]]
+          grep -q '^TSK_0204_MUTATION=PASS$' /tmp/usesafeweb-tsk-0204.log
+          echo 'TSK_0204_WORKFLOW=PASS'
