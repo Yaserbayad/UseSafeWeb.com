@@ -28,7 +28,7 @@ jobs:
       - name: Validate artifact and execute TSK-0203
         shell: bash
         env:
-          EXPECTED_SCRIPT_SHA256: ca3f3827353837f6494e6875e30e0f6cb459d5960c8e97a76bd2f4aa52b527fc
+          EXPECTED_SCRIPT_BLOB: 856ca3046532e99977bcbe08f0bd64a07f03f9ae
         run: |
           set -Eeuo pipefail
 
@@ -47,9 +47,11 @@ jobs:
 
           script='infrastructure/adguard-server/install-adguard.sh'
           test -f "${script}"
-          actual_script_sha="$(sha256sum "${script}" | awk '{print $1}')"
-          echo "installer_sha256=${actual_script_sha}"
-          [[ "${actual_script_sha}" == "${EXPECTED_SCRIPT_SHA256}" ]]
+          actual_blob="$(git hash-object "${script}")"
+          actual_sha256="$(sha256sum "${script}" | awk '{print $1}')"
+          echo "installer_git_blob=${actual_blob}"
+          echo "installer_sha256=${actual_sha256}"
+          [[ "${actual_blob}" == "${EXPECTED_SCRIPT_BLOB}" ]]
           bash -n "${script}"
           echo 'installer_artifact=PASS'
 
