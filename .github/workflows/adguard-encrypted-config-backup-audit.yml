@@ -61,17 +61,18 @@ jobs:
           [[ "$(sudo sha256sum "$archive" | awk '{print $1}')" == "$EXPECTED_ARCHIVE_SHA256" ]]
           sudo head -c 21 "$archive" | grep -a -q '^age-encryption.org/v1'
 
-          sudo python3 - "$meta" <<'PY'
-          import json,os,sys
-          d=json.load(open(sys.argv[1],encoding='utf-8'))
+          sudo python3 - "$meta" "$EXPECTED_CREATED_UTC" "$EXPECTED_ARCHIVE_NAME" "$EXPECTED_ARCHIVE_SHA256" "$EXPECTED_ARCHIVE_SIZE" "$EXPECTED_RECIPIENT_FP" "$EXPECTED_SOURCE_COMMIT" <<'PY'
+          import json,sys
+          path,created,name,sha,size,recipient,commit=sys.argv[1:]
+          d=json.load(open(path,encoding='utf-8'))
           expected={
             'backup_format':'usesafeweb.adguard-encrypted-config.v1',
-            'created_utc':os.environ['EXPECTED_CREATED_UTC'],
-            'encrypted_archive':os.environ['EXPECTED_ARCHIVE_NAME'],
-            'encrypted_archive_sha256':os.environ['EXPECTED_ARCHIVE_SHA256'],
-            'encrypted_archive_size_bytes':int(os.environ['EXPECTED_ARCHIVE_SIZE']),
-            'owner_recipient_fingerprint':os.environ['EXPECTED_RECIPIENT_FP'],
-            'source_git_commit':os.environ['EXPECTED_SOURCE_COMMIT'],
+            'created_utc':created,
+            'encrypted_archive':name,
+            'encrypted_archive_sha256':sha,
+            'encrypted_archive_size_bytes':int(size),
+            'owner_recipient_fingerprint':recipient,
+            'source_git_commit':commit,
             'location_class':'root-only same-VM encrypted staging/recovery artifact; not proof of node-loss resilience',
           }
           assert d == expected, (d,expected)
