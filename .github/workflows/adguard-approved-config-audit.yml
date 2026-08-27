@@ -1,0 +1,196 @@
+name: Audit approved AdGuard configuration artifact
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/adguard-approved-config-audit.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact main commit
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Independently compare artifact to live approved settings
+        shell: bash
+        env:
+          EXPECTED_ARTIFACT_BLOB: ea85830b5ef9de7f2772e5467570d52013228b0b
+          EXPECTED_SETTINGS_SHA256: 327c374d46fc40c03a847a57d7078df6035edc71710eb8725ce57c69ac8a93a8
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          [[ "$(id -un)" == "azureusr" ]]
+          sudo -n true
+          systemctl is-active --quiet AdGuardHome.service
+
+          artifact='infrastructure/adguard-server/approved-adguard-config-v1.json'
+          [[ "$(git hash-object "$artifact")" == "$EXPECTED_ARTIFACT_BLOB" ]]
+          [[ "$(/opt/AdGuardHome/AdGuardHome --version | awk '{print $NF}')" == 'v0.107.79' ]]
+
+          python3 - "$artifact" <<'PY'
+          import hashlib, json, os, re, subprocess, sys
+          path=sys.argv[1]
+          with open(path,encoding='utf-8') as f:
+              a=json.load(f)
+          assert a.get('artifact_schema') == 'usesafeweb.adguard-approved-config.v1'
+          assert a.get('artifact_version') == '1.0.0'
+          assert a.get('task_id') == 'TSK-0202'
+          assert a.get('acceptance_id') == 'ACC-0202'
+          assert a.get('target',{}).get('host') == 'adguardvm'
+          assert a.get('target',{}).get('adguard_home_version') == 'v0.107.79'
+          settings=a.get('settings')
+          assert isinstance(settings,dict)
+          raw=json.dumps(settings,sort_keys=True,separators=(',',':'),ensure_ascii=False)
+          sha=hashlib.sha256(raw.encode()).hexdigest()
+          assert sha == a['source_export']['settings_sha256'], (sha,a['source_export']['settings_sha256'])
+          assert sha == os.environ['EXPECTED_SETTINGS_SHA256'], sha
+
+          forbidden_keys={
+              'password','hashed_password','private_key','private_key_path',
+              'certificate_chain','certificate_chain_path','users','clients','client_ip'
+          }
+          keys=set()
+          def walk(v):
+              if isinstance(v,dict):
+                  for k,x in v.items():
+                      keys.add(str(k).lower()); walk(x)
+              elif isinstance(v,list):
+                  for x in v: walk(x)
+          walk(settings)
+          assert keys.isdisjoint(forbidden_keys), sorted(keys.intersection(forbidden_keys))
+
+          artifact_text=open(path,encoding='utf-8').read()
+          assert '-----BEGIN PRIVATE KEY-----' not in artifact_text
+          assert 'ADGUARD_ADMIN_PASSWORD=' not in artifact_text
+          assert 'querylog.json' not in artifact_text
+
+          assert settings['querylog']['enabled'] is False
+          assert settings['querylog']['file_enabled'] is False
+          assert settings['statistics']['enabled'] is False
+          assert settings['dns']['anonymize_client_ip'] is True
+          assert settings['dns']['edns_client_subnet']['enabled'] is False
+          assert settings['user_rules'] == []
+          assert settings['whitelist_filters'] == []
+
+          evidence=a.get('linked_deployment_evidence') or []
+          assert len(evidence) >= 8
+          for e in evidence:
+              p=e['path']; expected=e['blob']
+              assert os.path.isfile(p), p
+              actual=subprocess.check_output(['git','hash-object',p],text=True).strip()
+              assert actual == expected, (p,actual,expected)
+          print('artifact_settings_sha256='+sha)
+          print('artifact_sensitive_field_guard=PASS')
+          print('artifact_evidence_links_verified='+str(len(evidence)))
+          PY
+
+          sudo python3 - "$artifact" /opt/AdGuardHome/AdGuardHome.yaml <<'PY'
+          import hashlib, json, sys, yaml
+          artifact_path, config_path=sys.argv[1],sys.argv[2]
+          with open(artifact_path,encoding='utf-8') as f: artifact=json.load(f)
+          with open(config_path,encoding='utf-8') as f: d=yaml.safe_load(f)
+
+          dns=d.get('dns') or {}; filtering=d.get('filtering') or {}; querylog=d.get('querylog') or {}
+          statistics=d.get('statistics') or {}; http=d.get('http') or {}; tls=d.get('tls') or {}; dhcp=d.get('dhcp') or {}
+          filters=d.get('filters') or []; edns=dns.get('edns_client_subnet') or {}
+          clients=(d.get('clients') or {}).get('persistent') or []
+
+          assert clients == []
+          assert (d.get('user_rules') or []) == []
+          assert (d.get('whitelist_filters') or []) == []
+
+          live={
+            'schema_version': d.get('schema_version'),
+            'http': {'address': http.get('address')},
+            'dns': {
+              'bind_hosts': list(dns.get('bind_hosts') or []),
+              'port': dns.get('port'),
+              'upstream_dns': list(dns.get('upstream_dns') or []),
+              'upstream_dns_file': str(dns.get('upstream_dns_file') or ''),
+              'bootstrap_dns': list(dns.get('bootstrap_dns') or []),
+              'fallback_dns': list(dns.get('fallback_dns') or []),
+              'private_upstream': list(dns.get('private_upstream') or []),
+              'upstream_mode': dns.get('upstream_mode'),
+              'ratelimit': dns.get('ratelimit'),
+              'ratelimit_subnet_len_ipv4': dns.get('ratelimit_subnet_len_ipv4'),
+              'ratelimit_subnet_len_ipv6': dns.get('ratelimit_subnet_len_ipv6'),
+              'ratelimit_whitelist': list(dns.get('ratelimit_whitelist') or []),
+              'refuse_any': bool(dns.get('refuse_any')),
+              'edns_client_subnet': {
+                'enabled': bool(edns.get('enabled')),
+                'use_custom': bool(edns.get('use_custom')),
+                'custom_ip_configured': bool(edns.get('custom_ip')),
+              },
+              'anonymize_client_ip': bool(dns.get('anonymize_client_ip')),
+              'cache_size': dns.get('cache_size'),
+              'cache_ttl_min': dns.get('cache_ttl_min'),
+              'cache_ttl_max': dns.get('cache_ttl_max'),
+              'cache_optimistic': bool(dns.get('cache_optimistic')),
+            },
+            'filtering': {
+              'protection_enabled': bool(filtering.get('protection_enabled')),
+              'filtering_enabled': bool(filtering.get('filtering_enabled')),
+              'blocking_mode': filtering.get('blocking_mode'),
+              'interval': filtering.get('interval'),
+              'safebrowsing_enabled': bool(filtering.get('safebrowsing_enabled')),
+              'parental_enabled': bool(filtering.get('parental_enabled')),
+              'safesearch_enabled': bool(filtering.get('safesearch_enabled')),
+            },
+            'filters': [
+              {'name':x.get('name'),'url':x.get('url'),'enabled':bool(x.get('enabled'))}
+              for x in filters
+            ],
+            'whitelist_filters': [],
+            'user_rules': [],
+            'querylog': {
+              'enabled': bool(querylog.get('enabled')),
+              'file_enabled': bool(querylog.get('file_enabled')),
+              'interval': querylog.get('interval'),
+            },
+            'statistics': {
+              'enabled': bool(statistics.get('enabled')),
+              'interval': statistics.get('interval'),
+            },
+            'tls': {
+              'enabled': bool(tls.get('enabled')),
+              'server_name': tls.get('server_name'),
+              'force_https': bool(tls.get('force_https')),
+              'port_https': tls.get('port_https'),
+              'port_dns_over_tls': tls.get('port_dns_over_tls'),
+              'port_dns_over_quic': tls.get('port_dns_over_quic'),
+            },
+            'dhcp': {'enabled': bool(dhcp.get('enabled'))},
+          }
+
+          expected=artifact['settings']
+          if live != expected:
+              for key in sorted(set(live)|set(expected)):
+                  if live.get(key) != expected.get(key):
+                      print('mismatch_top_level='+key)
+              raise SystemExit('live safe settings differ from versioned artifact')
+          raw=json.dumps(live,sort_keys=True,separators=(',',':'),ensure_ascii=False)
+          sha=hashlib.sha256(raw.encode()).hexdigest()
+          assert sha == artifact['source_export']['settings_sha256']
+          print('live_settings_sha256='+sha)
+          print('live_to_artifact_exact_match=true')
+          print('persistent_client_count=0')
+          PY
+
+          mapfile -t qfiles < <(sudo find /opt/AdGuardHome -type f -name 'querylog.json*' -size +0c -print 2>/dev/null || true)
+          ((${#qfiles[@]} == 0))
+          echo 'persistent_querylog_files=0'
+          echo 'TSK_0202_INDEPENDENT_AUDIT=PASS'
