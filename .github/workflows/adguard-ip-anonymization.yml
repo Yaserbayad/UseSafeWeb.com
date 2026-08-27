@@ -1,0 +1,45 @@
+name: Enable AdGuard client IP anonymisation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/adguard-ip-anonymization.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact main commit
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Execute TSK-0206 IP anonymisation
+        shell: bash
+        env:
+          EXPECTED_SCRIPT_BLOB: c6881b1c08b2ba7c70546f9d89547ec70ba661fd
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          sudo -n true
+          script='infrastructure/adguard-server/enable-ip-anonymization.sh'
+          [[ "$(git hash-object "$script")" == "${EXPECTED_SCRIPT_BLOB}" ]]
+          bash -n "$script"
+          set +e
+          bash "$script" | tee /tmp/usesafeweb-tsk-0206.log
+          rc=${PIPESTATUS[0]}
+          set -e
+          [[ "$rc" -eq 0 ]]
+          grep -q '^TSK_0206_MUTATION=PASS$' /tmp/usesafeweb-tsk-0206.log
+          echo 'TSK_0206_WORKFLOW=PASS'
