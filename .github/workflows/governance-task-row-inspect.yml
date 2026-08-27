@@ -1,4 +1,4 @@
-name: Inspect governed task row
+name: Inspect governed task rows
 
 on:
   push:
@@ -25,17 +25,19 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Print canonical TSK-0483 WBS row
+      - name: Print canonical dependency rows for TSK-0483
         shell: bash
         run: |
           set -Eeuo pipefail
           [[ "$(hostname -s)" == "adguardvm" ]]
           python3 - <<'PY'
           import csv, json
+          wanted=['TSK-0011','TSK-0203','TSK-0436','TSK-0483']
           path='Plans/Master/WBS/master-wbs.csv'
           with open(path, newline='', encoding='utf-8-sig') as f:
               reader=csv.DictReader(f)
-              rows=[r for r in reader if any((v or '').strip()=='TSK-0483' for v in r.values())]
-          assert len(rows)==1, f'expected one TSK-0483 row, got {len(rows)}'
-          print('TSK_0483_WBS_ROW='+json.dumps(rows[0], sort_keys=True, ensure_ascii=False))
+              by_id={r.get('Task_ID','').strip():r for r in reader if r.get('Task_ID','').strip() in wanted}
+          assert set(by_id)==set(wanted), (set(wanted)-set(by_id))
+          for task_id in wanted:
+              print(task_id.replace('-','_')+'_WBS_ROW='+json.dumps(by_id[task_id], sort_keys=True, ensure_ascii=False))
           PY
