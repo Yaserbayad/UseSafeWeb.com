@@ -19,30 +19,55 @@ jobs:
     runs-on: [self-hosted, linux, x64]
     timeout-minutes: 5
     steps:
-      - name: Independently audit TSK-0204 stable state
+      - name: Audit TSK-0204 persisted state and API availability
         shell: bash
         run: |
           set -Eeuo pipefail
           [[ "$(hostname -s)" == "adguardvm" ]]
           sudo -n true
+          systemctl is-active --quiet AdGuardHome.service
+
+          sudo python3 - /opt/AdGuardHome/AdGuardHome.yaml <<'PY'
+          import sys, yaml
+          with open(sys.argv[1],encoding='utf-8') as f: d=yaml.safe_load(f)
+          q=d.get('querylog') or {}; dns=d.get('dns') or {}; stats=d.get('statistics') or {}; filtering=d.get('filtering') or {}
+          print('persisted_querylog_enabled='+str(bool(q.get('enabled'))).lower())
+          print('persisted_querylog_file_enabled='+str(bool(q.get('file_enabled'))).lower())
+          print('persisted_http_address='+str((d.get('http') or {}).get('address')))
+          print('persisted_schema_version='+str(d.get('schema_version')))
+          assert q.get('enabled') is False
+          assert dns.get('anonymize_client_ip') is True
+          assert stats.get('enabled') is False
+          assert list(dns.get('upstream_dns') or []) == ['https://dns10.quad9.net/dns-query']
+          assert bool((dns.get('edns_client_subnet') or {}).get('enabled')) is False
+          assert filtering.get('protection_enabled') is True
+          assert filtering.get('filtering_enabled') is True
+          print('privacy_upstream_filter_invariants_preserved=true')
+          PY
+
           secret='/var/lib/usesafeweb/adguard/admin.env'
           username="$(sudo awk -F= '$1=="ADGUARD_ADMIN_USER" {sub(/^[^=]*=/,""); print; exit}' "$secret")"
           password="$(sudo awk -F= '$1=="ADGUARD_ADMIN_PASSWORD" {sub(/^[^=]*=/,""); print; exit}' "$secret")"
           [[ -n "$username" && -n "$password" ]]
           base='http://127.0.0.1:3000/control'
 
-          curl --silent --show-error --fail --max-time 10 --user "$username:$password" "$base/querylog/config" -o /tmp/qcfg.json
+          status_code="$(curl --silent --show-error --max-time 10 --user "$username:$password" -o /tmp/status.json -w '%{http_code}' "$base/status")"
+          qcfg_code="$(curl --silent --show-error --max-time 10 --user "$username:$password" -o /tmp/qcfg.json -w '%{http_code}' "$base/querylog/config")"
+          echo "control_status_http_code=$status_code"
+          echo "querylog_config_http_code=$qcfg_code"
+          [[ "$status_code" == '200' ]]
+          [[ "$qcfg_code" == '200' ]]
+
           python3 - <<'PY'
           import json
           d=json.load(open('/tmp/qcfg.json',encoding='utf-8'))
           assert d.get('enabled') is False, d
-          print('querylog_enabled=false')
+          print('api_querylog_enabled=false')
           PY
 
-          # Fresh synthetic query after the mutation checkpoint.
           python3 - <<'PY'
           import random, socket, struct
-          name='usesafeweb-fresh-audit.invalid'
+          name='usesafeweb-rollback-audit.invalid'
           q=b''.join(bytes([len(x)])+x.encode() for x in name.split('.'))+b'\x00'
           pkt=struct.pack('!HHHHHH',random.randrange(0,65536),0x0100,1,0,0,0)+q+struct.pack('!HH',1,1)
           s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.settimeout(3); s.sendto(pkt,('127.0.0.1',53))
@@ -51,13 +76,15 @@ jobs:
           PY
           sleep 1
 
-          curl --silent --show-error --fail --max-time 10 --user "$username:$password" "$base/querylog?limit=20" -o /tmp/qlog.json
+          qlog_code="$(curl --silent --show-error --max-time 10 --user "$username:$password" -o /tmp/qlog.json -w '%{http_code}' "$base/querylog?limit=20")"
           unset password
+          echo "querylog_read_http_code=$qlog_code"
+          [[ "$qlog_code" == '200' ]]
           python3 - <<'PY'
           import json
           d=json.load(open('/tmp/qlog.json',encoding='utf-8'))
           items=d.get('data') or []
-          assert not any('usesafeweb-fresh-audit.invalid' in json.dumps(x,sort_keys=True) for x in items)
+          assert not any('usesafeweb-rollback-audit.invalid' in json.dumps(x,sort_keys=True) for x in items)
           print('fresh_synthetic_query_retained=false')
           print('querylog_items='+str(len(items)))
           PY
@@ -65,10 +92,5 @@ jobs:
           mapfile -t files < <(sudo find /opt/AdGuardHome -type f -name 'querylog.json*' -size +0c -print 2>/dev/null || true)
           ((${#files[@]} == 0))
           echo 'persistent_querylog_files=0'
-
-          systemctl is-active --quiet AdGuardHome.service
-          runner_unit="$(systemctl list-unit-files 'actions.runner.*.service' --no-legend 2>/dev/null | awk 'NR==1 {print $1}' || true)"
-          [[ -n "$runner_unit" ]]
-          systemctl is-active --quiet "$runner_unit"
-          rm -f /tmp/qcfg.json /tmp/qlog.json
-          echo 'FRESH_QUERYLOG_AUDIT=PASS'
+          rm -f /tmp/status.json /tmp/qcfg.json /tmp/qlog.json
+          echo 'TSK_0204_ROLLBACK_AUDIT=PASS'
