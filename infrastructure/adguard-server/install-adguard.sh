@@ -50,11 +50,15 @@ else
     || fail "official checksums.txt does not match pinned GitHub asset digest"
   pass "official checksums.txt agrees with pinned digest"
 
-  # Reject absolute/path-traversal archive members before extraction.
-  while IFS= read -r member; do
-    [[ "$member" == AdGuardHome/* ]] || fail "unexpected archive member: $member"
-    [[ "$member" != /* && "$member" != *"../"* && "$member" != *"/.."* ]] \
-      || fail "unsafe archive member: $member"
+  # Reject absolute/path-traversal archive members before extraction. The
+  # official archive prefixes members with './', which is normalized only
+  # after rejecting an absolute path.
+  while IFS= read -r raw_member; do
+    [[ "$raw_member" != /* ]] || fail "unsafe absolute archive member: $raw_member"
+    member="${raw_member#./}"
+    [[ "$member" == AdGuardHome/* ]] || fail "unexpected archive member: $raw_member"
+    [[ "$member" != *"../"* && "$member" != *"/.."* && "$member" != ".." ]] \
+      || fail "unsafe traversal archive member: $raw_member"
   done < <(tar -tzf "${tmp}/${ASSET}")
 
   tar -xzf "${tmp}/${ASSET}" -C "$tmp"
