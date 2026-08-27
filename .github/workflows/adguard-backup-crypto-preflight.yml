@@ -1,0 +1,107 @@
+name: Inspect AdGuard backup encryption capabilities
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/adguard-backup-crypto-preflight.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  inspect:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact main commit
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Inspect cryptographic and owner-recovery capability without exposing key material
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          sudo -n true
+          systemctl is-active --quiet AdGuardHome.service
+
+          for tool in openssl tar sha256sum python3 ssh-keygen gpg age; do
+            if command -v "$tool" >/dev/null 2>&1; then
+              echo "tool_${tool//-/_}=present"
+            else
+              echo "tool_${tool//-/_}=absent"
+            fi
+          done
+          openssl version | sed 's/^/openssl_version=/'
+
+          auth='/home/azureusr/.ssh/authorized_keys'
+          if sudo test -f "$auth"; then
+            echo "authorized_keys_exists=true"
+            echo "authorized_keys_mode_owner=$(sudo stat -c '%a %U:%G' "$auth")"
+            sudo python3 - "$auth" <<'PY'
+          import collections,sys
+          counts=collections.Counter(); total=0
+          for line in open(sys.argv[1],encoding='utf-8',errors='ignore'):
+              line=line.strip()
+              if not line or line.startswith('#'): continue
+              parts=line.split()
+              # options may precede key type; find first recognized key token.
+              keytype='unknown'
+              for p in parts:
+                  if p.startswith(('ssh-','ecdsa-','sk-')):
+                      keytype=p; break
+              total += 1; counts[keytype] += 1
+          print('authorized_key_count='+str(total))
+          for k,v in sorted(counts.items()):
+              safe=k.replace('@','_at_').replace('.','_').replace('-','_')
+              print('authorized_key_type_'+safe+'='+str(v))
+          PY
+          else
+            echo "authorized_keys_exists=false"
+            echo "authorized_key_count=0"
+          fi
+
+          # Inventory only the existence/count of potential local recovery key stores.
+          for dir in /root/.gnupg /home/azureusr/.gnupg /var/lib/usesafeweb/adguard; do
+            if sudo test -d "$dir"; then
+              echo "key_store_$(echo "$dir" | tr '/.' '__')=present"
+            else
+              echo "key_store_$(echo "$dir" | tr '/.' '__')=absent"
+            fi
+          done
+
+          if command -v gpg >/dev/null 2>&1; then
+            root_gpg_pub="$(sudo gpg --homedir /root/.gnupg --batch --with-colons --list-keys 2>/dev/null | awk -F: '$1=="pub"{n++} END{print n+0}')"
+            root_gpg_sec="$(sudo gpg --homedir /root/.gnupg --batch --with-colons --list-secret-keys 2>/dev/null | awk -F: '$1=="sec"{n++} END{print n+0}')"
+            user_gpg_pub="$(gpg --homedir /home/azureusr/.gnupg --batch --with-colons --list-keys 2>/dev/null | awk -F: '$1=="pub"{n++} END{print n+0}')"
+            user_gpg_sec="$(gpg --homedir /home/azureusr/.gnupg --batch --with-colons --list-secret-keys 2>/dev/null | awk -F: '$1=="sec"{n++} END{print n+0}')"
+            echo "root_gpg_public_key_count=$root_gpg_pub"
+            echo "root_gpg_secret_key_count=$root_gpg_sec"
+            echo "azureusr_gpg_public_key_count=$user_gpg_pub"
+            echo "azureusr_gpg_secret_key_count=$user_gpg_sec"
+          fi
+
+          # Do not print filenames or contents. Report only whether an existing
+          # dedicated backup key/recipient marker already exists.
+          if sudo test -f /var/lib/usesafeweb/adguard/backup-encryption.key; then
+            echo 'dedicated_backup_symmetric_key_exists=true'
+            echo "dedicated_backup_symmetric_key_mode_owner=$(sudo stat -c '%a %U:%G' /var/lib/usesafeweb/adguard/backup-encryption.key)"
+          else
+            echo 'dedicated_backup_symmetric_key_exists=false'
+          fi
+          if sudo test -f /var/lib/usesafeweb/adguard/backup-recipient.txt; then
+            echo 'dedicated_backup_recipient_exists=true'
+          else
+            echo 'dedicated_backup_recipient_exists=false'
+          fi
+
+          [[ "$(git hash-object infrastructure/adguard-server/BACKUP_SCOPE_POLICY.md)" == 'e62b48a3e746b1be90881bbffab3b7680384cc16' ]]
+          echo 'TSK_0430_CRYPTO_PREFLIGHT=PASS'
