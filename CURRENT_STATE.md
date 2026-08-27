@@ -78,6 +78,7 @@ Current preserved readiness facts:
 - `TSK-0166` — create pseudonymous participant record and metric schema: **PASS**. Evidence: `EXPERIMENT_01_CONCIERGE_VALIDATION.md` blob `bc801da11d7a7f2a5315d1cdca4f0d134afe7805`, §5 Mandatory measurements plus §9/§11 privacy/aggregate rules, reviewed 2026-08-27 against ACC-0166 / REQ-0013, REQ-0014, REQ-0015, CON-0025, CON-0009 and INT-0005. It contains participant ID, qualification, device/path, safeguard state, activation, time, assistance, abandonment, comprehension, false-positive and 14-day fields; it expressly excludes browsing/domain-history metrics. Predecessors `TSK-0223` and `TSK-0164` are PASS. Deviations: none against ACC-0166.
 - `TSK-0168` — create qualification screener: **PASS**. Evidence: `EXPERIMENT_01_CONCIERGE_VALIDATION.md` blob `bc801da11d7a7f2a5315d1cdca4f0d134afe7805`, §2 Cohort qualification, reviewed 2026-08-27 against ACC-0168 / REQ-0013, REQ-0014, REQ-0017, CON-0025, CON-0009 and INT-0005. It covers caregiver responsibility, first-phone age/stage, phone timing, iPhone/Android platform, willingness to make real safety-setting changes and non-surveillance fit; it does not require exact DOB or child name. Predecessor `TSK-0164` is PASS. Deviations: none against ACC-0168.
 - `TSK-0225` — create protection-claims checklist: **PASS**. Evidence: `PROTECTION_CLAIMS_CHECKLIST.md` commit `bc0a9dd773ee3ebd53b6aad216ded00c88f38fb5`, blob `4bfc83421318fe761d06f9a63e052e3bff36070a`, read back 2026-08-27. The checklist directly tests `Protected — verified`, `Configured — parent confirmed`, `Action needed`, `Not covered`, DNS scope/limits, app/service limits, VPN/alternate secure DNS/Private Relay uncertainty, removal/recovery, and narrow exception handling; failures downgrade/block claims rather than infer coverage. Predecessor `TSK-0219` is PASS. Deviations: none against ACC-0225.
+- `TSK-0227` — create exceptional diagnostic-logging procedure: **PASS**. Evidence: `EXCEPTIONAL_DIAGNOSTIC_LOGGING_PROCEDURE.md` commit `8db17d22e0c21dd224ce50d2473010125f92aa1b`, blob `f9e1bb52582a69bc385aa69c93d02febb7b5cffa`, read back 2026-08-27. The runbook requires incident/ticket ID, necessity, exact approved fields/scope, approver, explicit UTC start/end, restricted access, user-notice decision, deletion owner, baseline restoration and recorded deletion verification; it prohibits open-ended logging, GitHub raw logs and reuse for analytics/profiling. Predecessor `TSK-0224` is PASS. Deviations: none against ACC-0227.
 
 ## Runtime safeguards
 
@@ -90,7 +91,7 @@ Current preserved readiness facts:
 
 ## Exact next execution path
 
-1. Continue independent eligible non-legal LG-03 preparation while `TSK-0435`, `TSK-0438` and target-environment work wait.
+1. Continue independent eligible non-deferred LG-03 preparation while `TSK-0435`, `TSK-0438` and target-environment work wait.
 2. Reconcile existing canonical artifacts before creating duplicates; mark PASS only where every current acceptance criterion is directly evidenced.
 3. Recompute eligibility after every confirmed durable mutation.
 4. Do not recruit/activate real participants until LG-03 and LG-04 PASS.
