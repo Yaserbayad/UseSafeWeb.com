@@ -30686,8 +30686,6 @@ entities:
       type: belongs_to_deliverable
     - target: L2
       type: belongs_to_lifecycle
-    - target: TSK-0483
-      type: depends_on
     - target: TSK-0011
       type: depends_on
     - target: ACC-0203
@@ -41408,6 +41406,8 @@ entities:
       type: belongs_to_deliverable
     - target: L2
       type: belongs_to_lifecycle
+    - target: TSK-0203
+      type: depends_on
     - target: TSK-0436
       type: depends_on
     - target: TSK-0011

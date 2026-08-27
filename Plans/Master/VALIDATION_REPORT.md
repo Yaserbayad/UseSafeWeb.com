@@ -281,3 +281,24 @@ The candidate is technically/commercially amended and internally consistent for 
 - `TSK-0435` and `TSK-0472` remain `WAITING` for actual VM handoff evidence.
 - Post-handoff host hardening, DNS/TLS, resolver-abuse controls, deployment, backup/restore, monitoring and security verification remain active.
 - Broad operational/vendor tasks that merely mention Azure are not falsely closed when they still require future evidence.
+
+## Post-freeze CR-0001 validation — 2026-08-27
+
+**Scope:** bounded correction of one technically impossible dependency edge discovered during direct target execution after canonical activation. This section does not rewrite the historical pre-canonicalization audit above.
+
+### Defect
+
+Frozen `TSK-0203 — Install supported AdGuard release` depended on `TSK-0483 — Implement resolver abuse and amplification protections`, while ACC-0483 requires live resolver rate-limiting/denial/amplification controls to be implemented and tested. Direct target evidence proved the accepted fresh VM had no resolver before AdGuard installation, so the dependency was impossible to satisfy without fabricating evidence.
+
+### Correction
+
+- `TSK-0203` dependencies: `TSK-0483; TSK-0011` → `TSK-0011`.
+- `TSK-0483` dependencies: `TSK-0436; TSK-0011` → `TSK-0203; TSK-0436; TSK-0011`.
+- Matching task `depends_on` edges in `RELATIONSHIP_INDEX.yaml` are reversed identically.
+- No task ID, title, scope, planning/runtime status, acceptance criterion, gate, requirement, constraint, interface, risk, AI capability, action authority, or owner decision changes.
+- `TSK-0483` remains mandatory before public resolver activation.
+- Total WBS dependency-edge count remains 849.
+
+### Required verification
+
+The post-change tree is acceptable only if the deterministic validator reports PASS with 641 tasks, 849 dependency edges, no dependency cycle, valid relationship entities/targets/sources, zero broken local links, every task present in the generated reconstruction, and all regenerated checksums valid. GitHub publication plus exact read-back is additionally required before governed execution may rely on CR-0001.
