@@ -1,0 +1,25 @@
+name: Inspect AdGuard release checksum format
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/adguard-checksum-format.yml
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - name: Inspect official checksum line without mutation
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          url='https://github.com/AdguardTeam/AdGuardHome/releases/download/v0.107.79/checksums.txt'
+          curl --fail --show-error --silent --location --proto '=https' --tlsv1.2 "$url" -o /tmp/agh-checksums.txt
+          grep -F 'AdGuardHome_linux_amd64.tar.gz' /tmp/agh-checksums.txt
+          echo "CHECKSUM_FORMAT_INSPECTION=PASS"
