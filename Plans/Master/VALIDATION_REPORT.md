@@ -269,3 +269,13 @@ The candidate is technically/commercially amended and internally consistent for 
 - Technical privacy/security/safeguarding/reliability/infrastructure work remains active.
 - Gate preservation: LG-03 and other real-participant/public-action gates do not treat the owner hold as legal evidence or clearance; where current legal evidence is actually required, the gate remains unresolved until evidence or verified non-applicability exists.
 - Automatic review point: 2027-08-27, implemented in the WBS annual review timing and task notes.
+
+
+## Owner Azure control-plane handoff override — 2026-08-27
+
+- Owner will provide **two fresh Ubuntu 24.04 LTS Azure VMs**: one AdGuard/DNS server and one web/application server.
+- Azure control-plane provisioning/configuration is owner-managed and outside project automation.
+- `TSK-0434` and `TSK-0436` are `NOT_APPLICABLE + PASS`; this means the exclusion is verified, **not** that live Azure infrastructure has been technically implemented or tested.
+- `TSK-0435` and `TSK-0472` remain `WAITING` for actual VM handoff evidence.
+- Post-handoff host hardening, DNS/TLS, resolver-abuse controls, deployment, backup/restore, monitoring and security verification remain active.
+- Broad operational/vendor tasks that merely mention Azure are not falsely closed when they still require future evidence.

@@ -42,3 +42,7 @@ Effective 2026-08-27, the owner explicitly placed identified legal/regulatory/co
 Do not maintain a second task-status/acceptance table here. The authoritative task definitions and candidate planning states are in [WBS/master-wbs.csv](../WBS/master-wbs.csv); dependency traversal is in [RELATIONSHIP_INDEX.yaml](../RELATIONSHIP_INDEX.yaml); gate semantics are in [GATES.md](../Registers/GATES.md). After publication, canonical repository `CURRENT_STATE.md` is the authority for volatile execution state.
 
 For this pre-freeze candidate only, `TSK-0017` is the sole `TODO` owner action. The publication/read-back/rebaseline sequence is defined in Section 8.3 above.
+
+### 8.5 Owner Azure handoff boundary — 2026-08-27
+
+The owner will provide two fresh reachable Ubuntu 24.04 LTS Azure VMs: one dedicated AdGuard/DNS server and one dedicated web/application server. Azure control-plane provisioning/configuration is outside project execution. `TSK-0434` and `TSK-0436` are dispositioned `NOT_APPLICABLE + PASS` as verified exclusions, not as proof that live Azure resources were technically tested. `TSK-0435` and `TSK-0472` remain `WAITING` until the actual VM handoff can be inspected and accepted. Post-handoff host hardening, deployment, DNS/TLS, backup/restore, observability and security verification remain active.
