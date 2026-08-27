@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-27T23:43:43Z  
+**Updated:** 2026-08-27T23:51:18Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -45,6 +45,7 @@ GitHub is the active execution bridge for eligible AUTO_ALLOWED host work. Repos
 - `TSK-0407` — exact Quad9 dns10 DoH upstream with ECS disabled verified — evidence: `TSK_0407_QUAD9_DNS10_ECS_EVIDENCE_2026-08-27.md`, blob `7afeca58e9205234a230d2de702b99648b35347d`.
 - `TSK-0406` — conservative versioned filtering baseline, narrow exception path and exact rollback verified — policy: `infrastructure/adguard-server/filter-policy-v1.yaml`, blob `333a4ef8cd34719d66056aa608ab19473f839634`; evidence: `TSK_0406_FILTERING_POLICY_EVIDENCE_2026-08-27.md`, blob `bb4514b4af7c1c5e616b7875f98e86962fee0325`.
 - `TSK-0202` — secret-safe approved AdGuard settings exported/versioned and proven exactly equal to current live safe settings — artifact: `infrastructure/adguard-server/approved-adguard-config-v1.json`, blob `ea85830b5ef9de7f2772e5467570d52013228b0b`; settings SHA-256 `327c374d46fc40c03a847a57d7078df6035edc71710eb8725ce57c69ac8a93a8`; evidence: `TSK_0202_ADGUARD_CONFIG_EXPORT_EVIDENCE_2026-08-27.md`, blob `d885d3f8e53c052809620958d82eb3114d558b84`.
+- `TSK-0429` — privacy-minimal AdGuard backup scope documented and independently verified against current DPIA/retention/live state — policy: `infrastructure/adguard-server/BACKUP_SCOPE_POLICY.md`, blob `e62b48a3e746b1be90881bbffab3b7680384cc16`; evidence: `TSK_0429_PRIVACY_MINIMAL_BACKUP_SCOPE_EVIDENCE_2026-08-27.md`, blob `b77c6d7a2e17adc5e653151b55137467a8c5b62f`.
 
 ### TSK-0204 corrected stable state
 
@@ -58,63 +59,49 @@ After hardening rollback and API-readiness handling, final pinned control run `3
 
 ACC-0204 is fully satisfied at the stronger evidence level.
 
-### TSK-0406 accepted stable state
-
-The canonical WBS defines TSK-0406 as `A3`, `AUTO_ALLOWED`, HIGH priority, critical path, hard predecessors `TSK-0407` + `TSK-0011`, acceptance `ACC-0406`.
-
-The read-only baseline inspection found filtering already enabled with exactly one active maintained list: AdGuard DNS filter (`filter_1.txt`, 178285 rules at inspection), while AdAway remained configured but disabled. There were zero whitelist filters and zero user rules, `blocking_mode=default`, and normal `example.com` resolution worked. Existing dns10/ECS-off and privacy controls remained intact.
-
-Policy v1.0.0 was created and read back at `infrastructure/adguard-server/filter-policy-v1.yaml`. It records the one-list conservative rationale, the existing privacy-safe false-positive intake as the exception path, a narrow reversible allow-rule mechanism, exact rollback, the Protection Claims Checklist as the claims boundary, explicit no-complete-safety wording, and governed change control.
-
-First acceptance run `33125650171` / job `98703037668` was **not accepted**: after submitting a temporary randomized `.invalid` block rule, the immediate `check_host` observation had not yet converged. A pre-armed restore trap executed. Mandatory recovery audit run `33125686361` / job `98703159125`: **PASS**, directly proving API and persisted user rules returned to zero, list state was unchanged, privacy/upstream invariants were preserved, and normal resolution remained functional.
-
-The verifier was then materially corrected to poll for observed rule-engine convergence while keeping rollback armed until restoration itself was observed. Corrected acceptance run `33125736588` / job `98703328392`: **PASS**.
-
-Direct acceptance evidence:
-
-- baseline randomized `.invalid` name: `NotFilteredNotFound`;
-- temporary exact block: `FilteredBlackList`, convergence on poll attempt 2;
-- matching narrow allow exception: `NotFilteredWhiteList`, convergence on poll attempt 2;
-- exact restoration of the pre-test empty rule set: `NotFilteredNotFound`, convergence on poll attempt 3;
-- API user-rule set restored exactly to `[]`;
-- filter-list enabled/disabled state and whitelist state unchanged;
-- persisted policy still matches v1 with zero user rules;
-- dns10 upstream, ECS-off, query-log-off, anonymisation-on and statistics-off invariants preserved;
-- direct post-rollback `example.com` resolution returned 2 answers.
-
-No permanent resolver filtering mutation was required. The temporary synthetic rules were completely rolled back. ACC-0406 is fully satisfied.
-
 ### TSK-0202 accepted stable state
 
-The exact WBS row was reread immediately before execution: `A3`, `AUTO_ALLOWED`, HIGH, critical path, hard predecessors `TSK-0204`, `TSK-0205`, `TSK-0206`, `TSK-0406`, `TSK-0201`, `TSK-0011`, acceptance `ACC-0202`.
+Fresh corrected live export run `33127050108` / job `98707574318`: **PASS**. It asserted the current approved pre-public resolver/privacy/filter/admin/abuse invariants and emitted only a non-sensitive allowlist. Versioned artifact `infrastructure/adguard-server/approved-adguard-config-v1.json` v1.0.0 is blob `ea85830b5ef9de7f2772e5467570d52013228b0b`, and independent audit run `33127141644` / job `98707868115` proved exact live-to-artifact equality at SHA-256 `327c374d46fc40c03a847a57d7078df6035edc71710eb8725ce57c69ac8a93a8`, verified 9 linked evidence blobs, persistent client count `0`, and non-empty query-log file count `0`.
 
-Fresh corrected live export run `33127050108` / job `98707574318`: **PASS**. It first asserted the current approved pre-public resolver/privacy/filter/admin/abuse invariants, then emitted only an explicit non-sensitive allowlist from current `AdGuardHome.yaml`. The resulting canonical settings SHA-256 was `327c374d46fc40c03a847a57d7078df6035edc71710eb8725ce57c69ac8a93a8`.
+ACC-0202 is fully satisfied. Its `REQ-0022` reference remains unresolved under the owner-deferred UK representative/ICO work and does not authorize real England participant activation.
 
-Versioned artifact `infrastructure/adguard-server/approved-adguard-config-v1.json` v1.0.0 was created and read back at Git blob `ea85830b5ef9de7f2772e5467570d52013228b0b`. It intentionally excludes administrator credentials/password hashes, certificate private material, query history, persistent client identifiers, and volatile runtime data; it is not a raw secret-bearing AdGuard backup.
+### TSK-0429 accepted stable state
 
-Independent audit run `33127141644` / job `98707868115`: **PASS**. It pinned the artifact blob, independently canonicalized and hashed the artifact settings, checked sensitive-field exclusions, verified the exact Git blobs of all 9 linked deployment evidence files, rebuilt the same safe settings object directly from current `/opt/AdGuardHome/AdGuardHome.yaml`, and proved exact live-to-artifact equality at the same SHA-256. Persistent client count remained `0` and non-empty `querylog.json*` file count remained `0`.
+The exact WBS row defines TSK-0429 as `A3`, `AUTO_ALLOWED`, HIGH, critical path, hard predecessors `TSK-0437` + `TSK-0011`, acceptance `ACC-0429`.
 
-EVD-0202 was then created and read back at `TSK_0202_ADGUARD_CONFIG_EXPORT_EVIDENCE_2026-08-27.md`, blob `d885d3f8e53c052809620958d82eb3114d558b84`.
+Read-only live scope preflight run `33127459481` / job `98708878287`: **PASS**. It established current root-only config/secret/rollback permissions, logging/statistics/anonymisation state, zero persistent clients/user rules/query-log files, and absence of configured TLS private material.
 
-ACC-0202 is fully satisfied. Its `REQ-0022` reference remains intentionally unresolved under owner-deferred UK representative/ICO work until 2027-08-27 or earlier explicit reactivation; TSK-0202 PASS does not satisfy, waive, or reopen that legal condition and does not authorize real England participant activation.
+Policy v1.0.0 at `infrastructure/adguard-server/BACKUP_SCOPE_POLICY.md` defines:
+
+- included data: raw current `AdGuardHome.yaml` + non-secret verification manifest only;
+- exclusions: plaintext `admin.env`, stale rollback copies, DNS/query history, client statistics/records, participant/research data, diagnostics, caches/logs/reinstallable binaries, and current-absent TLS private material;
+- encryption: confidentiality + integrity/authentication before durable/off-host retention, owner-authorised decryption, secret material separate from archive/Git/logs;
+- retention: event-based latest verified + at most one previous verified generation, with immediate plaintext/failed-copy deletion rather than an invented calendar period;
+- access: root during execution plus owner/explicit owner-authorised recovery path only;
+- location: root-only staging on current West Europe/Netherlands DNS VM; future off-host location remains inside approved Azure/EU boundary and requires actual owner-managed target verification;
+- deletion: project-controlled files deleted and absence verified; provider-side deletion verified only when a real provider target exists.
+
+First audit run `33127565783` / job `98709225350` was not accepted because a literal static wording assertion mismatched the policy text; no target mutation occurred. Corrected independent audit run `33127643804` / job `98709483562`: **PASS**, proving policy/source alignment, source blobs, current live assumptions, no policy secret material, no TLS private material, and no query-log files.
+
+ACC-0429 is fully satisfied.
 
 ### Selected next
 
-`TSK-0429` — define privacy-minimal backup scope: **TODO / selected**.
+`TSK-0430` — create encrypted configuration backup: **TODO / selected**.
 
-Queue recomputation run `33127287940` / job `98708339992` directly re-read the affected WBS rows after TSK-0202 PASS:
+Current exact WBS metadata from queue recomputation:
 
-- TSK-0429: A3, AUTO_ALLOWED, HIGH, critical path; hard deps `TSK-0437` + `TSK-0011`, both currently satisfied; ACC-0429 requires included/excluded data, encryption, retention, access, location, and deletion to be documented and aligned with the DPIA.
-- TSK-0430 remains blocked on TSK-0429.
-- TSK-0514 remains blocked on TSK-0443.
-- TSK-0443 remains blocked on TSK-0442, which is downstream of external-provider-bound TSK-0441.
-- TSK-0511 remains blocked on TSK-0514.
+- A3 / AUTO_ALLOWED / HIGH / critical path;
+- hard predecessors `TSK-0202`, `TSK-0429`, `TSK-0011`, all now satisfied;
+- ACC-0430: backup completes, can be decrypted by the authorised owner, contains no prohibited query history, and has a recorded checksum/date;
+- REQ-0049, REQ-0050, REQ-0051; CON-0004, CON-0005, CON-0018; INT-0014; RSK-0048.
 
-Therefore TSK-0429 is the deterministic eligible task in the affected current queue; no blocked successor was promoted merely because TSK-0202 passed.
+TSK-0429 deliberately left the exact encryption/key mechanism to TSK-0430 because no existing owner decryption key or approved external secret-store object is canonical. TSK-0430 may proceed only if it can establish a real owner-authorised decryption path without publishing or co-locating unrecoverable key material in a way that defeats the recovery objective.
 
 ### External/provider and legal boundaries
 
 - `TSK-0441` — public `dns.usesafeweb.com` DNS record: no record is claimed created; no authorized DNS-provider account action is currently available through connected tools.
+- Azure control-plane provisioning/configuration remains owner-managed; no backup vault/storage account or other Azure control-plane resource is assumed or created by project automation.
 - Owner-deferred UK representative/ICO fee planning remains unresolved until 2027-08-27 or earlier explicit reactivation; technical work does not imply validation-readiness legal gate PASS or authorize real England participant activation.
 
 ## Runtime safeguards
@@ -128,4 +115,4 @@ Therefore TSK-0429 is the deterministic eligible task in the affected current qu
 
 ## Exact next authoritative step
 
-Execute TSK-0429 within its AUTO_ALLOWED documentation/control scope: load REQ-0049, REQ-0050, CON-0004, CON-0005, INT-0014, RSK-0048 and the authoritative current DPIA/data-flow/retention sources; define the smallest privacy-minimal backup scope with explicit included/excluded data, encryption, retention, authorized access, approved location and deletion behavior; do not invent retention periods or secret-storage mechanisms that are not supported by authority. Verify the artifact against the linked sources, persist/read back EVD-0429, update runtime only if ACC-0429 is fully satisfied, then recompute the queue before TSK-0430.
+Execute TSK-0430 preflight first: inspect available cryptographic tooling and any already-existing owner-authorised recovery key/recipient mechanism on `adguardvm` without revealing secret contents; verify the backup scope policy can be implemented with encrypted/authenticated output, separate decryption material, root-only staging, checksum/date, prohibited-data exclusion and immediate plaintext cleanup. If a valid owner-decryption path exists, create and independently decrypt/verify the encrypted backup without logging secret material. If no such path exists, complete the script/design/preflight work possible and stop at the smallest owner-access/key boundary rather than fabricating owner recoverability.
