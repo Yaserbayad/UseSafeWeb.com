@@ -1,0 +1,107 @@
+name: Reconcile TSK-0408 PASS and inspect L4 queue
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-tsk0408-pass-and-inspect-l4.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify TSK-0408 and derive current L4 candidates
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object TSK_0408_USESAFEWEB_DNS_IDENTITY_PLATFORM_ENDPOINT_PROFILE_CONTRACT_2026-08-28.md)" = "52860ce167fc8a31962cd412772e428d280c8184"
+          test "$(git hash-object TSK_0408_USESAFEWEB_DNS_IDENTITY_PLATFORM_ENDPOINT_PROFILE_EVIDENCE_2026-08-28.md)" = "b530b0608fd3cfa6abd39548def8e10ba133353b"
+          python3 - <<'PY'
+          import csv, pathlib, re
+          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',encoding='utf-8-sig',newline='')))
+          by={r['Task_ID']:r for r in rows}
+          t=by['TSK-0408']
+          assert t['Dependencies']=='TSK-0146'
+          assert t['Action_Authority']=='AUTO_ALLOWED'
+          assert t['AI_Capability_A0_A4']=='A3'
+          assert 'no false universal FQDN workflow' in t['Acceptance_Criteria']
+          e=pathlib.Path('TSK_0408_USESAFEWEB_DNS_IDENTITY_PLATFORM_ENDPOINT_PROFILE_EVIDENCE_2026-08-28.md').read_text()
+          assert 'All clauses of ACC-0408 are directly covered' in e
+          assert 'RSK-0002' in e
+          state=pathlib.Path('CURRENT_STATE.md').read_text()
+          assert 'Selected next: `TSK-0408' in state
+
+          passed={r['Task_ID'] for r in rows if (r.get('Execution_State') or '').strip()=='PASS'}
+          for tid in by:
+              if re.search(rf'`{re.escape(tid)}[^`]*`[^\n]*\*\*PASS',state) or re.search(rf'`{re.escape(tid)}[^`]*`:\s*\*\*PASS',state):
+                  passed.add(tid)
+          for tid in ['TSK-0138','TSK-0139','TSK-0141','TSK-0146','TSK-0147','TSK-0148','TSK-0229','TSK-0408','TSK-0558','TSK-0513','TSK-0510']:
+              if tid=='TSK-0408' or tid in state:
+                  passed.add(tid)
+
+          def deps(r):
+              return [x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
+          prio={'CRITICAL':0,'HIGH':1,'MEDIUM':2,'LOW':3}
+          candidates=[]
+          for idx,r in enumerate(rows):
+              if (r.get('Lifecycle_Stage') or '').strip()!='L4':
+                  continue
+              tid=r['Task_ID']
+              if tid in passed:
+                  continue
+              ds=deps(r)
+              missing=[d for d in ds if d not in passed]
+              if not missing:
+                  candidates.append((idx,r))
+          candidates.sort(key=lambda x:(prio.get((x[1].get('Priority') or '').strip(),9),x[0],x[1]['Task_ID']))
+
+          out=['# TSK-0408 post-PASS full L4 queue inspection','', '**Date:** 2026-08-28  ', '**Purpose:** recompute dependency-ready L4 candidates after TSK-0408 PASS without treating dependency-readiness as execution authority or acceptance.','', f'- Conservative current PASS set size: {len(passed)}',f'- Dependency-ready non-PASS L4 candidates: {len(candidates)}','', '## Dependency-ready L4 candidates','']
+          for _,r in candidates:
+              out.append(f"### {r['Task_ID']} — {r['Title']}")
+              for c in ['Priority','Critical_Path','Dependencies','Preconditions','Acceptance_ID','Acceptance_Criteria','AI_Capability_A0_A4','Action_Authority','Requirement_Reference','Constraint_Reference','Interface_Reference','Notes']:
+                  v=(r.get(c) or '').strip()
+                  if v:
+                      out.append(f'- **{c}:** {v}')
+              ac=(r.get('Acceptance_Criteria') or '').lower()
+              flags=[]
+              if (r.get('Action_Authority') or '').strip()!='AUTO_ALLOWED':
+                  flags.append('NON_AUTO_AUTHORITY')
+              if any(k in ac for k in ['representative parent','representative user','real participant','participant','observed user','user evidence','usability testing','comprehension testing','cohort','reviewed by owner','owner approves','owner approval']):
+                  flags.append('POTENTIAL_HUMAN_OR_REAL_EVIDENCE_BOUNDARY')
+              if flags:
+                  out.append('- **Preflight flags:** '+'; '.join(flags))
+              out.append('')
+          pathlib.Path('TSK_0408_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md').write_text('\n'.join(out)+'\n')
+          print('TSK0408_QUEUE_INSPECTION=PASS')
+          PY
+      - name: Reconcile runtime and publish inspection
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from datetime import datetime, timezone
+          import re
+          p=Path('CURRENT_STATE.md'); text=p.read_text()
+          now=datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
+          text=re.sub(r'\*\*Updated:\*\* [^\n]+',f'**Updated:** {now}',text,count=1)
+          sec='''### TSK-0408 accepted stable state\n\n`TSK-0408 — Define one coherent UseSafeWeb DNS identity and approved platform-specific endpoint/profile mechanisms`: **PASS for the provisional internal L4 technical design under DEC-0050/CR-0003**. Contract `TSK_0408_USESAFEWEB_DNS_IDENTITY_PLATFORM_ENDPOINT_PROFILE_CONTRACT_2026-08-28.md`, blob `52860ce167fc8a31962cd412772e428d280c8184`; independent evidence `TSK_0408_USESAFEWEB_DNS_IDENTITY_PLATFORM_ENDPOINT_PROFILE_EVIDENCE_2026-08-28.md`, blob `b530b0608fd3cfa6abd39548def8e10ba133353b`. ACC-0408 is satisfied: one UseSafeWeb DNS service identity is preserved while Android native Private DNS uses DoT hostname input and Apple DoH uses an HTTPS Server URL/profile; certificate, verification truth, removal/recovery, fallback/failure, and pilot/test/staging/future-production separation are explicit; a false universal FQDN workflow is prohibited.\n\nIndependent source audit used current Google Android, Android Developers, Apple Support/Platform Deployment, AdGuard Knowledge Base and current canonical UseSafeWeb evidence. The Apple device-management payload reference does not by itself prove the later manual consumer-profile package; any release `.mobileconfig` still requires artifact-level verification. `RSK-0002` remains OPEN and this PASS does not authorize LG-05/LG-06, implementation/build, participants, public release or launch.\n\n'''
+          marker='## Runtime safeguards'
+          if '### TSK-0408 accepted stable state' not in text:
+              text=text.replace(marker,sec+marker,1)
+          q=text.rfind('\n## Queue status after current reconciliation'); assert q>=0
+          text=text[:q].rstrip()+'''\n\n## Queue status after current reconciliation\n\n`TSK-0408` is runtime PASS for provisional internal L4 technical design. A fresh full L4 dependency-ready queue inspection has been generated as `TSK_0408_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. Selection is intentionally deferred until that report is read back because newly unlocked tasks may have HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED, current-source, or real-user-evidence acceptance boundaries.\n\n## Exact next authoritative step\n\nRead back `TSK_0408_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`, apply DEC-0050/CR-0003, RSK-0002, current action authority and task-specific acceptance, then select the highest-priority genuinely executable AUTO_ALLOWED L4 task. Do not choose a task merely because its hard dependencies are satisfied.\n'''
+          p.write_text(text)
+          PY
+          git diff --check
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add CURRENT_STATE.md TSK_0408_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md
+          git commit -m "state: accept TSK-0408 and inspect L4 queue"
+          git push
