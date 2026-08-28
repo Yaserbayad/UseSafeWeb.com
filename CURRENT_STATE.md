@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T18:21:32Z
+**Updated:** 2026-08-28T18:26:13Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -480,6 +480,12 @@ The measurement architecture creates no approved persistent raw event stream, an
 
 The internal 99.9% DoH/DoT 30-day target is provisional and intentionally compatible with the accepted single-node approximately-30-minute recovery model; it is not a public SLA and does not authorize HA spend. The new monitoring set/future web-app observability are not implemented by this PASS. `DVR-0230-01`, `DVR-0484-01`, `GAP-0484-02` and `RSK-0002` remain OPEN. This PASS does not authorize a new monitoring vendor, Azure control-plane mutation, staffed support, implementation/build, participants, publication or launch.
 
+### TSK-0044 accepted stable state
+
+`TSK-0044 — Define AdGuard API compatibility, credential-isolation and failure NFRs`: **PASS for the provisional internal L4 interface/NFR-definition acceptance under DEC-0050/CR-0003**. Contract `TSK_0044_ADGUARD_API_COMPATIBILITY_CREDENTIAL_FAILURE_NFR_2026-08-28.md`, blob `07ab5539d11ff25d591adeada34e7f30854caa90`; independent evidence `TSK_0044_ADGUARD_API_COMPATIBILITY_CREDENTIAL_FAILURE_NFR_EVIDENCE_2026-08-28.md`, blob `19355b7b9ea2bac219ccf79ef9cbfd588cc56ba4`. ACC-0044 is satisfied using exact AdGuard Home v0.107.79 source/OpenAPI plus current accepted UseSafeWeb runtime/config evidence: `/control` remains private/operator-only, customer components receive no AdGuard admin credentials, privacy booleans and persisted fields fail closed, finite timeout/retry and pre-state/delta/read-back reconciliation are explicit, no AdGuard-derived customer/setup identifier is currently required, version/contract drift blocks affected integration, and unavailable admin/verifier planes cannot create false protection claims or unsafe fallbacks.
+
+The contract introduces no mandatory customer authentication, account/dashboard, persistent product datastore or customer-linked AdGuard client record. It performs no AdGuard mutation or credential rotation. `DVR-0230-01`, `DVR-0484-01`, `GAP-0484-02` and `RSK-0002` remain OPEN. This PASS does not authorize implementation/build, participants, legal completion, publication or launch.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -491,13 +497,8 @@ The internal 99.9% DoH/DoT 30-day target is provisional and intentionally compat
 
 ## Queue status after current reconciliation
 
-The TSK-0538 post-PASS queue was reread against current acceptance, CR-0003 and the open security/privacy deviations. `TSK-0187` remains ineligible because it requires representative-parent evidence. `TSK-0140` remains ineligible for PASS because owner/multi-role review evidence is absent. `TSK-0044` and `TSK-0046` are both MEDIUM/A3/AUTO_ALLOWED with no preflight flag; WBS order places TSK-0044 first. Canonical WBS directly confirms TSK-0146 current Execution_State=PASS.
-
-- **Selected next: `TSK-0044 — Define AdGuard API compatibility, credential-isolation and failure NFRs`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
-- Hard dependencies: `TSK-0484`, `TSK-0538`, `TSK-0146` — all current PASS.
-- ACC-0044: define the private/restricted AdGuard administration path, secret storage/rotation, API/config timeouts/retries, partial-failure reconciliation, opaque setup/configuration identifiers if technically required, explicit privacy booleans, version/contract regression checks, and safe behavior when AdGuard or the verification path is unavailable; introduce no mandatory customer-authentication or persistent datastore dependency.
-- Selection boundary: internal compatibility/security/failure NFR definition only. No AdGuard mutation, secret rotation, account/auth activation, persistent database, application build, participant processing or release is authorized.
+`TSK-0044` is runtime PASS for its bounded provisional-L4 interface/NFR-definition acceptance. No AdGuard mutation, adapter implementation, credential rotation or customer identity/datastore dependency is inferred. A fresh conservative dependency-ready AUTO_ALLOWED L4 queue has been generated at `TSK_0044_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. No next task is selected by this write; the queue must be reread against acceptance, direct predecessor evidence, CR-0003, human/legal/participant holds and open security/privacy deviations before execution.
 
 ## Exact next authoritative step
 
-Execute bounded TSK-0044: verify the current/version-pinned AdGuard v0.107.79 administrative/API/configuration contract from official sources and current accepted runtime evidence; define the minimum private administration and secret-isolation contract, explicit privacy booleans, timeout/retry/idempotency/reconciliation semantics, opaque identifier rule only if technically necessary, version/contract regression checks and fail-safe behavior; preserve accountless/no-datastore, privacy and security boundaries; persist/read back independent ACC-0044 evidence; reconcile runtime; then recompute.
+Read back the TSK-0044 post-PASS L4 queue, reject any candidate requiring unavailable real-user evidence, owner/legal/privacy approval, unresolved trigger/gate or missing predecessor proof, account for open security/privacy deviations where relevant, and persist the deterministic highest-priority eligible AUTO_ALLOWED selection.
