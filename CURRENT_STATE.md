@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T21:25:27Z
+**Updated:** 2026-08-28T21:43:21Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -534,18 +534,18 @@ This PASS remains provisional internal L4 product-definition evidence only. It d
 - Plain DNS 53 remains non-public. TSK-0442 TLS, TSK-0443 certificate renewal/expiry controls, TSK-0514 external-network/removal verification, TSK-0511 supported-device verification, TSK-0512 filtering regression and TSK-0207 privacy-persistence verification are PASS, but broader participant/public readiness remains gated by validation, privacy/legal and activation evidence.
 - Azure control-plane remains owner-managed; runner autonomy applies to handed-off VM/repository-authorized tasks only after target identity and scope are verified.
 
-### TSK-0317 preparation stable state
+### TSK-0317 accepted stable state
 
-`TSK-0317 — Design the simplest technically correct install, verification, removal, and recovery path for each supported platform`: runtime **WAITING**, not PASS. Bounded AI preparation is complete. Candidate `TSK_0317_PLATFORM_INSTALL_VERIFICATION_REMOVAL_RECOVERY_DESIGN_CANDIDATE_2026-08-28.md`, blob `d44daf376d0e8ed1d5839cc3b6b2ac10d090828d`, publication commit `28156f75728c28333c61c33313007556839329e6`; preparation evidence `TSK_0317_PLATFORM_DESIGN_PREPARATION_EVIDENCE_2026-08-28.md`, blob `8a233a40ec549a5ded9377048eb1ef365e9b31f3`, publication commit `719ec389e22f5626bab412b8dc6d1223739559eb`. The preparation independently verifies complete technical coverage of ACC-0317 while preserving the WBS A1/HUMAN_ONLY boundary.
+`TSK-0317 — Design the simplest technically correct install, verification, removal, and recovery path for each supported platform`: **PASS for the provisional internal L4 design acceptance under DEC-0050/CR-0003**. Approved candidate `TSK_0317_PLATFORM_INSTALL_VERIFICATION_REMOVAL_RECOVERY_DESIGN_CANDIDATE_2026-08-28.md`, blob `d44daf376d0e8ed1d5839cc3b6b2ac10d090828d`, publication commit `28156f75728c28333c61c33313007556839329e6`; preparation evidence `TSK_0317_PLATFORM_DESIGN_PREPARATION_EVIDENCE_2026-08-28.md`, blob `8a233a40ec549a5ded9377048eb1ef365e9b31f3`, publication commit `719ec389e22f5626bab412b8dc6d1223739559eb`; Project Owner HUMAN_ONLY approval `TSK_0317_OWNER_APPROVAL_2026-08-28.md`, blob `260fe3795772c2e2928b86844172d5cad8407ba3`, publication commit `7f271d09eb9f2ac8b16d616e9b5ac1868bbbc762`; final acceptance evidence `TSK_0317_PLATFORM_DESIGN_ACCEPTANCE_EVIDENCE_2026-08-28.md`, blob `71eff82ab1194da7ca8666fe6f90f3d4244bb5fe`, publication commit `a2d6d2bf662d55de32d42942095e8c5930c99efd`.
 
-The candidate limits current support to accepted Android 9+ phone and iPhone/iOS 14+ paths; preserves Android DoT-hostname versus iPhone DoH-profile asymmetry; allows automation only for reliable routing/copy/verified-artifact delivery/controlled verification/state rendering; keeps system DNS/profile authorization user/OS controlled; preserves truthful conflict states, canonical manual fallback, safe removal/recovery and no-surveillance verification.
+ACC-0317 is satisfied: automatic behavior is limited to reliable routing/copy/already-verified artifact delivery/controlled verification/state rendering; Android system DNS changes and Apple profile authorization/removal remain user/OS controlled; canonical Android DoT-hostname versus iPhone DoH-profile asymmetry, manual fallback, conflicts, verification truth and reversible removal/recovery are explicit. The exact unchanged candidate received the required HUMAN_ONLY Project Owner approval.
 
-TSK-0317 cannot become PASS until the authorized human explicitly APPROVES, REQUESTS CHANGES to, or REJECTS the exact candidate blob `d44daf376d0e8ed1d5839cc3b6b2ac10d090828d`. No human design decision is inferred from technical preparation. Approval would remain provisional internal L4 only and would not authorize implementation/build/profile publication, participants, legal completion, payment, publication or launch.
+This PASS remains provisional internal L4 design evidence only. It does not make representative-parent behavioral validation true; `RSK-0002` remains OPEN; `REQ-0022` remains unresolved; LG-03/LG-04/LG-05/LG-06 remain non-PASS; account/dashboard remains deferred under EXC-0001; no implementation/build, production profile publication, participant processing, legal completion, payment, publication or launch is authorized.
 
-## Queue status after TSK-0317 preparation
+## Queue status after TSK-0317 acceptance
 
-`TSK-0317` is **WAITING** on its HUMAN_ONLY design disposition. `RSK-0002` remains OPEN; `REQ-0022` unresolved; LG-03/LG-04/LG-05/LG-06 non-PASS; account/dashboard remains deferred under EXC-0001. TSK-0307 and TSK-0310 remain blocked on TSK-0317 PASS. Other HUMAN_ONLY L4 bottlenecks remain human-controlled and are not silently completed.
+`TSK-0317` is runtime **PASS**. Its direct AUTO_ALLOWED successor `TSK-0307` may become eligible subject to fresh deterministic queue recomputation; `TSK-0310` still also depends on HUMAN_ONLY TSK-0318 and other current dependencies and must not be inferred eligible solely from this PASS.
 
 ## Exact next authoritative step
 
-Obtain the smallest required human disposition on candidate blob `d44daf376d0e8ed1d5839cc3b6b2ac10d090828d`: APPROVE, REQUEST CHANGES, or REJECT. If approved unchanged, independently re-check ACC-0317 against that exact blob, reconcile runtime PASS, then recompute the L4 queue. If changes are requested, revise only the specified design elements and re-verify before another human disposition.
+Recompute the deterministic L4 queue from current WBS/runtime/gates. Execute the highest-priority current AUTO_ALLOWED item whose hard dependencies are PASS and whose own acceptance can be proven within DEC-0050/CR-0003 without representative-participant evidence, unresolved legal fact, deferred account/persistence scope, HUMAN_ONLY action, L5/L6 build authority or public/production activation.
