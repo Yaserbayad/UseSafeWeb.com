@@ -11,24 +11,31 @@ permissions:
 
 jobs:
   reconcile:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
+    concurrency:
+      group: usesafeweb-governance-state-prod
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
+          persist-credentials: true
 
       - name: Verify exact pre-state and accepted evidence
         shell: bash
         run: |
           set -euo pipefail
+          test "$(sha256sum /etc/machine-id | awk '{print $1}')" = "e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2"
           test "$(git hash-object CURRENT_STATE.md)" = "3097079edb8f850a6966b74f0b7a35bea226f860"
           test "$(git hash-object TSK_0145_REQUIREMENT_TO_EVIDENCE_TRACEABILITY_2026-08-28.md)" = "d358d9129f37809743a1f599703a706de7333051"
           test "$(git hash-object TSK_0145_REQUIREMENT_TO_EVIDENCE_TRACEABILITY_EVIDENCE_2026-08-28.md)" = "5e82ef3f7737f90e0578c3393626a71cd1b50e1f"
 
       - name: Apply bounded runtime reconciliation
-        shell: python
+        shell: bash
         run: |
+          set -euo pipefail
+          python3 - <<'PY'
           from pathlib import Path
           from datetime import datetime, timezone
 
@@ -70,6 +77,7 @@ jobs:
           new_tail = '''## Queue status after TSK-0145 reconciliation\n\n`TSK-0145` is runtime **PASS** for its bounded traceability-matrix acceptance. The artifact and acceptance evidence were both published and read back from `main`; 91/91 canonical requirements are covered and the current validated relationship state identifies 0 orphan requirements. No requirement, owner decision, gate, participant authority, build authority, publication authority or launch authority is promoted by this PASS.\n\nNo successor task is selected by this synchronization write. Selection must be recomputed from current canonical WBS/runtime/gates after this write is read back.\n\n## Exact next authoritative step\n\nRead back this TSK-0145 runtime reconciliation, verify the exact commit/blob and preserved unrelated state, then recompute the deterministic eligible queue from current authority. Reject candidates requiring unavailable representative-user evidence, owner/legal/privacy approval, unresolved trigger/gate, missing direct predecessor proof, or any open security/privacy deviation that their own acceptance would falsely certify. Persist/read back the selected next bounded AUTO_ALLOWED task before execution.\n'''
           text = text[:q] + new_tail
           path.write_text(text, encoding='utf-8')
+          PY
 
       - name: Verify bounded diff and commit
         shell: bash
@@ -84,4 +92,4 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add CURRENT_STATE.md
           git commit -m 'state: reconcile TSK-0145 PASS'
-          git push origin HEAD:main
+          git push
