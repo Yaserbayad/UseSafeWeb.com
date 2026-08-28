@@ -1,0 +1,29 @@
+name: Reconcile TSK-0431 project recovery state
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/reconcile-tsk0431-project-recovery.yml
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - name: Reconcile current state
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 .github/scripts/reconcile_tsk0431_project_recovery.py
+          git config user.name 'UseSafeWeb Governance Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: record TSK-0431 project recovery acceptance'
+          git push origin HEAD:main
