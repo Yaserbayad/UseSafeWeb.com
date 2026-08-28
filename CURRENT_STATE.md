@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T16:11:46Z
+**Updated:** 2026-08-28T16:17:07Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -388,6 +388,12 @@ The register does not resolve its assumptions. RSK-0002 and all real-behavior un
 
 The first artifact revision omitted the mandatory CR-0003/RSK-0002 behavioral-evidence limitation; it was corrected before PASS. `RSK-0002` remains OPEN. This PASS is provisional design evidence only and does not authorize LG-05/LG-06, L5/L6 build, participants, legal completion, payment activation, public release or launch.
 
+### TSK-0408 accepted stable state
+
+`TSK-0408 — Define one coherent UseSafeWeb DNS identity and approved platform-specific endpoint/profile mechanisms`: **PASS for the provisional internal L4 technical design under DEC-0050/CR-0003**. Contract `TSK_0408_USESAFEWEB_DNS_IDENTITY_PLATFORM_ENDPOINT_PROFILE_CONTRACT_2026-08-28.md`, blob `52860ce167fc8a31962cd412772e428d280c8184`; independent evidence `TSK_0408_USESAFEWEB_DNS_IDENTITY_PLATFORM_ENDPOINT_PROFILE_EVIDENCE_2026-08-28.md`, blob `b530b0608fd3cfa6abd39548def8e10ba133353b`. ACC-0408 is satisfied: one UseSafeWeb DNS service identity is preserved while Android native Private DNS uses DoT hostname input and Apple DoH uses an HTTPS Server URL/profile; certificate, verification truth, removal/recovery, fallback/failure, and pilot/test/staging/future-production separation are explicit; a false universal FQDN workflow is prohibited.
+
+Independent source audit used current Google Android, Android Developers, Apple Support/Platform Deployment, AdGuard Knowledge Base and current canonical UseSafeWeb evidence. The Apple device-management payload reference does not by itself prove the later manual consumer-profile package; any release `.mobileconfig` still requires artifact-level verification. `RSK-0002` remains OPEN and this PASS does not authorize LG-05/LG-06, implementation/build, participants, public release or launch.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -399,13 +405,8 @@ The first artifact revision omitted the mandatory CR-0003/RSK-0002 behavioral-ev
 
 ## Queue status after current reconciliation
 
-`TSK-0229` is runtime PASS for the provisional internal L4 data contract. The previously generated full L4 queue inspection remains current for dependency structure. `TSK-0187` is still deferred because its acceptance requires representative-parent evidence unavailable under CR-0003.
-
-- **Selected next: `TSK-0408 — Define one coherent UseSafeWeb DNS identity and approved platform-specific endpoint/profile mechanisms`** (L4 / A3 / AUTO_ALLOWED / HIGH).
-- Hard dependency: `TSK-0146` — current PASS.
-- ACC-0408: Hostname/DoH path/profile naming, certificates, verification, removal, fallback, and environment separation are clear; no false universal FQDN workflow.
-- Execution remains internal definition/design only; current official platform evidence must be used where technical behavior is material, and `RSK-0002` must remain explicit.
+`TSK-0408` is runtime PASS for provisional internal L4 technical design. A fresh full L4 dependency-ready queue inspection has been generated as `TSK_0408_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. Selection is intentionally deferred until that report is read back because newly unlocked tasks may have HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED, current-source, or real-user-evidence acceptance boundaries.
 
 ## Exact next authoritative step
 
-Execute bounded `TSK-0408`: reconcile the already proven UseSafeWeb DNS identity (`dns.usesafeweb.com`, DoH `/dns-query`, Android native DoT where applicable) with current authoritative platform mechanisms. Define platform-specific endpoint/profile naming, certificate expectations, verification, removal/recovery, fallback/unsupported states and environment separation without inventing a universal FQDN workflow. Verify ACC-0408 against canonical runtime evidence plus current official sources, persist/read back, then recompute.
+Read back `TSK_0408_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`, apply DEC-0050/CR-0003, RSK-0002, current action authority and task-specific acceptance, then select the highest-priority genuinely executable AUTO_ALLOWED L4 task. Do not choose a task merely because its hard dependencies are satisfied.
