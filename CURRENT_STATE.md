@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T14:47:27Z  
+**Updated:** 2026-08-28T14:48:43Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -352,6 +352,12 @@ This PASS closes internal preparation only. The artifact remains **NOT FOR PARTI
 
 `TSK-0028 — Update canonical state after G-02 decision`: **PASS**. The canonical validation-readiness artifact now records the Project Owner's TSK-0027 outcome as **DEFER**, removes stale claims that already-proven deployment/technical verification is pending, preserves the three deferred/open legal/privacy/contact criterion classes, and retains recruitment authorization = NO. Updated `VALIDATION_READINESS_GATE.md` blob `1aef1c806a3fa4abcaf9e2feffa0ea093ec10ff9`; reconciliation evidence `TSK_0028_CANONICAL_GATE_STATE_RECONCILIATION_EVIDENCE_2026-08-28.md`, blob `e8231f6902cbcf0fd5b515b6f8a2ad6303d07a31`. ACC-0028 is satisfied: canonical gate/runtime files now agree on DEFER and preserve the evidence links without contradictory ready/blocked wording.
 
+### TSK-0513 accepted stable state
+
+`TSK-0513 — Run end-to-end synthetic rehearsal`: **PASS**. Rehearsal report `TSK_0513_END_TO_END_SYNTHETIC_REHEARSAL_2026-08-28.md`, blob `1c90d5e5734832c1e5b26d83fdb21e6aefc2305e`; synthetic fixture `fixtures/experiment1/TSK_0513_SYNTHETIC_REHEARSAL_FIXTURE_V1.json`, blob `8189de9d6f5fa554ff23fb127f95604c8fc381a5`; machine verification evidence `TSK_0513_END_TO_END_SYNTHETIC_REHEARSAL_EVIDENCE_2026-08-28.md`, blob `717a59aaf8e748e302b4a1aa972c2d3d2936d3aa`, run `33181725004`. All 16 main synthetic steps plus support/false-positive, withdrawal/removal and safeguarding-boundary branches passed with no prohibited participant data.
+
+The PASS remains valid against the reconciled TSK-0028 baseline because both the rehearsal and current gate state explicitly preserve G-02/LG-03 = DEFER and recruitment/real-participant processing = unauthorized. No equivalent re-execution was needed.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -363,12 +369,16 @@ This PASS closes internal preparation only. The artifact remains **NOT FOR PARTI
 
 ## Queue status after current reconciliation
 
-`TSK-0028` is runtime PASS and the canonical G-02/LG-03 outcome is reconciled as **DEFER**. The previously executed TSK-0513 synthetic rehearsal already has durable machine-verification evidence (`TSK_0513_END_TO_END_SYNTHETIC_REHEARSAL_EVIDENCE_2026-08-28.md`, blob `717a59aaf8e748e302b4a1aa972c2d3d2936d3aa`) created after the prior checkpoint. Under interrupted-work recovery rules, that durable result must be reconciled before selecting unrelated work.
+`TSK-0513` is runtime PASS. L2 technical and synthetic pre-experiment preparation is complete through the currently executable CR-0002 path.
 
-- **Selected next: reconcile the already-verified `TSK-0513` outcome against the now-current DEFER baseline.**
-- Direct TSK-0513 successor `TSK-0173` remains dependent on both TSK-0028 and TSK-0513 and is HUMAN_APPROVAL_REQUIRED; it cannot be dispatched until TSK-0513 is formally reconciled PASS and its own gate/preconditions are checked.
-- Recruitment and real-participant processing remain unauthorized.
+Direct successor `TSK-0173 — Verify Experiment-1 launch entry criteria` now has both hard dependencies satisfied (`TSK-0028`, `TSK-0513`) but is **not eligible for dispatch**: its WBS precondition requires `no unresolved safety/privacy blocker`, its acceptance requires unresolved safety/privacy/technical blockers to result in DEFER or FAIL, and current canonical LG-03/G-02 remains DEFER with three unresolved legal/privacy/contact criterion classes. TSK-0173 is also A2 / HUMAN_APPROVAL_REQUIRED.
+
+Downstream recruitment task `TSK-0037` remains unavailable because it depends on TSK-0173 and is HUMAN_ONLY. No real-participant Wave A/B or behavioral-analysis tasks can become current without the launch-entry/recruitment chain.
+
+**Ordinary dependency-ready AUTO_ALLOWED work after this reconciliation: 0.**
+
+CR-0002 has been fully used for the presently identified internal/synthetic L2 preparation path; it does not authorize crossing the real-participant launch-entry gate, fabricating behavioral evidence, or advancing lifecycle gates that require actual participant outcomes.
 
 ## Exact next authoritative step
 
-Re-read the durable TSK-0513 rehearsal report/fixture/evidence against the reconciled TSK-0028 DEFER baseline. If its acceptance proof remains valid, persist TSK-0513 PASS without re-executing equivalent rehearsal work; then recompute the queue.
+Preserve the current completed technical/synthetic baseline. To advance into real Experiment-1 execution, the Project Owner must reactivate and resolve the deferred legal/privacy/contact branch (or provide current verified non-applicability where valid), bring LG-03/G-02 to an explicit PASS with current evidence, and then provide any required approval for TSK-0173/TSK-0037. Until then, do not recruit, process real participants, or infer behavioral-validation outcomes.
