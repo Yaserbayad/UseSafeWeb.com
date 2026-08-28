@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T16:39:13Z
+**Updated:** 2026-08-28T16:43:24Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -418,6 +418,12 @@ Independent source audit used current Google Android, Android Developers, Apple 
 
 Current first-party source checks confirm Android Private DNS/DoT semantics, Android VPN DNS override capability, Chrome custom Secure DNS, Apple encrypted DNS profile semantics, Apple VPN DNS routing, and Private Relay DNS handling. Exact VPN/Private Relay/browser coexistence remains unproven and therefore cannot inherit S1 `Verified`. `RSK-0002` remains OPEN. This PASS does not authorize LG-05/LG-06, implementation/build, participants, legal completion, payment, public release or launch.
 
+### TSK-0143 accepted stable state
+
+`TSK-0143 — Specify native-device safeguard routing requirements`: **PASS for the provisional internal L4 routing contract under DEC-0050/CR-0003**. Contract `TSK_0143_NATIVE_DEVICE_SAFEGUARD_ROUTING_REQUIREMENTS_2026-08-28.md`, blob `20b588c27bc0d71249bec2c83f33cf551afa4ff0`; independent evidence `TSK_0143_NATIVE_DEVICE_SAFEGUARD_ROUTING_REQUIREMENTS_EVIDENCE_2026-08-28.md`, blob `d827c765959622dc3dad9f3c474bb17874c24ffa`. ACC-0143 is satisfied: supported-platform routing, already-configured skip behavior, parent-confirmed truth, unsupported/blocked paths, stale-guidance controls and verification limitations are explicit. The native layer is resolved from current canonical product authority as Apple/Google platform parental controls, not a new UseSafeWeb control system; exact per-version setting lists remain source/version-owned rather than guessed.
+
+Current first-party checks support Apple Screen Time/Family Sharing controls, Android/Family Link parental controls, Android 17+ on-device controls where actually available, and Google's explicit limitation that most Family Link supervision does not work on iPhone/iPad. `UPA-003`/`RSK-0002` remain OPEN: native-first value/friction and parent comprehension are not behaviorally validated. This PASS does not authorize LG-05/LG-06, implementation/build, participants, legal completion, payment, public release or launch.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -429,13 +435,13 @@ Current first-party source checks confirm Android Private DNS/DoT semantics, And
 
 ## Queue status after current reconciliation
 
-`TSK-0409` is runtime PASS. `TSK-0317` and `TSK-0319` remain HUMAN_ONLY and fenced; `TSK-0187` remains real-user-bound/deferred. `TSK-0140` is not selected despite WBS AUTO_ALLOWED metadata because its current acceptance explicitly requires owner and multi-role review evidence that is not present. The highest-priority executable provisional-L4 AUTO_ALLOWED candidate is `TSK-0143`; `TSK-0559` is also MEDIUM/AUTO_ALLOWED but later in WBS order.
+`TSK-0143` is runtime PASS. HUMAN_ONLY L4 tasks remain fenced and real-user-bound work remains deferred under CR-0003. `TSK-0144` is now dependency-ready and is the earliest WBS MEDIUM/A3/AUTO_ALLOWED provisional-L4 task; TSK-0559 remains another later MEDIUM/AUTO candidate.
 
-- **Selected next: `TSK-0143 — Specify native-device safeguard routing requirements`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
-- Hard dependency: `TSK-0146` — current PASS.
-- ACC-0143: Requirements cover supported platform states, already-configured handling, parent confirmation, unsupported paths, stale guidance, and verification limitations.
-- Selection rationale: dependency-ready MEDIUM/A3/AUTO_ALLOWED; acceptance can be satisfied from current platform/support evidence without representative-parent behavior or a human approval act; earlier WBS order than the remaining MEDIUM AUTO candidate.
+- **Selected next: `TSK-0144 — Specify the one relevant external-service safeguard step`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
+- Hard dependency: `TSK-0143` — current PASS.
+- ACC-0144: Requirements define eligibility, supported/unsupported state, one-service limit, parent confirmation, content update ownership, and fallback to Not covered.
+- Selection rationale: current dependency PASS, AUTO_ALLOWED, acceptance can be satisfied as a bounded service-guidance requirement without real-participant evidence, and WBS order precedes remaining equal-priority AUTO candidates.
 
 ## Exact next authoritative step
 
-Execute bounded `TSK-0143`: specify native-device safeguard routing requirements for supported, already-configured, unavailable/unsupported and verification-limited states; use only current authoritative platform evidence; preserve parent-confirmation versus system-verification truth; make stale-guidance/review triggers explicit; carry `RSK-0002`; persist/read back independent ACC-0143 evidence; reconcile runtime; then recompute.
+Execute bounded `TSK-0144`: define the one-relevant-external-service safeguard selection and state contract; specify eligibility/applicability, supported/unsupported handling, one-service maximum, parent-confirmed versus verified truth, source/version/update ownership, stale-guidance behavior and `Not covered` fallback; do not select a service based on invented popularity/user data; carry `UPA-004`/`RSK-0002`; persist/read back independent ACC-0144 evidence; reconcile runtime; then recompute.
