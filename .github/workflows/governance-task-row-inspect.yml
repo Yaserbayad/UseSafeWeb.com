@@ -15,16 +15,16 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  issue:
+  audit:
     runs-on: [self-hosted, linux, x64]
-    timeout-minutes: 10
+    timeout-minutes: 8
     steps:
       - name: Checkout exact main commit
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Staging validation then production certificate issuance
+      - name: Independent certificate and renewal audit
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -35,52 +35,32 @@ jobs:
           with urllib.request.urlopen(req,timeout=3) as r: print(json.load(r).get('name',''))
           PY
           )"
-          if [[ "$MID" != "e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2" || "$AZ_NAME" != "adguardvm" ]]; then
-            echo "PRODUCTION_GUARD=FAIL"
-            exit 1
-          fi
+          [[ "$MID" == "e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2" && "$AZ_NAME" == "adguardvm" ]]
           echo "PRODUCTION_GUARD=PASS"
-          [[ "$(getent ahostsv4 dns.usesafeweb.com | awk 'NR==1{print $1}')" == "52.157.109.120" ]]
-          if ! command -v certbot >/dev/null; then
-            sudo apt-get update -y >/dev/null
-            DEBIAN_FRONTEND=noninteractive sudo apt-get install -y certbot >/dev/null
-            echo "CERTBOT_INSTALLED=YES"
-          else
-            echo "CERTBOT_INSTALLED=ALREADY"
-          fi
-          certbot --version
-          if sudo ufw status | grep -Eq '^80/tcp[[:space:]]+ALLOW'; then
-            echo "UFW_HTTP80=ALREADY_ALLOWED"
-          else
-            sudo ufw allow 80/tcp comment 'UseSafeWeb ACME HTTP-01' >/dev/null
-            echo "UFW_HTTP80=ALLOWED"
-          fi
-          sudo certbot certonly --staging --standalone --preferred-challenges http \
-            --cert-name dns.usesafeweb.com-staging \
-            -d dns.usesafeweb.com \
-            --non-interactive --agree-tos --register-unsafely-without-email
-          echo "ACME_STAGING_HTTP01=PASS"
-          sudo certbot delete --cert-name dns.usesafeweb.com-staging --non-interactive >/dev/null || true
-          sudo certbot certonly --standalone --preferred-challenges http \
-            --cert-name dns.usesafeweb.com \
-            -d dns.usesafeweb.com \
-            --non-interactive --agree-tos --register-unsafely-without-email
-          echo "ACME_PRODUCTION_ISSUANCE=PASS"
           CERT=/etc/letsencrypt/live/dns.usesafeweb.com/cert.pem
+          CHAIN=/etc/letsencrypt/live/dns.usesafeweb.com/chain.pem
           FULL=/etc/letsencrypt/live/dns.usesafeweb.com/fullchain.pem
           KEY=/etc/letsencrypt/live/dns.usesafeweb.com/privkey.pem
-          sudo test -s "$CERT"; sudo test -s "$FULL"; sudo test -s "$KEY"
+          sudo test -s "$CERT"; sudo test -s "$CHAIN"; sudo test -s "$FULL"; sudo test -s "$KEY"
           sudo openssl x509 -in "$CERT" -noout -checkhost dns.usesafeweb.com
-          sudo openssl verify -CApath /etc/ssl/certs "$FULL"
+          sudo openssl verify -CAfile /etc/ssl/certs/ca-certificates.crt -untrusted "$CHAIN" "$CERT"
           echo "CERT_HOSTNAME_AND_CHAIN=PASS"
-          echo "PRIVATE_KEY_MODE=$(sudo stat -Lc '%a' "$KEY")"
-          echo "PRIVATE_KEY_UID=$(sudo stat -Lc '%u' "$KEY")"
-          echo "PRIVATE_KEY_GID=$(sudo stat -Lc '%g' "$KEY")"
-          sudo test "$(sudo stat -Lc '%u' "$KEY")" = "0"
-          MODE="$(sudo stat -Lc '%a' "$KEY")"
-          [[ "$MODE" == "600" || "$MODE" == "640" ]]
+          ISSUER="$(sudo openssl x509 -in "$CERT" -noout -issuer)"
+          printf '%s\n' "$ISSUER" | grep -qi "Let's Encrypt"
+          ! printf '%s\n' "$ISSUER" | grep -qi 'staging'
+          echo "CERT_PRODUCTION_ISSUER=PASS"
+          sudo openssl x509 -in "$CERT" -noout -checkend $((30*24*3600)) >/dev/null
+          echo "CERT_VALID_GT_30D=PASS"
+          MODE="$(sudo stat -Lc '%a' "$KEY")"; UID="$(sudo stat -Lc '%u' "$KEY")"; GID="$(sudo stat -Lc '%g' "$KEY")"
+          echo "PRIVATE_KEY_MODE=$MODE"; echo "PRIVATE_KEY_UID=$UID"; echo "PRIVATE_KEY_GID=$GID"
+          [[ "$UID" == "0" && ( "$MODE" == "600" || "$MODE" == "640" ) ]]
           echo "PRIVATE_KEY_ACCESS=PASS"
+          sudo ufw status | grep -Eq '^80/tcp[[:space:]]+ALLOW'
+          echo "HTTP01_FIREWALL_PATH=PASS"
+          sudo systemctl is-enabled certbot.timer >/dev/null
+          echo "CERTBOT_TIMER_ENABLED=PASS"
           sudo certbot renew --cert-name dns.usesafeweb.com --dry-run --no-random-sleep-on-renew
           echo "ACME_RENEWAL_DRY_RUN=PASS"
-          sudo systemctl is-enabled certbot.timer >/dev/null 2>&1 && echo "CERTBOT_TIMER_ENABLED=YES" || echo "CERTBOT_TIMER_ENABLED=NO"
-          echo "TSK_0442_CERTIFICATE_PHASE=PASS"
+          echo "ADGUARD_SERVICE_USER=$(sudo systemctl show AdGuardHome -p User --value 2>/dev/null || true)"
+          echo "ADGUARD_SERVICE_GROUP=$(sudo systemctl show AdGuardHome -p Group --value 2>/dev/null || true)"
+          echo "TSK_0442_CERTIFICATE_AUDIT=PASS"
