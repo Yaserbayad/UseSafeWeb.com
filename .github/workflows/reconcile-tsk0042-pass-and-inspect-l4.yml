@@ -1,0 +1,142 @@
+name: Reconcile TSK-0042 PASS and inspect L4 queue
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-tsk0042-pass-and-inspect-l4.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify support requirements, reconcile, inspect queue
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object TSK_0042_USER_SUPPORT_EXCEPTION_RECOVERY_REMOVAL_REQUIREMENTS_2026-08-28.md)" = "bf9e1ece69b5ccfc38c1cb44d69de6545b7865dc"
+          test "$(git hash-object TSK_0042_USER_SUPPORT_EXCEPTION_RECOVERY_REMOVAL_REQUIREMENTS_EVIDENCE_2026-08-28.md)" = "e8698c39c13eb8d346ac195d60ff9d2d4288d2f6"
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "dce5b829c4d447eac180ae1e896e0019292cf971"
+          python3 - <<'PY'
+          import csv, pathlib, re
+          from datetime import datetime, timezone
+
+          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',encoding='utf-8-sig',newline='')))
+          by={r['Task_ID']:r for r in rows}
+          t=by['TSK-0042']
+          assert set(x.strip() for x in t['Dependencies'].split(';'))=={'TSK-0041','TSK-0146'}
+          assert t['Lifecycle_Stage']=='L4' and t['Priority']=='MEDIUM'
+          assert t['AI_Capability_A0_A4']=='A3' and t['Action_Authority']=='AUTO_ALLOWED'
+          acc=t['Acceptance_Criteria']
+          for phrase in [
+              'accountless setup/journey-state recovery',
+              'device-configuration lifecycle',
+              'AdGuard/DNS integration',
+              'false-positive and unsupported-state incidents',
+              'data-minimising diagnostics',
+              'response expectations',
+              'deletion/removal/recovery',
+              'support-burden metrics',
+              'Account-access requirements remain excluded unless EXC-0001 is activated'
+          ]:
+              assert phrase in acc, phrase
+
+          c=pathlib.Path('TSK_0042_USER_SUPPORT_EXCEPTION_RECOVERY_REMOVAL_REQUIREMENTS_2026-08-28.md').read_text()
+          e=pathlib.Path('TSK_0042_USER_SUPPORT_EXCEPTION_RECOVERY_REMOVAL_REQUIREMENTS_EVIDENCE_2026-08-28.md').read_text()
+          for phrase in [
+              '## 5. Accountless journey-state recovery',
+              '## 6. Device-configuration lifecycle requirements',
+              '## 7. DNS/AdGuard integration incident requirements',
+              '## 8. False-positive and exception requirements',
+              '## 9. Unsupported/conflict-state behavior',
+              '## 10. Data-minimising diagnostics',
+              '## 12. Response expectations — no fabricated human SLA',
+              '## 13. Deletion, removal and recovery requirements',
+              '## 14. Support-burden metrics — privacy-minimal definitions only',
+              'EXC-0001', 'EXC-0008', 'RSK-0002'
+          ]:
+              assert phrase in c, phrase
+          assert '**VER-0042 independent guarded audit result: PASS.**' in e
+          assert '| Account-access exclusion |' in e
+          assert 'No new account store, support-ticket database, per-user allowlist' in e
+
+          p=pathlib.Path('CURRENT_STATE.md')
+          text=p.read_text()
+          assert 'Selected next: `TSK-0042' in text
+          assert '### TSK-0041 accepted stable state' in text
+          assert '### TSK-0042 accepted stable state' not in text
+
+          # Verify current explicit accountless/deferred exceptions still exist before PASS.
+          dec=pathlib.Path('Plans/Master/Registers/DECISIONS_TRIGGERS.md').read_text()
+          exc=pathlib.Path('Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md').read_text()
+          assert '| DEC-0042 |' in dec and 'Accountless-first product baseline' in dec
+          assert '| EXC-0001 |' in exc and 'No mandatory account/auth vendor/persistent identity/dashboard in active baseline.' in exc
+          assert '| EXC-0008 |' in exc and 'Self-service and exceptional escalation remain baseline.' in exc
+
+          now=datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
+          text=re.sub(r'\*\*Updated:\*\* [^\n]+',f'**Updated:** {now}',text,count=1)
+          sec='''### TSK-0042 accepted stable state\n\n`TSK-0042 — Specify user support, exception, recovery, and removal requirements`: **PASS for the provisional internal L4 support/recovery requirements under DEC-0050/CR-0003**. Requirements `TSK_0042_USER_SUPPORT_EXCEPTION_RECOVERY_REMOVAL_REQUIREMENTS_2026-08-28.md`, blob `bf9e1ece69b5ccfc38c1cb44d69de6545b7865dc`; independent evidence `TSK_0042_USER_SUPPORT_EXCEPTION_RECOVERY_REMOVAL_REQUIREMENTS_EVIDENCE_2026-08-28.md`, blob `e8698c39c13eb8d346ac195d60ff9d2d4288d2f6`. ACC-0042 is satisfied: accountless journey-state recovery, device-configuration lifecycle, DNS/AdGuard incident classes, false-positive/unsupported-state remedies, privacy-minimising diagnostics, escalation, deterministic response expectations, deletion/removal/recovery and privacy-minimal support-burden metrics are explicit and testable.\n\nThe contract preserves DEC-0042/EXC-0001 and EXC-0008: no account/login/password-recovery/dashboard requirement and no routine staffed-support/SLA assumption is introduced. Existing TSK-0229 data rules, TSK-0041/0409 DNS/support truth, TSK-0320 protection-state semantics, exceptional-diagnostic procedure and safeguarding procedure retain their own authority. `RSK-0002` remains OPEN because representative-parent self-service success and real support burden are not behaviorally validated. This PASS does not authorize LG-05/LG-06, implementation/build, participants, legal completion, payment, publication or launch.\n\n'''
+          marker='## Runtime safeguards'
+          assert marker in text
+          text=text.replace(marker,sec+marker,1)
+
+          pass_set={r['Task_ID'] for r in rows if r.get('Execution_State')=='PASS'}
+          pass_set.update(re.findall(r'^### (TSK-\d{4}) accepted stable state$', text, re.M))
+          pass_set.add('TSK-0042')
+          pri={'CRITICAL':0,'HIGH':1,'MEDIUM':2,'LOW':3}
+          candidates=[]
+          for idx,r in enumerate(rows):
+              if r.get('Lifecycle_Stage')!='L4':
+                  continue
+              if r['Task_ID'] in pass_set:
+                  continue
+              if r.get('Plan_Status') in {'DEFERRED','NOT_APPLICABLE'}:
+                  continue
+              if r.get('Action_Authority')!='AUTO_ALLOWED':
+                  continue
+              deps=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
+              if not all(d in pass_set for d in deps):
+                  continue
+              flags=[]
+              hay=' '.join([r.get('Acceptance_Criteria',''),r.get('Preconditions',''),r.get('Notes',''),r.get('Trigger','')]).lower()
+              if any(k in hay for k in ['representative parent','real participant','cohort','usability','comprehension','behavioral','observed parent','user evidence']):
+                  flags.append('REAL_OR_BEHAVIOR_EVIDENCE_CHECK')
+              if any(k in hay for k in ['reviewed by owner','owner approval','explicit owner','approved by owner']):
+                  flags.append('OWNER_REVIEW_CHECK')
+              candidates.append((pri.get(r.get('Priority','LOW'),9),idx,r,deps,flags))
+          candidates.sort(key=lambda x:(x[0],x[1]))
+
+          report=['# TSK-0042 post-PASS L4 queue inspection','','**Date:** 2026-08-28  ','**Purpose:** conservative derived queue after TSK-0042 PASS. This report is not authority and does not change task state.','',f'- Conservative PASS set size: {len(pass_set)}',f'- Dependency-ready non-PASS AUTO_ALLOWED L4 candidates: {len(candidates)}','','## Candidates in deterministic priority/WBS order','']
+          for _,_,r,deps,flags in candidates:
+              report += [
+                  f"### {r['Task_ID']} — {r['Title']}",
+                  f"- **Priority:** {r['Priority']}",
+                  f"- **Dependencies:** {'; '.join(deps) if deps else '(none)'}",
+                  f"- **Acceptance:** {r['Acceptance_ID']} — {r['Acceptance_Criteria']}",
+                  f"- **AI / authority:** {r['AI_Capability_A0_A4']} / {r['Action_Authority']}",
+                  f"- **Requirements:** {r.get('Requirement_Reference','')}",
+                  f"- **Interfaces:** {r.get('Interface_Reference','')}",
+                  f"- **Notes:** {r.get('Notes','')}",
+                  f"- **Preflight flags:** {', '.join(flags) if flags else '(none)'}",
+                  ''
+              ]
+          pathlib.Path('TSK_0042_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md').write_text('\n'.join(report)+'\n')
+
+          q=text.rfind('\n## Queue status after current reconciliation')
+          assert q>=0
+          text=text[:q].rstrip()+'''\n\n## Queue status after current reconciliation\n\n`TSK-0042` is runtime PASS. A fresh conservative dependency-ready AUTO_ALLOWED L4 queue has been generated at `TSK_0042_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. No next task is selected by this write; the queue must be reread against acceptance, direct predecessor evidence, gate/trigger conditions and CR-0003 before execution. HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED and representative-parent work remain fenced.\n\n## Exact next authoritative step\n\nRead back the TSK-0042 post-PASS L4 queue, reject any candidate requiring unavailable real-user evidence, owner review/approval, unresolved trigger/gate or missing direct predecessor proof, and persist the deterministic highest-priority eligible AUTO_ALLOWED selection.\n'''
+          p.write_text(text)
+          PY
+          git diff --check
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add CURRENT_STATE.md TSK_0042_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md
+          git commit -m "state: accept TSK-0042 and inspect L4 queue"
+          git push
