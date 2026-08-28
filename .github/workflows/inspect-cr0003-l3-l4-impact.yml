@@ -46,6 +46,17 @@ jobs:
               txt=' '.join([(r.get('Title') or ''),(r.get('Acceptance_Criteria') or ''),(r.get('Notes') or '')]).lower()
               if stage(r)=='L3' and any(k in txt for k in ['experiment-1','behavioral','behavioural','gate','proceed','pivot','outcome','canonical state']): likely.append(r)
           emit('L3 exit / gate / outcome candidates', likely)
+          out += ['## L4 tasks whose acceptance/evidence wording may require real behavioral evidence','']
+          patt=re.compile(r'validat|participant|experiment|user evidence|usability|comprehension|observed|cohort|behavior|behaviour|activation|abandon|support burden|persistence', re.I)
+          for r in l4:
+              blob=' '.join([(r.get('Acceptance_Criteria') or ''),(r.get('Verification_Method') or ''),(r.get('Evidence_Required') or '')])
+              if patt.search(blob):
+                  out.append(f"### {(r.get('Task_ID') or '').strip()} — {(r.get('Title') or '').strip()}")
+                  out.append(f"- **Dependencies:** {(r.get('Dependencies') or '').strip()}")
+                  out.append(f"- **Acceptance_Criteria:** {(r.get('Acceptance_Criteria') or '').strip()}")
+                  out.append(f"- **Verification_Method:** {(r.get('Verification_Method') or '').strip()}")
+                  out.append(f"- **Action_Authority:** {(r.get('Action_Authority') or '').strip()}")
+                  out.append('')
           out += ['## Cross-authority references requiring CR-0003 review','']
           terms=re.compile(r'LG-05|behavioral validation|behavioural validation|validated behavior|validated behaviour|before expensive software build|before integrated software build', re.I)
           for f in sorted(root.rglob('*')):
@@ -77,5 +88,5 @@ jobs:
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add CR_0003_L3_L4_IMPACT_INSPECTION_2026-08-28.md
-          git commit -m "governance: finalize CR-0003 impact inspection"
+          git commit -m "governance: audit CR-0003 L4 acceptance impact"
           git push
