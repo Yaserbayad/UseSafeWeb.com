@@ -75,3 +75,5 @@ jobs:
                   out['PlanningOnlySatisfiedDeps']=[d for d in deps if d in planning_pass and d not in runtime_pass and d != released]
                   print('WAIT_RELEASE_READY='+json.dumps(out,sort_keys=True,ensure_ascii=False))
           PY
+
+# Queue recomputation trigger after TSK-0511 runtime PASS reconciliation (2026-08-28).
