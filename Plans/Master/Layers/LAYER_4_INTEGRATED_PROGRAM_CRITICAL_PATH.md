@@ -8,7 +8,7 @@
 | 1 | L1 - Business & Product Evaluation | Complete evidence-based opportunity, product, market, operating, risk, and business-model evaluation. | LG-02 |
 | 2 | L2 - Validation Readiness & Mandatory Controls | Make the bounded behavioral experiment legally, technically, operationally, and evidentially safe to run. | LG-03 |
 | 3 | L3 - Concierge Behavioral Validation | Test whether qualified parents complete real safeguards and value the orchestration before expensive software build. | LG-05 |
-| 4 | L4 - Product Definition, Requirements & Experience Design | Translate validated behavior into a frozen minimum compelling product, service journey, brand, UX, and content system. | LG-06 |
+| 4 | L4 - Product Definition, Requirements & Experience Design | Translate validated behavior into a frozen minimum compelling product, service journey, brand, UX, and content system; DEC-0050 temporarily permits provisional internal definition/design from technical/synthetic evidence while L3 remains deferred. | LG-06 |
 | 5 | L5 - Architecture, Security, Privacy & Delivery Readiness | Approve production-capable architecture, controls, delivery plan, cost envelope, and implementation evidence model. | LG-07 |
 | 6 | L6 - Build & Integration | Implement the smallest validated integrated product, website, DNS service, automation, and supporting systems. | LG-08 |
 | 7 | L7 - Integrated Verification & Release Readiness | Prove the integrated release meets functional, UX, accessibility, security, privacy, reliability, recovery, and operational acceptance. | LG-09 |
@@ -24,7 +24,7 @@
 - Current planning freeze is a hard program predecessor: owner freeze -> authorized GitHub publication -> fetch/read-back -> CURRENT_STATE rebaseline. Derived trackers follow later and cannot block canonical execution.
 - After the governance hold is released, LG-03 closes through parallel legal/privacy and technical deployment branches. Final notices/LIA-DPIA/gate evidence consume verified deployed reality.
 - LG-04 authorizes concierge recruitment only after LG-03 and the synthetic operating rehearsal. L3 tests behavior before integrated software build.
-- Positive LG-05 evidence unlocks product/brand/service/UX definition. The implementation-ready prototype, product requirements, and truth/self-service models constrain architecture and build.
+- Positive LG-05 evidence normally unlocks product/brand/service/UX definition. Through 2027-08-27, DEC-0050/CR-0003 instead permits bounded provisional internal L4 definition/design from current technical/synthetic evidence while LG-05 remains DEFER; missing real-participant evidence is explicit RSK-0002, cannot be fabricated, and any real-evidence-dependent L4 task remains deferred. The override does not authorize LG-06 PASS, L5/L6 progression, integrated build, or launch.
 - L5 resolves application/DNS/platform/security/privacy/data/test/recovery/cost contracts. L6 implements in bounded vertical slices. L7 independently proves the exact integrated release and Ubuntu recovery path.
 - L8 operates one controlled integrated pilot. L9 evaluates the evidence and selects production action. No launch work substitutes for a failed product-value decision.
 - L10 production readiness may parallelize platform, legal/security, operations, brand/web, finance and the selected GTM engine, but LG-12 requires all applicable branches.
@@ -41,7 +41,7 @@ This section intentionally does **not** repeat task titles, acceptance criteria,
 
 ## 4.4 Customer-value critical path
 
-Behavioral validation -> accountless minimum product/non-goals -> service blueprint/friction budget/truth state -> full brand system and implementation-ready prototype -> usability/comprehension/accessibility evidence -> architecture -> accountless public/setup build plus real DNS -> integrated acceptance/self-service/recovery -> controlled pilot -> product correction and primary-channel selection -> production readiness -> staged launch -> persistence/support/root-cause improvement -> Year-1 decision.
+Behavioral validation (currently DEFER under DEC-0050) -> provisional accountless minimum product/non-goals from technical/synthetic evidence -> service blueprint/friction budget/truth state -> brand/prototype work that does not require real-user evidence -> deferred usability/comprehension evidence where real users are required -> LG-06 decision -> architecture -> accountless public/setup build plus real DNS -> integrated acceptance/self-service/recovery -> controlled pilot -> product correction and primary-channel selection -> production readiness -> staged launch -> persistence/support/root-cause improvement -> Year-1 decision. No arrow after the provisional L4 segment implies that missing behavioral evidence was satisfied.
 
 ## 4.5 Technical critical path
 
@@ -49,7 +49,7 @@ LG-03 Azure/AdGuard/DNS/TLS/privacy acceptance -> DNS endpoint/platform mechanis
 
 ## 4.6 Legal/safety gate path
 
-OWNER LEGAL HOLD (2026-08-27 to 2027-08-27 unless reactivated earlier): UK representative/Article-27, ICO, DPIA/LIA/legal-notice/terms/tax-regulatory work is DEFERRED/WAITING while eligible technical privacy/security/infrastructure readiness continues. Real-participant Experiment 1 authorization still requires LG-03 PASS, so unresolved mandatory legal evidence remains a gate blocker rather than being treated as complete. After reactivation/resolution: Experiment 1 authorization -> post-validation product data model -> architecture privacy/security controls -> integrated privacy/security acceptance -> pilot/production updates -> incident/rights/retention/vendor/legal monitoring -> locale/market-specific LG-16 -> Year-1 reconciliation.
+OWNER LEGAL HOLD (2026-08-27 to 2027-08-27 unless reactivated earlier): UK representative/Article-27, ICO, DPIA/LIA/legal-notice/terms/tax-regulatory work is DEFERRED/WAITING while eligible technical privacy/security/infrastructure readiness continues. Real-participant Experiment 1 authorization still requires LG-03 PASS, so unresolved mandatory legal evidence remains a gate blocker rather than being treated as complete. DEC-0050/CR-0003 separately defers the complete real-participant L3 branch to the same date and permits only provisional internal L4 definition/design; it does not satisfy any legal condition or participant gate. After reactivation/resolution: Experiment 1 authorization -> behavioral evidence -> reconciliation of provisional L4 assumptions -> architecture/privacy/security readiness -> integrated acceptance -> later pilot/production gates.
 
 ## 4.7 Parallel work rules
 

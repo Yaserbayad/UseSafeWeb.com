@@ -12,7 +12,8 @@
 | Final planning architecture | OWNER-FROZEN | Owner freeze recorded 2026-08-27 under TSK-0017 against the exact reviewed tree/digest in MANIFEST.yaml. Canonical runtime activation requires TSK-0009 publication + TSK-0011 exact read-back, followed by CURRENT_STATE rebaseline. |
 | Validation readiness LG-03 | IN PROGRESS / publication handoff | Legal/regulatory/compliance work is OWNER-DEFERRED until 2027-08-27 or earlier explicit reactivation; technical Azure/AdGuard/endpoint/privacy/security readiness may continue after canonical publication/read-back. The legal hold is not PASS and does not by itself authorize real participants. |
 | Experiment 1 protocol | Designed | Execution/recruitment unauthorized until LG-03 and LG-04 PASS. |
-| Integrated product definition/build | WAITING | Requires positive LG-05, then LG-06/LG-07. |
+| L4 product/brand/experience definition | PROVISIONAL / OWNER-AUTHORIZED under DEC-0050 | Through 2027-08-27, internal definition/design may proceed from current technical/synthetic evidence with RSK-0002 explicit; LG-05 remains DEFER and no behavioral validation is inferred. |
+| Integrated product build | WAITING | Still requires actual downstream gate authority; DEC-0050 does not itself satisfy LG-06/LG-07 or authorize L6 build. |
 | Integrated pilot | WAITING | Requires LG-09. |
 | Production launch | WAITING | Requires LG-11/LG-12/LG-13. |
 | ClickUp/Monday | STALE/DERIVED | Do not use for governed execution until post-freeze regeneration/read-back. |
@@ -25,6 +26,11 @@
 ### 8.2A Owner legal/regulatory/compliance work hold
 
 Effective 2026-08-27, the owner explicitly placed identified legal/regulatory/compliance planning tasks on hold through 2027-08-27 unless explicitly reactivated earlier. In the WBS these tasks use `Plan_Status=DEFERRED` and `Execution_State=WAITING` and carry the tag `OWNER_LEGAL_HOLD_2026-08-27`. Historical `PASS` evidence is not rewritten. Technical privacy, security, safeguarding, reliability, and infrastructure controls remain active. The hold is a planning/timing instruction only; it is not completion, exemption evidence, a waiver, or legal-clearance proof. Any gate that actually requires unresolved legal evidence remains unable to PASS for the corresponding real-participant/public action until the evidence is resolved or current verified evidence establishes non-applicability.
+
+
+### 8.2B Owner L3 behavioral-validation deferral / provisional L4 authorization
+
+Effective 2026-08-28, DEC-0050/CR-0003 defers the complete real-participant Experiment-1/L3 branch through 2027-08-27 unless reactivated earlier. LG-03/LG-04/LG-05 remain DEFER/non-PASS. Bounded internal L4 product/brand/experience definition and design may proceed from accepted technical/synthetic evidence only; missing real-participant behavioral evidence remains explicit RSK-0002, real-evidence-dependent tasks remain deferred, and no integrated build/public launch follows merely from this sequencing exception.
 
 ### 8.3 Exact post-freeze sequence
 

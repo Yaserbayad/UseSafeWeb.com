@@ -40,6 +40,15 @@ No hidden chain-of-thought is evidence. Useful evidence is a source-cited analys
 - No WBS dependency edge is deleted or rewritten by CR-0002. This is a bounded execution-eligibility semantic override only, preserving future dependency enforcement.
 - The exception expires on **2027-08-27**, or earlier on explicit Project Owner reactivation/supersession. At expiry/reactivation, recompute eligibility from current authority and re-evaluate any downstream `PASS` whose proof materially relied on the conditional dependency treatment.
 
+### 5.3.2 Owner-approved L3 behavioral-validation deferral and provisional L4 entry (DEC-0050 / CR-0003)
+
+- Through **2027-08-27**, or until earlier explicit Project Owner reactivation/supersession, the complete real-participant Experiment-1/L3 branch remains deferred. `LG-03`, `LG-04`, and `LG-05` remain non-PASS/DEFER; no participant, cohort, behavioral metric, comprehension, assistance, persistence, abandonment, or value result may be invented.
+- The owner authorizes **internal, non-public L4 Product, Brand and Experience definition/design only** from the current accepted technical and synthetic evidence as a provisional basis. `TSK-0139` is the explicit entry bridge and depends on current `TSK-0513` PASS rather than the unexecuted `TSK-0040`.
+- A downstream L4 task may execute only when its own current acceptance can be satisfied without real-participant evidence. Any acceptance requiring experiment frequency/severity, affected cohort, observed parent behavior, real usability/comprehension, support burden, persistence, or equivalent real-user evidence remains `WAITING`/deferred; synthetic rehearsal, model judgment, or owner preference cannot substitute.
+- `ACC-0139` and `ACC-0141` are explicitly rebaselined to provisional/unvalidated semantics. Every resulting artifact must state the missing behavioral evidence and active `RSK-0002`; no use of words such as validated, proven, user-tested, or behaviorally confirmed may exceed the evidence actually held.
+- This override does **not** make `LG-06` PASS and does not authorize L5/L6 progression, integrated build, real-participant processing, legal completion, public release/launch, payment, or any HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED act whose own authority is unsatisfied.
+- At expiry/reactivation, execute the deferred L3 branch when authorized and re-evaluate every downstream PASS whose proof materially relied on provisional assumptions. Contradictory real evidence reopens affected tasks/gates; it is not reconciled away.
+
 ### 5.4 Evidence and PASS rules
 
 - Each task has VER-xxxx, EVD-xxxx and ACC-xxxx identifiers.

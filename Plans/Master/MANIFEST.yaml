@@ -4,7 +4,7 @@ canonical_root: Plans/Master
 source_plan:
   name: UseSafeWeb_Master_Plan_FINAL.md
   sha256: 04fe68fe4e922322cb878c3c35f97e0b5b4862a333df4c313cbfc2b359ebfc1e
-  status: 2.0-owner-frozen / OWNER_FREEZE_2026-08-27 / OWNER_TECHNICAL_COMMERCIAL_AMENDMENT_APPLIED / OWNER_LEGAL_HOLD_ACTIVE_TO_2027-08-27 / OWNER_AZURE_HANDOFF_BOUNDARY_APPLIED_2026-08-27 / POST_FREEZE_CR_0001_DEPENDENCY_REPAIR_2026-08-27 / OWNER_LEGAL_SEQUENCING_OVERRIDE_ACTIVE_TO_2027-08-27 / deterministic validation PASS / canonical activation established; post-freeze CR requires verified GitHub publication-readback before reliance
+  status: 2.0-owner-frozen / OWNER_FREEZE_2026-08-27 / OWNER_TECHNICAL_COMMERCIAL_AMENDMENT_APPLIED / OWNER_LEGAL_HOLD_ACTIVE_TO_2027-08-27 / OWNER_AZURE_HANDOFF_BOUNDARY_APPLIED_2026-08-27 / POST_FREEZE_CR_0001_DEPENDENCY_REPAIR_2026-08-27 / OWNER_LEGAL_SEQUENCING_OVERRIDE_ACTIVE_TO_2027-08-27 / OWNER_L3_BEHAVIORAL_VALIDATION_DEFERRED_TO_2027-08-27 / PROVISIONAL_L4_AUTHORIZED / deterministic validation PASS / canonical activation established; post-freeze CR requires verified GitHub publication-readback before reliance
 migration_prompt:
   name: UseSafeWeb_Master_Plan_Modularization_Prompt(1).txt
   sha256: 49031063a84f9b56ed98b5b07782f1d9818b01b84e0761d3c48018fc07ef5e5b
@@ -337,16 +337,20 @@ canonicalization:
   canonical_activation_condition: TSK-0009 publication PASS plus TSK-0011 exact GitHub read-back PASS; volatile execution state is then rebaselined in repository CURRENT_STATE.md under TSK-0010
 
 post_freeze_change_control:
-  latest_change: CR-0002
+  latest_change: CR-0003
   date: '2026-08-28'
-  status: bounded owner-approved legal-hold sequencing override; owner freeze remains in force; legal tasks remain deferred/non-evidentiary; canonical reliance requires deterministic validation plus GitHub publication/read-back
-  authority: explicit current Project Owner instruction 2026-08-28; actual applicable legal/safety/security/platform reality remains higher authority
+  status: owner-authorized L3 real-participant behavioral-validation deferral and bounded provisional L4 definition/design rebaseline; LG-03/LG-04/LG-05 remain non-PASS; canonical reliance requires deterministic validation plus GitHub publication/read-back
+  authority: explicit current Project Owner instruction 2026-08-28; actual applicable safety/legal/security/platform reality remains higher authority
   affected_tasks:
-  - OWNER_LEGAL_HOLD_2026-08-27 tasks (dependency-satisfaction semantics only)
-  - TSK-0167
-  - TSK-0026
-  - TSK-0513
-  semantic_delta: through 2027-08-27, marked deferred legal dependencies may be treated as conditionally satisfied solely for internal/synthetic/non-participant/non-public preparatory work; no legal task becomes PASS and no WBS dependency edge is changed
+  - TSK-0139
+  - TSK-0141
+  - TSK-0326 (explicitly remains real-evidence-dependent/deferred)
+  affected_gates:
+  - LG-03 (remains DEFER/non-PASS)
+  - LG-04 (remains DEFER/non-PASS)
+  - LG-05 (remains DEFER/non-PASS)
+  - LG-06 (provisional L4 entry only; no automatic PASS)
+  semantic_delta: through 2027-08-27, bounded internal L4 product/brand/experience definition/design may proceed from current technical/synthetic evidence without claiming behavioral validation; real-evidence-dependent work, integrated build and public launch remain gated
   change_record: Registers/EXCEPTIONS_CHANGE_CONTROLS.md#post-freeze-material-change-records
 
 generated_assembly_contract:

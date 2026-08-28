@@ -28322,7 +28322,7 @@ entities:
       type: belongs_to_deliverable
     - target: L4
       type: belongs_to_lifecycle
-    - target: TSK-0040
+    - target: TSK-0513
       type: depends_on
     - target: ACC-0139
       type: acceptance

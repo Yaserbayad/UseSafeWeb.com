@@ -155,7 +155,7 @@ Parent roll-up rules: a parent cannot PASS while mandatory children are TODO/WAI
 | L1 | Business & Product Evaluation | Complete evidence-based opportunity, product, market, operating, risk, and business-model evaluation. | LG-02 |
 | L2 | Validation Readiness & Mandatory Controls | Make the bounded behavioral experiment legally, technically, operationally, and evidentially safe to run. | LG-03 |
 | L3 | Concierge Behavioral Validation | Test whether qualified parents complete real safeguards and value the orchestration before expensive software build. | LG-05 |
-| L4 | Product Definition, Requirements & Experience Design | Translate validated behavior into a frozen minimum compelling product, service journey, brand, UX, and content system. | LG-06 |
+| L4 | Product Definition, Requirements & Experience Design | Translate validated behavior into a frozen minimum compelling product, service journey, brand, UX, and content system; under DEC-0050/CR-0003, only provisional internal definition/design may proceed from technical/synthetic evidence while missing real-participant evidence remains explicit. | LG-06 |
 | L5 | Architecture, Security, Privacy & Delivery Readiness | Approve production-capable architecture, controls, delivery plan, cost envelope, and implementation evidence model. | LG-07 |
 | L6 | Build & Integration | Implement the smallest validated integrated product, website, DNS service, automation, and supporting systems. | LG-08 |
 | L7 | Integrated Verification & Release Readiness | Prove the integrated release meets functional, UX, accessibility, security, privacy, reliability, recovery, and operational acceptance. | LG-09 |

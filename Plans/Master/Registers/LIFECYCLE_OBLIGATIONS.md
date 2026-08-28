@@ -7,7 +7,7 @@
 | L1 | Business & Product Evaluation | Complete evidence-based opportunity, product, market, operating, risk, and business-model evaluation. | 43 | LG-02 |
 | L2 | Validation Readiness & Mandatory Controls | Make the bounded behavioral experiment legally, technically, operationally, and evidentially safe to run. | 84 | LG-03 |
 | L3 | Concierge Behavioral Validation | Test whether qualified parents complete real safeguards and value the orchestration before expensive software build. | 31 | LG-05 |
-| L4 | Product Definition, Requirements & Experience Design | Translate validated behavior into a frozen minimum compelling product, service journey, brand, UX, and content system. | 68 | LG-06 |
+| L4 | Product Definition, Requirements & Experience Design | Translate validated behavior into a frozen minimum compelling product, service journey, brand, UX, and content system; under DEC-0050/CR-0003, provisional internal definition/design may proceed without claiming behavioral validation. | 68 | LG-06 |
 | L5 | Architecture, Security, Privacy & Delivery Readiness | Approve production-capable architecture, controls, delivery plan, cost envelope, and implementation evidence model. | 36 | LG-07 |
 | L6 | Build & Integration | Implement the smallest validated integrated product, website, DNS service, automation, and supporting systems. | 76 | LG-08 |
 | L7 | Integrated Verification & Release Readiness | Prove the integrated release meets functional, UX, accessibility, security, privacy, reliability, recovery, and operational acceptance. | 48 | LG-09 |
