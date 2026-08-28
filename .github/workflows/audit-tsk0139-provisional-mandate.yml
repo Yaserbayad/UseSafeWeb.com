@@ -1,0 +1,92 @@
+name: Audit TSK-0139 provisional L4 mandate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-tsk0139-provisional-mandate.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify ACC-0139 and evidence boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object TSK_0139_PROVISIONAL_L4_PRODUCT_OUTCOME_MANDATE_2026-08-28.md)" = "855628303b04bd48e9e8d51c4a6b9c221e343583"
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "dce5b829c4d447eac180ae1e896e0019292cf971"
+          python3 - <<'PY'
+          import csv, pathlib, re
+          w='Plans/Master/WBS/master-wbs.csv'
+          rows=list(csv.DictReader(open(w,encoding='utf-8-sig',newline=''))); by={r['Task_ID']:r for r in rows}
+          t=by['TSK-0139']
+          assert t['Title']=='Translate provisional L4 owner authorization into authorised product outcomes'
+          assert t['Lifecycle_Stage']=='L4'
+          assert t['Dependencies']=='TSK-0513'
+          assert t['AI_Capability_A0_A4']=='A3' and t['Action_Authority']=='AUTO_ALLOWED'
+          assert t['Acceptance_ID']=='ACC-0139'
+          acc=t['Acceptance_Criteria']
+          for s in ['provisional job assumption','target user','required outcome','current technical/synthetic evidence basis','missing real-participant behavioral evidence','unresolved risks/constraints/stop conditions','authorised L4 definition/design scope','must not state or imply behavioral validation','LG-05 PASS','integrated-build authorization','public-launch authorization']:
+              assert s in acc, s
+          state=pathlib.Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          assert 'Selected next: `TSK-0139' in state
+          assert '`TSK-0513 — Run end-to-end synthetic rehearsal`: **PASS**' in state
+          m=pathlib.Path('TSK_0139_PROVISIONAL_L4_PRODUCT_OUTCOME_MANDATE_2026-08-28.md').read_text(encoding='utf-8')
+          required=[
+            'PROVISIONAL / INTERNAL ONLY / BEHAVIORALLY UNVALIDATED',
+            'No real-participant Experiment-1 behavioral validation has occurred. LG-03, LG-04 and LG-05 remain DEFER/non-PASS.',
+            '`RSK-0002` remains **OPEN**',
+            '## 2. Current evidence basis',
+            '## 3. Provisional job assumption',
+            '## 4. Provisional target-user assumption',
+            '## 5. Required provisional product outcome',
+            '## 6. Authorized L4 scope',
+            '## 7. Explicitly prohibited / still deferred',
+            '## 8. Current unresolved behavioral evidence',
+            '## 9. Frozen constraints that remain authoritative',
+            '## 10. Design decision rule under missing behavioral evidence',
+            '## 11. Stop and revalidation conditions',
+            '## 12. Work unlocked by this mandate',
+            'integrated build/L5/L6 progression',
+            'real participants, LG-05 PASS, LG-06 PASS by inference, integrated build/L5/L6 progression, legal completion, payments or public launch'
+          ]
+          for s in required: assert s in m, s
+          # Verify all current unknowns remain explicitly unknown rather than synthetic results.
+          for s in ['completion / full activation rate','Incremental non-DNS safeguard completion/value','Parent-perceived duplication / added work','Active human-assistance burden','Coverage-gap comprehension','14-day baseline-protection persistence']:
+              assert s in m, s
+          # Verify no real-participant count/result is asserted by the mandate.
+          bad=[r'\b\d+%\s+(?:of\s+)?(?:parents|participants)',r'Wave A.*PASS',r'Wave B.*PASS']
+          for pat in bad: assert not re.search(pat,m,re.I), pat
+          print('TSK_0139_ACC_AUDIT=PASS')
+          # Direct successors.
+          succ=[]
+          for r in rows:
+              ds=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
+              if 'TSK-0139' in ds: succ.append(r)
+          out=['# TSK-0139 — Provisional L4 mandate verification evidence','', '**Task:** TSK-0139 — Translate provisional L4 owner authorization into authorised product outcomes  ', '**Acceptance:** ACC-0139  ', '**Date:** 2026-08-28  ', '**Verification:** independent guarded repository audit','', '## Exact evidence','', '- Mandate: `TSK_0139_PROVISIONAL_L4_PRODUCT_OUTCOME_MANDATE_2026-08-28.md`','- Mandate blob: `855628303b04bd48e9e8d51c4a6b9c221e343583`','- WBS blob: `dce5b829c4d447eac180ae1e896e0019292cf971`',f"- Runtime blob before PASS reconciliation: `{__import__('subprocess').check_output(['git','hash-object','CURRENT_STATE.md'],text=True).strip()}`",'- CR-0003 plan evidence blob: `8d90d06e547d15cf4dd11c0ba1dccdd115bda4b3`','', '## Audit result','', 'ACC-0139 is fully satisfied for the bounded provisional L4 scope. The mandate identifies a provisional job assumption, provisional target-user assumption, required product outcome, current technical/synthetic evidence basis, missing real-participant behavioral evidence, open RSK-0002, frozen constraints, stop/revalidation conditions and the exact internal L4 definition/design scope authorized by DEC-0050/CR-0003.','', 'The audit confirms the mandate does not claim LG-03/LG-04/LG-05 PASS, real-parent behavior, integrated-build authority, LG-06 PASS, legal completion, payment activation or public-launch authority. Synthetic rehearsal is not presented as user evidence.','', '**Stable verification outcome: TSK-0139 = PASS candidate pending runtime reconciliation/read-back.**','', '## Direct WBS successors','']
+          if not succ: out.append('None.')
+          else:
+              out += ['| Task | Stage | Title | Plan status | WBS state | Priority | Dependencies | AI capability | Action authority | Acceptance |','| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |']
+              for r in succ:
+                  vals=[r.get('Task_ID',''),r.get('Lifecycle_Stage',''),r.get('Title',''),r.get('Plan_Status',''),r.get('Execution_State',''),r.get('Priority',''),r.get('Dependencies',''),r.get('AI_Capability_A0_A4',''),r.get('Action_Authority',''),r.get('Acceptance_Criteria','')]
+                  vals=[v.replace('|','\\|').replace('\n',' ') for v in vals]
+                  out.append('| '+' | '.join(vals)+' |')
+          pathlib.Path('TSK_0139_PROVISIONAL_L4_PRODUCT_OUTCOME_MANDATE_EVIDENCE_2026-08-28.md').write_text('\n'.join(out)+'\n',encoding='utf-8')
+          PY
+          git diff --check
+      - name: Publish audit evidence
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add TSK_0139_PROVISIONAL_L4_PRODUCT_OUTCOME_MANDATE_EVIDENCE_2026-08-28.md
+          git commit -m "evidence: verify TSK-0139 provisional L4 mandate"
+          git push
