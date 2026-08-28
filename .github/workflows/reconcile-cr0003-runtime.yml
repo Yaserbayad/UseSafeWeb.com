@@ -1,0 +1,87 @@
+name: Reconcile CR-0003 runtime and select L4 entry
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-cr0003-runtime.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify CR-0003 authority and derive entry
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "dce5b829c4d447eac180ae1e896e0019292cf971"
+          test "$(git hash-object Plans/Master/MANIFEST.yaml)" = "00feca027babfd99dcd1992e3e0abd6ef2d3380b"
+          test "$(git hash-object CR_0003_OWNER_L3_DEFERRAL_PROVISIONAL_L4_EVIDENCE_2026-08-28.md)" = "8d90d06e547d15cf4dd11c0ba1dccdd115bda4b3"
+          python3 Plans/Master/Tools/validate_master_plan.py | tee /tmp/v
+          grep -qx 'VALIDATION PASS' /tmp/v
+          python3 - <<'PY'
+          import csv, pathlib
+          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',encoding='utf-8-sig',newline=''))); by={r['Task_ID']:r for r in rows}
+          t=by['TSK-0139']
+          assert t['Lifecycle_Stage']=='L4'
+          assert t['Dependencies']=='TSK-0513'
+          assert t['Action_Authority']=='AUTO_ALLOWED'
+          assert 'provisional job assumption' in t['Acceptance_Criteria']
+          assert by['TSK-0326']['Dependencies'].split(';')[0].strip()=='TSK-0034'
+          state=pathlib.Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          assert '`TSK-0513 — Run end-to-end synthetic rehearsal`: **PASS**' in state
+          assert 'LG-03/G-02' in state and 'DEFER' in state
+          print('CR0003_RUNTIME_PREFLIGHT=PASS')
+          PY
+      - name: Reconcile runtime
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('CURRENT_STATE.md'); text=p.read_text(encoding='utf-8')
+          # Refresh Updated time without disturbing authority text.
+          import re
+          text=re.sub(r'\*\*Updated:\*\* [^\n]+', '**Updated:** 2026-08-28T15:22:00Z  ', text, count=1)
+          sec='''### CR-0003 owner-authorized L3 deferral / provisional L4 baseline\n\nThe Project Owner explicitly deferred the complete real-participant Experiment-1/L3 behavioral-validation branch through **2027-08-27**, kept LG-03/LG-04/LG-05 non-PASS/DEFER, and authorized bounded internal L4 Product, Brand and Experience definition/design from current technical/synthetic evidence only. Canonical planning publication commit `a7e536e444e9db4415374a794ca43980f69ba803`; evidence `CR_0003_OWNER_L3_DEFERRAL_PROVISIONAL_L4_EVIDENCE_2026-08-28.md`, blob `8d90d06e547d15cf4dd11c0ba1dccdd115bda4b3`; WBS blob `dce5b829c4d447eac180ae1e896e0019292cf971`; manifest blob `00feca027babfd99dcd1992e3e0abd6ef2d3380b`. Full deterministic validation remained PASS with 641 tasks and 849 dependency edges.\n\n`RSK-0002` remains OPEN and explicitly represents the missing real-participant behavioral evidence. `TSK-0139` is rebaselined as the bounded provisional L4 entry, depending on current `TSK-0513` PASS. `ACC-0139` and `ACC-0141` prohibit claims that behavioral validation occurred. `TSK-0326` and any task whose own acceptance requires actual participant/user evidence remain deferred. No L3 gate PASS, LG-06 PASS, L5/L6 build authority, participant processing, legal completion or public-launch authority is inferred.\n\n'''
+          marker='## Runtime safeguards'
+          if '### CR-0003 owner-authorized L3 deferral / provisional L4 baseline' not in text:
+              if marker not in text: raise SystemExit('runtime safeguards marker missing')
+              text=text.replace(marker,sec+marker,1)
+          q=text.rfind('\n## Queue status after current reconciliation')
+          if q<0: raise SystemExit('queue section missing')
+          text=text[:q].rstrip()+'''\n\n## Queue status after current reconciliation\n\nCR-0003 is current canonical authority for L3→L4 sequencing. L3 real-participant work, LG-03/LG-04/LG-05 and real-evidence-dependent L4 research remain deferred. The previously accepted technical/synthetic evidence remains valid for its bounded scope.\n\n- **Selected next: `TSK-0139 — Translate provisional L4 owner authorization into authorised product outcomes`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).\n- Hard dependency: `TSK-0513` — current runtime PASS.\n- Acceptance is explicitly provisional: it must identify the current technical/synthetic evidence basis, missing real-participant behavioral evidence, RSK-0002, constraints/stop conditions and only the L4 definition/design scope actually authorized.\n- `TSK-0326` remains unavailable because it still depends on the unexecuted real-participant Experiment-1 evidence chain.\n- The existing independent L4 owner-baseline tasks `TSK-0146`, `TSK-0147`, `TSK-0148` and `TSK-0558` remain preserved PASS; CR-0003 does not invalidate those owner decisions.\n\n## Exact next authoritative step\n\nExecute bounded `TSK-0139`: create a provisional L4 product-outcome mandate grounded only in current accepted technical/synthetic evidence and explicit owner decisions. State that real-participant behavioral validation has not occurred, keep RSK-0002 open, define stop/revalidation conditions, and authorize only internal L4 definition/design. Independently verify ACC-0139, persist/read back evidence, then recompute the L4 queue.\n'''
+          p.write_text(text,encoding='utf-8')
+          PY
+          git diff --check
+      - name: Publish reconciliation evidence
+        shell: bash
+        run: |
+          cat > CR_0003_RUNTIME_RECONCILIATION_EVIDENCE_2026-08-28.md <<'EOF'
+          # CR-0003 runtime reconciliation evidence
+
+          **Date:** 2026-08-28
+
+          - Canonical CR-0003 publication commit: `a7e536e444e9db4415374a794ca43980f69ba803`.
+          - CR-0003 evidence blob: `8d90d06e547d15cf4dd11c0ba1dccdd115bda4b3`.
+          - WBS blob: `dce5b829c4d447eac180ae1e896e0019292cf971`.
+          - Manifest blob: `00feca027babfd99dcd1992e3e0abd6ef2d3380b`.
+          - Deterministic validator: PASS, 641 tasks / 849 dependency edges.
+          - TSK-0513 runtime predecessor: PASS.
+          - LG-03/LG-04/LG-05: DEFER/non-PASS.
+          - RSK-0002: OPEN; missing behavioral evidence is not converted to validation proof.
+          - Selected bounded L4 entry: TSK-0139 / AUTO_ALLOWED.
+          - TSK-0326 remains real-evidence-dependent and deferred.
+          - No L6 build, participant, legal-completion or public-launch authorization is created.
+          EOF
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add CURRENT_STATE.md CR_0003_RUNTIME_RECONCILIATION_EVIDENCE_2026-08-28.md
+          git commit -m "state: reconcile CR-0003 and enter provisional L4"
+          git push
