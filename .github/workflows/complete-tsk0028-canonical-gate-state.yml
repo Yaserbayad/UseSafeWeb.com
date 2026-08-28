@@ -1,0 +1,149 @@
+name: Complete TSK-0028 canonical gate-state reconciliation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/complete-tsk0028-canonical-gate-state.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-governance-tsk0028
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - name: Reconcile canonical G-02/LG-03 outcome
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(git hash-object CURRENT_STATE.md)" == '4f438a44a51b9f77e1434f6a3b2e300bd5a1c819' ]]
+          [[ "$(git hash-object VALIDATION_READINESS_GATE.md)" == 'b3b0efd0cc0f40faa1ecab190c7469b8dff12ec1' ]]
+          [[ "$(git hash-object TSK_0027_G02_LG03_OWNER_DEFER_DECISION_EVIDENCE_2026-08-28.md)" == '1c12e4f4e31962735dd3a3a8bd94ccbfa8308e92' ]]
+          [[ "$(git hash-object TSK_0026_G02_LG03_EVIDENCE_PACKAGE_EVIDENCE_2026-08-28.md)" == 'e4d14fea268b78ab0bc395fb10988412c7e66484' ]]
+          [[ "$(git hash-object TSK_0513_END_TO_END_SYNTHETIC_REHEARSAL_EVIDENCE_2026-08-28.md)" == '717a59aaf8e748e302b4a1aa972c2d3d2936d3aa' ]]
+          test ! -e TSK_0028_CANONICAL_GATE_STATE_RECONCILIATION_EVIDENCE_2026-08-28.md
+
+          python3 - <<'PY'
+          import csv, re
+          from pathlib import Path
+
+          with open('Plans/Master/WBS/master-wbs.csv',encoding='utf-8-sig',newline='') as f:
+              rows={r['Task_ID']:r for r in csv.DictReader(f)}
+          r=rows['TSK-0028']
+          assert r['Title']=='Update canonical state after G-02 decision'
+          assert r['Dependencies']=='TSK-0027; TSK-0011'
+          assert r['AI_Capability_A0_A4']=='A3'
+          assert r['Action_Authority']=='AUTO_ALLOWED'
+          assert r['Acceptance_ID']=='ACC-0028'
+          assert r['Acceptance_Criteria']=='Canonical files agree on the outcome; evidence links are preserved; no contradictory “ready” or “blocked” status remains.'
+
+          p=Path('VALIDATION_READINESS_GATE.md')
+          s=p.read_text(encoding='utf-8')
+          old='''**Date:** 2026-08-26  \n**Status:** IN PROGRESS — owner/environment facts substantially resolved; remaining blockers are minimum UK representation/fee handling plus deployment verification.  \n**Purpose:** prerequisite to Experiment 1. No real child-linked DNS processing is authorised until this gate is PASS.'''
+          new='''**Date:** 2026-08-26  \n**Updated:** 2026-08-28  \n**Status:** **DEFER — Project Owner decision recorded 2026-08-28.** Current technical readiness is accepted for its bounded scope; final LIA/DPIA approval, participant-facing notice/contact release, and ICO/UK-representation resolution remain deferred/open.  \n**Purpose:** prerequisite to Experiment 1. No real child-linked DNS processing is authorised while this gate is DEFER/non-PASS.'''
+          assert old in s
+          s=s.replace(old,new,1)
+
+          old='''**LIA state:** substantively complete; final approval remains tied to deployment verification and the UK representative/fee decision below.'''
+          new='''**LIA state:** substantively complete for preparation. Current deployment/privacy/region evidence is now technically verified, but final LIA/DPIA residual-risk approval remains deferred/open with the participant-facing notice/contact and UK representative/ICO branch. No legal approval is inferred from technical PASS evidence or CR-0002.'''
+          assert old in s
+          s=s.replace(old,new,1)
+
+          old='''**Verification rule:** before the first real participant, inspect the deployed configuration and confirm every requirement directly. Planned settings are not execution evidence.'''
+          new='''**Verification rule:** before the first real participant, inspect the deployed configuration and confirm every requirement directly. Planned settings are not execution evidence.\n\n**Current technical verification (2026-08-28):** the deployed AdGuard/privacy/upstream/ECS baseline has direct accepted evidence through TSK-0202, TSK-0204, TSK-0205, TSK-0206, TSK-0207, TSK-0407, TSK-0428, TSK-0511, TSK-0512 and TSK-0510. Any material deployment/configuration change requires re-verification before participant use.'''
+          assert old in s
+          s=s.replace(old,new,1)
+
+          old='''This is sufficient for the **design-stage processor selection**, but deployment acceptance still requires verifying that the actual pilot VM/resources are created in `westeurope` and that no optional service added to the pilot creates an unreviewed data flow.'''
+          new='''The design-stage selection is now supplemented by current deployment evidence: TSK-0428 directly verifies the active UseSafeWeb DNS VM in Azure `westeurope`, the current Quad9 dns10 path, ECS disabled, and no unreviewed CDN/analytics/payment/email/application processor in the active child-linked DNS query path. Any later processor/service or region change requires renewed review before participant use.'''
+          assert old in s
+          s=s.replace(old,new,1)
+
+          replacements={
+          '| identifiable DNS history | query/file log off; no history feature | design resolved; deployment verification pending |':'| identifiable DNS history | query/file log off; no history feature | **RESOLVED for current technical baseline** — TSK-0204/0207 direct evidence |',
+          '| client/IP statistics | exclude/disable + anonymise | design resolved; deployment verification pending |':'| client/IP statistics | exclude/disable + anonymise | **RESOLVED for current technical baseline** — TSK-0205/0206/0207 direct evidence |',
+          '| client subnet disclosed upstream | ECS off | resolved requirement; deployment verification pending |':'| client subnet disclosed upstream | ECS off | **RESOLVED for current technical baseline** — TSK-0407/0428 direct evidence |',
+          '| Azure hosting processor | West Europe + Microsoft DPA/transfer terms | design RESOLVED; deployment region verification pending |':'| Azure hosting processor | West Europe + Microsoft DPA/transfer terms | **RESOLVED for current technical baseline** — TSK-0428 directly verifies `westeurope`; legal/provider terms remain subject to ordinary current review |'
+          }
+          for a,b in replacements.items():
+              assert a in s
+              s=s.replace(a,b,1)
+
+          start=s.index('## 13. Current gate result')
+          s=s[:start]+'''## 13. Current gate result\n\n**PROJECT OWNER DECISION: DEFER (2026-08-28).**\n\nDecision evidence: `TSK_0027_G02_LG03_OWNER_DEFER_DECISION_EVIDENCE_2026-08-28.md`. Decision package: `TSK_0026_G02_LG03_EVIDENCE_PACKAGE_2026-08-28.md`.\n\nCurrent eight-criterion disposition:\n\n- **PASS for bounded current criterion scope:** 1 data flow/data inventory; 3 lawful-basis documentation; 4 deployed AdGuard privacy settings; 7 hosting/upstream/recipient/data-path review; 8 payments/marketing disabled for Experiment 1.\n- **DEFERRED / OPEN:** 2 final LIA/DPIA approval against the actual participant-ready environment; 5 final participant-facing notice/contact release; 6 ICO-fee/UK-representative or verified non-applicability resolution.\n\nTechnical readiness now additionally includes accepted encrypted-DNS endpoint/TLS, supported-device tests, filtering/exception/rollback, privacy persistence, Azure region/data path, clean recovery/rebuild and Azure-native restore evidence, compiled under TSK-0510. The prior deployment-verification items are therefore no longer listed as open blockers.\n\n**Gate effect:** LG-03/G-02 is **DEFER, not PASS**. Recruitment, real-participant processing and child-linked DNS activation for a real participant remain unauthorized.\n\n**CR-0002 sequencing effect:** through 2027-08-27, owner-deferred legal/regulatory/compliance dependencies may be conditionally treated as satisfied only for qualifying internal, synthetic, non-participant, non-public preparatory work. This does not convert criteria 2, 5 or 6 to PASS.\n\n### Remaining before any future LG-03 PASS / real-participant authorization\n\n1. complete/approve the final LIA/DPIA residual-risk position against the then-current participant-ready environment;\n2. complete and release the final parent/child privacy/protection notice with actual approved participant-facing contact route;\n3. resolve the ICO-fee and UK-representative position, or establish verified current non-applicability where legally valid;\n4. reverify any technical/control evidence that has become stale or changed;\n5. obtain a new explicit Project Owner gate decision authorizing the resulting scope.\n\n## 14. Exact next authoritative step\n\nThe current gate outcome is **DEFER**. Do not recruit or activate real participants. Governed project execution may continue only through work independently eligible under CR-0002 and the current WBS/action-authority rules.\n\nThe owner-deferred legal/regulatory/compliance branch must be reactivated by **2027-08-27** or earlier explicit Project Owner instruction if the project intends to pursue real-participant authorization. Before any such authorization, the remaining items above must be resolved with current evidence and a fresh owner gate decision.\n'''
+          p.write_text(s,encoding='utf-8')
+          PY
+
+          grep -Fq '**PROJECT OWNER DECISION: DEFER (2026-08-28).**' VALIDATION_READINESS_GATE.md
+          grep -Fq 'LG-03/G-02 is **DEFER, not PASS**' VALIDATION_READINESS_GATE.md
+          grep -Fq 'prior deployment-verification items are therefore no longer listed as open blockers' VALIDATION_READINESS_GATE.md
+          grep -Fq 'UK-representative or verified non-applicability resolution' VALIDATION_READINESS_GATE.md
+
+          gate_blob="$(git hash-object VALIDATION_READINESS_GATE.md)"
+          cat > TSK_0028_CANONICAL_GATE_STATE_RECONCILIATION_EVIDENCE_2026-08-28.md <<EOF
+          # TSK-0028 — Canonical G-02/LG-03 state reconciliation evidence
+
+          **Task:** TSK-0028 — Update canonical state after G-02 decision  
+          **Acceptance:** ACC-0028  
+          **Date:** 2026-08-28  
+          **Run:** ${GITHUB_RUN_ID}  
+          **Job:** ${GITHUB_JOB}
+
+          ## Owner outcome preserved
+
+          The Project Owner's exact TSK-0027 disposition is **DEFER**. Recruitment authorization remains **NO**. No legal or gate PASS is fabricated.
+
+          ## Canonical reconciliation
+
+          `VALIDATION_READINESS_GATE.md` was updated from its stale pre-deployment/in-progress wording to the current evidence state:
+
+          - G-02/LG-03 = DEFER;
+          - current deployment/privacy/region/upstream/endpoint/recovery technical work is no longer incorrectly described as pending;
+          - final LIA/DPIA approval, participant-facing notice/contact release, and ICO/UK-representation resolution remain DEFERRED/OPEN;
+          - CR-0002 internal/synthetic sequencing scope is recorded without converting deferred legal work to PASS;
+          - real-participant recruitment/processing remains unauthorized.
+
+          Updated gate artifact blob: \`$gate_blob\`.
+
+          Evidence links preserved: TSK-0026 package/evidence, TSK-0027 owner decision evidence, current technical acceptance/recovery/privacy evidence through canonical runtime references.
+
+          **Stable outcome: TSK-0028 = PASS**, subject to runtime read-back below.
+          EOF
+
+          evidence_blob="$(git hash-object TSK_0028_CANONICAL_GATE_STATE_RECONCILIATION_EVIDENCE_2026-08-28.md)"
+          python3 - "$gate_blob" "$evidence_blob" <<'PY'
+          from pathlib import Path
+          from datetime import datetime, timezone
+          import re, sys
+          gate_blob,evidence_blob=sys.argv[1:]
+          p=Path('CURRENT_STATE.md')
+          s=p.read_text(encoding='utf-8')
+          s,n=re.subn(r'\*\*Updated:\*\* [^\n]+','**Updated:** '+datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')+'  ',s,count=1)
+          assert n==1
+          marker='## Runtime safeguards'
+          assert s.count(marker)==1
+          if '### TSK-0028 accepted stable state' not in s:
+              section=f'''### TSK-0028 accepted stable state\n\n`TSK-0028 — Update canonical state after G-02 decision`: **PASS**. The canonical validation-readiness artifact now records the Project Owner's TSK-0027 outcome as **DEFER**, removes stale claims that already-proven deployment/technical verification is pending, preserves the three deferred/open legal/privacy/contact criterion classes, and retains recruitment authorization = NO. Updated `VALIDATION_READINESS_GATE.md` blob `{gate_blob}`; reconciliation evidence `TSK_0028_CANONICAL_GATE_STATE_RECONCILIATION_EVIDENCE_2026-08-28.md`, blob `{evidence_blob}`. ACC-0028 is satisfied: canonical gate/runtime files now agree on DEFER and preserve the evidence links without contradictory ready/blocked wording.\n\n'''
+              s=s.replace(marker,section+marker,1)
+          q=s.index('## Queue status after current reconciliation')
+          tail='''## Queue status after current reconciliation\n\n`TSK-0028` is runtime PASS and the canonical G-02/LG-03 outcome is reconciled as **DEFER**. The previously executed TSK-0513 synthetic rehearsal already has durable machine-verification evidence (`TSK_0513_END_TO_END_SYNTHETIC_REHEARSAL_EVIDENCE_2026-08-28.md`, blob `717a59aaf8e748e302b4a1aa972c2d3d2936d3aa`) created after the prior checkpoint. Under interrupted-work recovery rules, that durable result must be reconciled before selecting unrelated work.\n\n- **Selected next: reconcile the already-verified `TSK-0513` outcome against the now-current DEFER baseline.**\n- Direct TSK-0513 successor `TSK-0173` remains dependent on both TSK-0028 and TSK-0513 and is HUMAN_APPROVAL_REQUIRED; it cannot be dispatched until TSK-0513 is formally reconciled PASS and its own gate/preconditions are checked.\n- Recruitment and real-participant processing remain unauthorized.\n\n## Exact next authoritative step\n\nRe-read the durable TSK-0513 rehearsal report/fixture/evidence against the reconciled TSK-0028 DEFER baseline. If its acceptance proof remains valid, persist TSK-0513 PASS without re-executing equivalent rehearsal work; then recompute the queue.\n'''
+          s=s[:q]+tail
+          p.write_text(s,encoding='utf-8')
+          PY
+
+          grep -Fq 'TSK-0028 accepted stable state' CURRENT_STATE.md
+          grep -Fq 'Selected next: reconcile the already-verified `TSK-0513` outcome' CURRENT_STATE.md
+          git config user.name 'UseSafeWeb Governance Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add VALIDATION_READINESS_GATE.md TSK_0028_CANONICAL_GATE_STATE_RECONCILIATION_EVIDENCE_2026-08-28.md CURRENT_STATE.md
+          git commit -m 'state: reconcile G-02 DEFER and mark TSK-0028 PASS'
+          git push origin HEAD:main
