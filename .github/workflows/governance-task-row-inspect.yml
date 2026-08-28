@@ -25,34 +25,34 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Derive all L2 AUTO_ALLOWED dependency-ready work
+      - name: Validate TSK-0166 predecessor evidence
         shell: bash
         run: |
           set -Eeuo pipefail
           [[ "$(hostname -s)" == "adguardvm" ]]
           python3 - <<'PY'
-          import csv,json,re
+          import csv,json,os,re
           rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',newline='',encoding='utf-8-sig')))
-          state=open('CURRENT_STATE.md',encoding='utf-8').read()
-          pass_block=state.split('### PASS',1)[1].split('### TSK-0204 corrected stable state',1)[0]
-          runtime_pass=set(re.findall(r'`(TSK-\d+)`\s+—',pass_block)); runtime_pass.add('TSK-0011')
-          runtime_wait=set(re.findall(r'### WAITING — (TSK-\d+)',state))
-          planning_pass={r['Task_ID'].strip() for r in rows if (r.get('Execution_State') or '').strip()=='PASS'}
-          satisfied=runtime_pass|planning_pass
-          ready=[]
-          for i,r in enumerate(rows):
-              tid=(r.get('Task_ID') or '').strip()
-              if not tid or tid in runtime_pass or tid in runtime_wait: continue
-              if (r.get('Lifecycle_Stage') or '').strip()!='L2': continue
-              if (r.get('Action_Authority') or '').strip()!='AUTO_ALLOWED': continue
-              if (r.get('Plan_Status') or '').strip() not in {'PLANNED','ACTIVE'}: continue
-              deps=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
-              if all(d in satisfied for d in deps): ready.append((i,r,deps))
-          rank={'CRITICAL':0,'HIGH':1,'MEDIUM':2,'LOW':3}
-          ready.sort(key=lambda x:(rank.get((x[1].get('Priority') or '').strip(),9), x[0], x[1]['Task_ID']))
-          print('READY_COUNT='+str(len(ready)))
-          for _,r,deps in ready[:40]:
-              out={k:r.get(k,'') for k in ['Task_ID','Title','Priority','Critical_Path','Plan_Status','Execution_State','Dependencies','Trigger','Preconditions','Action_Authority','Acceptance_ID','Acceptance_Criteria','Verification_ID','Required_Tools_or_Access','Requirement_Reference','Interface_Reference','Risk_Reference','Notes']}
-              out['PlanningOnlySatisfiedDeps']=[d for d in deps if d in planning_pass and d not in runtime_pass]
-              print('READY='+json.dumps(out,sort_keys=True,ensure_ascii=False))
+          by={r['Task_ID'].strip():r for r in rows if (r.get('Task_ID') or '').strip()}
+          for tid in ['TSK-0164','TSK-0223','TSK-0166']:
+              print(tid.replace('-','_')+'_ROW='+json.dumps(by.get(tid),sort_keys=True,ensure_ascii=False))
+          ids=set()
+          for tid in ['TSK-0164','TSK-0223','TSK-0166']:
+              r=by[tid]
+              for field in ['Acceptance_ID','Verification_ID','Evidence_ID','Requirement_Reference','Interface_Reference','Risk_Reference']:
+                  ids.update(re.findall(r'(?:ACC|VER|EVD|REQ|INT|RSK|CON)-\d+',r.get(field,'') or ''))
+              ids.update(re.findall(r'CON-\d+',r.get('Preconditions','') or ''))
+          print('REFERENCE_IDS='+','.join(sorted(ids)))
+          for root,dirs,files in os.walk('.'):
+              if root.startswith('./.git'): continue
+              for fn in files:
+                  p=os.path.join(root,fn)
+                  try:
+                      if os.path.getsize(p)>300000: continue
+                      text=open(p,encoding='utf-8',errors='ignore').read()
+                  except Exception: continue
+                  hits=[x for x in ids if x in text]
+                  taskhits=[x for x in ['TSK-0164','TSK-0223','TSK-0166'] if x in text]
+                  if hits or taskhits:
+                      print('MATCH='+p+' IDS='+','.join(sorted(set(hits+taskhits))))
           PY
