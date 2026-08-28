@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T14:23:29Z  
+**Updated:** 2026-08-28T14:27:46Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -67,6 +67,7 @@ This supersedes the earlier duplicate-runner condition in which `adguartestdvm` 
 - `TSK-0430` — encrypted configuration backup created, independently audited and directly decrypted by the authorised owner — evidence: `TSK_0430_ENCRYPTED_CONFIG_BACKUP_EVIDENCE_2026-08-27.md`, blob `de1820cb2a9fc5b175c5e5eb1e18b45e6a430a82`; ciphertext SHA-256 `bd5cad421a44efb27a669a0119f6247f456e1e8e97a0f23bb628933e6208ccde`; owner recipient fingerprint `SHA256:682Jbw3baP6jxs57+1c5lchlkrNMELcvDk8bauEl51U`; owner-side decrypted configuration SHA-256 `d8b6eae3b85edbaa1c49e318354389dc616099ecb3d2d90eff3c3dd8c663e1f2`.
 - `TSK-0431` — pilot restore/rebuild recovery acceptance fully satisfied: project-controlled isolated recovery drill PASS with deterministic `rec-v1` routing, encrypted DoH/DoT, filtering/rollback, privacy, health and 12-second recovery evidence; owner-managed Azure-native restore subsequently reported successful by the Project Owner — project recovery evidence `TSK_0431_PROJECT_CONTROLLED_RECOVERY_DRILL_EVIDENCE_2026-08-28.md`, blob `2df5c05767fe326e38c609d37888f672dcb9dd48`; Azure restore owner evidence `TSK_0431_AZURE_RESTORE_OWNER_EVIDENCE_2026-08-28.md`, blob `e077165e98fa4460fba84466ffe28953ad53dec0`. **ACC-0431 and REQ-0052 recovery acceptance are satisfied.**
 - `TSK-0510` — pilot technical acceptance report compiled and independently audited against ACC-0510, REQ-0065/REQ-0066, current predecessor evidence and the LG-03 boundary — report `TSK_0510_PILOT_TECHNICAL_ACCEPTANCE_REPORT_2026-08-28.md`, blob `fbc41f65ec56e7e9ea8873e9a995b66ae9e8f2c9`; evidence `TSK_0510_PILOT_TECHNICAL_ACCEPTANCE_EVIDENCE_2026-08-28.md`, blob `ce833b35f904c7657b5cc69419ec388b84e1a611`; independent audit run `33175993512` / job `98864628019`: PASS. The evidence signature is Git/repository evidence only; no human/legal signature or gate approval is fabricated. **TSK-0510 = PASS; LG-03 remains NOT PASS.**
+- `TSK-0026` — G-02/LG-03 eight-criterion evidence package assembled and independently audited — package `TSK_0026_G02_LG03_EVIDENCE_PACKAGE_2026-08-28.md`, blob `dbeda1202728bdd6ec6d1f838842fa576e733d8e`; evidence `TSK_0026_G02_LG03_EVIDENCE_PACKAGE_EVIDENCE_2026-08-28.md`, blob `e4d14fea268b78ab0bc395fb10988412c7e66484`; independent audit run `33180135119` / job `98878984354`: PASS. Criteria 1,3,4,7,8 are current PASS for their bounded criterion scope; criteria 2,5,6 remain DEFERRED/OPEN under CR-0002. **TSK-0026 = PASS; LG-03 remains NOT PASS.**
 - `TSK-0166` — pseudonymous Experiment-1 participant record/metric schema created and independently audited with direct predecessor proof — artifact: `EXPERIMENT_01_PARTICIPANT_RECORD_SCHEMA.md`, blob `c7706fceced87c797b8cd92179198754e2b08ffe`; evidence: `TSK_0166_PARTICIPANT_RECORD_SCHEMA_EVIDENCE_2026-08-28.md`, blob `d043370a9c1efc99ccf8f65b813733b4c832c3f0`; independent audit run `33130737625` / job `98719395096`: PASS.
 - `TSK-0168` — Experiment-1 qualification screener created and independently audited — artifact: `EXPERIMENT_01_QUALIFICATION_SCREENER.md`, blob `d35d3e0abfc3882d648df3c0c7458e216853b592`; evidence: `TSK_0168_QUALIFICATION_SCREENER_EVIDENCE_2026-08-28.md`, blob `760f881100e6221640c8afa86108665dc4ba1792`; independent audit run `33130918142` / job `98719985132`: PASS.
 - `TSK-0214` — Experiment-1 retention/deletion execution checklist independently verified with direct predecessor proof — artifact: `RETENTION_DELETION_EXECUTION_CHECKLIST.md`, blob `5c2d6edbfbabe9ed0fb9c309e7afca8c96fa9c9f`; evidence: `TSK_0214_RETENTION_DELETION_CHECKLIST_EVIDENCE_2026-08-28.md`, blob `0740743793e53c655f3ca447fddd51fd70b8d6e5`; independent audit run `33152847430` / job `98788653014`: PASS.
@@ -346,16 +347,12 @@ The Project Owner explicitly instructed on 2026-08-28 that the legal/regulatory/
 
 ## Queue status after current reconciliation
 
-CR-0002 is canonically published/read-back verified with deterministic validation PASS. The WBS remains structurally unchanged at 641 tasks / 849 dependency edges. Applying DEC-0049 / Layer-5 section 5.3.1 to the current L2 queue makes two internal/preparatory AUTO_ALLOWED tasks dependency-eligible: `TSK-0026` and `TSK-0167`.
+TSK-0026 is runtime PASS with durable eight-criterion evidence-package and independent audit proof. The package preserves the current gate truth: criteria 1, 3, 4, 7 and 8 are PASS for their bounded criterion scope; criteria 2, 5 and 6 remain DEFERRED/OPEN. **LG-03 remains NOT PASS.**
 
-Priority selection is deterministic:
+The dependency mutation makes `TSK-0027 — Decide G-02 PASS, FAIL, or DEFER` dependency-ready. WBS classification: L2 / A1 / `HUMAN_ONLY` / HIGH / critical path. Its acceptance requires the Project Owner to review evidence/residual risks/open conditions, choose PASS/FAIL/DEFER, state work unlocked, and state whether recruitment is authorised. The AI may prepare the decision but must not make or fabricate it.
 
-- **Selected next: `TSK-0026` — Assemble G-02 evidence package** (L2 / A3 / AUTO_ALLOWED / HIGH / critical path). Its legal-branch predecessors `TSK-0211`, `TSK-0208`, `TSK-0217`, and `TSK-0221` are conditionally dependency-satisfied only for preparation of a truthful evidence package; they remain unresolved deviations and cannot be represented as legal PASS. `TSK-0510` is current PASS and the canonical publication/read-back prerequisite is satisfied.
-- `TSK-0167` — invitation/scheduling/reminder/follow-up/withdrawal templates — is also preparatorily eligible because `TSK-0168` is PASS and deferred `TSK-0221` is conditionally dependency-satisfied for internal template preparation, but it is lower priority than TSK-0026.
-- `TSK-0513` remains unavailable until TSK-0167 itself becomes PASS.
-
-LG-03 remains **NOT PASS**. CR-0002 does not authorize recruitment, participant processing, child-linked DNS activation, public launch, or any Project Owner/HUMAN_ONLY gate decision.
+`TSK-0167` remains a lower-priority preparatory AUTO_ALLOWED task under CR-0002, but SERIAL LIGHT priority stops progression at the higher-priority current gate/HUMAN_ONLY boundary rather than bypassing it.
 
 ## Exact next authoritative step
 
-Execute bounded `TSK-0026`: assemble the LG-03/G-02 evidence package against all eight current gate criteria, map each to current evidence/owner/status/deviation/source, explicitly retain every deferred legal item as unresolved rather than fabricated PASS, independently verify ACC-0026, persist/read back the package/evidence, then recompute selection. If that makes `TSK-0027` the highest-priority boundary, stop for the Project Owner's HUMAN_ONLY PASS/FAIL/DEFER decision rather than inferring it.
+Project Owner decision required for `TSK-0027`. Review `TSK_0026_G02_LG03_EVIDENCE_PACKAGE_2026-08-28.md` and explicitly choose **PASS**, **FAIL**, or **DEFER** for G-02/LG-03. Current evidence contains three unresolved/deferred criterion classes (final LIA/DPIA approval, final participant-notice release, and ICO/UK-representation resolution), so no automatic PASS or recruitment authorization may be inferred. After the explicit owner decision is persisted/read-back, recompute governed work.
