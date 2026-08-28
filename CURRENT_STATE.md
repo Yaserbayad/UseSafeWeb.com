@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T15:28:00Z
+**Updated:** 2026-08-28T15:31:00Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -370,6 +370,12 @@ The Project Owner explicitly deferred the complete real-participant Experiment-1
 
 This PASS does not mean LG-03/LG-04/LG-05 or LG-06 passed, does not supply real-parent behavioral evidence, and does not authorize integrated build, participants, legal completion, payment activation or public launch.
 
+### TSK-0141 accepted stable state
+
+`TSK-0141 — Freeze minimum product scope and non-goals`: **PASS for provisional L4 scope under DEC-0050/CR-0003**. Scope artifact `TSK_0141_PROVISIONAL_MINIMUM_PRODUCT_SCOPE_AND_NON_GOALS_2026-08-28.md`, blob `c72bfd906fdca4a106dcd7d4ff458a2577e32c90`; independent evidence `TSK_0141_PROVISIONAL_MINIMUM_PRODUCT_SCOPE_EVIDENCE_2026-08-28.md`, blob `a7881f443a85c72cda63e628e0d6def8d41c6564`. ACC-0141 is satisfied: every included capability has an Owner-approved, Mandatory, or Provisional/unvalidated basis; accountless-first is preserved; authentication/persistent dashboard/customer AdGuard control plane remain deferred; surveillance/history/child-account/advanced scope is excluded; synthetic evidence is not behavioral proof.
+
+This PASS does not authorize LG-06, L5/L6 build, participants, legal completion, payment activation or public launch. RSK-0002 remains OPEN.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -381,14 +387,13 @@ This PASS does not mean LG-03/LG-04/LG-05 or LG-06 passed, does not supply real-
 
 ## Queue status after current reconciliation
 
-`TSK-0139` is runtime PASS for its bounded provisional scope. Its sole direct WBS successor is now dependency-ready.
+`TSK-0141` is runtime PASS for provisional scope. Its sole direct successor is dependency-ready.
 
-- **Selected next: `TSK-0141 — Freeze minimum product scope and non-goals`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
-- Hard dependency: `TSK-0139` — current PASS.
-- ACC-0141 is explicitly provisional under CR-0003: every included capability must map to an unvalidated current-need assumption, mandatory operation/safety requirement, or explicit owner-approved architectural decision. No capability may be described as behaviorally validated.
-- Accountless-first remains authoritative; mandatory authentication, persistent parent dashboard and customer-facing AdGuard control plane remain deferred under EXC-0001. Surveillance/activity history, child accounts and other advanced capabilities remain excluded unless separately reauthorized.
-- Real-evidence-dependent L4 tasks remain deferred; LG-03/LG-04/LG-05 remain non-PASS.
+- **Selected next: `TSK-0138 — Register unresolved product assumptions and owner decisions`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
+- Hard dependency: `TSK-0141` — current PASS.
+- ACC-0138 requires every unresolved item to have an owner, evidence needed, decision deadline/gate, safe default, and consequence of deferral, while preventing engineering/AI from silently making critical owner decisions.
+- The register must explicitly carry RSK-0002 and all provisional user-behavior unknowns created by CR-0003.
 
 ## Exact next authoritative step
 
-Execute bounded `TSK-0141`: freeze the smallest provisional product scope and explicit non-goals using TSK-0139, DEC-0042/accountless authority, current technical constraints and owner decisions only. Label user-need-derived capabilities as provisional/unvalidated, exclude deferred/surveillance scope, preserve RSK-0002 and create independently auditable ACC-0141 evidence. Then recompute the L4 queue.
+Execute bounded `TSK-0138`: create a controlled unresolved-assumptions/owner-decisions register covering the provisional L4 scope, evidence gaps, deferred exceptions, legal/participant boundary and any later decision trigger. Use safe defaults that preserve minimum scope and stop progression where required; do not silently decide owner-only matters. Verify ACC-0138, persist/read back evidence, then recompute.
