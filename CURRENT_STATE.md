@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T14:27:46Z  
+**Updated:** 2026-08-28T14:39:06Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -336,6 +336,12 @@ The Project Owner explicitly instructed on 2026-08-28 that the legal/regulatory/
 - Real-participant recruitment/processing, child-linked DNS activation, public launch, legal attestation/signature, payment of regulated fees, and HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED decisions remain fenced by actual applicable authority.
 - The exception expires 2027-08-27 or on earlier explicit owner reactivation/supersession; affected downstream PASS is then re-evaluated where materially reliant on the exception.
 
+### TSK-0027 owner gate decision stable state
+
+`TSK-0027 — Decide G-02 PASS, FAIL, or DEFER`: **PASS as a completed decision task, with gate disposition DEFER**. The Project Owner explicitly instructed `DEFER and continue` on 2026-08-28. Durable owner-decision evidence: `TSK_0027_G02_LG03_OWNER_DEFER_DECISION_EVIDENCE_2026-08-28.md`, blob `1c12e4f4e31962735dd3a3a8bd94ccbfa8308e92`.
+
+The task PASS means the required HUMAN_ONLY decision was actually made and recorded; it does **not** mean LG-03 passed. **LG-03/G-02 disposition is DEFER. Recruitment authorized: NO.** Criteria 2, 5 and 6 remain DEFERRED/OPEN in the accepted TSK-0026 package. CR-0002 remains the bounded authority for internal/synthetic/non-participant/non-public preparatory continuation through 2027-08-27.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -347,12 +353,15 @@ The Project Owner explicitly instructed on 2026-08-28 that the legal/regulatory/
 
 ## Queue status after current reconciliation
 
-TSK-0026 is runtime PASS with durable eight-criterion evidence-package and independent audit proof. The package preserves the current gate truth: criteria 1, 3, 4, 7 and 8 are PASS for their bounded criterion scope; criteria 2, 5 and 6 remain DEFERRED/OPEN. **LG-03 remains NOT PASS.**
+`TSK-0027` is complete: runtime task state **PASS**, owner gate disposition **DEFER**. LG-03 remains deferred/non-PASS and recruitment remains unauthorized. The immediate HUMAN_ONLY decision boundary is resolved.
 
-The dependency mutation makes `TSK-0027 — Decide G-02 PASS, FAIL, or DEFER` dependency-ready. WBS classification: L2 / A1 / `HUMAN_ONLY` / HIGH / critical path. Its acceptance requires the Project Owner to review evidence/residual risks/open conditions, choose PASS/FAIL/DEFER, state work unlocked, and state whether recruitment is authorised. The AI may prepare the decision but must not make or fabricate it.
+Applying current WBS priority plus CR-0002 after that decision selects the next eligible preparatory task:
 
-`TSK-0167` remains a lower-priority preparatory AUTO_ALLOWED task under CR-0002, but SERIAL LIGHT priority stops progression at the higher-priority current gate/HUMAN_ONLY boundary rather than bypassing it.
+- **Selected next: `TSK-0167` — Create invitation, scheduling, reminder, follow-up, and withdrawal templates** (L2 / A3 / AUTO_ALLOWED / MEDIUM). `TSK-0168` is current PASS. Its deferred `TSK-0221` notice-approval/release predecessor is conditionally dependency-satisfied only for internal template preparation under CR-0002; the final participant-facing notice/contact/legal release remains unresolved and must be preserved as a limitation.
+- `TSK-0513` remains unavailable until `TSK-0167` itself is verified PASS.
+
+No real-participant recruitment, participant processing, child-linked DNS activation, or public launch is authorized by the DEFER decision.
 
 ## Exact next authoritative step
 
-Project Owner decision required for `TSK-0027`. Review `TSK_0026_G02_LG03_EVIDENCE_PACKAGE_2026-08-28.md` and explicitly choose **PASS**, **FAIL**, or **DEFER** for G-02/LG-03. Current evidence contains three unresolved/deferred criterion classes (final LIA/DPIA approval, final participant-notice release, and ICO/UK-representation resolution), so no automatic PASS or recruitment authorization may be inferred. After the explicit owner decision is persisted/read-back, recompute governed work.
+Execute bounded `TSK-0167`: prepare the invitation, scheduling, reminder, 14-day follow-up, and withdrawal templates; include voluntary participation, no payment ask, preparation requirements, support boundaries, 14-day follow-up, withdrawal route, and the truthful current contact status. Because final controller/UK-representative contacts remain deferred, the templates must explicitly retain that unresolved release/contact limitation and remain **INTERNAL / NOT FOR PARTICIPANT USE** until the participant-facing release gate is actually satisfied. Independently verify ACC-0167, persist/read back the artifact/evidence, then recompute selection.
