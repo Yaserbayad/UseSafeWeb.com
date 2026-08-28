@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T20:36:42Z
+**Updated:** 2026-08-28T20:53:36Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -522,10 +522,10 @@ The matrix is explicitly derived/non-authoritative and does not duplicate the re
 
 ## Queue status after TSK-0145 reconciliation
 
-`TSK-0145` is runtime **PASS** for its bounded traceability-matrix acceptance. The artifact and acceptance evidence were both published and read back from `main`; 91/91 canonical requirements are covered and the current validated relationship state identifies 0 orphan requirements. No requirement, owner decision, gate, participant authority, build authority, publication authority or launch authority is promoted by this PASS.
+`TSK-0043 — Run cross-functional requirements review and resolve conflicts` is the selected runtime **TODO** work item. Its sole hard dependency `TSK-0145` is runtime PASS with accepted 91/91 requirement traceability and 0 current orphan mappings. WBS authority classifies TSK-0043 as L4 / A3 / AUTO_ALLOWED. Current DEC-0050/CR-0003 permits this bounded internal L4 requirements review because ACC-0043 can be evaluated from canonical planning evidence without substituting synthetic evidence for real-participant behavior.
 
-No successor task is selected by this synchronization write. Selection must be recomputed from current canonical WBS/runtime/gates after this write is read back.
+Selection does **not** make LG-03, LG-04, LG-05 or LG-06 PASS; does not authorize L5/L6 build, real-participant processing, legal completion, payment, publication or launch; and does not close `RSK-0002`. Legacy `G-04` wording in ACC-0043 resolves to current `LG-05` semantics. `RSK-0044` remains OPEN-controlled and is mitigated for this dispatch by fresh canonical read-back and source/version checks.
 
 ## Exact next authoritative step
 
-Read back this TSK-0145 runtime reconciliation, verify the exact commit/blob and preserved unrelated state, then recompute the deterministic eligible queue from current authority. Reject candidates requiring unavailable representative-user evidence, owner/legal/privacy approval, unresolved trigger/gate, missing direct predecessor proof, or any open security/privacy deviation that their own acceptance would falsely certify. Persist/read back the selected next bounded AUTO_ALLOWED task before execution.
+Execute TSK-0043 against the current canonical requirement register, TSK-0145 traceability matrix, constraints, interfaces, risks, decisions/exceptions and gate semantics. Identify requirement conflicts or contradictions with frozen privacy, accountless scope and current LG-05/DEC-0050 authority. Resolve only conflicts already resolvable under existing authority; do not invent owner decisions or behavioral evidence. Produce durable source-cited review evidence. TSK-0043 may PASS only if every critical finding is resolved, every remaining noncritical item has an owner plus an approved or gate-relative due condition, and no requirement contradicts frozen privacy, scope or current LG-05 authority. If an owner-only material conflict is found, classify the task BLOCKED instead of changing policy.
