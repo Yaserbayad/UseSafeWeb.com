@@ -107,6 +107,8 @@ REQ-0070 does **not** require centralized logs/APM/distributed tracing. Under th
 
 `DVR-0230-01` remains OPEN until the custom DoH critical error-log mode is hardened/read-back verified.
 
+Monitoring/verification that executes on a root-capable self-hosted runner must default to repository `contents: read`, `persist-credentials: false`, minimum sudo and no repository write capability. Evidence publication/owner-alert writes should be separated from privileged target execution where practical. Any temporary exception remains part of `DVR-0484-01`; this contract does not normalize repository-write credentials on a privileged production runner.
+
 ## 5. Provisional internal SLIs and SLOs
 
 These are **internal provisional engineering targets**, not customer promises. They are deliberately compatible with the accepted single-node/approximately-30-minute recovery model and must be recalibrated after real operating evidence exists.
@@ -191,7 +193,7 @@ Every alert must:
 
 ### DNS RTO
 
-**RTO: <=30 minutes** from confirmed qualifying single-node service failure/rebuild decision to verified restoration of:
+**RTO: <=30 minutes end to end** from the earliest confirmed user-impact timestamp (the first failed valid synthetic probe subsequently confirmed as target failure, or the planned rebuild start) through verified restoration of:
 
 - encrypted DoH/DoT service on approved identity;
 - accepted AdGuard version/configuration;
