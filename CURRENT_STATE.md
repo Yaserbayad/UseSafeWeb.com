@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T00:49:18Z  
+**Updated:** 2026-08-28T07:49:47Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -49,6 +49,7 @@ GitHub is the active execution bridge for eligible AUTO_ALLOWED host work. Repos
 - `TSK-0430` — encrypted configuration backup created, independently audited and directly decrypted by the authorised owner — evidence: `TSK_0430_ENCRYPTED_CONFIG_BACKUP_EVIDENCE_2026-08-27.md`, blob `de1820cb2a9fc5b175c5e5eb1e18b45e6a430a82`; ciphertext SHA-256 `bd5cad421a44efb27a669a0119f6247f456e1e8e97a0f23bb628933e6208ccde`; owner recipient fingerprint `SHA256:682Jbw3baP6jxs57+1c5lchlkrNMELcvDk8bauEl51U`; owner-side decrypted configuration SHA-256 `d8b6eae3b85edbaa1c49e318354389dc616099ecb3d2d90eff3c3dd8c663e1f2`.
 - `TSK-0166` — pseudonymous Experiment-1 participant record/metric schema created and independently audited with direct predecessor proof — artifact: `EXPERIMENT_01_PARTICIPANT_RECORD_SCHEMA.md`, blob `c7706fceced87c797b8cd92179198754e2b08ffe`; evidence: `TSK_0166_PARTICIPANT_RECORD_SCHEMA_EVIDENCE_2026-08-28.md`, blob `d043370a9c1efc99ccf8f65b813733b4c832c3f0`; independent audit run `33130737625` / job `98719395096`: PASS.
 - `TSK-0168` — Experiment-1 qualification screener created and independently audited — artifact: `EXPERIMENT_01_QUALIFICATION_SCREENER.md`, blob `d35d3e0abfc3882d648df3c0c7458e216853b592`; evidence: `TSK_0168_QUALIFICATION_SCREENER_EVIDENCE_2026-08-28.md`, blob `760f881100e6221640c8afa86108665dc4ba1792`; independent audit run `33130918142` / job `98719985132`: PASS.
+- `TSK-0214` — Experiment-1 retention/deletion execution checklist independently verified with direct predecessor proof — artifact: `RETENTION_DELETION_EXECUTION_CHECKLIST.md`, blob `5c2d6edbfbabe9ed0fb9c309e7afca8c96fa9c9f`; evidence: `TSK_0214_RETENTION_DELETION_CHECKLIST_EVIDENCE_2026-08-28.md`, blob `0740743793e53c655f3ca447fddd51fd70b8d6e5`; independent audit run `33152847430` / job `98788653014`: PASS.
 
 ### TSK-0204 corrected stable state
 
@@ -120,6 +121,18 @@ Independent read-only audit run `33130918142` / job `98719985132`: **PASS**. It 
 
 Evidence: `TSK_0168_QUALIFICATION_SCREENER_EVIDENCE_2026-08-28.md`, blob `760f881100e6221640c8afa86108665dc4ba1792`. ACC-0168 is fully satisfied. This preparation artifact does not authorise recruitment or participant processing.
 
+### TSK-0214 accepted stable state
+
+The exact WBS row defines TSK-0214 as L2 / A3 / `AUTO_ALLOWED` / MEDIUM with hard predecessors `TSK-0224; TSK-0166`, acceptance `ACC-0214`.
+
+Historical/planning predecessor labels were not accepted as sufficient evidence by themselves. Current `VALIDATION_READINESS_GATE.md`, blob `b3b0efd0cc0f40faa1ecab190c7469b8dff12ec1`, directly re-proves TSK-0224's retention schedule, while current accepted `EXPERIMENT_01_PARTICIPANT_RECORD_SCHEMA.md`, blob `c7706fceced87c797b8cd92179198754e2b08ffe`, directly proves the no-participant-records-in-GitHub boundary.
+
+The existing `RETENTION_DELETION_EXECUTION_CHECKLIST.md`, blob `5c2d6edbfbabe9ed0fb9c309e7afca8c96fa9c9f`, identifies controlled data locations, owner, exact due-date rules, deletion/verification methods, aggregate-output restrictions, structured deletion evidence, and fail-closed exception handling.
+
+Independent read-only audit run `33152847430` / job `98788653014`: **PASS**. It returned `TSK_0224_DIRECT_PREDECESSOR_PROOF=PASS`, `TSK_0166_CURRENT_ARTIFACT_BOUNDARY_PROOF=PASS`, `TSK_0214_ACCEPTANCE_CLASSES=6/6`, exact checklist blob match and `TSK_0214_INDEPENDENT_AUDIT=PASS`.
+
+Evidence: `TSK_0214_RETENTION_DELETION_CHECKLIST_EVIDENCE_2026-08-28.md`, blob `0740743793e53c655f3ca447fddd51fd70b8d6e5`. ACC-0214 is fully satisfied. This verifies preparation only; no participant processing/deletion occurred and no validation-readiness gate was bypassed.
+
 ### WAITING — TSK-0431
 
 `TSK-0431` — test pilot restore or rebuild procedure: **WAITING on an independent clean recovery target and the owner-managed Azure/TLS inputs required by ACC-0431/REQ-0052; not PASS**.
@@ -163,4 +176,4 @@ Deterministic resumption condition: the owner/provider creates that record, or a
 
 ## Exact next authoritative step
 
-Recompute the current L2 queue after confirmed TSK-0168 PASS, with TSK-0431 and TSK-0441 held WAITING. Continue the highest-priority eligible autonomous preparation work only after its historical/planning predecessors are independently re-proven from current durable evidence; do not bypass legal/participant-activation, Azure control-plane, Cloudflare provider, recovery, or public-service readiness boundaries.
+Recompute the current L2 queue after confirmed TSK-0214 PASS, with TSK-0431 and TSK-0441 held WAITING. Continue the highest-priority eligible autonomous preparation work only after its historical/planning predecessors are independently re-proven from current durable evidence; do not bypass legal/participant-activation, Azure control-plane, Cloudflare provider, recovery, or public-service readiness boundaries.
