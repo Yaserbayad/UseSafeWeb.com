@@ -1,0 +1,45 @@
+name: Select post-TSK-0138 L4 next task
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/select-post-tsk0138-l4-next.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  select:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Verify queue and select privacy-first executable task
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object TSK_0138_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md)" = "26b1f2fb462b8d267f639b005d87963bfd94c7e0"
+          python3 - <<'PY'
+          import csv, pathlib, re
+          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',encoding='utf-8-sig',newline=''))); by={r['Task_ID']:r for r in rows}
+          q=pathlib.Path('TSK_0138_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md').read_text()
+          for tid in ['TSK-0187','TSK-0229','TSK-0408']: assert f'### {tid}' in q
+          assert 'Representative parents can complete the prototype' in by['TSK-0187']['Acceptance_Criteria']
+          assert by['TSK-0229']['Priority']=='HIGH' and by['TSK-0229']['Action_Authority']=='AUTO_ALLOWED'
+          assert by['TSK-0229']['Dependencies']=='TSK-0146'
+          assert by['TSK-0408']['Priority']=='HIGH' and by['TSK-0408']['Action_Authority']=='AUTO_ALLOWED'
+          s=pathlib.Path('CURRENT_STATE.md').read_text()
+          assert '`TSK-0138 — Register unresolved product assumptions and owner decisions`: **PASS**' in s
+          text=re.sub(r'\*\*Updated:\*\* [^\n]+','**Updated:** 2026-08-28T15:36:00Z',s,count=1)
+          m=text.rfind('\n## Queue status after current reconciliation'); assert m>=0
+          text=text[:m].rstrip()+'''\n\n## Queue status after current reconciliation\n\nThe post-TSK-0138 full L4 inspection found seven dependency-ready candidates. `TSK-0187` is HIGH but not executable under CR-0003 because ACC-0187 explicitly requires representative parents to complete the prototype and demonstrate comprehension/recovery. It remains deferred as real-user-evidence-dependent.\n\nAmong genuinely executable candidates, privacy/safety precedence selects:\n\n- **Selected next: `TSK-0229 — Define and approve the accountless journey data model, expiry, deletion, and no-linkage rules`** (L4 / A3 / AUTO_ALLOWED / HIGH).\n- Hard dependency `TSK-0146` is preserved PASS.\n- ACC-0229 can be satisfied internally: define only fields necessary for the active journey, prohibit browsing history/persistent child profile, and make expiry/deletion/diagnostic boundaries testable.\n- `TSK-0408` remains the next HIGH technical candidate after recomputation.\n- `TSK-0140` remains potentially owner-review-bound by its own ACC; `TSK-0330` is HUMAN_ONLY.\n\n## Exact next authoritative step\n\nExecute `TSK-0229` as an accountless/privacy-minimal L4 data contract. Define necessary fields/state classes, prohibited fields/linkages, expiry/deletion semantics, diagnostic separation, logs/backups boundaries and testable invariants. Do not introduce mandatory identity, browsing/query history or architecture beyond what is necessary to specify the contract. Verify ACC-0229, persist/read back, then recompute.\n'''
+          pathlib.Path('CURRENT_STATE.md').write_text(text)
+          PY
+          git diff --check
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add CURRENT_STATE.md
+          git commit -m "state: select TSK-0229 accountless data model"
+          git push
