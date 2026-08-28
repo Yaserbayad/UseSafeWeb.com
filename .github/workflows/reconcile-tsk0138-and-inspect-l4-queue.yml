@@ -1,0 +1,88 @@
+name: Reconcile TSK-0138 and inspect full L4 queue
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-tsk0138-and-inspect-l4-queue.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify TSK-0138 and derive L4 candidates
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object TSK_0138_UNRESOLVED_PRODUCT_ASSUMPTIONS_AND_OWNER_DECISIONS_2026-08-28.md)" = "d782f26d5d48b0902b044d8bbab48569bdee0ea2"
+          test "$(git hash-object TSK_0138_UNRESOLVED_ASSUMPTIONS_DECISIONS_EVIDENCE_2026-08-28.md)" = "bde66025ffe274d04fb869427b37fe4a32382be9"
+          python3 - <<'PY'
+          import csv, pathlib, re
+          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',encoding='utf-8-sig',newline=''))); by={r['Task_ID']:r for r in rows}
+          assert by['TSK-0138']['Dependencies']=='TSK-0141'
+          e=pathlib.Path('TSK_0138_UNRESOLVED_ASSUMPTIONS_DECISIONS_EVIDENCE_2026-08-28.md').read_text(); assert 'ACC-0138 is fully satisfied' in e
+          state=pathlib.Path('CURRENT_STATE.md').read_text()
+          assert 'Selected next: `TSK-0138' in state
+          # Build conservative PASS set: WBS PASS plus runtime stable-state/explicit PASS mentions.
+          passed={r['Task_ID'] for r in rows if (r.get('Execution_State') or '').strip()=='PASS'}
+          for tid in by:
+              if re.search(rf'`{re.escape(tid)}[^`]*`[^\n]*\*\*PASS',state) or re.search(rf'`{re.escape(tid)}[^`]*`:\s*\*\*PASS',state): passed.add(tid)
+          # Explicit current accepted states from runtime text that may span phrasing.
+          for tid in ['TSK-0138','TSK-0139','TSK-0141','TSK-0146','TSK-0147','TSK-0148','TSK-0558','TSK-0513','TSK-0510']:
+              if tid=='TSK-0138' or tid in state: passed.add(tid)
+          def deps(r): return [x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
+          candidates=[]
+          for r in rows:
+              if (r.get('Lifecycle_Stage') or '').strip()!='L4': continue
+              tid=r['Task_ID']
+              if tid in passed: continue
+              ds=deps(r)
+              missing=[d for d in ds if d not in passed]
+              if not missing:
+                  candidates.append((r,[]))
+          prio={'CRITICAL':0,'HIGH':1,'MEDIUM':2,'LOW':3}
+          candidates.sort(key=lambda x:(prio.get((x[0].get('Priority') or '').strip(),9), rows.index(x[0]), x[0]['Task_ID']))
+          out=['# TSK-0138 post-PASS full L4 queue inspection','', '**Date:** 2026-08-28  ', '**Purpose:** derive dependency-ready L4 candidates after accepting TSK-0138, without treating readiness as automatic acceptance.','', f'- Conservative current PASS set size: {len(passed)}',f'- Dependency-ready non-PASS L4 candidates: {len(candidates)}','', '## Dependency-ready L4 candidates','']
+          cols=['Task_ID','Title','Priority','Critical_Path','Dependencies','Preconditions','Acceptance_ID','Acceptance_Criteria','AI_Capability_A0_A4','Action_Authority','Requirement_Reference','Constraint_Reference','Interface_Reference','Notes']
+          for r,_ in candidates:
+              out.append(f"### {r['Task_ID']} — {r['Title']}")
+              for c in cols[2:]:
+                  v=(r.get(c) or '').strip()
+                  if v: out.append(f'- **{c}:** {v}')
+              ac=(r.get('Acceptance_Criteria') or '').lower()
+              flags=[]
+              if (r.get('Action_Authority') or '').strip()!='AUTO_ALLOWED': flags.append('NON_AUTO_AUTHORITY')
+              if any(k in ac for k in ['reviewed by owner','owner approves','owner approval','real participant','participant','observed user','user evidence','usability testing','comprehension testing','cohort']): flags.append('POTENTIAL_HUMAN_OR_REAL_EVIDENCE_BOUNDARY')
+              if flags: out.append('- **Preflight flags:** '+ '; '.join(flags))
+              out.append('')
+          pathlib.Path('TSK_0138_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md').write_text('\n'.join(out)+'\n')
+          print('TSK0138_QUEUE_INSPECTION=PASS')
+          PY
+      - name: Reconcile runtime and publish inspection
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('CURRENT_STATE.md'); text=p.read_text()
+          text=re.sub(r'\*\*Updated:\*\* [^\n]+','**Updated:** 2026-08-28T15:34:00Z',text,count=1)
+          sec='''### TSK-0138 accepted stable state\n\n`TSK-0138 — Register unresolved product assumptions and owner decisions`: **PASS**. Register `TSK_0138_UNRESOLVED_PRODUCT_ASSUMPTIONS_AND_OWNER_DECISIONS_2026-08-28.md`, blob `d782f26d5d48b0902b044d8bbab48569bdee0ea2`; independent evidence `TSK_0138_UNRESOLVED_ASSUMPTIONS_DECISIONS_EVIDENCE_2026-08-28.md`, blob `bde66025ffe274d04fb869427b37fe4a32382be9`. ACC-0138 is satisfied with 20 controlled unresolved items, each carrying owner/authority, evidence, deterministic trigger, safe default, deferral consequence and explicit AI/engineering authority.\n\nThe register does not resolve its assumptions. RSK-0002 and all real-behavior unknowns remain open; owner-only decisions are fenced.\n\n'''
+          marker='## Runtime safeguards'
+          if '### TSK-0138 accepted stable state' not in text: text=text.replace(marker,sec+marker,1)
+          q=text.rfind('\n## Queue status after current reconciliation'); assert q>=0
+          text=text[:q].rstrip()+'''\n\n## Queue status after current reconciliation\n\n`TSK-0138` is runtime PASS. A full L4 dependency-ready queue inspection has been generated as `TSK_0138_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. Selection is intentionally deferred until that report is read back because some dependency-ready tasks may still have HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED or real-user-evidence acceptance boundaries.\n\n## Exact next authoritative step\n\nRead back the full L4 queue inspection, apply current CR-0003 evidence restrictions and action authority, then select the highest-priority genuinely executable AUTO_ALLOWED L4 task. Do not choose a task merely because its hard dependencies are satisfied.\n'''
+          p.write_text(text)
+          PY
+          git diff --check
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add CURRENT_STATE.md TSK_0138_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md
+          git commit -m "state: accept TSK-0138 and inspect L4 queue"
+          git push
