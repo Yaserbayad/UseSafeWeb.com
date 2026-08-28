@@ -208,7 +208,7 @@ pkt=struct.pack('!HHHHHH',random.randrange(65536),0x0100,1,0,0,0)+q+struct.pack(
 open('/tmp/t0431-query.bin','wb').write(pkt)
 PY
 
-curl --silent --show-error --fail --noproxy '*' --max-time 10 \
+sudo curl --silent --show-error --fail --noproxy '*' --max-time 10 \
   --cacert /etc/usesafeweb-recovery/recovery.crt \
   --resolve dns.usesafeweb.com:443:127.0.0.1 \
   -H 'accept: application/dns-message' -H 'content-type: application/dns-message' \
