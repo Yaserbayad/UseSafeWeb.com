@@ -1,0 +1,42 @@
+name: Capture TSK-0046 host capacity baseline
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/capture-tsk0046-host-baseline.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: [self-hosted, Linux, X64]
+    concurrency:
+      group: usesafeweb-adguard-server
+      cancel-in-progress: false
+    steps:
+      - name: Capture privacy-safe host capacity baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(sha256sum /etc/machine-id | awk '{print $1}')" = "e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2"
+          echo "TSK_0046_BASELINE_BEGIN"
+          echo "hostname=$(hostname)"
+          echo "logical_cpus=$(nproc)"
+          echo "cpu_model=$(lscpu | awk -F: '/Model name/ {sub(/^[ \t]+/,"",$2); print $2; exit}')"
+          free -b | awk '/^Mem:/ {printf "memory_total_bytes=%s\nmemory_used_bytes=%s\nmemory_available_bytes=%s\n",$2,$3,$7}'
+          df -B1 --output=size,used,avail,pcent,target / | tail -n 1 | awk '{gsub(/%/,"",$4); printf "root_fs_total_bytes=%s\nroot_fs_used_bytes=%s\nroot_fs_available_bytes=%s\nroot_fs_used_percent=%s\n",$1,$2,$3,$4}'
+          awk '{printf "load_1m=%s\nload_5m=%s\nload_15m=%s\n",$1,$2,$3}' /proc/loadavg
+          echo "adguard_active=$(systemctl is-active AdGuardHome || true)"
+          echo "nginx_active=$(systemctl is-active nginx || true)"
+          pid=$(pgrep -xo AdGuardHome || true)
+          if [ -n "$pid" ]; then
+            ps -p "$pid" -o rss=,%cpu= | awk '{printf "adguard_rss_kib=%s\nadguard_cpu_percent_snapshot=%s\n",$1,$2}'
+          else
+            echo "adguard_rss_kib=unavailable"
+            echo "adguard_cpu_percent_snapshot=unavailable"
+          fi
+          nginx_rss=$(ps -C nginx -o rss= 2>/dev/null | awk '{s+=$1} END {print s+0}')
+          echo "nginx_total_rss_kib=${nginx_rss}"
+          echo "TSK_0046_BASELINE_END"
