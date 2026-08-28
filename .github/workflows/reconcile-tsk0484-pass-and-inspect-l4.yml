@@ -11,9 +11,9 @@ permissions:
 
 jobs:
   reconcile:
-    runs-on: [self-hosted, rec-v1]
+    runs-on: [self-hosted, Linux, X64]
     concurrency:
-      group: usesafeweb-governance-state
+      group: usesafeweb-governance-state-prod
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
@@ -24,7 +24,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(sha256sum /etc/machine-id | awk '{print $1}')" = "e09868443c476b30eae778d191ceedee57ed6f27a74856eae1d0709c68f1c852"
+          test "$(sha256sum /etc/machine-id | awk '{print $1}')" = "e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2"
           test "$(git hash-object CURRENT_STATE.md)" = "b0050ea04590cbdd3d798e358e31908fe70ea496"
           test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "dce5b829c4d447eac180ae1e896e0019292cf971"
           test "$(git hash-object TSK_0484_SECURITY_ABUSE_RESISTANCE_NFR_2026-08-28.md)" = "ebd146f88f51cae67b9515fb94133bcd74c8cf28"
