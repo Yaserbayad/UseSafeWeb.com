@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: usesafeweb-adguard-recovery-v3
+  group: usesafeweb-adguard-recovery-v4
   cancel-in-progress: false
 
 jobs:
@@ -20,7 +20,7 @@ jobs:
       max-parallel: 2
       matrix:
         slot: [a, b]
-    runs-on: [self-hosted, linux, x64]
+    runs-on: [self-hosted]
     timeout-minutes: 25
     steps:
       - name: Checkout
@@ -38,7 +38,7 @@ jobs:
 
   confirm:
     needs: recover
-    runs-on: [self-hosted, linux, x64]
+    runs-on: [self-hosted]
     timeout-minutes: 3
     permissions:
       contents: read
