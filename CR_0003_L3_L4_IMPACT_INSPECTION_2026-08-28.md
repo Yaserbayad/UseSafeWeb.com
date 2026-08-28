@@ -845,6 +845,242 @@
 - **Source_Reference:** UseSafeWeb_Master_Plan-1.4.md::USW-03.03.01.001; canonical repository Yaserbayad/UseSafeWeb.com@c672991229acc7675f1e25b978af6fbdacd04590
 - **Notes:** Future gate/dependency not yet satisfied. Valid work is retained but re-owned by one responsibility package and attached to the new L0-L13 lifecycle.
 
+## L4 tasks whose acceptance/evidence wording may require real behavioral evidence
+
+### TSK-0041 — Specify baseline DNS-protection activation requirements
+- **Dependencies:** TSK-0143
+- **Acceptance_Criteria:** Requirements cover endpoint format, DoH setup, filtering verification, fail-safe behavior, uninstall/removal, Private Relay/VPN conflicts, false positives, and no-history constraints.
+- **Verification_Method:** Peer/reviewer inspection against the stated acceptance criteria, source baseline, dependencies, and required evidence.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0044 — Define AdGuard API compatibility, credential-isolation and failure NFRs
+- **Dependencies:** TSK-0484; TSK-0538; TSK-0146
+- **Acceptance_Criteria:** NFRs define the private/restricted AdGuard administration path, secret storage/rotation, API/config timeouts/retries, partial-failure reconciliation, opaque setup/configuration identifiers if technically required, explicit privacy booleans, version/contract regression checks, and safe behavior when AdGuard or the verification path is unavailable; no mandatory customer-authentication or persistent datastore dependency is introduced.
+- **Verification_Method:** Peer/reviewer inspection against the stated acceptance criteria, source baseline, dependencies, and required evidence.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0046 — Define performance and capacity NFRs
+- **Dependencies:** TSK-0538
+- **Acceptance_Criteria:** NFRs state expected pilot load, safety margin, DNS latency/availability test method, web journey performance, degradation behavior, and capacity-review trigger.
+- **Verification_Method:** Peer/reviewer inspection against the stated acceptance criteria, source baseline, dependencies, and required evidence.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0139 — Translate the G-04 decision into authorised product outcomes
+- **Dependencies:** TSK-0040
+- **Acceptance_Criteria:** Mandate identifies the validated job, target user, required outcome, unresolved evidence, constraints, stop conditions, and explicitly authorised build scope.
+- **Verification_Method:** Review the complete evidence index, contrary evidence, risks, and authority; record an explicit stable decision and work unlocked.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0141 — Freeze minimum product scope and non-goals
+- **Dependencies:** TSK-0139
+- **Acceptance_Criteria:** Every included capability maps to a validated need, mandatory operation/safety requirement, or explicit owner-approved architectural decision. The first coded product is accountless-first and uses only the minimum public/setup application and DNS integration needed for the validated journey; mandatory authentication, persistent parent dashboard and customer-facing AdGuard control plane remain deferred under EXC-0001, while surveillance/activity history, child accounts and other advanced capabilities remain excluded unless separately reauthorised.
+- **Verification_Method:** Peer/reviewer inspection against the stated acceptance criteria, source baseline, dependencies, and required evidence.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0146 — Freeze accountless-first product baseline and optional-account trigger
+- **Dependencies:** 
+- **Acceptance_Criteria:** Product brief states no mandatory UseSafeWeb account, preserves immediate value, defines the exact future persistence/account trigger and owner authority, and supersedes the v1.4 dashboard-first mandate.
+- **Verification_Method:** Peer/reviewer inspection against the stated acceptance criteria, source baseline, dependencies, and required evidence.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0147 — Freeze targeted market, technical availability, and official localized-market semantics
+- **Dependencies:** 
+- **Acceptance_Criteria:** UK is targeted/optimized first; broader technical availability is not represented as official localization/support; Turkey/Arabic markets use explicit activation gates.
+- **Verification_Method:** Peer/reviewer inspection against the stated acceptance criteria, source baseline, dependencies, and required evidence.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0297 — Publish concise brand guidelines, source/editable asset library, versioning, ownership, and usage rules
+- **Dependencies:** TSK-0300
+- **Acceptance_Criteria:** A human or AI can generate a compliant asset without guessing; deprecated assets are traceable; no font files are exposed as user deliverables.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0298 — Create the evidence-grounded brand strategy, promise, personality, audience, differentiation, trust, and prohibited-expression brief
+- **Dependencies:** TSK-0187
+- **Acceptance_Criteria:** Brief is traceable to validated customer/product evidence and non-surveillance/claims constraints; it is approved before identity finalization.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0299 — Define tone, voice, terminology, trust language, protection-state language, and communication examples
+- **Dependencies:** TSK-0298
+- **Acceptance_Criteria:** Verbal system is clear to normal parents, child-aware, non-alarmist, non-technical, legally/claims reviewed, and reusable across surfaces/locales.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0301 — Finalize logo system, typography, color, imagery, iconography, visual language, and layout principles
+- **Dependencies:** TSK-0302; TSK-0299
+- **Acceptance_Criteria:** Owner approves one system; all masters are editable/versioned; small/mobile/mono/contrast/readability uses pass; no safety guarantee is implied visually.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** HUMAN_ONLY
+
+### TSK-0302 — Develop and evaluate a small set of coherent visual identity directions
+- **Dependencies:** TSK-0298
+- **Acceptance_Criteria:** Directions are distinct, accessible, scalable, editable, aligned to brand strategy, and evaluated without premature high-volume asset production.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0308 — Create the shared responsive design system for public and product surfaces
+- **Dependencies:** TSK-0309; TSK-0300
+- **Acceptance_Criteria:** Components include content/error/loading/verification/uncertain/recovery states, tokens, accessibility behavior, localization expansion, and implementation specs.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** HUMAN_ONLY
+
+### TSK-0309 — Correct the prototype from usability/comprehension evidence and freeze the implementation-ready experience baseline
+- **Dependencies:** TSK-0310; TSK-0187
+- **Acceptance_Criteria:** Material findings have root cause/disposition; critical friction/comprehension/accessibility failures are corrected and retested; speculative features are excluded.
+- **Verification_Method:** Execute in the target environment; run functional, negative, configuration, security/privacy, and rollback checks; compare to acceptance criteria.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0311 — Define translation keys/files, locale metadata, plural/date rules, content ownership, localized instruction variants, and fallback behavior
+- **Dependencies:** TSK-0318
+- **Acceptance_Criteria:** English baseline uses externalized content; no hard-coded UI copy blocks Turkish/Arabic; locale fallback and content versioning are testable.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0312 — Specify parent authentication, account/session, and minimal intake requirements
+- **Dependencies:** TSK-0140
+- **Acceptance_Criteria:** Requirements define Google social sign-in, account/session lifecycle, minimal required identity fields, logout/revocation/deletion, intake fields, prohibited data, validation, errors, resume/expiry behavior, CSRF/session protections and test cases; no password or SMS authentication is introduced without a later decision.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0313 — Specify Protection Map state and evidence requirements
+- **Dependencies:** TSK-0041; TSK-0144; TSK-0146
+- **Acceptance_Criteria:** Every Protection Map state has entry/evidence rules, parent-facing copy, transition rules, unsupported behavior, persistence scope, device/journey-state boundary and testable examples; parent-confirmed and system-verified states are never conflated; no account ownership model is assumed in the active baseline.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0314 — Define accessibility, responsive, browser, OS, and device support NFRs
+- **Dependencies:** TSK-0046
+- **Acceptance_Criteria:** Requirements define target WCAG level, keyboard/screen-reader/text-resize behavior, supported browsers/OS versions, device test tiers, and unsupported-state messaging.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0315 — Create the accountless end-to-end service blueprint from discovery through recovery/removal
+- **Dependencies:** TSK-0149; TSK-0229
+- **Acceptance_Criteria:** Blueprint identifies parent actions, system actions, evidence states, dependencies, failures, automated support, privacy, and owner-only exceptions.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0316 — Define a friction budget and challenge every click, field, choice, confirmation, account, and manual step
+- **Dependencies:** TSK-0315
+- **Acceptance_Criteria:** Each retained interaction has a decision/technical/safety reason; removable steps are removed; platform constraints are explicit; unsupported one-click claims are absent.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0318 — Design the public website IA and product/setup IA as distinct but connected systems
+- **Dependencies:** TSK-0315
+- **Acceptance_Criteria:** Each page/screen has one purpose, entry/exit, content owner, SEO/index intent, privacy/accessibility requirement, and no duplicated or missing critical step.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** HUMAN_ONLY
+
+### TSK-0320 — Freeze the protection-state model and copy rules
+- **Dependencies:** TSK-0315
+- **Acceptance_Criteria:** Protected/verified, configured/parent-confirmed, action-needed, not-covered, uncertain/error, and removed states have exact evidence and transition rules; no confirmation masquerades as verification.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0322 — Create product voice, claims, and terminology guide
+- **Dependencies:** TSK-0327
+- **Acceptance_Criteria:** Guide includes approved/prohibited claims, state labels, child-readable principles, reading-level goals, and review ownership; no complete-safety promise is allowed.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0323 — Create versioned device and service instruction catalogue
+- **Dependencies:** TSK-0322
+- **Acceptance_Criteria:** Every instruction has platform/version applicability, source reference, last verified date, owner, expected result, fallback, and test case; unsupported states are explicit.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0324 — Define lightweight visual identity and reusable UI component rules
+- **Dependencies:** TSK-0322
+- **Acceptance_Criteria:** System covers typography, spacing, contrast, focus, controls, feedback, four Protection Map states, mobile/desktop behavior, logo/domain use, and accessible component specifications.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0325 — Create end-to-end parent journey and service blueprint
+- **Dependencies:** TSK-0326
+- **Acceptance_Criteria:** Map covers normal, already-configured, unsupported, failed-activation, false-positive, resume, removal, and support paths; each touchpoint maps to requirements.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0326 — Synthesize experiment friction, comprehension, and support evidence
+- **Dependencies:** TSK-0034; TSK-0043
+- **Acceptance_Criteria:** Each problem states evidence frequency/severity, affected cohort/path, root-cause hypothesis, business/safety impact, and whether design can address it.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0327 — Resolve critical usability, trust, and accessibility findings
+- **Dependencies:** TSK-0336
+- **Acceptance_Criteria:** All critical/high findings are fixed or formally accepted by the owner with rationale; retest evidence confirms critical paths and Protection Map comprehension.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0328 — Define information architecture and navigation model
+- **Dependencies:** TSK-0325
+- **Acceptance_Criteria:** Architecture supports the normal and exception paths, avoids unnecessary sections/accounts, and maps each screen to a user goal and requirement.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0329 — Design Google sign-in, account/session, minimal intake and dashboard-entry interactions
+- **Dependencies:** TSK-0328
+- **Acceptance_Criteria:** Prototype covers Google sign-in, first-session account creation, signed-in return, errors/provider outage, logout, session expiry, account deletion entry, intake field states, back/resume and data-use explanation with minimal identity collection.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** HUMAN_ONLY
+
+### TSK-0330 — Design Phone → Internet → Services setup flows
+- **Dependencies:** TSK-0146
+- **Acceptance_Criteria:** Each flow has prerequisites, step-by-step actions, verification/confirmation, skip conditions, unsupported/conflict states, troubleshooting, and no misleading completion state.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** HUMAN_ONLY
+
+### TSK-0332 — Design lightweight parent dashboard and device-management interactions
+- **Dependencies:** TSK-0329; TSK-0142
+- **Acceptance_Criteria:** Prototype includes polished mobile-first empty/device states, add/setup/status/Protection Map, curated controls and contextual help; normal and error states are understandable without AdGuard/DNS administration terminology and expose no activity history.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** HUMAN_ONLY
+
+### TSK-0333 — Assemble end-to-end responsive interactive prototype
+- **Dependencies:** TSK-0335; TSK-0334; TSK-0146
+- **Acceptance_Criteria:** Prototype includes all critical normal/exception paths, representative iOS/Android content, responsive states, accessibility annotations, and analytics/test markers.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0334 — Design support, false-positive, removal, and reconfiguration flows
+- **Dependencies:** TSK-0330
+- **Acceptance_Criteria:** Each major support category has an accessible path, minimal diagnostic request, clear protection consequence, escalation option, and success state.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** HUMAN_ONLY
+
+### TSK-0335 — Design Protection Map and coverage-limit interactions
+- **Dependencies:** TSK-0330
+- **Acceptance_Criteria:** Prototype never labels parent confirmation as verification, exposes material gaps at the right time, and supports the comprehension test defined by product metrics.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** HUMAN_ONLY
+
+### TSK-0336 — Run focused prototype usability and comprehension testing
+- **Dependencies:** TSK-0333
+- **Acceptance_Criteria:** Testing covers accountless entry/routing, setup/Protection Map comprehension, native and relevant external-service steps, DNS configuration/verification, recovery/removal and core exception paths; critical tasks and comprehension are measured without requiring a UseSafeWeb account or processing real child DNS in prototype testing.
+- **Verification_Method:** Use the approved checklist/test procedure against the exact artifact/environment; retain reproducible outputs and reviewer result.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0538 — Define reliability, observability, recovery, and service-level NFRs
+- **Dependencies:** TSK-0484
+- **Acceptance_Criteria:** Specification defines critical user journeys, provisional SLI/SLO targets, alert conditions, recovery objectives, backup scope, restore test, maintenance behavior, and escalation ownership.
+- **Verification_Method:** Peer/reviewer inspection against the stated acceptance criteria, source baseline, dependencies, and required evidence.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0558 — Freeze the USD 20-50/month discretionary budget, earned-distribution priority, and one-primary/one-challenger rule
+- **Dependencies:** 
+- **Acceptance_Criteria:** GTM plan cannot require paid acquisition or simultaneous platform programs; spend caps/accumulation/approval and channel stop rules are explicit.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** AUTO_ALLOWED
+
+### TSK-0559 — Define the research, originality, usefulness, source, claims, update, localization, and pruning standard for first-phone content
+- **Dependencies:** TSK-0558
+- **Acceptance_Criteria:** Mass low-quality AI SEO is prohibited; every item solves a real high-intent job and connects to product/help with source/review/owner/metric.
+- **Verification_Method:** Review against approved brief, user evidence, claims, accessibility, source currency, and surface acceptance; test with representative tasks where applicable.
+- **Action_Authority:** AUTO_ALLOWED
+
 ## Cross-authority references requiring CR-0003 review
 
 ### Governance/CURRENT_STATE_INTERFACE.md
