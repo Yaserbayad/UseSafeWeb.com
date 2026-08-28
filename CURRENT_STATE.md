@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T09:57:00Z  
+**Updated:** 2026-08-28T10:08:00Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -45,6 +45,7 @@ This supersedes the earlier duplicate-runner condition in which `adguartestdvm` 
 - `TSK-0440` — encrypted-DNS hostname/path — evidence blob `9e0f15d0e1f11c892cf51317b705ac21c9563e53`.
 - `TSK-0441` — public DNS for `dns.usesafeweb.com` independently verified from system, Cloudflare, Google and Quad9 resolvers with exact A `52.157.109.120` and no AAAA/CNAME — evidence: `TSK_0441_PUBLIC_DNS_EVIDENCE_2026-08-28.md`, blob `91369bbe33eb608361e8b7b771ceca0a5cd42d50`; verification run `33156757093`, jobs `98801252982` and `98801253193`: PASS.
 - `TSK-0442` — TLS certificate acceptance fully satisfied after owner-observed real-phone encrypted-DNS success and fresh server-side revalidation — evidence: `TSK_0442_TLS_CERTIFICATE_EVIDENCE_2026-08-28.md`, blob `cb11394af1e80f15d85bda5d9b000bbf0efd6d20`; server revalidation run `33160416730` / job `98813254928`: PASS.
+- `TSK-0443` — certificate renewal dry-run, Nginx deploy hook, daily expiry monitoring, owner alert route and recovery runbook fully verified — evidence: `TSK_0443_CERTIFICATE_RENEWAL_ALERT_EVIDENCE_2026-08-28.md`, blob `c2f3b3b35c9d8e2ec33f473d72c508ebde30348d`; production renewal run `33162046237` / job `98818564431`: PASS; external monitor run `33161991492` / job `98818390448`: PASS; final monitor blob `b565df52182e325d1d416a07be31f152078fd373`; runbook blob `881d797ea6f69879d0c8696d61e596733c38c3c5`.
 - `TSK-0203` — supported AdGuard release installed — evidence blob `382b70ca971739712ff8ad5668d03841d5493d62`.
 - `TSK-0201` — restricted authenticated administration/change path — evidence blob `ae06672e1cebdf87d006b85b80e5a7977f4e69b9`.
 - `TSK-0204` — persistent query logging and file query logging explicitly disabled — corrected evidence: `TSK_0204_QUERYLOG_PRIVACY_EVIDENCE_2026-08-27.md`, blob `aa84d93d33d789fe4ff74ea12bcc2e5ffccd5b06`.
@@ -231,6 +232,20 @@ After certificate issuance and the path-restricted same-host TLS proxy were impl
 
 Evidence: `TSK_0442_TLS_CERTIFICATE_EVIDENCE_2026-08-28.md`, blob `cb11394af1e80f15d85bda5d9b000bbf0efd6d20`. ACC-0442 is fully satisfied. This does not by itself authorize participant recruitment/activation or bypass later readiness/legal gates.
 
+### TSK-0443 accepted stable state
+
+The exact WBS row defines TSK-0443 as L2 / A3 / `AUTO_ALLOWED` / HIGH / critical path with hard predecessors `TSK-0442; TSK-0011`, both satisfied, acceptance `ACC-0443`.
+
+Production preflight found Certbot 2.9.0 with `certbot.timer` already enabled/active twice daily but no deploy hook and no host-local owner notification channel. Governed production run `33162046237` / job `98818564431`, guarded by the exact production Azure VM ID, installed root-owned deploy hook `/etc/letsencrypt/renewal-hooks/deploy/10-usesafeweb-reload-nginx.sh` at mode 0755, SHA-256 `980197605ee3230c4c4463817ff53a734a5f9c9aa9b6c2b1672cd168a35de8e5`. The hook validates Nginx configuration before reload and was directly invoked successfully.
+
+The same job ran `certbot renew --dry-run --no-random-sleep-on-renew`; Certbot reported all simulated renewals succeeded for `dns.usesafeweb.com`. Post-dry-run verification re-proved hostname/key validity, local TLS on 443/853, admin loopback-only 3000, plain DNS loopback-only 53, and active/enabled Certbot timer.
+
+Daily expiry monitor `.github/workflows/certificate-expiry-monitor.yml`, blob `b565df52182e325d1d416a07be31f152078fd373`, now runs schedule-only at 06:17 UTC with `contents: read` and `issues: write`. Successful independent external monitor run `33161991492` / job `98818390448` on `adguartestdvm_correct` validated both TCP 443 and 853 using TLS 1.3 with 89 days remaining and no errors. Installation route proof created GitHub issue #1, assigned it to `Yaserbayad`, then closed it after successful delivery proof. Direct issue read-back confirmed owner assignment and closed/completed state.
+
+Recovery documentation is `infrastructure/adguard-server/TLS_CERTIFICATE_RENEWAL_RUNBOOK.md`, blob `881d797ea6f69879d0c8696d61e596733c38c3c5`. It covers normal renewal, dry-run verification, 30-day alert handling, diagnosis, safe real renewal, Nginx reload, DoH/DoT validation, emergency replacement, no-plaintext-DNS fallback, and privacy-safe evidence rules.
+
+Evidence: `TSK_0443_CERTIFICATE_RENEWAL_ALERT_EVIDENCE_2026-08-28.md`, blob `c2f3b3b35c9d8e2ec33f473d72c508ebde30348d`. ACC-0443 is fully satisfied.
+
 ### WAITING — TSK-0431
 
 `TSK-0431` — test pilot restore or rebuild procedure: **WAITING on the owner-managed Azure-native backup/restore path required by REQ-0052; not PASS**.
@@ -247,7 +262,7 @@ No recovery mutation has been started on the corrected VM. Deterministic resumpt
 
 - TSK-0441 Cloudflare DNS is satisfied and independently verified. Any further Cloudflare account/zone mutation remains owner/provider-controlled unless an explicitly authorized interface becomes available.
 - Azure control-plane provisioning/configuration remains owner-managed. The corrected recovery VM handoff is independently verified, but TSK-0431 still requires an owner-managed Azure-native backup/restore path/evidence before the full recovery drill can satisfy REQ-0052.
-- TSK-0442 TLS target-device acceptance is satisfied; broader participant/public readiness remains governed by downstream technical, validation, privacy/legal and activation gates.
+- TSK-0442 TLS target-device acceptance and TSK-0443 certificate renewal/expiry alerting are satisfied; broader participant/public readiness remains governed by downstream technical, validation, privacy/legal and activation gates.
 - Owner-deferred UK representative/ICO fee planning remains unresolved until 2027-08-27 or earlier explicit reactivation; technical work does not imply validation-readiness legal gate PASS or authorize real England participant activation.
 
 ## Runtime safeguards
@@ -256,13 +271,13 @@ No recovery mutation has been started on the corrected VM. Deterministic resumpt
 - PASS requires all applicable current acceptance criteria with durable/reconstructable proof.
 - Current contradictory direct evidence reopens stale PASS rather than being ignored.
 - No secrets, credentials, password hashes, private keys, unnecessary personal data, or raw DNS query history may be exported to GitHub.
-- Plain DNS 53 remains non-public. TSK-0442 TLS acceptance is PASS, but broader participant/public readiness remains gated by applicable downstream readiness, validation, privacy/legal and activation evidence.
+- Plain DNS 53 remains non-public. TSK-0442 TLS and TSK-0443 certificate renewal/expiry controls are PASS, but broader participant/public readiness remains gated by applicable downstream readiness, validation, privacy/legal and activation evidence.
 - Azure control-plane remains owner-managed; runner autonomy applies to handed-off VM/repository-authorized tasks only after target identity and scope are verified.
 
-## Queue status after current reconciliation
+## Queue status after TSK-0443
 
-The prior queue result `READY_COUNT=0` was computed before TSK-0442 PASS and before the corrected recovery-runner identity was verified, so it is superseded for selection purposes. The L2 queue has not yet been recomputed against this reconciled runtime state.
+The last L2 queue recomputation selected TSK-0443 as the sole ready item before its execution. TSK-0443 is now PASS, so that selection result is superseded. The L2 queue has not yet been recomputed against this new runtime state.
 
 ## Exact next authoritative step
 
-Recompute the current L2 queue with TSK-0442 PASS and TSK-0431 held WAITING only on the owner-managed Azure-native backup/restore path required by REQ-0052. Continue the highest-priority eligible `AUTO_ALLOWED` L2 work after direct dependency/gate verification. Do not start the TSK-0431 recovery drill until its Azure-native recovery input is identified, and do not bypass participant-activation, legal, Azure control-plane, provider, or public-service readiness boundaries.
+Recompute the current L2 queue with TSK-0443 PASS and TSK-0431 held WAITING only on the owner-managed Azure-native backup/restore path required by REQ-0052. Continue the highest-priority eligible `AUTO_ALLOWED` L2 work after direct dependency/gate verification. Do not start the TSK-0431 recovery drill until its Azure-native recovery input is identified, and do not bypass participant-activation, legal, Azure control-plane, provider, or public-service readiness boundaries.
