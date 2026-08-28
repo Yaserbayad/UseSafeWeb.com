@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T09:24:00Z  
+**Updated:** 2026-08-28T09:29:00Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -260,8 +260,10 @@ Deterministic resumption condition: directly validate the trusted chain/hostname
 
 ## Queue status after current reconciliation
 
-TSK-0441 remains PASS. TSK-0202 and TSK-0437 are freshly reconciled PASS. TSK-0431 and TSK-0442 are explicit WAITING boundaries. The L2 queue has not yet been recomputed against this reconciled runtime state.
+Canonical queue recomputation run `33159527105` / job `98810341270`: **PASS** against runtime blob `970daf59b1daee288ef8ef20748c82944375c151`. It returned `RUNTIME_PASS_COUNT=26`, `RUNTIME_WAIT=TSK-0431,TSK-0442`, and **`READY_COUNT=0`**. Durable queue evidence: `L2_QUEUE_RECOMPUTATION_EVIDENCE_2026-08-28T092848Z.md`, blob `520443bc812a326b2a006fb70c8714fc4eb1706d`.
+
+There is currently no dependency-ready L2 `AUTO_ALLOWED` task outside the two explicit WAITING boundaries. No unrelated autonomous L2 work may be selected while this remains the current queue result.
 
 ## Exact next authoritative step
 
-Recompute the current L2 queue with TSK-0431 and TSK-0442 held WAITING and all current PASS evidence above. Continue only the highest-priority eligible autonomous work after direct dependency/gate verification. Do not execute TSK-0443 before TSK-0442 PASS, do not run recovery work through either current runner registration as an independent target, and do not bypass participant-activation, legal, Azure control-plane, provider, or public-service readiness boundaries.
+Hold ordinary L2 progression at the two verified WAITING boundaries. Resume governed execution immediately when new evidence resolves either condition: (1) `TSK-0431` receives a genuinely independent owner-provided Ubuntu 24.04 LTS West Europe recovery VM/runner with a different Azure VM ID/machine fingerprint from production and the required Azure-native recovery evidence path; or (2) `TSK-0442` receives direct supported target-device/external validation of the trusted `dns.usesafeweb.com` certificate chain/hostname over the encrypted-DNS path. Recompute eligibility after either condition changes. Do not execute TSK-0443 before TSK-0442 PASS, do not run recovery through either current runner registration as an independent target, and do not bypass participant-activation, legal, Azure control-plane, provider, or public-service readiness boundaries.
