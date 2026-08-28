@@ -31,6 +31,15 @@ No hidden chain-of-thought is evidence. Useful evidence is a source-cited analys
 - Execute one bounded task or coherent serial unit; verify and persist evidence before recomputing state.
 - A completed-evidence-incomplete predecessor cannot satisfy a successor demanding direct evidence.
 
+### 5.3.1 Owner-approved temporary legal-hold dependency-satisfaction exception (DEC-0049 / CR-0002)
+
+- Through **2027-08-27**, WBS tasks carrying the canonical `OWNER_LEGAL_HOLD_2026-08-27` marker remain `DEFERRED`/`WAITING`; this exception does **not** make them `PASS`, completed, legally satisfied, not applicable, waived, exempt, registered, paid, represented, approved, or otherwise evidenced.
+- Solely for **internal, synthetic, non-participant, non-public preparatory work**, a hard dependency edge to one of those marked tasks may be treated as **conditionally dependency-satisfied** when the downstream task's own acceptance criteria can be fully met without asserting the missing legal fact, contact, registration, payment, approval, representation, or attestation.
+- The downstream artifact/evidence must explicitly carry the affected deferred legal condition as an unresolved deviation/limitation and must not convert that condition into legal/compliance evidence.
+- This exception never authorizes real-participant recruitment or processing, child-linked DNS activation, public launch, legal attestation/signature, contracts, identity/consent acts, payment of a regulated fee, or a `HUMAN_ONLY`/`HUMAN_APPROVAL_REQUIRED` decision whose own current acceptance still requires the underlying legal fact. Actual applicable law, safety, security and platform reality remain higher authority.
+- No WBS dependency edge is deleted or rewritten by CR-0002. This is a bounded execution-eligibility semantic override only, preserving future dependency enforcement.
+- The exception expires on **2027-08-27**, or earlier on explicit Project Owner reactivation/supersession. At expiry/reactivation, recompute eligibility from current authority and re-evaluate any downstream `PASS` whose proof materially relied on the conditional dependency treatment.
+
 ### 5.4 Evidence and PASS rules
 
 - Each task has VER-xxxx, EVD-xxxx and ACC-xxxx identifiers.
