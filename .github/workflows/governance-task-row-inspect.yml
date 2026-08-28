@@ -18,15 +18,13 @@ jobs:
   probe_a:
     runs-on: [self-hosted, linux, x64]
     timeout-minutes: 5
-    env:
-      RUNNER_CONTEXT_NAME: ${{ runner.name }}
     steps:
       - name: Fingerprint runner A
         shell: bash
         run: |
           set -Eeuo pipefail
           sudo -n true
-          echo "RUNNER_NAME=$RUNNER_CONTEXT_NAME"
+          echo "RUNNER_NAME=${{ runner.name }}"
           echo "MACHINE_NAME=$(hostname -s)"
           echo "MACHINE_ID_SHA256=$(sha256sum /etc/machine-id | awk '{print $1}')"
           . /etc/os-release
@@ -48,15 +46,13 @@ jobs:
   probe_b:
     runs-on: [self-hosted, linux, x64]
     timeout-minutes: 5
-    env:
-      RUNNER_CONTEXT_NAME: ${{ runner.name }}
     steps:
       - name: Fingerprint runner B
         shell: bash
         run: |
           set -Eeuo pipefail
           sudo -n true
-          echo "RUNNER_NAME=$RUNNER_CONTEXT_NAME"
+          echo "RUNNER_NAME=${{ runner.name }}"
           echo "MACHINE_NAME=$(hostname -s)"
           echo "MACHINE_ID_SHA256=$(sha256sum /etc/machine-id | awk '{print $1}')"
           . /etc/os-release
