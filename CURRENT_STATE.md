@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T11:38:35Z  
+**Updated:** 2026-08-28T12:04:11Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -27,10 +27,12 @@
 
 GitHub is the active execution bridge for eligible AUTO_ALLOWED host work. Repository-scoped runner `adguardvm` runs as `azureusr` through a persistent systemd service with non-interactive sudo. Ordinary host jobs are restricted to trusted `main`, read-only repository permissions, no persisted checkout credentials, and serialized `usesafeweb-adguard-server` concurrency.
 
-Current direct fingerprint evidence proves two genuinely separate handed-off Azure VMs are now reachable through GitHub Actions:
+Historical direct fingerprint evidence proved two genuinely separate handed-off Azure VMs. Current execution evidence must now distinguish the previously proven recovery identity from present runner availability:
 
 - production runner `adguardvm`: Azure VM `adguardvm`, VM ID `bc7f566f-7231-41fb-9fdd-49cf190fd5e1`, machine-id SHA-256 `e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2`, Ubuntu 24.04, West Europe, AdGuard/Nginx active;
 - recovery runner `adguartestdvm_correct`: Azure VM `adguartestdvm`, VM ID `6e92a026-964c-4118-8312-f1d31c6ff4d2`, machine-id SHA-256 `e09868443c476b30eae778d191ceedee57ed6f27a74856eae1d0709c68f1c852`, Ubuntu 24.04, West Europe, AdGuard/Nginx inactive.
+
+Current recovery-attempt evidence from run `33169207187` shows both common-label jobs were scheduled on production runner `adguardvm`; neither reached `adguartestdvm_correct`. Therefore the recovery VM identity remains historically proven, but the recovery runner is currently treated as unavailable to GitHub Actions until directly re-proven. Evidence: `TSK_0431_RECOVERY_RUNNER_UNAVAILABLE_EVIDENCE_2026-08-28.md`.
 
 This supersedes the earlier duplicate-runner condition in which `adguartestdvm` incorrectly executed on production. Corrected identity evidence: `TSK_0431_RECOVERY_RUNNER_CORRECTED_EVIDENCE_2026-08-28.md`, blob `1c8137ae89a5785d12fd1ec5b178488162b5bcd3`; dual-runner run `33161281851`, jobs `98816079276` and `98816079544`: PASS.
 
@@ -253,15 +255,26 @@ Evidence: `TSK_0443_CERTIFICATE_RENEWAL_ALERT_EVIDENCE_2026-08-28.md`, blob `c2f
 
 ### WAITING — TSK-0431
 
-`TSK-0431` — test pilot restore or rebuild procedure: **WAITING on the owner-managed Azure-native backup/restore path required by REQ-0052; not PASS**.
+`TSK-0431` — test pilot restore or rebuild procedure: **WAITING on recovery-runner availability and, after the project-controlled drill passes, direct owner evidence for the literal Azure-native restore element of REQ-0052; not PASS**.
 
 The exact WBS row is L2 / A3 / `AUTO_ALLOWED` / HIGH / critical path with hard predecessors `TSK-0430; TSK-0011`, both satisfied. ACC-0431 requires a functional test target that passes encrypted-DNS and privacy checks with recovery time/issues recorded. REQ-0052 requires a timed clean-server drill covering host baseline, packages, AdGuard, server-managed configuration recovery, firewall/network, endpoint, TLS, filters, privacy, startup, Azure-native backup/restore, verification and health.
 
-The prior machine-identity blocker is resolved. Direct dual-runner fingerprint run `33161281851` proves the corrected runner `adguartestdvm_correct` executes on independent Azure VM `adguartestdvm`, West Europe, Ubuntu 24.04, Azure VM ID `6e92a026-964c-4118-8312-f1d31c6ff4d2`, machine-id SHA-256 `e09868443c476b30eae778d191ceedee57ed6f27a74856eae1d0709c68f1c852`, with AdGuard/Nginx inactive. Production remains VM ID `bc7f566f-7231-41fb-9fdd-49cf190fd5e1`. Evidence: `TSK_0431_RECOVERY_RUNNER_CORRECTED_EVIDENCE_2026-08-28.md`, blob `1c8137ae89a5785d12fd1ec5b178488162b5bcd3`.
+The former Azure Backup readiness blocker is resolved. On 2026-08-28 the Project Owner directly reported Azure Backup ready with status **Successful** and explicitly approved treating Azure Backup setup/readiness as done. Durable owner evidence: `TSK_0431_AZURE_BACKUP_OWNER_EVIDENCE_2026-08-28.md`, blob `fb846d5ab9a3ed3f4b52976273c92653d73db925`. No vault/policy/recovery-point values are invented, and this statement is not silently converted into proof that an Azure recovery-point restore was actually executed.
 
-Authoritative contract inspection run `33161362741` / job `98816346637` confirms CON-0004/CON-0019 keep Azure control-plane creation/configuration owner-managed. No Azure control-plane connector is available and no current durable evidence identifies the Azure-native backup/restore interface or restoration step required by REQ-0052.
+The independent recovery target identity remains the previously proven Azure VM `adguartestdvm`, West Europe, Ubuntu 24.04, Azure VM ID `6e92a026-964c-4118-8312-f1d31c6ff4d2`, machine-id SHA-256 `e09868443c476b30eae778d191ceedee57ed6f27a74856eae1d0709c68f1c852`. Production remains VM ID `bc7f566f-7231-41fb-9fdd-49cf190fd5e1`.
 
-No recovery mutation has been started on the corrected VM. Deterministic resumption condition: the owner identifies/provides the Azure-native backup/restore path or evidence. The timed clean-server recovery drill may then execute on `adguartestdvm_correct` and must not use production as the destructive target.
+A production-safe, fingerprint-gated clean recovery drill was prepared as workflow `.github/workflows/adguard-clean-recovery-drill.yml` with versioned runtime/evidence scripts. Run `33169207187` attempted two common-label jobs so production could not be mistaken for recovery. Job `98841930651` ran on `adguardvm`, emitted `production_runner_no_mutation=PASS`, and skipped evidence publication. After it released the available runner, job `98841930635` was again scheduled on `adguardvm`, emitted the same no-mutation marker, and skipped publication. Final confirm job `98842441250` correctly failed because no recovery-drill evidence existed. No production or recovery host mutation was performed by those guarded jobs.
+
+Evidence: `TSK_0431_RECOVERY_RUNNER_UNAVAILABLE_EVIDENCE_2026-08-28.md`. The available evidence proves the recovery runner `adguartestdvm_correct` was not available to receive this governed run, but does not establish why; an offline service, disconnected runner, VM state, or another registration/scheduling condition must not be guessed.
+
+Deterministic resumption condition:
+
+1. make already-registered runner `adguartestdvm_correct` available to GitHub Actions again;
+2. re-prove its exact recovery VM fingerprint before any mutation;
+3. rerun the prepared clean-server recovery drill on that target and require encrypted DoH/DoT, filtering/rollback, privacy, admin/firewall, health and <30-minute evidence;
+4. after the project-controlled drill passes, provide direct owner evidence that an Azure-native recovery-point restore was actually exercised successfully, unless the owner explicitly changes that literal REQ-0052 requirement through governed change control.
+
+No recovery PASS is inferred from Azure Backup readiness alone.
 
 ### TSK-0514 accepted stable state
 
@@ -328,7 +341,7 @@ The first verifier run `33167781526` was rejected as a test false negative becau
 ### External/provider and legal boundaries
 
 - TSK-0441 Cloudflare DNS is satisfied and independently verified. Any further Cloudflare account/zone mutation remains owner/provider-controlled unless an explicitly authorized interface becomes available.
-- Azure control-plane provisioning/configuration remains owner-managed. The corrected recovery VM handoff is independently verified, but TSK-0431 still requires an owner-managed Azure-native backup/restore path/evidence before the full recovery drill can satisfy REQ-0052.
+- Azure control-plane provisioning/configuration remains owner-managed. Azure Backup readiness is owner-confirmed Successful. TSK-0431 is now immediately WAITING on `adguartestdvm_correct` becoming available to GitHub Actions; after the project-controlled drill passes, the literal Azure-native restore element of REQ-0052 still requires direct owner restore evidence unless changed by governed owner decision.
 - TSK-0442 TLS target-device acceptance, TSK-0443 certificate renewal/expiry controls, TSK-0514 external-network/removal verification, TSK-0511 per-supported-device verification, TSK-0512 filtering/exception/rollback verification, and TSK-0207 privacy-persistence verification are satisfied. None of these PASS states by themselves authorize participant activation.
 - Owner-deferred UK representative/ICO fee planning remains unresolved until 2027-08-27 or earlier explicit reactivation; technical work does not imply validation-readiness legal gate PASS or authorize real England participant activation.
 
@@ -349,8 +362,8 @@ No ordinary L2 `AUTO_ALLOWED` candidate is dependency-ready.
 
 Current explicit WAITING boundary:
 
-- `TSK-0431` — identify/provide the owner-managed Azure-native backup/restore path required by REQ-0052.
+- `TSK-0431` — make recovery runner `adguartestdvm_correct` available to GitHub Actions; then rerun the fingerprint-gated recovery drill. Azure Backup readiness itself is already owner-confirmed Successful.
 
 ## Exact next authoritative step
 
-No ordinary L2 work may progress until a dependency/gate condition changes. Separately, TSK-0431 remains WAITING on the owner-managed Azure-native backup/restore path. Do not bypass participant-activation, legal, Azure control-plane, provider, recovery, privacy or validation gates.
+No ordinary L2 work may progress until a dependency/gate condition changes. TSK-0431 next requires `adguartestdvm_correct` to become available to GitHub Actions so the already-prepared fingerprint-gated clean recovery drill can execute on the isolated recovery VM. After that drill passes, do not infer the literal Azure-native restore element from backup readiness; require direct owner restore evidence or an explicit governed owner change to REQ-0052. Do not bypass participant-activation, legal, Azure control-plane, provider, recovery, privacy or validation gates.
