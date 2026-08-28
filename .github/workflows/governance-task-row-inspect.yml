@@ -15,20 +15,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  inspect:
+  apply:
     strategy:
       fail-fast: false
       matrix:
         slot: [a, b]
     runs-on: [self-hosted, linux, x64]
-    timeout-minutes: 6
+    timeout-minutes: 12
     steps:
-      - name: Checkout exact main commit
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 1
-          persist-credentials: false
-      - name: Inspect renewal and alert capabilities
+      - name: Apply renewal controls only on verified production VM
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -43,33 +38,54 @@ jobs:
           echo "AZURE_VM_ID=$VMID"
           if [[ "$VMID" != 'bc7f566f-7231-41fb-9fdd-49cf190fd5e1' ]]; then
             echo 'ROLE=NON_PRODUCTION_SKIP'
-            sleep 20
+            sleep 30
             exit 0
           fi
+
           echo 'ROLE=PRODUCTION'
           sudo -n true
-          command -v certbot || true
-          certbot --version 2>&1 || true
-          echo 'CERTBOT_TIMER_BEGIN'
-          systemctl is-enabled certbot.timer 2>/dev/null || true
-          systemctl is-active certbot.timer 2>/dev/null || true
-          systemctl cat certbot.timer 2>/dev/null || true
-          systemctl cat certbot.service 2>/dev/null || true
-          echo 'CERTBOT_TIMER_END'
-          echo 'RENEWAL_CONFIG_BEGIN'
-          sudo sh -c "grep -R -nE '^(renew_before_expiry|deploy_hook|pre_hook|post_hook)|renew_hook|deploy-hook|post-hook|pre-hook' /etc/letsencrypt/renewal /etc/letsencrypt/renewal-hooks 2>/dev/null || true"
-          echo 'RENEWAL_CONFIG_END'
-          echo 'ALERT_CAPABILITIES_BEGIN'
-          for x in mail mailx sendmail msmtp ssmtp curl logger systemd-cat; do command -v "$x" >/dev/null 2>&1 && echo "BIN_$x=YES" || echo "BIN_$x=NO"; done
-          systemctl list-unit-files --type=service --no-pager 2>/dev/null | grep -Ei 'postfix|exim|sendmail|msmtp|mail|prometheus|alert|zabbix|nagios|grafana|healthchecks|uptime' || true
-          systemctl list-unit-files --type=timer --no-pager 2>/dev/null | grep -Ei 'cert|renew|expiry|alert|monitor|health' || true
-          echo 'ALERT_CAPABILITIES_END'
-          echo 'REPO_ALERT_REFS_BEGIN'
-          grep -RniE --exclude-dir=.git --exclude='*.lock' --exclude='CURRENT_STATE.md' '(alert|expiry|certificate renewal|certbot|notify|notification|owner email|webhook|healthcheck)' . 2>/dev/null | head -n 200 || true
-          echo 'REPO_ALERT_REFS_END'
-          echo 'CERT_STATE_BEGIN'
-          sudo certbot certificates 2>/dev/null || true
-          sudo systemctl status certbot.timer --no-pager 2>/dev/null | head -n 40 || true
-          echo 'CERT_STATE_END'
-          sleep 20
-          echo 'TSK_0443_PREFLIGHT=PASS'
+          [[ "$(hostname -s)" == 'adguardvm' ]]
+          . /etc/os-release
+          [[ "$ID" == ubuntu && "$VERSION_ID" == 24.04 ]]
+          systemctl is-active --quiet AdGuardHome.service
+          systemctl is-active --quiet nginx.service
+          systemctl is-enabled --quiet certbot.timer
+          systemctl is-active --quiet certbot.timer
+
+          HOOK=/etc/letsencrypt/renewal-hooks/deploy/10-usesafeweb-reload-nginx.sh
+          TMP="$(mktemp)"
+          trap 'rm -f "$TMP" /tmp/usw-certbot-dryrun.log' EXIT
+          cat > "$TMP" <<'SH'
+          #!/bin/sh
+          set -eu
+          /usr/sbin/nginx -t
+          /bin/systemctl reload nginx
+          SH
+          sudo install -o root -g root -m 0755 "$TMP" "$HOOK"
+          [[ "$(sudo stat -Lc '%u:%g:%a' "$HOOK")" == '0:0:755' ]]
+          echo "DEPLOY_HOOK_SHA256=$(sudo sha256sum "$HOOK" | awk '{print $1}')"
+          sudo nginx -t
+          sudo "$HOOK"
+          systemctl is-active --quiet nginx.service
+          echo 'DEPLOY_HOOK_RELOAD=PASS'
+
+          echo 'CERTBOT_DRY_RUN_BEGIN'
+          sudo certbot renew --dry-run --no-random-sleep-on-renew 2>&1 | tee /tmp/usw-certbot-dryrun.log
+          echo 'CERTBOT_DRY_RUN_END'
+          echo 'CERTBOT_RENEWAL_DRY_RUN=PASS'
+
+          CERT=/etc/letsencrypt/live/dns.usesafeweb.com/fullchain.pem
+          KEY=/etc/letsencrypt/live/dns.usesafeweb.com/privkey.pem
+          sudo openssl x509 -in "$CERT" -noout -checkhost dns.usesafeweb.com >/dev/null
+          sudo openssl x509 -in "$CERT" -noout -checkend 2592000 >/dev/null
+          [[ "$(sudo stat -Lc '%u:%a' "$KEY")" == '0:600' ]]
+          timeout 5 openssl s_client -connect 127.0.0.1:443 -servername dns.usesafeweb.com -verify_hostname dns.usesafeweb.com -verify_return_error </dev/null 2>/dev/null | grep -q 'Verify return code: 0 (ok)'
+          timeout 5 openssl s_client -connect 127.0.0.1:853 -servername dns.usesafeweb.com -verify_hostname dns.usesafeweb.com -verify_return_error </dev/null 2>/dev/null | grep -q 'Verify return code: 0 (ok)'
+          [[ "$(sudo ss -lntH 'sport = :3000' | awk '{print $4}' | sort -u)" == '127.0.0.1:3000' ]]
+          sudo ss -lntH 'sport = :53' | awk '{print $4}' | grep -qx '127.0.0.1:53'
+          sudo ss -lnuH 'sport = :53' | awk '{print $4}' | grep -qx '127.0.0.1:53'
+          systemctl is-enabled --quiet certbot.timer
+          systemctl is-active --quiet certbot.timer
+          echo 'POST_RENEWAL_SECURITY_BOUNDARY=PASS'
+          echo 'TSK_0443_PRODUCTION_RENEWAL_CONTROL=PASS'
+          sleep 30
