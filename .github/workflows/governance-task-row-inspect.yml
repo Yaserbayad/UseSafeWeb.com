@@ -10,57 +10,162 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: usesafeweb-adguard-server
-  cancel-in-progress: false
-
 jobs:
-  patch:
-    runs-on: [self-hosted, linux, x64]
-    timeout-minutes: 10
+  external:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Checkout exact main commit
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Apply current Ubuntu package updates and verify
+      - name: Print exact governed task rows
         shell: bash
         run: |
           set -Eeuo pipefail
-          [[ "$(hostname -s)" == "adguardvm" ]]
+          python3 - <<'PY'
+          import csv,json
+          wanted={'TSK-0431','TSK-0437','TSK-0442','TSK-0443','TSK-0444','TSK-0445','TSK-0446','TSK-0447'}
+          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',newline='',encoding='utf-8-sig')))
+          found=0
+          for r in rows:
+              if (r.get('Task_ID') or '').strip() in wanted:
+                  keys=['Task_ID','Title','Lifecycle_Stage','Priority','Critical_Path','Plan_Status','Execution_State','Dependencies','Action_Authority','Acceptance_ID','Acceptance_Criteria','Verification_ID','Requirement_Reference','Risk_Reference']
+                  print('WBS='+json.dumps({k:r.get(k,'') for k in keys},sort_keys=True,ensure_ascii=False))
+                  found+=1
+          assert found==len(wanted),(found,len(wanted))
+          PY
+      - name: Verify external DNS DoH DoT TLS and closed plain DNS
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          HOST=dns.usesafeweb.com
+          EXPECTED_IP=52.157.109.120
+          python3 - <<'PY'
+          import socket
+          host='dns.usesafeweb.com'; expected='52.157.109.120'
+          ips=sorted({x[4][0] for x in socket.getaddrinfo(host,None,socket.AF_INET,socket.SOCK_STREAM)})
+          assert ips==[expected],ips
+          print('EXTERNAL_A='+','.join(ips))
+          print('EXTERNAL_DNS_TARGET=PASS')
+          PY
+          timeout 8 openssl s_client -connect "$HOST:443" -servername "$HOST" -verify_hostname "$HOST" -verify_return_error </dev/null 2>/tmp/usw-sclient.err | grep -q 'Verify return code: 0 (ok)'
+          echo 'EXTERNAL_TLS_443_CHAIN_HOSTNAME=PASS'
+          ! timeout 5 openssl s_client -connect "$HOST:443" -servername "$HOST" -tls1 </dev/null >/dev/null 2>&1
+          ! timeout 5 openssl s_client -connect "$HOST:443" -servername "$HOST" -tls1_1 </dev/null >/dev/null 2>&1
+          timeout 5 openssl s_client -connect "$HOST:443" -servername "$HOST" -tls1_2 </dev/null 2>/dev/null | grep -q 'Verify return code: 0 (ok)'
+          timeout 5 openssl s_client -connect "$HOST:443" -servername "$HOST" -tls1_3 </dev/null 2>/dev/null | grep -q 'Verify return code: 0 (ok)'
+          echo 'EXTERNAL_TLS_PROTOCOL_POLICY=PASS'
+          python3 - <<'PY'
+          import random,ssl,socket,struct,urllib.request
+          host='dns.usesafeweb.com'
+          def query(name):
+              qid=random.randrange(65536)
+              q=b''.join(bytes([len(x)])+x.encode() for x in name.split('.'))+b'\x00'
+              pkt=struct.pack('!HHHHHH',qid,0x0100,1,0,0,0)+q+struct.pack('!HH',1,1)
+              return qid,pkt
+          qid,pkt=query('usesafeweb-external-doh.invalid')
+          req=urllib.request.Request('https://'+host+'/dns-query',data=pkt,method='POST',headers={'Content-Type':'application/dns-message','Accept':'application/dns-message'})
+          with urllib.request.urlopen(req,timeout=8,context=ssl.create_default_context()) as r:
+              body=r.read(); ctype=r.headers.get_content_type()
+          assert ctype=='application/dns-message',ctype
+          assert len(body)>=12 and struct.unpack('!H',body[:2])[0]==qid and (struct.unpack('!H',body[2:4])[0]&0x8000)
+          print('EXTERNAL_DOH=PASS')
+          for path in ('/','/control/status'):
+              req=urllib.request.Request('https://'+host+path)
+              try:
+                  urllib.request.urlopen(req,timeout=8,context=ssl.create_default_context())
+              except urllib.error.HTTPError as e:
+                  assert e.code==404,(path,e.code)
+              else:
+                  raise SystemExit('unexpected public non-DoH route: '+path)
+          print('EXTERNAL_ADMIN_SURFACE=PASS')
+          qid,pkt=query('usesafeweb-external-dot.invalid')
+          ctx=ssl.create_default_context(); raw=socket.create_connection((host,853),timeout=8)
+          s=ctx.wrap_socket(raw,server_hostname=host)
+          s.sendall(struct.pack('!H',len(pkt))+pkt)
+          h=s.recv(2); assert len(h)==2
+          n=struct.unpack('!H',h)[0]; body=b''
+          while len(body)<n:
+              chunk=s.recv(n-len(body))
+              if not chunk: break
+              body+=chunk
+          s.close()
+          assert len(body)==n and struct.unpack('!H',body[:2])[0]==qid and (struct.unpack('!H',body[2:4])[0]&0x8000)
+          print('EXTERNAL_DOT=PASS')
+          # Plain DNS must remain unavailable externally.
+          tcp=socket.socket(socket.AF_INET,socket.SOCK_STREAM); tcp.settimeout(3)
+          rc=tcp.connect_ex((host,53)); tcp.close(); assert rc!=0,rc
+          qid,pkt=query('usesafeweb-external-plain.invalid')
+          udp=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); udp.settimeout(3); udp.sendto(pkt,(host,53))
+          try:
+              udp.recvfrom(4096)
+          except socket.timeout:
+              pass
+          else:
+              raise SystemExit('external UDP/53 unexpectedly answered')
+          udp.close()
+          print('EXTERNAL_PLAIN_DNS_CLOSED=PASS')
+          PY
+          echo 'TSK_0442_EXTERNAL_TECHNICAL_PROBE=PASS'
+
+  probe_a:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 3
+    steps:
+      - name: Fingerprint self-hosted runner A
+        shell: bash
+        env:
+          RUNNER_CONTEXT_NAME: ${{ runner.name }}
+        run: |
+          set -Eeuo pipefail
           sudo -n true
-          MID="$(sha256sum /etc/machine-id | awk '{print $1}')"
-          [[ "$MID" == "e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2" ]]
+          echo "RUNNER_NAME=$RUNNER_CONTEXT_NAME"
+          echo "MACHINE_NAME=$(hostname -s)"
+          echo "MACHINE_ID_SHA256=$(sha256sum /etc/machine-id | awk '{print $1}')"
+          . /etc/os-release
+          echo "OS_ID=$ID"
+          echo "OS_VERSION_ID=$VERSION_ID"
           python3 - <<'PY'
           import json,urllib.request
           req=urllib.request.Request('http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01',headers={'Metadata':'true'})
           with urllib.request.urlopen(req,timeout=3) as r: d=json.load(r)
-          assert d.get('name')=='adguardvm' and d.get('location')=='westeurope',d
-          print('PRODUCTION_IDENTITY=PASS')
+          print('AZURE_NAME='+str(d.get('name','')))
+          print('AZURE_LOCATION='+str(d.get('location','')))
+          print('AZURE_VM_ID='+str(d.get('vmId','')))
           PY
-          systemctl is-active --quiet AdGuardHome.service
-          systemctl is-active --quiet nginx.service
-          export DEBIAN_FRONTEND=noninteractive
-          export NEEDRESTART_MODE=a
-          sudo -E apt-get update -y
-          sudo -E apt-get -y full-upgrade
-          echo 'PACKAGE_UPDATE_APPLIED=PASS'
-          SIM="$(sudo apt-get -s full-upgrade 2>/dev/null || true)"
-          if grep -q '^Inst ' <<<"$SIM"; then
-            echo 'PENDING_UPGRADES_BEGIN'
-            grep '^Inst ' <<<"$SIM" | head -20
-            echo 'PENDING_UPGRADES_END'
-            exit 1
-          fi
-          echo 'NO_PENDING_UPGRADES=PASS'
-          systemctl is-active --quiet AdGuardHome.service
-          systemctl is-active --quiet nginx.service
-          systemctl is-enabled --quiet apt-daily.timer
-          systemctl is-enabled --quiet apt-daily-upgrade.timer
-          if [[ -e /var/run/reboot-required ]]; then
-            echo 'REBOOT_REQUIRED=YES'
-            exit 2
-          fi
-          echo 'REBOOT_REQUIRED=NO'
-          echo 'TSK_0437_PATCH_REPAIR=PASS'
+          echo "ADGUARD_ACTIVE=$(systemctl is-active AdGuardHome.service 2>/dev/null || true)"
+          echo "NGINX_ACTIVE=$(systemctl is-active nginx.service 2>/dev/null || true)"
+          sleep 12
+          echo 'RUNNER_FINGERPRINT=PASS'
+
+  probe_b:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 3
+    steps:
+      - name: Fingerprint self-hosted runner B
+        shell: bash
+        env:
+          RUNNER_CONTEXT_NAME: ${{ runner.name }}
+        run: |
+          set -Eeuo pipefail
+          sudo -n true
+          echo "RUNNER_NAME=$RUNNER_CONTEXT_NAME"
+          echo "MACHINE_NAME=$(hostname -s)"
+          echo "MACHINE_ID_SHA256=$(sha256sum /etc/machine-id | awk '{print $1}')"
+          . /etc/os-release
+          echo "OS_ID=$ID"
+          echo "OS_VERSION_ID=$VERSION_ID"
+          python3 - <<'PY'
+          import json,urllib.request
+          req=urllib.request.Request('http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01',headers={'Metadata':'true'})
+          with urllib.request.urlopen(req,timeout=3) as r: d=json.load(r)
+          print('AZURE_NAME='+str(d.get('name','')))
+          print('AZURE_LOCATION='+str(d.get('location','')))
+          print('AZURE_VM_ID='+str(d.get('vmId','')))
+          PY
+          echo "ADGUARD_ACTIVE=$(systemctl is-active AdGuardHome.service 2>/dev/null || true)"
+          echo "NGINX_ACTIVE=$(systemctl is-active nginx.service 2>/dev/null || true)"
+          sleep 12
+          echo 'RUNNER_FINGERPRINT=PASS'
