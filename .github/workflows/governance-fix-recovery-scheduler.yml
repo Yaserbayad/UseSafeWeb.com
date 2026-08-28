@@ -46,6 +46,5 @@ jobs:
           git config user.name 'UseSafeWeb Governance Bot'
           git config user.email 'actions@users.noreply.github.com'
           git add TSK_0431_RECOVERY_WORKFLOW_PATCHED.txt
-          git diff --cached --check
           git commit -m 'governance: stage patched TSK-0431 recovery workflow'
           git push origin HEAD:main
