@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T11:34:29Z  
+**Updated:** 2026-08-28T11:38:35Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -59,6 +59,7 @@ This supersedes the earlier duplicate-runner condition in which `adguartestdvm` 
 - `TSK-0407` — exact Quad9 dns10 DoH upstream with ECS disabled verified — evidence: `TSK_0407_QUAD9_DNS10_ECS_EVIDENCE_2026-08-27.md`, blob `7afeca58e9205234a230d2de702b99648b35347d`.
 - `TSK-0406` — conservative versioned filtering baseline, narrow exception path and exact rollback verified — policy: `infrastructure/adguard-server/filter-policy-v1.yaml`, blob `333a4ef8cd34719d66056aa608ab19473f839634`; evidence: `TSK_0406_FILTERING_POLICY_EVIDENCE_2026-08-27.md`, blob `bb4514b4af7c1c5e616b7875f98e86962fee0325`.
 - `TSK-0202` — secret-safe approved AdGuard settings exported/versioned and proven exactly equal to current live post-TLS-proxy safe settings — artifact: `infrastructure/adguard-server/approved-adguard-config-v1.json` v1.1.0, blob `e9975c4e75c2a68131f049da942468d8d1952d8d`; settings SHA-256 `fcedf8b67b5d4c43544d5a57b9f74b6a45e6f3be1d778c6fb6183e83802ac49d`; reconciliation evidence: `TSK_0202_ADGUARD_CONFIG_RECONCILIATION_EVIDENCE_2026-08-28.md`, blob `3d9ac577cfe75fb33d317d3e00905ebab91c3a45`; independent reconciliation run `33159129601` / job `98809042724`: PASS.
+- `TSK-0428` — Azure region, recipients, and active DNS data path verified on production: Azure `westeurope`, Quad9 dns10 recursive/bootstrap path, loopback-only DoH/DoT backends, and no US DNS node/CDN/analytics/payment/email/application processor in the child-linked DNS query path — evidence: `TSK_0428_AZURE_REGION_DATA_PATH_EVIDENCE_2026-08-28.md`, blob `bbcd27772f8a9cad8248c48e9290b52baf71056f`.
 - `TSK-0429` — privacy-minimal AdGuard backup scope documented and independently verified against current DPIA/retention/live state — policy: `infrastructure/adguard-server/BACKUP_SCOPE_POLICY.md`, blob `e62b48a3e746b1be90881bbffab3b7680384cc16`; evidence: `TSK_0429_PRIVACY_MINIMAL_BACKUP_SCOPE_EVIDENCE_2026-08-27.md`, blob `b77c6d7a2e17adc5e653151b55137467a8c5b62f`.
 - `TSK-0430` — encrypted configuration backup created, independently audited and directly decrypted by the authorised owner — evidence: `TSK_0430_ENCRYPTED_CONFIG_BACKUP_EVIDENCE_2026-08-27.md`, blob `de1820cb2a9fc5b175c5e5eb1e18b45e6a430a82`; ciphertext SHA-256 `bd5cad421a44efb27a669a0119f6247f456e1e8e97a0f23bb628933e6208ccde`; owner recipient fingerprint `SHA256:682Jbw3baP6jxs57+1c5lchlkrNMELcvDk8bauEl51U`; owner-side decrypted configuration SHA-256 `d8b6eae3b85edbaa1c49e318354389dc616099ecb3d2d90eff3c3dd8c663e1f2`.
 - `TSK-0166` — pseudonymous Experiment-1 participant record/metric schema created and independently audited with direct predecessor proof — artifact: `EXPERIMENT_01_PARTICIPANT_RECORD_SCHEMA.md`, blob `c7706fceced87c797b8cd92179198754e2b08ffe`; evidence: `TSK_0166_PARTICIPANT_RECORD_SCHEMA_EVIDENCE_2026-08-28.md`, blob `d043370a9c1efc99ccf8f65b813733b4c832c3f0`; independent audit run `33130737625` / job `98719395096`: PASS.
@@ -314,6 +315,16 @@ The retained same-VM encrypted backup remains the documented approved configurat
 
 REQ-0018 and RSK-0001 remain respected: this was a synthetic rehearsal only and no real England participant was activated or processed. The separately deferred UK representative/ICO work remains unresolved. **ACC-0207 is fully satisfied. TSK-0207: PASS.**
 
+### TSK-0428 accepted stable state
+
+`TSK-0428` — verify Azure region, recipients, and data path: **PASS**.
+
+Fresh production evidence `TSK_0428_AZURE_REGION_DATA_PATH_EVIDENCE_2026-08-28.md`, blob `bbcd27772f8a9cad8248c48e9290b52baf71056f`, proves Azure IMDS location `westeurope` on VM `adguardvm` / VM ID `bc7f566f-7231-41fb-9fdd-49cf190fd5e1`; live AdGuard upstream exactly `https://dns10.quad9.net/dns-query` with Quad9 dns10 bootstrap addresses, no fallback/private upstream and ECS disabled; effective Nginx DoH/DoT proxy targets only same-host loopback backends; expected DNS listener topology; and no CDN, analytics, payment, email, US DNS node, or other application processor in the active child-linked DNS query path.
+
+The first verifier run `33167781526` was rejected as a test false negative because it omitted the legitimate loopback DoT proxy from its expectation. No product mutation occurred. Corrected run `33167847368` passed fully and published the evidence. Microsoft IMDS and current Quad9 documentation were also checked on 2026-08-28 as source corroboration.
+
+**ACC-0428 is fully satisfied. TSK-0428: PASS.** Azure control-plane configuration remains owner-managed and this PASS does not authorize participant activation or web/application deployment.
+
 ### External/provider and legal boundaries
 
 - TSK-0441 Cloudflare DNS is satisfied and independently verified. Any further Cloudflare account/zone mutation remains owner/provider-controlled unless an explicitly authorized interface becomes available.
@@ -332,9 +343,9 @@ REQ-0018 and RSK-0001 remain respected: this was a synthetic rehearsal only and 
 
 ## Queue status after current reconciliation
 
-TSK-0207 is runtime PASS with fresh synthetic production privacy-persistence evidence. The deterministic WBS dependency-readiness recomputation found **1** L2 `AUTO_ALLOWED` candidate(s).
+TSK-0428 is runtime PASS with fresh target evidence. The deterministic WBS dependency-readiness recomputation found **0** L2 `AUTO_ALLOWED` candidate(s).
 
-Highest dependency-ready candidate: `TSK-0428` — Verify Azure region, recipients, and data path. Dependency readiness alone does not authorize execution; full current preflight is required.
+No ordinary L2 `AUTO_ALLOWED` candidate is dependency-ready.
 
 Current explicit WAITING boundary:
 
@@ -342,4 +353,4 @@ Current explicit WAITING boundary:
 
 ## Exact next authoritative step
 
-Preflight `TSK-0428` — Verify Azure region, recipients, and data path against its exact acceptance, gates, trigger, requirements, constraints, interfaces, risk and available executor. Continue only if safe and authorized. Separately, TSK-0431 remains WAITING on the owner-managed Azure-native backup/restore path. Do not bypass participant-activation, legal, Azure control-plane, provider, recovery, privacy or validation gates.
+No ordinary L2 work may progress until a dependency/gate condition changes. Separately, TSK-0431 remains WAITING on the owner-managed Azure-native backup/restore path. Do not bypass participant-activation, legal, Azure control-plane, provider, recovery, privacy or validation gates.
