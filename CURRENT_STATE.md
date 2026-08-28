@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T00:45:46Z  
+**Updated:** 2026-08-28T00:49:18Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -48,6 +48,7 @@ GitHub is the active execution bridge for eligible AUTO_ALLOWED host work. Repos
 - `TSK-0429` — privacy-minimal AdGuard backup scope documented and independently verified against current DPIA/retention/live state — policy: `infrastructure/adguard-server/BACKUP_SCOPE_POLICY.md`, blob `e62b48a3e746b1be90881bbffab3b7680384cc16`; evidence: `TSK_0429_PRIVACY_MINIMAL_BACKUP_SCOPE_EVIDENCE_2026-08-27.md`, blob `b77c6d7a2e17adc5e653151b55137467a8c5b62f`.
 - `TSK-0430` — encrypted configuration backup created, independently audited and directly decrypted by the authorised owner — evidence: `TSK_0430_ENCRYPTED_CONFIG_BACKUP_EVIDENCE_2026-08-27.md`, blob `de1820cb2a9fc5b175c5e5eb1e18b45e6a430a82`; ciphertext SHA-256 `bd5cad421a44efb27a669a0119f6247f456e1e8e97a0f23bb628933e6208ccde`; owner recipient fingerprint `SHA256:682Jbw3baP6jxs57+1c5lchlkrNMELcvDk8bauEl51U`; owner-side decrypted configuration SHA-256 `d8b6eae3b85edbaa1c49e318354389dc616099ecb3d2d90eff3c3dd8c663e1f2`.
 - `TSK-0166` — pseudonymous Experiment-1 participant record/metric schema created and independently audited with direct predecessor proof — artifact: `EXPERIMENT_01_PARTICIPANT_RECORD_SCHEMA.md`, blob `c7706fceced87c797b8cd92179198754e2b08ffe`; evidence: `TSK_0166_PARTICIPANT_RECORD_SCHEMA_EVIDENCE_2026-08-28.md`, blob `d043370a9c1efc99ccf8f65b813733b4c832c3f0`; independent audit run `33130737625` / job `98719395096`: PASS.
+- `TSK-0168` — Experiment-1 qualification screener created and independently audited — artifact: `EXPERIMENT_01_QUALIFICATION_SCREENER.md`, blob `d35d3e0abfc3882d648df3c0c7458e216853b592`; evidence: `TSK_0168_QUALIFICATION_SCREENER_EVIDENCE_2026-08-28.md`, blob `760f881100e6221640c8afa86108665dc4ba1792`; independent audit run `33130918142` / job `98719985132`: PASS.
 
 ### TSK-0204 corrected stable state
 
@@ -109,6 +110,16 @@ Independent read-only audit run `33130737625` / job `98719395096`: **PASS**. It 
 
 Evidence: `TSK_0166_PARTICIPANT_RECORD_SCHEMA_EVIDENCE_2026-08-28.md`, blob `d043370a9c1efc99ccf8f65b813733b4c832c3f0`. ACC-0166 is fully satisfied. This does not activate Experiment 1 or override the validation-readiness gate.
 
+### TSK-0168 accepted stable state
+
+The exact WBS row defines TSK-0168 as L2 / A3 / `AUTO_ALLOWED` / MEDIUM with hard predecessor `TSK-0164`, acceptance `ACC-0168`.
+
+Current durable `EXPERIMENT_01_CONCIERGE_VALIDATION.md`, blob `bc801da11d7a7f2a5315d1cdca4f0d134afe7805`, directly re-proves the historical predecessor's frozen qualification semantics. The v1.0.0 screener `EXPERIMENT_01_QUALIFICATION_SCREENER.md` covers caregiver setup responsibility, broad first-phone age/stage, bounded phone timing, iPhone/Android, willingness for real appropriate changes and non-surveillance fit, while explicitly prohibiting child name/exact DOB and unnecessary location/activity data.
+
+Independent read-only audit run `33130918142` / job `98719985132`: **PASS**. It re-proved TSK-0164, checked all eight ACC-0168 items, verified that the screener's controlled outputs align to the accepted TSK-0166 schema, matched the exact screener blob and returned `TSK_0168_INDEPENDENT_AUDIT=PASS`.
+
+Evidence: `TSK_0168_QUALIFICATION_SCREENER_EVIDENCE_2026-08-28.md`, blob `760f881100e6221640c8afa86108665dc4ba1792`. ACC-0168 is fully satisfied. This preparation artifact does not authorise recruitment or participant processing.
+
 ### WAITING — TSK-0431
 
 `TSK-0431` — test pilot restore or rebuild procedure: **WAITING on an independent clean recovery target and the owner-managed Azure/TLS inputs required by ACC-0431/REQ-0052; not PASS**.
@@ -152,4 +163,4 @@ Deterministic resumption condition: the owner/provider creates that record, or a
 
 ## Exact next authoritative step
 
-Recompute the current L2 queue after confirmed TSK-0166 PASS, with TSK-0431 and TSK-0441 held WAITING. Continue the highest-priority eligible autonomous preparation work that has direct predecessor evidence and does not bypass legal/participant-activation, Azure control-plane, Cloudflare provider, recovery, or public-service readiness boundaries.
+Recompute the current L2 queue after confirmed TSK-0168 PASS, with TSK-0431 and TSK-0441 held WAITING. Continue the highest-priority eligible autonomous preparation work only after its historical/planning predecessors are independently re-proven from current durable evidence; do not bypass legal/participant-activation, Azure control-plane, Cloudflare provider, recovery, or public-service readiness boundaries.
