@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T16:43:24Z
+**Updated:** 2026-08-28T16:46:12Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -424,6 +424,12 @@ Current first-party source checks confirm Android Private DNS/DoT semantics, And
 
 Current first-party checks support Apple Screen Time/Family Sharing controls, Android/Family Link parental controls, Android 17+ on-device controls where actually available, and Google's explicit limitation that most Family Link supervision does not work on iPhone/iPad. `UPA-003`/`RSK-0002` remain OPEN: native-first value/friction and parent comprehension are not behaviorally validated. This PASS does not authorize LG-05/LG-06, implementation/build, participants, legal completion, payment, public release or launch.
 
+### TSK-0144 accepted stable state
+
+`TSK-0144 — Specify the one relevant external-service safeguard step`: **PASS for the provisional internal L4 service-guidance contract under DEC-0050/CR-0003**. Contract `TSK_0144_ONE_RELEVANT_EXTERNAL_SERVICE_SAFEGUARD_REQUIREMENTS_2026-08-28.md`, blob `f7821c8ef50aa517753c31477b383d660de11f40`; independent evidence `TSK_0144_ONE_RELEVANT_EXTERNAL_SERVICE_SAFEGUARD_EVIDENCE_2026-08-28.md`, blob `2613667a6da870a3943ff5f0b528d635326e757c`. ACC-0144 is satisfied: service eligibility/applicability, supported/unsupported states, zero-or-one hard limit, parent-confirmed truth, source/version/update ownership and `Not covered` fallback are explicit. No named service is hard-coded from popularity or inferred child behavior; service use must be parent-declared and current-policy/source eligible.
+
+The UK government's current July 2026 response, updated 19 August 2026, plans under-16 social-media service restrictions for spring 2027 while exact covered-service implementation remains in progress, reinforcing the canonical service-agnostic rule. `UPA-004`/`RSK-0002` remain OPEN: no representative-parent evidence proves the service step's relevance or incremental value. This PASS does not authorize LG-05/LG-06, implementation/build, participants, legal completion, payment, public release or launch.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -435,13 +441,13 @@ Current first-party checks support Apple Screen Time/Family Sharing controls, An
 
 ## Queue status after current reconciliation
 
-`TSK-0143` is runtime PASS. HUMAN_ONLY L4 tasks remain fenced and real-user-bound work remains deferred under CR-0003. `TSK-0144` is now dependency-ready and is the earliest WBS MEDIUM/A3/AUTO_ALLOWED provisional-L4 task; TSK-0559 remains another later MEDIUM/AUTO candidate.
+`TSK-0144` is runtime PASS. `TSK-0313` is **not** eligible yet because its direct hard predecessor `TSK-0041` has no current direct accepted evidence in runtime; TSK-0144 cannot transitively satisfy that missing predecessor. `TSK-0140` remains unselected because its own acceptance requires owner/multi-role review evidence not present. HUMAN_ONLY and real-user-bound tasks remain fenced. The next dependency-ready MEDIUM/A3/AUTO_ALLOWED provisional-L4 task is `TSK-0559`.
 
-- **Selected next: `TSK-0144 — Specify the one relevant external-service safeguard step`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
-- Hard dependency: `TSK-0143` — current PASS.
-- ACC-0144: Requirements define eligibility, supported/unsupported state, one-service limit, parent confirmation, content update ownership, and fallback to Not covered.
-- Selection rationale: current dependency PASS, AUTO_ALLOWED, acceptance can be satisfied as a bounded service-guidance requirement without real-participant evidence, and WBS order precedes remaining equal-priority AUTO candidates.
+- **Selected next: `TSK-0559 — Define the research, originality, usefulness, source, claims, update, localization, and pruning standard for first-phone content`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
+- Hard dependency: `TSK-0558` — previously established dependency-ready in the current L4 queue and must be rechecked before execution.
+- ACC-0559: Mass low-quality AI SEO is prohibited; every item solves a real high-intent job and connects to product/help with source/review/owner/metric.
+- Selection rationale: no earlier equal/higher-priority executable AUTO_ALLOWED L4 task remains after the current reconciliations; the task is internal content-governance design and does not require representative-parent evidence to define a quality/source standard.
 
 ## Exact next authoritative step
 
-Execute bounded `TSK-0144`: define the one-relevant-external-service safeguard selection and state contract; specify eligibility/applicability, supported/unsupported handling, one-service maximum, parent-confirmed versus verified truth, source/version/update ownership, stale-guidance behavior and `Not covered` fallback; do not select a service based on invented popularity/user data; carry `UPA-004`/`RSK-0002`; persist/read back independent ACC-0144 evidence; reconcile runtime; then recompute.
+Recheck TSK-0558 direct PASS evidence, then execute bounded `TSK-0559`: define the first-phone content research/originality/usefulness/source/claims/update/localization/pruning standard, explicitly prohibiting mass low-quality AI SEO; ensure every content item maps to a real high-intent job and product/help path with source, review owner and metric; preserve the initial earned-distribution and USD 20-50/month GTM constraints; carry provisional evidence limits; persist/read back independent ACC-0559 evidence; reconcile runtime; then recompute.
