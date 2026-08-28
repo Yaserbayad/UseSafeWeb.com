@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T18:06:16Z
+**Updated:** 2026-08-28T18:12:58Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -468,6 +468,12 @@ Current first-party ICO guidance was rechecked on 2026-08-28 for per-purpose law
 
 Current first-party OWASP ASVS/Input-Validation/XSS/SSRF guidance and AdGuard anti-amplification configuration semantics were rechecked on 2026-08-28. Historical TSK-0483 remains valid evidence of AdGuard engine-level anti-abuse capability/configuration but does not self-certify the later public Nginx DoH/DoT ingress. `GAP-0484-02` therefore remains OPEN pending direct current public-path verification. `DVR-0230-01` remains OPEN for the custom DoH critical error-log mode (`0644 root:root` vs target <=0640/service-admin only). `DVR-0484-01` remains OPEN because the TSK-0230 production-host evidence workflow used repository write credentials on a root-capable runner; no compromise is evidenced, and future host-verification/publishing should be separated where practical. `RSK-0002` remains OPEN. This PASS does not authorize implementation/build, account/auth activation, public release, participants, legal completion, payment or launch.
 
+### TSK-0497 accepted stable state
+
+`TSK-0497 — Define minimal product event and KPI catalogue`: **PASS for the provisional internal L4 measurement-contract-definition acceptance under DEC-0050/CR-0003**. Contract `TSK_0497_MINIMAL_PRODUCT_EVENT_KPI_CATALOGUE_2026-08-28.md`, blob `61bcd78bbe7ac2446c9c79e5e2e0765cb4f66b8c`; independent evidence `TSK_0497_MINIMAL_PRODUCT_EVENT_KPI_CATALOGUE_EVIDENCE_2026-08-28.md`, blob `b26a4cb123929518b7875023530f37256612ac98`. ACC-0497 is satisfied: each of 14 approved aggregate-only events has purpose, exact trigger, allowlisted properties, prohibited fields, collection point, denominator relationship, zero raw retention after aggregate commit and owner; the KPI catalogue defines source/formula/denominator/window/release-cohort/owner/guardrail/decision action; and account/login/dashboard plus DNS/domain/visited-domain/child-activity/addictive-engagement telemetry remain absent/prohibited.
+
+The measurement architecture creates no approved persistent raw event stream, analytics identity, full journey-token field, session replay or cross-session profile. Human-assistance incidence/minutes remain dormant definitions requiring a future reopened governed measurement contract before collection. `RSK-0002` remains OPEN: no real-user KPI value, support burden, completion or comprehension result is inferred. This PASS does not activate telemetry/storage, accounts, participants, legal completion, build, publication or launch.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -479,13 +485,8 @@ Current first-party OWASP ASVS/Input-Validation/XSS/SSRF guidance and AdGuard an
 
 ## Queue status after current reconciliation
 
-The TSK-0484 post-PASS queue was reread against current acceptance, CR-0003 and the open security/privacy deviations. `TSK-0187` remains ineligible because it requires representative-parent evidence. `TSK-0140` remains ineligible for PASS because owner/multi-role review evidence is absent. `TSK-0497` and `TSK-0538` are both MEDIUM/A3/AUTO_ALLOWED with no preflight flag; WBS order places TSK-0497 first.
-
-- **Selected next: `TSK-0497 — Define minimal product event and KPI catalogue`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
-- Hard dependency: `TSK-0230` — current PASS.
-- ACC-0497: every approved event has purpose, exact definition, properties, prohibited fields, collection point, denominator, retention and owner; accountless/device-configuration/Protection-Map/self-service/support measurement may be minimal; login/account/dashboard events remain absent unless EXC-0001 activates; DNS/domain history, visited-domain and child-activity events remain prohibited.
-- Selection boundary: internal measurement-contract definition only. No telemetry implementation, new persistent data store, account/dashboard activation, DNS-history collection, behavioral validation, real participants or release is authorized.
+`TSK-0497` is runtime PASS for its bounded provisional-L4 measurement-contract-definition acceptance. No telemetry implementation or real-user metric result is inferred. A fresh conservative dependency-ready AUTO_ALLOWED L4 queue has been generated at `TSK_0497_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. No next task is selected by this write; the queue must be reread against acceptance, direct predecessor evidence, CR-0003, human/legal/participant holds and open security/privacy deviations before execution.
 
 ## Exact next authoritative step
 
-Execute bounded TSK-0497: load TSK-0230/0229/0313/0320/0042 plus REQ-0060/0061 and INT-0016; define the minimum event/KPI catalogue with exact event semantics, properties, prohibited fields, collection point, denominator, retention and owner; ensure account/login/dashboard and DNS/domain/visited-domain/child-activity telemetry are absent; preserve RSK-0002 and all legal/build/participant gates; persist/read back independent ACC-0497 evidence; reconcile runtime; then recompute.
+Read back the TSK-0497 post-PASS L4 queue, reject any candidate requiring unavailable real-user evidence, owner/legal/privacy approval, unresolved trigger/gate or missing predecessor proof, account for open security/privacy deviations where relevant, and persist the deterministic highest-priority eligible AUTO_ALLOWED selection.
