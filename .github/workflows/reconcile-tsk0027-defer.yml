@@ -1,0 +1,54 @@
+name: Reconcile TSK-0027 DEFER
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/reconcile-tsk0027-defer.yml
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - name: Persist owner DEFER decision and select next work
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(git hash-object CURRENT_STATE.md)" == 'ff63f59cabeb40237b56e618dedf0761919ff366' ]]
+          [[ "$(git hash-object TSK_0027_G02_LG03_OWNER_DEFER_DECISION_EVIDENCE_2026-08-28.md)" == '1c12e4f4e31962735dd3a3a8bd94ccbfa8308e92' ]]
+          [[ "$(git hash-object TSK_0026_G02_LG03_EVIDENCE_PACKAGE_EVIDENCE_2026-08-28.md)" == 'e4d14fea268b78ab0bc395fb10988412c7e66484' ]]
+          [[ "$(git hash-object Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md)" == '5e3137861f546f2b5f7bd6ac152b1b32694a439a' ]]
+          python3 - <<'PY'
+          from pathlib import Path
+          from datetime import datetime, timezone
+          import re
+          p=Path('CURRENT_STATE.md')
+          s=p.read_text(encoding='utf-8')
+          s,n=re.subn(r'\*\*Updated:\*\* [^\n]+', '**Updated:** '+datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')+'  ', s, count=1)
+          assert n==1
+          marker='## Runtime safeguards'
+          assert s.count(marker)==1
+          if '### TSK-0027 owner gate decision stable state' not in s:
+              section='''### TSK-0027 owner gate decision stable state\n\n`TSK-0027 — Decide G-02 PASS, FAIL, or DEFER`: **PASS as a completed decision task, with gate disposition DEFER**. The Project Owner explicitly instructed `DEFER and continue` on 2026-08-28. Durable owner-decision evidence: `TSK_0027_G02_LG03_OWNER_DEFER_DECISION_EVIDENCE_2026-08-28.md`, blob `1c12e4f4e31962735dd3a3a8bd94ccbfa8308e92`.\n\nThe task PASS means the required HUMAN_ONLY decision was actually made and recorded; it does **not** mean LG-03 passed. **LG-03/G-02 disposition is DEFER. Recruitment authorized: NO.** Criteria 2, 5 and 6 remain DEFERRED/OPEN in the accepted TSK-0026 package. CR-0002 remains the bounded authority for internal/synthetic/non-participant/non-public preparatory continuation through 2027-08-27.\n\n'''
+              s=s.replace(marker,section+marker,1)
+          q=s.index('## Queue status after current reconciliation')
+          tail='''## Queue status after current reconciliation\n\n`TSK-0027` is complete: runtime task state **PASS**, owner gate disposition **DEFER**. LG-03 remains deferred/non-PASS and recruitment remains unauthorized. The immediate HUMAN_ONLY decision boundary is resolved.\n\nApplying current WBS priority plus CR-0002 after that decision selects the next eligible preparatory task:\n\n- **Selected next: `TSK-0167` — Create invitation, scheduling, reminder, follow-up, and withdrawal templates** (L2 / A3 / AUTO_ALLOWED / MEDIUM). `TSK-0168` is current PASS. Its deferred `TSK-0221` notice-approval/release predecessor is conditionally dependency-satisfied only for internal template preparation under CR-0002; the final participant-facing notice/contact/legal release remains unresolved and must be preserved as a limitation.\n- `TSK-0513` remains unavailable until `TSK-0167` itself is verified PASS.\n\nNo real-participant recruitment, participant processing, child-linked DNS activation, or public launch is authorized by the DEFER decision.\n\n## Exact next authoritative step\n\nExecute bounded `TSK-0167`: prepare the invitation, scheduling, reminder, 14-day follow-up, and withdrawal templates; include voluntary participation, no payment ask, preparation requirements, support boundaries, 14-day follow-up, withdrawal route, and the truthful current contact status. Because final controller/UK-representative contacts remain deferred, the templates must explicitly retain that unresolved release/contact limitation and remain **INTERNAL / NOT FOR PARTICIPANT USE** until the participant-facing release gate is actually satisfied. Independently verify ACC-0167, persist/read back the artifact/evidence, then recompute selection.\n'''
+          s=s[:q]+tail
+          p.write_text(s,encoding='utf-8')
+          PY
+          grep -Fq 'TSK-0027 owner gate decision stable state' CURRENT_STATE.md
+          grep -Fq 'gate disposition **DEFER**' CURRENT_STATE.md
+          grep -Fq 'Selected next: `TSK-0167`' CURRENT_STATE.md
+          grep -Fq 'Recruitment authorized: NO' CURRENT_STATE.md
+          git config user.name 'UseSafeWeb Governance Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: record TSK-0027 DEFER and select TSK-0167'
+          git push origin HEAD:main
