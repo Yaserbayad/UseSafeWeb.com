@@ -1,0 +1,61 @@
+name: Reconcile TSK-0229 PASS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-tsk0229-pass.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify evidence and reconcile runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object TSK_0229_ACCOUNTLESS_JOURNEY_DATA_MODEL_EXPIRY_DELETION_NO_LINKAGE_2026-08-28.md)" = "3fa48b11b6c7704ecc3748bcd865f77aa54f5605"
+          test "$(git hash-object TSK_0229_ACCOUNTLESS_JOURNEY_DATA_MODEL_EVIDENCE_2026-08-28.md)" = "a087c63a0556db549ead4f40805e435725709251"
+          python3 - <<'PY'
+          import csv, pathlib, re
+          from datetime import datetime, timezone
+          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',encoding='utf-8-sig',newline=''))); by={r['Task_ID']:r for r in rows}
+          t=by['TSK-0229']; n=by['TSK-0408']; blocked=by['TSK-0187']
+          assert t['Dependencies']=='TSK-0146'
+          assert t['Action_Authority']=='AUTO_ALLOWED'
+          assert t['AI_Capability_A0_A4']=='A3'
+          assert n['Dependencies']=='TSK-0146'
+          assert n['Action_Authority']=='AUTO_ALLOWED'
+          assert n['AI_Capability_A0_A4']=='A3'
+          assert 'no false universal FQDN workflow' in n['Acceptance_Criteria']
+          assert 'Representative parents' in blocked['Acceptance_Criteria']
+          e=pathlib.Path('TSK_0229_ACCOUNTLESS_JOURNEY_DATA_MODEL_EVIDENCE_2026-08-28.md').read_text()
+          assert 'All current ACC-0229 clauses are directly supported' in e
+          assert 'RSK-0002' in e
+          a=pathlib.Path('TSK_0229_ACCOUNTLESS_JOURNEY_DATA_MODEL_EXPIRY_DELETION_NO_LINKAGE_2026-08-28.md').read_text()
+          assert 'Provisional evidence limitation — RSK-0002 remains OPEN' in a
+          assert 'PASS candidate subject to independent verification and runtime read-back' in a
+          p=pathlib.Path('CURRENT_STATE.md'); text=p.read_text()
+          assert 'Selected next: `TSK-0229' in text
+          now=datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
+          text=re.sub(r'\*\*Updated:\*\* [^\n]+',f'**Updated:** {now}',text,count=1)
+          sec='''### TSK-0229 accepted stable state\n\n`TSK-0229 — Define and approve the accountless journey data model, expiry, deletion, and no-linkage rules`: **PASS for the provisional internal L4 data contract under DEC-0050/CR-0003**. Contract `TSK_0229_ACCOUNTLESS_JOURNEY_DATA_MODEL_EXPIRY_DELETION_NO_LINKAGE_2026-08-28.md`, blob `3fa48b11b6c7704ecc3748bcd865f77aa54f5605`; independent evidence `TSK_0229_ACCOUNTLESS_JOURNEY_DATA_MODEL_EVIDENCE_2026-08-28.md`, blob `a087c63a0556db549ead4f40805e435725709251`. ACC-0229 is satisfied: the active journey is accountless-first; persistent identity, browsing/query history and persistent child/family profile are prohibited; J1 is optional/transient with fixed expiry/deletion/no-linkage rules; diagnostics/logging/backups are separated; fourteen implementation-testable invariants are defined.\n\nThe first artifact revision omitted the mandatory CR-0003/RSK-0002 behavioral-evidence limitation; it was corrected before PASS. `RSK-0002` remains OPEN. This PASS is provisional design evidence only and does not authorize LG-05/LG-06, L5/L6 build, participants, legal completion, payment activation, public release or launch.\n\n'''
+          marker='## Runtime safeguards'
+          if '### TSK-0229 accepted stable state' not in text: text=text.replace(marker,sec+marker,1)
+          q=text.rfind('\n## Queue status after current reconciliation'); assert q>=0
+          text=text[:q].rstrip()+f'''\n\n## Queue status after current reconciliation\n\n`TSK-0229` is runtime PASS for the provisional internal L4 data contract. The previously generated full L4 queue inspection remains current for dependency structure. `TSK-0187` is still deferred because its acceptance requires representative-parent evidence unavailable under CR-0003.\n\n- **Selected next: `TSK-0408 — {n['Title']}`** (L4 / {n['AI_Capability_A0_A4']} / {n['Action_Authority']} / {n['Priority']}).\n- Hard dependency: `TSK-0146` — current PASS.\n- ACC-0408: {n['Acceptance_Criteria']}\n- Execution remains internal definition/design only; current official platform evidence must be used where technical behavior is material, and `RSK-0002` must remain explicit.\n\n## Exact next authoritative step\n\nExecute bounded `TSK-0408`: reconcile the already proven UseSafeWeb DNS identity (`dns.usesafeweb.com`, DoH `/dns-query`, Android native DoT where applicable) with current authoritative platform mechanisms. Define platform-specific endpoint/profile naming, certificate expectations, verification, removal/recovery, fallback/unsupported states and environment separation without inventing a universal FQDN workflow. Verify ACC-0408 against canonical runtime evidence plus current official sources, persist/read back, then recompute.\n'''
+          p.write_text(text)
+          PY
+          git diff --check
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add CURRENT_STATE.md
+          git commit -m "state: accept TSK-0229 and select TSK-0408"
+          git push
