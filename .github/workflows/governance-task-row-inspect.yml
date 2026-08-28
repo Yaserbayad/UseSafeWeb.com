@@ -24,7 +24,7 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Independent certificate and renewal audit
+      - name: Corrected independent certificate and renewal audit
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -51,9 +51,9 @@ jobs:
           echo "CERT_PRODUCTION_ISSUER=PASS"
           sudo openssl x509 -in "$CERT" -noout -checkend $((30*24*3600)) >/dev/null
           echo "CERT_VALID_GT_30D=PASS"
-          MODE="$(sudo stat -Lc '%a' "$KEY")"; UID="$(sudo stat -Lc '%u' "$KEY")"; GID="$(sudo stat -Lc '%g' "$KEY")"
-          echo "PRIVATE_KEY_MODE=$MODE"; echo "PRIVATE_KEY_UID=$UID"; echo "PRIVATE_KEY_GID=$GID"
-          [[ "$UID" == "0" && ( "$MODE" == "600" || "$MODE" == "640" ) ]]
+          KEY_MODE="$(sudo stat -Lc '%a' "$KEY")"; KEY_UID="$(sudo stat -Lc '%u' "$KEY")"; KEY_GID="$(sudo stat -Lc '%g' "$KEY")"
+          echo "PRIVATE_KEY_MODE=$KEY_MODE"; echo "PRIVATE_KEY_UID=$KEY_UID"; echo "PRIVATE_KEY_GID=$KEY_GID"
+          [[ "$KEY_UID" == "0" && ( "$KEY_MODE" == "600" || "$KEY_MODE" == "640" ) ]]
           echo "PRIVATE_KEY_ACCESS=PASS"
           sudo ufw status | grep -Eq '^80/tcp[[:space:]]+ALLOW'
           echo "HTTP01_FIREWALL_PATH=PASS"
