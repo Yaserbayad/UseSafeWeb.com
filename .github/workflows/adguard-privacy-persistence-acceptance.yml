@@ -1,4 +1,4 @@
-name: Verify AdGuard privacy persistence for TSK-0207
+name: Reconcile TSK-0207 PASS and queue
 
 on:
   push:
@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  verify:
+  reconcile:
     runs-on: [self-hosted, linux, x64]
     timeout-minutes: 6
     steps:
@@ -23,212 +23,120 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
-
-      - name: Verify no persistent identifiable history or unapproved backup copy
+      - name: Persist TSK-0207 PASS, recompute queue, and remove one-shot verifier
         shell: bash
         run: |
           set -Eeuo pipefail
-          [[ "$(hostname -s)" == 'adguardvm' ]]
-          [[ "$(sha256sum /etc/machine-id | awk '{print $1}')" == 'e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2' ]]
-          [[ "$(git hash-object CURRENT_STATE.md)" == '3987dabdeced6ea70e811bc9b7a59dcd0ed46758' ]]
-          sudo -n true
-          systemctl is-active --quiet AdGuardHome.service
-
-          config='/opt/AdGuardHome/AdGuardHome.yaml'
-          secret='/var/lib/usesafeweb/adguard/admin.env'
-          backup_dir='/var/backups/usesafeweb/adguard'
-          [[ "$(sudo stat -c '%a %U:%G' "$secret")" == '600 root:root' ]]
-
-          sudo python3 - "$config" <<'PY'
-          import sys,yaml
-          d=yaml.safe_load(open(sys.argv[1],encoding='utf-8'))
-          q=d.get('querylog') or {}; stats=d.get('statistics') or {}; dns=d.get('dns') or {}
-          clients=(d.get('clients') or {}).get('persistent') or []
-          assert q.get('enabled') is False, q
-          assert q.get('file_enabled') is False, q
-          assert stats.get('enabled') is False, stats
-          assert dns.get('anonymize_client_ip') is True
-          assert clients == [], clients
-          print('persisted_querylog_enabled=false')
-          print('persisted_querylog_file_enabled=false')
-          print('persisted_statistics_enabled=false')
-          print('persisted_client_ip_anonymization=true')
-          print('persistent_client_count=0')
-          PY
-
-          username="$(sudo awk -F= '$1=="ADGUARD_ADMIN_USER" {sub(/^[^=]*=/,""); print; exit}' "$secret")"
-          password="$(sudo awk -F= '$1=="ADGUARD_ADMIN_PASSWORD" {sub(/^[^=]*=/,""); print; exit}' "$secret")"
-          [[ -n "$username" && -n "$password" ]]
-          base='http://127.0.0.1:3000/control'
-          curl --silent --show-error --fail --max-time 10 --user "$username:$password" "$base/querylog/config" -o /tmp/t0207-qcfg.json
-          curl --silent --show-error --fail --max-time 10 --user "$username:$password" "$base/stats/config" -o /tmp/t0207-scfg.json
           python3 - <<'PY'
-          import json
-          q=json.load(open('/tmp/t0207-qcfg.json',encoding='utf-8'))
-          s=json.load(open('/tmp/t0207-scfg.json',encoding='utf-8'))
-          assert q.get('enabled') is False, q
-          assert s.get('enabled') is False, s
-          print('api_querylog_enabled=false')
-          print('api_statistics_enabled=false')
+          import csv,datetime,json,re,subprocess
+
+          state_path='CURRENT_STATE.md'
+          expected_state='3987dabdeced6ea70e811bc9b7a59dcd0ed46758'
+          evidence_path='TSK_0207_PRIVACY_PERSISTENCE_EVIDENCE_2026-08-28.md'
+          expected_evidence='1c16db063e2e84d300b547075721d33c2e020e32'
+          actual_state=subprocess.check_output(['git','hash-object',state_path],text=True).strip()
+          actual_evidence=subprocess.check_output(['git','hash-object',evidence_path],text=True).strip()
+          if actual_state != expected_state:
+              raise SystemExit(f'CURRENT_STATE stale: expected {expected_state}, got {actual_state}')
+          if actual_evidence != expected_evidence:
+              raise SystemExit(f'TSK-0207 evidence mismatch: expected {expected_evidence}, got {actual_evidence}')
+
+          state=open(state_path,encoding='utf-8').read()
+          pass_block=state.split('### PASS',1)[1].split('### TSK-0204 corrected stable state',1)[0]
+          if '`TSK-0207`' in pass_block:
+              raise SystemExit('TSK-0207 already runtime PASS; reconcile manually')
+
+          now=datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
+          state=re.sub(r'\*\*Updated:\*\* [^\n]+', f'**Updated:** {now}  ', state, count=1)
+          anchor='- `TSK-0206` — client-IP anonymisation enabled while query logging/statistics remain disabled — evidence: `TSK_0206_CLIENT_IP_ANONYMIZATION_EVIDENCE_2026-08-27.md`, blob `5905136433d930c2325a877e10a45e8540ac6a80`.\n'
+          addition='- `TSK-0207` — synthetic production persistence audit proves no persistent raw query/domain history, file query log, identifiable client/statistics history, or unapproved backup copy in controlled project locations; only the documented approved encrypted configuration recovery artifact remains — evidence: `TSK_0207_PRIVACY_PERSISTENCE_EVIDENCE_2026-08-28.md`, blob `1c16db063e2e84d300b547075721d33c2e020e32`, publication commit `53728ea6cc13e9510859217b4567294a30a60bab`.\n'
+          if anchor not in state:
+              raise SystemExit('TSK-0206 PASS anchor not found')
+          state=state.replace(anchor,anchor+addition,1)
+
+          section='''### TSK-0207 accepted stable state
+
+`TSK-0207` — verify no persistent identifiable query history or client statistics: **PASS**.
+
+ACC-0207 requires that after a controlled test there be no persistent raw query/domain history, file query log, identifiable client history, or unapproved backup copy, and that any residual operational data be documented/anonymised. VER-0207/EVD-0207 require the approved procedure against the exact artifact/environment with reproducible output and reviewer disposition.
+
+Fresh production evidence `TSK_0207_PRIVACY_PERSISTENCE_EVIDENCE_2026-08-28.md`, blob `1c16db063e2e84d300b547075721d33c2e020e32`, publication commit `53728ea6cc13e9510859217b4567294a30a60bab`, executed on the accepted production host `adguardvm`, AdGuard Home v0.107.79, against runtime-state blob `3987dabdeced6ea70e811bc9b7a59dcd0ed46758`, approved-config blob `e9975c4e75c2a68131f049da942468d8d1952d8d`, and backup-policy blob `e62b48a3e746b1be90881bbffab3b7680384cc16`.
+
+The assertion-based synthetic test proved persisted/API query logging disabled; persisted file query logging disabled; a randomized reserved `.invalid` request absent from query-log output with query-log item count zero; no non-empty `querylog.json*`; persisted/API statistics disabled; top-client count and stored statistics query count zero; persistent client count zero; client-IP anonymisation enabled; one approved root-only age-encrypted configuration backup pair with matching metadata/hash; zero unexpected backup-directory classes; zero plaintext staging; and zero stale/raw/unapproved backup-named artifacts in the controlled service/config/secret/temp locations.
+
+The retained same-VM encrypted backup remains the documented approved configuration recovery artifact already proven under TSK-0430 to exclude prohibited query/client history. It is not a participant-history dataset and is not evidence of node-loss resilience.
+
+REQ-0018 and RSK-0001 remain respected: this was a synthetic rehearsal only and no real England participant was activated or processed. The separately deferred UK representative/ICO work remains unresolved. **ACC-0207 is fully satisfied. TSK-0207: PASS.**
+
+'''
+          marker='### External/provider and legal boundaries\n'
+          if marker not in state:
+              raise SystemExit('external-boundary marker not found')
+          state=state.replace(marker,section+marker,1)
+
+          state=state.replace(
+              '- TSK-0442 TLS target-device acceptance, TSK-0443 certificate renewal/expiry controls, TSK-0514 external-network/removal verification, TSK-0511 per-supported-device verification, and TSK-0512 filtering/exception/rollback verification are satisfied. None of these technical PASS states by themselves authorize participant activation.',
+              '- TSK-0442 TLS target-device acceptance, TSK-0443 certificate renewal/expiry controls, TSK-0514 external-network/removal verification, TSK-0511 per-supported-device verification, TSK-0512 filtering/exception/rollback verification, and TSK-0207 privacy-persistence verification are satisfied. None of these PASS states by themselves authorize participant activation.'
+          )
+          state=state.replace(
+              '- Plain DNS 53 remains non-public. TSK-0442 TLS, TSK-0443 certificate renewal/expiry controls, TSK-0514 external-network/removal verification, TSK-0511 supported-device verification and TSK-0512 filtering regression are PASS, but broader participant/public readiness remains gated by validation, privacy/legal and activation evidence.',
+              '- Plain DNS 53 remains non-public. TSK-0442 TLS, TSK-0443 certificate renewal/expiry controls, TSK-0514 external-network/removal verification, TSK-0511 supported-device verification, TSK-0512 filtering regression and TSK-0207 privacy-persistence verification are PASS, but broader participant/public readiness remains gated by validation, privacy/legal and activation evidence.'
+          )
+
+          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',newline='',encoding='utf-8-sig')))
+          pass_block=state.split('### PASS',1)[1].split('### TSK-0204 corrected stable state',1)[0]
+          runtime_pass=set(re.findall(r'`(TSK-\d+)`\s+—',pass_block)); runtime_pass.add('TSK-0011')
+          runtime_wait=set(re.findall(r'### WAITING — (TSK-\d+)',state))
+          planning_pass={r['Task_ID'].strip() for r in rows if (r.get('Execution_State') or '').strip()=='PASS'}
+          satisfied=runtime_pass|planning_pass
+          rank={'CRITICAL':0,'HIGH':1,'MEDIUM':2,'LOW':3}
+          ready=[]
+          for i,r in enumerate(rows):
+              tid=(r.get('Task_ID') or '').strip()
+              if not tid or tid in runtime_pass or tid in runtime_wait: continue
+              if (r.get('Lifecycle_Stage') or '').strip()!='L2': continue
+              if (r.get('Action_Authority') or '').strip()!='AUTO_ALLOWED': continue
+              if (r.get('Plan_Status') or '').strip() not in {'PLANNED','ACTIVE'}: continue
+              deps=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
+              if all(d in satisfied for d in deps): ready.append((i,r,deps))
+          ready.sort(key=lambda x:(rank.get((x[1].get('Priority') or '').strip(),9),x[0],x[1]['Task_ID']))
+
+          q=['# Queue Recompute Evidence after TSK-0207 PASS','', '**Date:** 2026-08-28','', f'- Pre-mutation CURRENT_STATE blob: `{actual_state}`', f'- TSK-0207 evidence blob: `{actual_evidence}`', f'- Runtime PASS count after local reconciliation (including TSK-0011 sentinel): `{len(runtime_pass)}`', f'- Runtime WAIT: `{",".join(sorted(runtime_wait)) or "none"}`', f'- L2 AUTO_ALLOWED dependency-ready count: `{len(ready)}`','', '## Dependency-ready tasks','']
+          if not ready:
+              q.append('None.')
+          else:
+              for _,r,deps in ready[:40]:
+                  q += [f"### {r.get('Task_ID','')} — {r.get('Title','')}",'', f"- Priority: `{r.get('Priority','')}`", f"- Critical path: `{r.get('Critical_Path','')}`", f"- Plan status: `{r.get('Plan_Status','')}`", f"- WBS execution snapshot: `{r.get('Execution_State','')}`", f"- Dependencies: `{r.get('Dependencies','')}`", f"- Action authority: `{r.get('Action_Authority','')}`", f"- Acceptance: `{r.get('Acceptance_ID','')}` — {r.get('Acceptance_Criteria','')}", f"- Verification: `{r.get('Verification_ID','')}`", f"- Required tools/access: {r.get('Required_Tools_or_Access','')}", f"- Requirement refs: `{r.get('Requirement_Reference','')}`", f"- Interface refs: `{r.get('Interface_Reference','')}`", f"- Risk refs: `{r.get('Risk_Reference','')}`", f"- Trigger: {r.get('Trigger','')}", f"- Preconditions: {r.get('Preconditions','')}",'']
+          q += ['## Selection note','', 'This calculation proves dependency readiness only. Every candidate still requires current gate/trigger/constraint/interface/platform/authority preflight and direct acceptance evidence before dispatch or PASS.','']
+          open('TSK_0207_QUEUE_RECOMPUTE_EVIDENCE_2026-08-28.md','w',encoding='utf-8').write('\n'.join(q))
+
+          tail='## Queue status after current reconciliation\n\n'
+          tail+='TSK-0207 is runtime PASS with fresh synthetic production privacy-persistence evidence. '
+          tail+=f'The deterministic WBS dependency-readiness recomputation found **{len(ready)}** L2 `AUTO_ALLOWED` candidate(s).\n\n'
+          if ready:
+              first=ready[0][1]
+              tail+=f"Highest dependency-ready candidate: `{first.get('Task_ID','')}` — {first.get('Title','')}. Dependency readiness alone does not authorize execution; full current gate/constraint/interface/risk/tool preflight is required.\n\n"
+          else:
+              tail+='No ordinary L2 `AUTO_ALLOWED` candidate is dependency-ready.\n\n'
+          tail+='Current explicit WAITING boundary:\n\n- `TSK-0431` — identify/provide the owner-managed Azure-native backup/restore path required by REQ-0052.\n\n'
+          tail+='## Exact next authoritative step\n\n'
+          if ready:
+              first=ready[0][1]
+              tail+=f"Preflight `{first.get('Task_ID','')}` — {first.get('Title','')} against its exact acceptance, gates, trigger, requirements, constraints, interfaces, risk and available executor. Continue only if safe and authorized. "
+          else:
+              tail+='No ordinary L2 work may progress until a dependency/gate condition changes. '
+          tail+='Separately, TSK-0431 remains WAITING on the owner-managed Azure-native backup/restore path. Do not bypass participant-activation, legal, Azure control-plane, provider, recovery, privacy or validation gates.\n'
+          state=state.split('## Queue status after current reconciliation\n',1)[0]+tail
+          open(state_path,'w',encoding='utf-8').write(state)
+
+          print('PRE_STATE_BLOB='+actual_state)
+          print('READY_COUNT='+str(len(ready)))
+          for _,r,_ in ready[:10]:
+              print('READY='+json.dumps({k:r.get(k,'') for k in ['Task_ID','Title','Priority','Critical_Path','Dependencies','Action_Authority','Acceptance_ID','Acceptance_Criteria','Verification_ID','Required_Tools_or_Access','Requirement_Reference','Interface_Reference','Risk_Reference','Trigger','Preconditions']},sort_keys=True,ensure_ascii=False))
           PY
-
-          test_domain="usesafeweb-t0207-$RANDOM-$RANDOM.invalid"
-          printf '%s' "$test_domain" > /tmp/t0207-domain
-          TEST_DOMAIN="$test_domain" python3 - <<'PY'
-          import os,random,socket,struct
-          name=os.environ['TEST_DOMAIN']
-          q=b''.join(bytes([len(x)])+x.encode() for x in name.split('.'))+b'\x00'
-          pkt=struct.pack('!HHHHHH',random.randrange(0,65536),0x0100,1,0,0,0)+q+struct.pack('!HH',1,1)
-          s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.settimeout(3); s.sendto(pkt,('127.0.0.1',53))
-          try: s.recvfrom(4096)
-          except socket.timeout: pass
-          finally: s.close()
-          PY
-          sleep 1
-
-          curl --silent --show-error --fail --max-time 10 --user "$username:$password" "$base/querylog?limit=100" -o /tmp/t0207-qlog.json
-          curl --silent --show-error --fail --max-time 10 --user "$username:$password" "$base/stats" -o /tmp/t0207-stats.json
-          unset password
-          TEST_DOMAIN="$test_domain" python3 - <<'PY'
-          import json,os
-          q=json.load(open('/tmp/t0207-qlog.json',encoding='utf-8'))
-          s=json.load(open('/tmp/t0207-stats.json',encoding='utf-8'))
-          domain=os.environ['TEST_DOMAIN']
-          items=q.get('data') or []
-          assert not any(domain in json.dumps(x,sort_keys=True) for x in items), 'synthetic domain retained in query log'
-          assert items == [], f'query log unexpectedly contains {len(items)} item(s)'
-          assert (s.get('top_clients') or []) == [], s.get('top_clients')
-          assert int(s.get('num_dns_queries') or 0) == 0, s.get('num_dns_queries')
-          print('synthetic_query_retained=false')
-          print('querylog_items=0')
-          print('top_clients_count=0')
-          print('statistics_query_count=0')
-          PY
-
-          mapfile -t qfiles < <(sudo find /opt/AdGuardHome -type f -name 'querylog.json*' -size +0c -print 2>/dev/null || true)
-          ((${#qfiles[@]} == 0))
-          echo 'nonempty_querylog_file_count=0'
-
-          sudo test -d "$backup_dir"
-          [[ "$(sudo stat -c '%a %U:%G' "$backup_dir")" == '700 root:root' ]]
-          archive_count="$(sudo find "$backup_dir" -maxdepth 1 -type f -name 'usesafeweb-adguard-config-*.tar.age' -print | wc -l)"
-          meta_count="$(sudo find "$backup_dir" -maxdepth 1 -type f -name 'usesafeweb-adguard-config-*.tar.age.meta.json' -print | wc -l)"
-          [[ "$archive_count" =~ ^[0-9]+$ && "$meta_count" =~ ^[0-9]+$ ]]
-          (( archive_count >= 1 && archive_count <= 2 ))
-          (( meta_count == archive_count ))
-          unexpected_count="$(sudo find "$backup_dir" -maxdepth 1 -mindepth 1 \( -type f ! -name 'usesafeweb-adguard-config-*.tar.age' ! -name 'usesafeweb-adguard-config-*.tar.age.meta.json' -o -type d ! -name '.' \) -print | wc -l)"
-          [[ "$unexpected_count" == '0' ]]
-          stage_count="$(sudo find "$backup_dir" -maxdepth 1 -type d -name '.stage.*' -print | wc -l)"
-          [[ "$stage_count" == '0' ]]
-
-          sudo python3 - "$backup_dir" <<'PY'
-          from pathlib import Path
-          import hashlib,json,os,sys
-          root=Path(sys.argv[1])
-          archives=sorted(root.glob('usesafeweb-adguard-config-*.tar.age'))
-          assert 1 <= len(archives) <= 2, len(archives)
-          for a in archives:
-              st=a.stat(); assert (st.st_mode & 0o777)==0o600
-              meta=Path(str(a)+'.meta.json'); assert meta.exists()
-              mst=meta.stat(); assert (mst.st_mode & 0o777)==0o600
-              with a.open('rb') as f: assert f.read(21).startswith(b'age-encryption.org/v1')
-              m=json.load(meta.open(encoding='utf-8'))
-              assert m.get('encrypted_archive')==a.name
-              h=hashlib.sha256()
-              with a.open('rb') as f:
-                  for chunk in iter(lambda:f.read(1024*1024),b''): h.update(chunk)
-              assert m.get('encrypted_archive_sha256')==h.hexdigest()
-              assert 'root-only same-VM encrypted staging/recovery artifact' in str(m.get('location_class',''))
-          print('approved_encrypted_backup_pairs='+str(len(archives)))
-          print('approved_backup_metadata_and_hashes=PASS')
-          PY
-
-          # No raw/stale backup artifacts are permitted in the service/config secret areas.
-          stale_service_copies="$(sudo find /opt/AdGuardHome -maxdepth 3 -type f \( -name 'AdGuardHome.yaml.bak*' -o -name 'AdGuardHome.yaml.*.bak*' -o -name '*.rollback' -o -name '*.backup' \) -print | wc -l)"
-          [[ "$stale_service_copies" == '0' ]]
-          stale_secret_copies="$(sudo find /var/lib/usesafeweb/adguard -maxdepth 2 -type f \( -name '*.bak*' -o -name '*.backup' -o -name '*.tar*' -o -name '*.zip' -o -name '*.age' \) -print | wc -l)"
-          [[ "$stale_secret_copies" == '0' ]]
-          temp_backup_artifacts="$(sudo find /tmp /var/tmp -maxdepth 2 \( -type d -name '.stage.*' -o -type f -name 'usesafeweb-adguard-config-*.tar*' \) -print 2>/dev/null | wc -l)"
-          [[ "$temp_backup_artifacts" == '0' ]]
-          echo 'unapproved_backup_artifact_count=0'
-          echo 'plaintext_backup_stage_count=0'
-
-          /opt/AdGuardHome/AdGuardHome --version | awk '{print "adguard_home_version="$NF}' > /tmp/t0207-safe-summary
-          printf 'approved_encrypted_backup_pairs=%s\n' "$archive_count" >> /tmp/t0207-safe-summary
-          printf 'querylog_items=0\nstatistics_query_count=0\ntop_clients_count=0\nunapproved_backup_artifact_count=0\n' >> /tmp/t0207-safe-summary
-          rm -f /tmp/t0207-qcfg.json /tmp/t0207-scfg.json /tmp/t0207-qlog.json /tmp/t0207-stats.json /tmp/t0207-domain
-          echo 'TSK_0207_ACCEPTANCE=PASS'
-
-      - name: Publish TSK-0207 evidence after successful production assertions
-        shell: bash
-        run: |
-          set -Eeuo pipefail
-          workflow_blob="$(git hash-object .github/workflows/adguard-privacy-persistence-acceptance.yml)"
-          state_blob="$(git hash-object CURRENT_STATE.md)"
-          approved_config_blob="$(git hash-object infrastructure/adguard-server/approved-adguard-config-v1.json)"
-          backup_policy_blob="$(git hash-object infrastructure/adguard-server/BACKUP_SCOPE_POLICY.md)"
-          source /tmp/t0207-safe-summary
-          cat > TSK_0207_PRIVACY_PERSISTENCE_EVIDENCE_2026-08-28.md <<EOF
-          # TSK-0207 — Privacy Persistence Verification Evidence
-
-          **Task:** TSK-0207 — Verify no persistent identifiable query history or client statistics  
-          **Acceptance:** ACC-0207  
-          **Verification:** VER-0207  
-          **Evidence:** EVD-0207  
-          **Date:** 2026-08-28  
-          **Target:** production host \`adguardvm\`
-
-          ## Exact environment/artifacts
-
-          - Workflow source commit: \`${GITHUB_SHA}\`
-          - Workflow blob: \`${workflow_blob}\`
-          - Runtime-state blob at checkout: \`${state_blob}\`
-          - Approved-config blob: \`${approved_config_blob}\`
-          - Backup-policy blob: \`${backup_policy_blob}\`
-          - AdGuard Home version: \`${adguard_home_version}\`
-          - Production machine identity was asserted against the accepted \`adguardvm\` machine-id fingerprint before testing.
-
-          ## Fresh controlled production test
-
-          The assertion step generated one randomized reserved \`.invalid\` DNS name locally on the production resolver. It then verified, after the request:
-
-          - persisted query logging is disabled;
-          - persisted file query logging is disabled;
-          - API query logging is disabled;
-          - the synthetic name is absent from query-log output and query-log item count is \`0\`;
-          - no non-empty \`querylog.json*\` file exists;
-          - persisted and API statistics are disabled;
-          - top-client count is \`0\` and stored statistics query count is \`0\`;
-          - persistent client count is \`0\` and client-IP anonymisation remains enabled;
-          - approved encrypted backup pairs retained: \`${approved_encrypted_backup_pairs}\` (within the approved maximum of two);
-          - every retained archive is root-only \`0600\` age ciphertext with matching root-only metadata and verified SHA-256;
-          - the backup directory is root-only and contains no unexpected file/directory class;
-          - plaintext backup staging count is \`0\`;
-          - no stale/raw backup-named copy exists in the AdGuard service/config or UseSafeWeb secret area, and no matching temporary backup artifact exists in \`/tmp\` or \`/var/tmp\`;
-          - unapproved backup artifact count for the controlled project locations is \`0\`.
-
-          The approved encrypted archives contain the configuration package defined by the accepted backup policy; accepted TSK-0430 owner-side decryption already proved the package/member scope and absence of prohibited query history. The retained same-VM encrypted copies are documented residual recovery artifacts, not query/client-history datasets and not proof of node-loss resilience.
-
-          ## Privacy/legal boundary
-
-          REQ-0018 remains respected: no real England participant was activated or processed. The test used a randomized reserved synthetic name only. No participant browsing/domain history, participant identity, device identity, credential, token, private key, or raw query data is stored in this evidence.
-
-          REQ-0019/INT-0007 are supported by direct actual-configuration/runtime/storage evidence rather than assumed policy. CON-0007 and CON-0008 remain satisfied.
-
-          ## Acceptance evaluation
-
-          - Persistent raw query/domain history after controlled test: **none — PASS**.
-          - File query log after controlled test: **none — PASS**.
-          - Identifiable client/statistics history after controlled test: **none — PASS**.
-          - Unapproved backup copy in controlled project locations: **none — PASS**.
-          - Residual operational data: only the documented root-only approved encrypted configuration recovery artifact(s), with no prohibited query/client history — **PASS**.
-
-          **Stable outcome: TSK-0207 = PASS.**
-
-          This PASS verifies the current synthetic production privacy-persistence condition only. It does not resolve the separately deferred UK representative/ICO work, authorize real-participant activation, or satisfy later legal/release gates.
-          EOF
-          git config user.name "UseSafeWeb QA Bot"
+          git config user.name "UseSafeWeb Governance Bot"
           git config user.email "actions@users.noreply.github.com"
-          git add TSK_0207_PRIVACY_PERSISTENCE_EVIDENCE_2026-08-28.md
-          git commit -m "evidence: verify TSK-0207 privacy persistence"
+          git add CURRENT_STATE.md TSK_0207_QUEUE_RECOMPUTE_EVIDENCE_2026-08-28.md
+          git rm .github/workflows/adguard-privacy-persistence-acceptance.yml
+          git commit -m "state: mark TSK-0207 PASS and recompute governed queue"
           git push origin HEAD:main
