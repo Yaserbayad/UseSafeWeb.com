@@ -22,8 +22,7 @@ jobs:
           python3 - <<'PY'
           import csv, pathlib, re
           root=pathlib.Path('Plans/Master')
-          p=root/'WBS/master-wbs.csv'
-          rows=list(csv.DictReader(p.open(newline='', encoding='utf-8-sig')))
+          rows=list(csv.DictReader((root/'WBS/master-wbs.csv').open(newline='', encoding='utf-8-sig')))
           def stage(r): return (r.get('Lifecycle_Stage') or '').strip()
           def deps(r): return [x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
           l3_ids={r['Task_ID'].strip() for r in rows if stage(r)=='L3'}
@@ -41,9 +40,7 @@ jobs:
                       v=(r.get(c) or '').strip()
                       if v: out.append(f'- **{c}:** {v}')
                   out.append('')
-          emit('L3 tasks directly feeding L4', l3_with_l4)
-          emit('L4 roots', roots)
-          emit('L4 tasks with direct L3 dependencies', cross)
+          emit('L3 tasks directly feeding L4', l3_with_l4); emit('L4 roots', roots); emit('L4 tasks with direct L3 dependencies', cross)
           likely=[]
           for r in rows:
               txt=' '.join([(r.get('Title') or ''),(r.get('Acceptance_Criteria') or ''),(r.get('Notes') or '')]).lower()
@@ -52,8 +49,7 @@ jobs:
           out += ['## Cross-authority references requiring CR-0003 review','']
           terms=re.compile(r'LG-05|behavioral validation|behavioural validation|validated behavior|validated behaviour|before expensive software build|before integrated software build', re.I)
           for f in sorted(root.rglob('*')):
-              if not f.is_file() or f.suffix not in {'.md','.yaml','.yml'}: continue
-              if 'Generated' in f.parts: continue
+              if not f.is_file() or f.suffix not in {'.md','.yaml','.yml'} or 'Generated' in f.parts: continue
               try: lines=f.read_text(encoding='utf-8').splitlines()
               except UnicodeDecodeError: continue
               matches=[(i,l.strip()) for i,l in enumerate(lines,1) if terms.search(l)]
@@ -61,7 +57,18 @@ jobs:
                   out.append(f'### {f.relative_to(root).as_posix()}')
                   for i,l in matches: out.append(f'- L{i}: {l}')
                   out.append('')
-          pathlib.Path('CR_0003_L3_L4_IMPACT_INSPECTION_2026-08-28.md').write_text('\n'.join(out)+'\n', encoding='utf-8')
+          rel=(root/'RELATIONSHIP_INDEX.yaml').read_text(encoding='utf-8').splitlines()
+          out += ['## Exact relationship-index blocks for affected L4 tasks','']
+          for tid in ['TSK-0139','TSK-0326']:
+              start=None; end=None
+              for i,line in enumerate(rel):
+                  if line==f'  {tid}:': start=i; break
+              if start is not None:
+                  for j in range(start+1,len(rel)):
+                      if re.match(r'^  [A-Za-z0-9_.:-]+:$', rel[j]): end=j; break
+                  if end is None: end=len(rel)
+                  out += [f'### {tid}','```yaml']+rel[start:end]+['```','']
+          pathlib.Path('CR_0003_L3_L4_IMPACT_INSPECTION_2026-08-28.md').write_text('\n'.join(out)+'\n',encoding='utf-8')
           print('CR0003_IMPACT_INSPECTION=PASS')
           PY
       - name: Publish inspection report
@@ -70,5 +77,5 @@ jobs:
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add CR_0003_L3_L4_IMPACT_INSPECTION_2026-08-28.md
-          git commit -m "governance: extend CR-0003 L3 to L4 impact inspection"
+          git commit -m "governance: finalize CR-0003 impact inspection"
           git push
