@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T17:05:32Z
+**Updated:** 2026-08-28T17:06:16Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -465,8 +465,13 @@ The contract preserves DEC-0042/EXC-0001 and EXC-0008: no account/login/password
 
 ## Queue status after current reconciliation
 
-`TSK-0042` is runtime PASS. A fresh conservative dependency-ready AUTO_ALLOWED L4 queue has been generated at `TSK_0042_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. No next task is selected by this write; the queue must be reread against acceptance, direct predecessor evidence, gate/trigger conditions and CR-0003 before execution. HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED and representative-parent work remain fenced.
+The TSK-0042 post-PASS queue was reread against current acceptance and CR-0003. `TSK-0187` remains ineligible because it requires representative-parent behavioral evidence. `TSK-0140` remains ineligible for PASS because owner/multi-role review evidence is absent. `TSK-0230` is the highest eligible AUTO_ALLOWED provisional-L4 task.
+
+- **Selected next: `TSK-0230 — Define privacy, data-minimisation, retention, and deletion NFRs`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
+- Hard dependencies: `TSK-0313`, `TSK-0042` — current PASS.
+- ACC-0230: Each data element has purpose, lawful basis, source, recipient, retention, deletion mechanism, access control, and prohibited use; identifiable browsing history remains excluded.
+- Selection boundary: internal provisional privacy/data NFR definition only. It must reuse current data/accountless/privacy authority, preserve the legal/participant hold, distinguish existing accepted lawful-basis analysis from any new legal conclusion, and verify material current UK privacy-law facts from authoritative sources before freezing them.
 
 ## Exact next authoritative step
 
-Read back the TSK-0042 post-PASS L4 queue, reject any candidate requiring unavailable real-user evidence, owner review/approval, unresolved trigger/gate or missing direct predecessor proof, and persist the deterministic highest-priority eligible AUTO_ALLOWED selection.
+Execute bounded `TSK-0230`: inventory every allowed product/support/diagnostic/operational data element in the active minimum, map purpose/source/recipient/retention/deletion/access/prohibited use and the current supported lawful-basis position, exclude identifiable browsing history, preserve DEC-0042/TSK-0229/CON-0007/CON-0008 and unresolved legal/participant gates; source-verify material current UK privacy rules; persist/read back independent ACC-0230 evidence; reconcile runtime; then recompute.
