@@ -1,0 +1,60 @@
+name: Reconcile TSK-0041 PASS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-tsk0041-pass.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify DNS requirements and reconcile runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object TSK_0041_BASELINE_DNS_PROTECTION_ACTIVATION_REQUIREMENTS_2026-08-28.md)" = "95a5292223f1d2c3c8f79d4c889ad91e917478b2"
+          test "$(git hash-object TSK_0041_BASELINE_DNS_PROTECTION_ACTIVATION_EVIDENCE_2026-08-28.md)" = "66cdc50ae2fbb9ec4501b408837d01aafcba876d"
+          python3 - <<'PY'
+          import csv, pathlib, re
+          from datetime import datetime, timezone
+          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',encoding='utf-8-sig',newline=''))); by={r['Task_ID']:r for r in rows}
+          t=by['TSK-0041']; n=by['TSK-0313']; real=by['TSK-0187']; owner=by['TSK-0140']
+          assert t['Dependencies']=='TSK-0143' and t['Action_Authority']=='AUTO_ALLOWED'
+          assert 'endpoint format' in t['Acceptance_Criteria'] and 'no-history constraints' in t['Acceptance_Criteria']
+          assert set(x.strip() for x in n['Dependencies'].split(';'))=={'TSK-0041','TSK-0144','TSK-0146'}
+          assert n['Priority']=='MEDIUM' and n['AI_Capability_A0_A4']=='A3' and n['Action_Authority']=='AUTO_ALLOWED'
+          assert 'Every Protection Map state has entry/evidence rules' in n['Acceptance_Criteria']
+          e=pathlib.Path('TSK_0041_BASELINE_DNS_PROTECTION_ACTIVATION_EVIDENCE_2026-08-28.md').read_text()
+          assert 'directly satisfies every ACC-0041 clause' in e
+          assert 'Legacy “DoH setup” wording' in e and 'RSK-0002' in e
+          p=pathlib.Path('CURRENT_STATE.md'); text=p.read_text()
+          assert '### TSK-0559 accepted stable state' in text
+          assert 'Selected next: `TSK-0041' in text
+          assert '### TSK-0041 accepted stable state' not in text
+          assert '### TSK-0144 accepted stable state' in text
+          # TSK-0146 is current WBS PASS; direct task ownership is authoritative for this no-dependency historical owner freeze.
+          assert by['TSK-0146']['Execution_State']=='PASS'
+          now=datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
+          text=re.sub(r'\*\*Updated:\*\* [^\n]+',f'**Updated:** {now}',text,count=1)
+          sec='''### TSK-0041 accepted stable state\n\n`TSK-0041 — Specify baseline DNS-protection activation requirements`: **PASS for the provisional internal L4 DNS-activation requirements under DEC-0050/CR-0003**. Contract `TSK_0041_BASELINE_DNS_PROTECTION_ACTIVATION_REQUIREMENTS_2026-08-28.md`, blob `95a5292223f1d2c3c8f79d4c889ad91e917478b2`; independent evidence `TSK_0041_BASELINE_DNS_PROTECTION_ACTIVATION_EVIDENCE_2026-08-28.md`, blob `66cdc50ae2fbb9ec4501b408837d01aafcba876d`. ACC-0041 is satisfied: exact endpoint formats, Apple DoH versus Android native DoT activation semantics, filtering verification, truthful fail-safe behavior, removal/recovery, Private Relay/VPN/browser/app/network conflicts, narrow reversible false-positive handling and no-history privacy constraints are explicit. Historical “DoH setup” wording is reconciled to stronger current target evidence rather than misapplied as a universal Android DoH workflow.\n\nCurrent direct target evidence proves the accepted phone encrypted-DNS paths, allowed/blocked/narrow-exception/rollback filtering semantics, normal-DNS removal recovery and no persistent raw query/client-history baseline. `RSK-0002` remains OPEN: final user-facing activation usability/comprehension is not representative-parent validated. This PASS does not authorize LG-05/LG-06, implementation/build, participants, legal completion, payment, public release or launch.\n\n'''
+          marker='## Runtime safeguards'; assert marker in text
+          text=text.replace(marker,sec+marker,1)
+          q=text.rfind('\n## Queue status after current reconciliation'); assert q>=0
+          text=text[:q].rstrip()+f'''\n\n## Queue status after current reconciliation\n\n`TSK-0041` is runtime PASS. This satisfies the previously missing direct predecessor for `TSK-0313`; its other hard predecessors `TSK-0144` and `TSK-0146` are current PASS. `TSK-0187` remains ineligible under CR-0003 because it requires representative-parent evidence, and `TSK-0140` remains fenced by its own owner/multi-role review acceptance.\n\n- **Selected next: `TSK-0313 — {n['Title']}`** (L4 / {n['AI_Capability_A0_A4']} / {n['Action_Authority']} / {n['Priority']}).\n- Hard dependencies: `TSK-0041`, `TSK-0144`, `TSK-0146` — current PASS.\n- ACC-0313: {n['Acceptance_Criteria']}\n- Selection rationale: all direct predecessors now satisfy current evidence semantics; ACC-0313 is an internal Protection Map requirements contract that can be satisfied from the already accepted truth-state/data/journey evidence without representative-parent behavior or an owner approval act.\n\n## Exact next authoritative step\n\nExecute bounded `TSK-0313`: specify Protection Map entry/evidence rules, parent-facing state semantics, transitions, unsupported behavior, persistence scope, accountless device/journey boundary and testable examples; reuse but do not weaken TSK-0320, TSK-0229, TSK-0315 and TSK-0041; preserve parent-confirmed versus system-verified separation; carry `RSK-0002`; persist/read back independent ACC-0313 evidence; reconcile runtime; then recompute.\n'''
+          p.write_text(text)
+          PY
+          git diff --check
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add CURRENT_STATE.md
+          git commit -m "state: accept TSK-0041 and select TSK-0313"
+          git push
