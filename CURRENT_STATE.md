@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T21:20:50Z
+**Updated:** 2026-08-28T21:23:07Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -534,12 +534,14 @@ This PASS remains provisional internal L4 product-definition evidence only. It d
 - Plain DNS 53 remains non-public. TSK-0442 TLS, TSK-0443 certificate renewal/expiry controls, TSK-0514 external-network/removal verification, TSK-0511 supported-device verification, TSK-0512 filtering regression and TSK-0207 privacy-persistence verification are PASS, but broader participant/public readiness remains gated by validation, privacy/legal and activation evidence.
 - Azure control-plane remains owner-managed; runner autonomy applies to handed-off VM/repository-authorized tasks only after target identity and scope are verified.
 
-## Queue status after TSK-0140 acceptance
+## Queue status — TSK-0317 HUMAN_ONLY preparation selected
 
-`TSK-0140` is runtime **PASS** for its bounded provisional internal L4 product-brief acceptance. Owner approval and final acceptance evidence were published and read back from `main`. No successor is selected by this reconciliation write.
+`TSK-0317 — Design the simplest technically correct install, verification, removal, and recovery path for each supported platform` is the selected runtime **TODO** item for **preparation only**. Its sole hard dependency `TSK-0316` is runtime PASS. The WBS classifies TSK-0317 as L4 / HIGH / A1 / HUMAN_ONLY, so AI may prepare a source-grounded candidate and verification packet but may not perform, fabricate, or self-certify the required human design decision.
 
-Current fences remain unchanged: `RSK-0002` OPEN; `REQ-0022` unresolved; LG-03/LG-04/LG-05/LG-06 non-PASS; account/dashboard deferred under EXC-0001; HUMAN_ONLY tasks remain human-controlled; L5/L6 build, participant processing, legal completion, payment, publication and launch remain unauthorized.
+Selection basis after TSK-0140 PASS: TSK-0312 is statically DEFERRED under EXC-0001; TSK-0309 is blocked on representative-parent evidence through TSK-0187; TSK-0307 and TSK-0310 depend on TSK-0317; TSK-0311 depends on HUMAN_ONLY TSK-0318; TSK-0319 is also HUMAN_ONLY. Among the live HIGH HUMAN_ONLY L4 bottlenecks, TSK-0317 is first by current dependency impact and WBS/task order.
+
+All current fences remain: RSK-0002 OPEN; REQ-0022 unresolved; LG-03/LG-04/LG-05/LG-06 non-PASS; account/dashboard deferred; no L5/L6 build, participant processing, legal completion, payment, publication or launch authority.
 
 ## Exact next authoritative step
 
-Recompute the deterministic eligible queue from the current canonical WBS/runtime/gates after this TSK-0140 PASS read-back. Consider only current bounded L4 AUTO_ALLOWED work whose hard dependencies are directly satisfied and whose own acceptance can be proven without representative-participant evidence, a HUMAN_ONLY/owner-only decision, unresolved legal fact, L5/L6 authority, public/production activation or deferred account/persistence scope. Persist and read back the selected successor before substantive execution.
+Prepare the smallest technically correct TSK-0317 candidate from current accepted friction, DNS identity, support-matrix, verification-state and recovery evidence. Make Android/iPhone asymmetry, automatic-versus-manual limits, verification truth, conflicts, fallback, removal and recovery explicit. Publish and independently verify the candidate, then classify TSK-0317 WAITING on the exact HUMAN_ONLY review/decision without marking PASS or claiming human completion.
