@@ -46,9 +46,8 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           p=Path('CURRENT_STATE.md'); text=p.read_text(encoding='utf-8')
-          # Refresh Updated time without disturbing authority text.
           import re
-          text=re.sub(r'\*\*Updated:\*\* [^\n]+', '**Updated:** 2026-08-28T15:22:00Z  ', text, count=1)
+          text=re.sub(r'\*\*Updated:\*\* [^\n]+', '**Updated:** 2026-08-28T15:24:00Z', text, count=1)
           sec='''### CR-0003 owner-authorized L3 deferral / provisional L4 baseline\n\nThe Project Owner explicitly deferred the complete real-participant Experiment-1/L3 behavioral-validation branch through **2027-08-27**, kept LG-03/LG-04/LG-05 non-PASS/DEFER, and authorized bounded internal L4 Product, Brand and Experience definition/design from current technical/synthetic evidence only. Canonical planning publication commit `a7e536e444e9db4415374a794ca43980f69ba803`; evidence `CR_0003_OWNER_L3_DEFERRAL_PROVISIONAL_L4_EVIDENCE_2026-08-28.md`, blob `8d90d06e547d15cf4dd11c0ba1dccdd115bda4b3`; WBS blob `dce5b829c4d447eac180ae1e896e0019292cf971`; manifest blob `00feca027babfd99dcd1992e3e0abd6ef2d3380b`. Full deterministic validation remained PASS with 641 tasks and 849 dependency edges.\n\n`RSK-0002` remains OPEN and explicitly represents the missing real-participant behavioral evidence. `TSK-0139` is rebaselined as the bounded provisional L4 entry, depending on current `TSK-0513` PASS. `ACC-0139` and `ACC-0141` prohibit claims that behavioral validation occurred. `TSK-0326` and any task whose own acceptance requires actual participant/user evidence remain deferred. No L3 gate PASS, LG-06 PASS, L5/L6 build authority, participant processing, legal completion or public-launch authority is inferred.\n\n'''
           marker='## Runtime safeguards'
           if '### CR-0003 owner-authorized L3 deferral / provisional L4 baseline' not in text:
