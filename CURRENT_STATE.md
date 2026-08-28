@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T21:54:35Z
+**Updated:** 2026-08-28T21:56:44Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -558,14 +558,18 @@ Preparation independently verifies complete ACC-0318 content coverage while pres
 
 TSK-0318 cannot become PASS until an authorized human explicitly APPROVES, REQUESTS CHANGES to, or REJECTS exact candidate blob `64f0e6382a5ce166c0aad2ad2e86a3796c5df379`. Approval remains provisional internal L4 only and does not authorize implementation, publication, market activation or launch.
 
-## Queue status — TSK-0319 HUMAN_ONLY preparation selected
+### TSK-0319 preparation stable state
 
-`TSK-0319 — Design automated verification, issue-specific troubleshooting, safe reset/reinstall/remove, and point-of-need help` is the selected runtime **TODO** item for **preparation only**. Its hard dependencies `TSK-0315` and `TSK-0320` are runtime PASS. The WBS classifies TSK-0319 as L4 / HIGH / A1 / HUMAN_ONLY, so AI may prepare and independently verify a complete candidate but may not perform or fabricate the human design disposition.
+`TSK-0319 — Design automated verification, issue-specific troubleshooting, safe reset/reinstall/remove, and point-of-need help`: runtime **WAITING**, not PASS. Bounded AI preparation is complete. Candidate `TSK_0319_AUTOMATED_VERIFICATION_TROUBLESHOOTING_RECOVERY_HELP_DESIGN_CANDIDATE_2026-08-28.md`, exact Git blob `86de353dd8446f02ed48c80638391a3caa852e59`, publication commit `674c83b716039cd2165c41f0b223ebc1dc551560`; preparation evidence `TSK_0319_AUTOMATED_VERIFICATION_TROUBLESHOOTING_RECOVERY_HELP_DESIGN_PREPARATION_EVIDENCE_2026-08-28.md`, blob `d4d8a4bbf3e8f9ad3e04f45fdf8f342df188a854`, publication commit `4fe2c2a80d49d86cb2dbefeaeb5120e12b769c6f`. Preparation independently verifies complete ACC-0319 design coverage while preserving A1/HUMAN_ONLY authority.
 
-Selection basis: TSK-0318 is already stably WAITING on its human disposition; TSK-0319 is independently eligible and blocks downstream TSK-0628. Preparing it now maximizes safe progress without crossing either human boundary.
+The candidate provides fourteen issue-specific decision trees, seven privacy-safe automatic-check classes, point-of-need help placement, changed-condition retry/circuit-breaker rules, separate web-reset/device-removal semantics, Android/iPhone recovery confirmation, no-history diagnostics and narrow privacy/security/safeguarding/operator escalation boundaries.
 
-All current fences remain unchanged: `RSK-0002` OPEN; `REQ-0022` unresolved; LG-03/LG-04/LG-05/LG-06 non-PASS; account/dashboard deferred under EXC-0001; no L5/L6 build, participant processing, legal completion, payment, publication, market activation or launch authority.
+TSK-0319 cannot become PASS until an authorized human explicitly APPROVES, REQUESTS CHANGES to, or REJECTS exact candidate blob `86de353dd8446f02ed48c80638391a3caa852e59`. Approval remains provisional internal L4 only and does not authorize implementation, diagnostic collection, staffed support, participant/public use or launch.
+
+## Queue status after TSK-0319 preparation
+
+`TSK-0318` and `TSK-0319` are both **WAITING** on independent HUMAN_ONLY design dispositions. TSK-0318 blocks TSK-0311 and contributes to the TSK-0310 prototype chain; TSK-0319 blocks TSK-0628. Nearby AUTO_ALLOWED work remains dependency-blocked by these human decisions or by representative-parent/deferred scope. Current global fences remain unchanged.
 
 ## Exact next authoritative step
 
-Prepare the smallest complete TSK-0319 candidate using current protection-state, support, platform-install, source-backed instruction, support/recovery/privacy and verified removal evidence. Publish and independently verify it, then classify TSK-0319 WAITING on the exact HUMAN_ONLY disposition without marking PASS.
+Obtain the smallest human dispositions on exact TSK-0318 candidate blob `64f0e6382a5ce166c0aad2ad2e86a3796c5df379` and exact TSK-0319 candidate blob `86de353dd8446f02ed48c80638391a3caa852e59`. If either is approved unchanged, independently re-check its ACC against that exact blob, reconcile PASS, then recompute and continue the L4 queue; if changes are requested, revise only the specified elements and re-verify.
