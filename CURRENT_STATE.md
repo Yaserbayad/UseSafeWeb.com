@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T08:47:54Z  
+**Updated:** 2026-08-28T09:24:00Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -27,12 +27,14 @@
 
 GitHub is the active execution bridge for eligible AUTO_ALLOWED host work. Repository-scoped runner `adguardvm` runs as `azureusr` through a persistent systemd service with non-interactive sudo. Ordinary host jobs are restricted to trusted `main`, read-only repository permissions, no persisted checkout credentials, and serialized `usesafeweb-adguard-server` concurrency.
 
+Current direct fingerprint evidence also proves that runner registrations `adguardvm` and `adguartestdvm` are both executing on the same production Azure VM ID `bc7f566f-7231-41fb-9fdd-49cf190fd5e1`. The name `adguartestdvm` therefore does not currently identify an independent recovery target.
+
 ## Current technical task state
 
 ### PASS
 
 - `TSK-0435` — Azure VM handoff — evidence blob `57de1a4187288870da7655973ac09bf907674d89`.
-- `TSK-0437` — host security baseline — evidence blob `bb9221657a65c254975f61762af73b16a3e50241`.
+- `TSK-0437` — host security baseline, revalidated after TLS-proxy installation and current Ubuntu patch repair — base evidence blob `bb9221657a65c254975f61762af73b16a3e50241`; current revalidation evidence `TSK_0437_POST_TLS_PATCH_REVALIDATION_EVIDENCE_2026-08-28.md`, blob `b23bb28960efe28526626b36dfa2d52339a521e8`; reconciliation run `33159129601` / job `98809042724`: PASS.
 - `TSK-0438` — domain/control owner condition.
 - `TSK-0439` — pilot device DNS methods — evidence blob `f9af8b18cdc85bfe9b120661776172ab8581c2c9`.
 - `TSK-0440` — encrypted-DNS hostname/path — evidence blob `9e0f15d0e1f11c892cf51317b705ac21c9563e53`.
@@ -45,7 +47,7 @@ GitHub is the active execution bridge for eligible AUTO_ALLOWED host work. Repos
 - `TSK-0483` — resolver abuse/amplification protections verified — evidence: `TSK_0483_RESOLVER_ABUSE_PROTECTION_EVIDENCE_2026-08-27.md`, blob `8a6426707fe9c9c8cd08f6b55e25d6b48bb8b28c`.
 - `TSK-0407` — exact Quad9 dns10 DoH upstream with ECS disabled verified — evidence: `TSK_0407_QUAD9_DNS10_ECS_EVIDENCE_2026-08-27.md`, blob `7afeca58e9205234a230d2de702b99648b35347d`.
 - `TSK-0406` — conservative versioned filtering baseline, narrow exception path and exact rollback verified — policy: `infrastructure/adguard-server/filter-policy-v1.yaml`, blob `333a4ef8cd34719d66056aa608ab19473f839634`; evidence: `TSK_0406_FILTERING_POLICY_EVIDENCE_2026-08-27.md`, blob `bb4514b4af7c1c5e616b7875f98e86962fee0325`.
-- `TSK-0202` — secret-safe approved AdGuard settings exported/versioned and proven exactly equal to current live safe settings — artifact: `infrastructure/adguard-server/approved-adguard-config-v1.json`, blob `ea85830b5ef9de7f2772e5467570d52013228b0b`; settings SHA-256 `327c374d46fc40c03a847a57d7078df6035edc71710eb8725ce57c69ac8a93a8`; evidence: `TSK_0202_ADGUARD_CONFIG_EXPORT_EVIDENCE_2026-08-27.md`, blob `d885d3f8e53c052809620958d82eb3114d558b84`.
+- `TSK-0202` — secret-safe approved AdGuard settings exported/versioned and proven exactly equal to current live post-TLS-proxy safe settings — artifact: `infrastructure/adguard-server/approved-adguard-config-v1.json` v1.1.0, blob `e9975c4e75c2a68131f049da942468d8d1952d8d`; settings SHA-256 `fcedf8b67b5d4c43544d5a57b9f74b6a45e6f3be1d778c6fb6183e83802ac49d`; reconciliation evidence: `TSK_0202_ADGUARD_CONFIG_RECONCILIATION_EVIDENCE_2026-08-28.md`, blob `3d9ac577cfe75fb33d317d3e00905ebab91c3a45`; independent reconciliation run `33159129601` / job `98809042724`: PASS.
 - `TSK-0429` — privacy-minimal AdGuard backup scope documented and independently verified against current DPIA/retention/live state — policy: `infrastructure/adguard-server/BACKUP_SCOPE_POLICY.md`, blob `e62b48a3e746b1be90881bbffab3b7680384cc16`; evidence: `TSK_0429_PRIVACY_MINIMAL_BACKUP_SCOPE_EVIDENCE_2026-08-27.md`, blob `b77c6d7a2e17adc5e653151b55137467a8c5b62f`.
 - `TSK-0430` — encrypted configuration backup created, independently audited and directly decrypted by the authorised owner — evidence: `TSK_0430_ENCRYPTED_CONFIG_BACKUP_EVIDENCE_2026-08-27.md`, blob `de1820cb2a9fc5b175c5e5eb1e18b45e6a430a82`; ciphertext SHA-256 `bd5cad421a44efb27a669a0119f6247f456e1e8e97a0f23bb628933e6208ccde`; owner recipient fingerprint `SHA256:682Jbw3baP6jxs57+1c5lchlkrNMELcvDk8bauEl51U`; owner-side decrypted configuration SHA-256 `d8b6eae3b85edbaa1c49e318354389dc616099ecb3d2d90eff3c3dd8c663e1f2`.
 - `TSK-0166` — pseudonymous Experiment-1 participant record/metric schema created and independently audited with direct predecessor proof — artifact: `EXPERIMENT_01_PARTICIPANT_RECORD_SCHEMA.md`, blob `c7706fceced87c797b8cd92179198754e2b08ffe`; evidence: `TSK_0166_PARTICIPANT_RECORD_SCHEMA_EVIDENCE_2026-08-28.md`, blob `d043370a9c1efc99ccf8f65b813733b4c832c3f0`; independent audit run `33130737625` / job `98719395096`: PASS.
@@ -71,9 +73,11 @@ ACC-0204 is fully satisfied at the stronger evidence level.
 
 ### TSK-0202 accepted stable state
 
-Fresh corrected live export run `33127050108` / job `98707574318`: **PASS**. It asserted the current approved pre-public resolver/privacy/filter/admin/abuse invariants and emitted only a non-sensitive allowlist. Versioned artifact `infrastructure/adguard-server/approved-adguard-config-v1.json` v1.0.0 is blob `ea85830b5ef9de7f2772e5467570d52013228b0b`, and independent audit run `33127141644` / job `98707868115` proved exact live-to-artifact equality at SHA-256 `327c374d46fc40c03a847a57d7078df6035edc71710eb8725ce57c69ac8a93a8`, verified 9 linked evidence blobs, persistent client count `0`, and non-empty query-log file count `0`.
+Post-TLS safe export run `33158010249` / job `98805347681`: **PASS**. It asserted the current resolver/privacy/filter/admin/abuse invariants and emitted only a non-sensitive allowlist. Versioned artifact `infrastructure/adguard-server/approved-adguard-config-v1.json` v1.1.0 is blob `e9975c4e75c2a68131f049da942468d8d1952d8d`, with settings SHA-256 `fcedf8b67b5d4c43544d5a57b9f74b6a45e6f3be1d778c6fb6183e83802ac49d`.
 
-ACC-0202 is fully satisfied. Its `REQ-0022` reference remains unresolved under the owner-deferred UK representative/ICO work and does not authorize real England participant activation.
+Independent reconciliation run `33159129601` / job `98809042724`: **PASS**. It proved exact live-to-artifact equality, secret-field exclusion, zero persistent clients, query logging/file logging/statistics disabled, client-IP anonymisation enabled, dns10/ECS/filter invariants preserved, AdGuard admin `127.0.0.1:3000`, loopback-only local DoH backend enabled for the path-restricted TLS proxy, AdGuard native TLS listener disabled, and no non-empty query-log file.
+
+Evidence: `TSK_0202_ADGUARD_CONFIG_RECONCILIATION_EVIDENCE_2026-08-28.md`, blob `3d9ac577cfe75fb33d317d3e00905ebab91c3a45`. ACC-0202 remains fully satisfied. Its `REQ-0022` reference remains unresolved under the owner-deferred UK representative/ICO work and does not authorize real England participant activation.
 
 ### TSK-0429 accepted stable state
 
@@ -203,24 +207,46 @@ The exact WBS/runtime preflight defines TSK-0441 as L2 / A3 / `AUTO_ALLOWED` / H
 
 After the owner completed the Cloudflare-side record, independent read-only verification run `33156757093` executed on two repository-scoped self-hosted runners. Jobs `98801252982` (`adguardvm`) and `98801253193` (`adguartestdvm`) both returned the exact same public state: the system resolver, Cloudflare `1.1.1.1`, Google `8.8.8.8` and Quad9 `9.9.9.9` resolve `dns.usesafeweb.com` to `52.157.109.120`, with no AAAA or CNAME observed.
 
-Evidence: `TSK_0441_PUBLIC_DNS_EVIDENCE_2026-08-28.md`, blob `91369bbe33eb608361e8b7b771ceca0a5cd42d50`. ACC-0441 is fully satisfied. This proves public DNS only and does not prove TLS/DoH/DoT readiness, open public resolver ports, or authorize participant activation.
+Evidence: `TSK_0441_PUBLIC_DNS_EVIDENCE_2026-08-28.md`, blob `91369bbe33eb608361e8b7b771ceca0a5cd42d50`. ACC-0441 is fully satisfied. This proves public DNS only and does not prove TLS/DoH/DoT readiness or authorize participant activation.
+
+### TSK-0437 current revalidation
+
+A post-TLS reconciliation found five newly installable Ubuntu Python 3.12 packages, so the historical current-patch proof was not preserved blindly. Patch repair run `33158277980` / job `98806231226` upgraded all five and proved no pending upgrades and no reboot requirement.
+
+Post-TLS production audit run `33158990648` / job `98808581681` and independent reconciliation run `33159129601` / job `98809042724` then proved Ubuntu 24.04, current patches, effective SSH hardening, AdGuard/Nginx active, UFW deny-incoming/allow-outgoing with exact allowed TCP ports 22/80/443/853, externally bound service ports exactly 22/443/853, admin `127.0.0.1:3000`, plain DNS `127.0.0.1:53` only, path-restricted Nginx, no Nginx access logging, no non-empty AdGuard query-log files and preserved privacy/filter controls.
+
+Evidence: `TSK_0437_POST_TLS_PATCH_REVALIDATION_EVIDENCE_2026-08-28.md`, blob `b23bb28960efe28526626b36dfa2d52339a521e8`. ACC-0437 is current PASS.
 
 ### WAITING — TSK-0431
 
-`TSK-0431` — test pilot restore or rebuild procedure: **WAITING on an independently confirmed clean recovery target plus the owner-managed Azure/TLS inputs required by ACC-0431/REQ-0052; not PASS**.
+`TSK-0431` — test pilot restore or rebuild procedure: **WAITING on a genuinely independent clean recovery target; not PASS**.
 
 The exact WBS row is L2 / A3 / `AUTO_ALLOWED` / HIGH / critical path with hard predecessors `TSK-0430; TSK-0011`, both satisfied. ACC-0431 requires a functional test target that passes encrypted-DNS and privacy checks with recovery time/issues recorded. REQ-0052 requires a timed clean-server drill covering host baseline, packages, AdGuard, server-managed configuration, firewall/network, endpoint, TLS, filters, privacy, startup, Azure-native backup/restore, verification and health.
 
-CON-0019 and CON-0004 require a fresh owner-provided Ubuntu 24.04 LTS Azure VM and keep Azure VM/control-plane creation/configuration outside project automation. The owner has now registered repository runner `adguartestdvm`; read-only probe job `98801253193` proves Ubuntu 24.04 and non-interactive sudo, but the machine reports hostname `adguardvm` and an active AdGuard service. Independent-machine identity/freshness therefore remains to be directly established before any recovery mutation. TSK-0441 public DNS is now PASS, while TSK-0442 TLS is not yet PASS.
+The owner reported that the real test VM had been registered as runner `adguartestdvm`. Direct dual-runner fingerprint run `33158855146` disproved independence: job `98808136878` (`adguartestdvm`) and job `98808137226` (`adguardvm`) both reported the same machine-id SHA-256 `e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2`, Azure VM name `adguardvm`, region `westeurope`, Azure VM ID `bc7f566f-7231-41fb-9fdd-49cf190fd5e1`, and active AdGuard/Nginx services.
 
-No Azure control-plane action, rebuild, or recovery mutation has been performed on the reported test runner. Preflight evidence remains `TSK_0431_RECOVERY_DRILL_PREFLIGHT_EVIDENCE_2026-08-28.md`, blob `701398159b8b35d5c48ca9b8e3b193acfa038b1e`.
+No recovery mutation was attempted. Evidence: `TSK_0431_RECOVERY_RUNNER_IDENTITY_RECHECK_EVIDENCE_2026-08-28.md`, blob `e55dbfb1f1664740ec8ddce9f7e5c385b3882251`; earlier preflight evidence remains `TSK_0431_RECOVERY_DRILL_PREFLIGHT_EVIDENCE_2026-08-28.md`, blob `701398159b8b35d5c48ca9b8e3b193acfa038b1e`.
 
-Deterministic resumption condition: prove that `adguartestdvm` is an independent clean Ubuntu 24.04 LTS Azure target inside the approved West Europe boundary with no participant data; confirm the endpoint/TLS inputs needed for encrypted-DNS verification; and provide/verify an owner-managed Azure-native backup/restore interface or evidence path for the REQ-0052 drill. Only then may the timed clean-server restore/rebuild acceptance execute.
+Deterministic resumption condition: the recovery runner must execute on a distinct owner-provided Ubuntu 24.04 LTS West Europe VM and prove a different Azure VM ID/machine fingerprint from production before any restore/rebuild starts; the endpoint/TLS and owner-managed Azure-native backup/restore evidence path must then be available for the REQ-0052 drill.
+
+### WAITING — TSK-0442
+
+`TSK-0442` — issue and install TLS certificate: **WAITING on direct target-device/external certificate-chain validation; not PASS**.
+
+The exact WBS row is L2 / A3 / `AUTO_ALLOWED` / HIGH / critical path with hard predecessors `TSK-0441; TSK-0011`, both satisfied. ACC-0442 requires that the certificate chain validates on target devices, hostname matches, weak protocols are disabled, and private keys are access-restricted.
+
+The server-side work is materially complete and currently verified: Let's Encrypt certificate present for `dns.usesafeweb.com`; root-owned mode-0600 private key; same-host path-restricted Nginx TLS proxy; local DoH and DoT functional; TLS 1.0/1.1 rejected and TLS 1.2/1.3 accepted during installation; administration remains non-public; plain DNS remains loopback-only; UFW exposes encrypted DNS 443/853 and not plain DNS 53. TLS-proxy installation run `33157853876` / job `98804837297`: PASS local install. Post-ingress production audit `33158990648` / job `98808581681`: PASS current server state.
+
+The owner reported that Azure inbound TCP 443 and 853 were opened. Current Azure IMDS on the VM returned private IP `172.16.0.4` and no `publicIpAddress` value on the NIC; Azure control-plane configuration remains owner-managed, so no further inference is made from that fact. A GitHub-hosted external verification job did not produce usable test-step evidence, and the ChatGPT sandbox's raw-network environment was shown to refuse unrelated public destinations, so those sandbox connection results are excluded from acceptance evidence.
+
+Evidence: `TSK_0442_TLS_CERTIFICATE_PARTIAL_EVIDENCE_2026-08-28.md`, blob `de7e6997b512224801d2b25e64cdbc1eb663f7d4`.
+
+Deterministic resumption condition: directly validate the trusted chain/hostname on the supported target-device/external encrypted-DNS path while re-confirming that the admin surface and plain DNS remain non-public. Only then may TSK-0442 move to PASS and unlock TSK-0443.
 
 ### External/provider and legal boundaries
 
-- The TSK-0441 Cloudflare DNS mutation is satisfied and independently verified. Any further Cloudflare account/zone mutation remains owner/provider-controlled unless an explicitly authorized interface becomes available.
-- Azure control-plane provisioning/configuration remains owner-managed; no backup vault/storage account or other Azure control-plane resource is assumed or created by project automation.
+- TSK-0441 Cloudflare DNS is satisfied and independently verified. Any further Cloudflare account/zone mutation remains owner/provider-controlled unless an explicitly authorized interface becomes available.
+- Azure control-plane provisioning/configuration remains owner-managed. The owner reports inbound TCP 443/853 opened; guest-side listeners/UFW are proven ready, but no Azure control-plane connector is available here and the target-device acceptance check remains outstanding.
 - Owner-deferred UK representative/ICO fee planning remains unresolved until 2027-08-27 or earlier explicit reactivation; technical work does not imply validation-readiness legal gate PASS or authorize real England participant activation.
 
 ## Runtime safeguards
@@ -229,13 +255,13 @@ Deterministic resumption condition: prove that `adguartestdvm` is an independent
 - PASS requires all applicable current acceptance criteria with durable/reconstructable proof.
 - Current contradictory direct evidence reopens stale PASS rather than being ignored.
 - No secrets, credentials, password hashes, private keys, unnecessary personal data, or raw DNS query history may be exported to GitHub.
-- Public resolver ports remain closed until exact privacy/security/abuse/TLS controls are verified.
+- Plain DNS 53 remains non-public. Encrypted 443/853 guest listeners are now configured under TSK-0442, but participant/public readiness is not PASS until the applicable TLS target-device and downstream readiness evidence is complete.
 - Azure control-plane remains owner-managed; runner autonomy applies to handed-off VM/repository-authorized tasks only after target identity and scope are verified.
 
-## Queue status after TSK-0441
+## Queue status after current reconciliation
 
-TSK-0441 has transitioned from WAITING to PASS. The L2 queue has not yet been recomputed against this new confirmed runtime state.
+TSK-0441 remains PASS. TSK-0202 and TSK-0437 are freshly reconciled PASS. TSK-0431 and TSK-0442 are explicit WAITING boundaries. The L2 queue has not yet been recomputed against this reconciled runtime state.
 
 ## Exact next authoritative step
 
-Recompute the current L2 queue after confirmed TSK-0441 PASS. In parallel only as read-only preflight, establish whether runner `adguartestdvm` is a genuinely independent Azure recovery target before allowing TSK-0431 mutation. Continue only the highest-priority eligible autonomous work after direct dependency/gate verification; do not bypass TLS/public-service readiness, participant-activation, legal, Azure control-plane, recovery, or provider boundaries.
+Recompute the current L2 queue with TSK-0431 and TSK-0442 held WAITING and all current PASS evidence above. Continue only the highest-priority eligible autonomous work after direct dependency/gate verification. Do not execute TSK-0443 before TSK-0442 PASS, do not run recovery work through either current runner registration as an independent target, and do not bypass participant-activation, legal, Azure control-plane, provider, or public-service readiness boundaries.
