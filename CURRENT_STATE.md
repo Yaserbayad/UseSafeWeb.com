@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T17:06:16Z
+**Updated:** 2026-08-28T17:19:35Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -454,6 +454,14 @@ Authority remains non-duplicative: TSK-0320 owns exact state/copy semantics; TSK
 
 The contract preserves DEC-0042/EXC-0001 and EXC-0008: no account/login/password-recovery/dashboard requirement and no routine staffed-support/SLA assumption is introduced. Existing TSK-0229 data rules, TSK-0041/0409 DNS/support truth, TSK-0320 protection-state semantics, exceptional-diagnostic procedure and safeguarding procedure retain their own authority. `RSK-0002` remains OPEN because representative-parent self-service success and real support burden are not behaviorally validated. This PASS does not authorize LG-05/LG-06, implementation/build, participants, legal completion, payment, publication or launch.
 
+### TSK-0230 accepted stable state
+
+`TSK-0230 — Define privacy, data-minimisation, retention, and deletion NFRs`: **PASS for the provisional internal L4 NFR-definition acceptance under DEC-0050/CR-0003**. Contract `TSK_0230_PRIVACY_DATA_MINIMISATION_RETENTION_DELETION_NFR_2026-08-28.md`, blob `011caaa84dd3dec13bb608be30b15ec92a24f19e`; independent evidence `TSK_0230_PRIVACY_DATA_MINIMISATION_RETENTION_DELETION_NFR_EVIDENCE_2026-08-28.md`, blob `f44b4a41992cac42a7538b3aa424bdf282c38724`; fresh actual-runtime inspection `TSK_0230_RUNTIME_DATA_FOOTPRINT_INSPECTION_2026-08-28.md`, blob `48d38b95f43e186624041d6c511412272f93305f`, accepted run `33193644558` / job `98925167227`. ACC-0230 is satisfied: every currently allowed or conditional accountless/product/DNS/diagnostic data element/class is mapped to purpose, existing supported lawful-basis position, source, recipient, retention, deletion, access control and prohibited use, and identifiable browsing/DNS/domain history remains excluded.
+
+Current first-party ICO guidance was rechecked on 2026-08-28 for per-purpose lawful basis, children/legitimate-interests safeguards, data minimisation and storage limitation; Quad9 privacy policy version 1.1 (2026-06-24) was rechecked for the current upstream-recipient boundary. The contract preserves the canonical Article 6(1)(f) planning position without inventing final legal approval. `VALIDATION_READINESS_GATE.md` remains DEFER/non-PASS for the unresolved LIA/DPIA residual-risk approval, participant notice/contact release and ICO/UK-representative branch; real-participant activation remains prohibited.
+
+`DVR-0230-01` remains OPEN: the custom critical DoH Nginx error-log file is currently zero bytes but mode `0644 root:root`, broader than the new least-privilege NFR target (`<=0640`, service/admin only). This is a pre-activation implementation deviation, not hidden or certified compliant by the TSK-0230 PASS. Nginx access logging is currently explicitly off; AdGuard query/file logging and statistics are off; `dns.anonymize_client_ip=true`; Nginx critical logs currently use daily `rotate 14`. `RSK-0002` remains OPEN. This PASS does not authorize LG-03/LG-05/LG-06, implementation/build, participants, legal completion, payment, publication or launch.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -465,13 +473,8 @@ The contract preserves DEC-0042/EXC-0001 and EXC-0008: no account/login/password
 
 ## Queue status after current reconciliation
 
-The TSK-0042 post-PASS queue was reread against current acceptance and CR-0003. `TSK-0187` remains ineligible because it requires representative-parent behavioral evidence. `TSK-0140` remains ineligible for PASS because owner/multi-role review evidence is absent. `TSK-0230` is the highest eligible AUTO_ALLOWED provisional-L4 task.
-
-- **Selected next: `TSK-0230 — Define privacy, data-minimisation, retention, and deletion NFRs`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
-- Hard dependencies: `TSK-0313`, `TSK-0042` — current PASS.
-- ACC-0230: Each data element has purpose, lawful basis, source, recipient, retention, deletion mechanism, access control, and prohibited use; identifiable browsing history remains excluded.
-- Selection boundary: internal provisional privacy/data NFR definition only. It must reuse current data/accountless/privacy authority, preserve the legal/participant hold, distinguish existing accepted lawful-basis analysis from any new legal conclusion, and verify material current UK privacy-law facts from authoritative sources before freezing them.
+`TSK-0230` is runtime PASS for its bounded provisional-L4 NFR-definition acceptance. `DVR-0230-01` remains an explicit pre-activation implementation deviation. A fresh conservative dependency-ready AUTO_ALLOWED L4 queue has been generated at `TSK_0230_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. No next task is selected by this write; the queue must be reread against acceptance, direct predecessor evidence, CR-0003, the legal/participant hold and the open privacy deviation before execution.
 
 ## Exact next authoritative step
 
-Execute bounded `TSK-0230`: inventory every allowed product/support/diagnostic/operational data element in the active minimum, map purpose/source/recipient/retention/deletion/access/prohibited use and the current supported lawful-basis position, exclude identifiable browsing history, preserve DEC-0042/TSK-0229/CON-0007/CON-0008 and unresolved legal/participant gates; source-verify material current UK privacy rules; persist/read back independent ACC-0230 evidence; reconcile runtime; then recompute.
+Read back the TSK-0230 post-PASS L4 queue, reject any candidate requiring unavailable real-user evidence, owner/legal/privacy approval, unresolved trigger/gate or missing direct predecessor proof, account for `DVR-0230-01` where relevant, and persist the deterministic highest-priority eligible AUTO_ALLOWED selection.
