@@ -258,11 +258,25 @@ Authoritative contract inspection run `33161362741` / job `98816346637` confirms
 
 No recovery mutation has been started on the corrected VM. Deterministic resumption condition: the owner identifies/provides the Azure-native backup/restore path or evidence. The timed clean-server recovery drill may then execute on `adguartestdvm_correct` and must not use production as the destructive target.
 
+### WAITING — TSK-0514
+
+`TSK-0514` — verify the endpoint from external networks and target devices: **WAITING on two privacy-safe owner observations; not PASS**.
+
+The exact WBS row is L2 / A3 / `AUTO_ALLOWED` / HIGH with hard predecessors `TSK-0442; TSK-0443`, both current PASS. ACC-0514 requires all target tests to pass, network-specific failures to be recorded, and removal of the profile/configuration to restore normal DNS behaviour. REQ-0066 additionally requires verification from at least one network outside Azure and outside the operator's normal network before pilot approval; REQ-0069 requires a verified removal/recovery path.
+
+The earlier owner-observed real-phone test remains valid evidence that the supported encrypted-DNS path works and was used to close TSK-0442. It does not explicitly identify the test network as satisfying REQ-0066 and does not state that the UseSafeWeb DNS configuration was removed/reset and normal DNS behavior restored.
+
+No repeated TLS/server setup test is required. The remaining evidence is only: (1) use the already-supported real phone on one qualifying external network and report pass/fail or any network-specific failure; and (2) remove/reset the UseSafeWeb DNS configuration and confirm normal DNS/internet resolution returns. No browsing history, DNS history, screenshot, device identifier or participant data is required.
+
+Preflight evidence: `TSK_0514_EXTERNAL_ENDPOINT_PREFLIGHT_EVIDENCE_2026-08-28.md` (created after authoritative contract inspection run `33162389253` / job `98819702034`).
+
+Deterministic resumption condition: obtain those two direct target-device observations, evaluate ACC-0514, and then recompute the L2 queue.
+
 ### External/provider and legal boundaries
 
 - TSK-0441 Cloudflare DNS is satisfied and independently verified. Any further Cloudflare account/zone mutation remains owner/provider-controlled unless an explicitly authorized interface becomes available.
 - Azure control-plane provisioning/configuration remains owner-managed. The corrected recovery VM handoff is independently verified, but TSK-0431 still requires an owner-managed Azure-native backup/restore path/evidence before the full recovery drill can satisfy REQ-0052.
-- TSK-0442 TLS target-device acceptance and TSK-0443 certificate renewal/expiry alerting are satisfied; broader participant/public readiness remains governed by downstream technical, validation, privacy/legal and activation gates.
+- TSK-0442 TLS target-device acceptance and TSK-0443 certificate renewal/expiry alerting are satisfied; TSK-0514 external-network/removal verification remains a direct target-device observation boundary.
 - Owner-deferred UK representative/ICO fee planning remains unresolved until 2027-08-27 or earlier explicit reactivation; technical work does not imply validation-readiness legal gate PASS or authorize real England participant activation.
 
 ## Runtime safeguards
@@ -274,10 +288,10 @@ No recovery mutation has been started on the corrected VM. Deterministic resumpt
 - Plain DNS 53 remains non-public. TSK-0442 TLS and TSK-0443 certificate renewal/expiry controls are PASS, but broader participant/public readiness remains gated by applicable downstream readiness, validation, privacy/legal and activation evidence.
 - Azure control-plane remains owner-managed; runner autonomy applies to handed-off VM/repository-authorized tasks only after target identity and scope are verified.
 
-## Queue status after TSK-0443
+## Queue status after TSK-0514 preflight
 
-The last L2 queue recomputation selected TSK-0443 as the sole ready item before its execution. TSK-0443 is now PASS, so that selection result is superseded. The L2 queue has not yet been recomputed against this new runtime state.
+The previous L2 queue recomputation selected TSK-0514 as the sole ready item. Its direct target-device observation gap is now explicitly classified as WAITING. The L2 queue has not yet been recomputed with both TSK-0431 and TSK-0514 held WAITING.
 
 ## Exact next authoritative step
 
-Recompute the current L2 queue with TSK-0443 PASS and TSK-0431 held WAITING only on the owner-managed Azure-native backup/restore path required by REQ-0052. Continue the highest-priority eligible `AUTO_ALLOWED` L2 work after direct dependency/gate verification. Do not start the TSK-0431 recovery drill until its Azure-native recovery input is identified, and do not bypass participant-activation, legal, Azure control-plane, provider, or public-service readiness boundaries.
+Recompute the current L2 queue with TSK-0431 and TSK-0514 held WAITING. Continue any other highest-priority eligible `AUTO_ALLOWED` L2 work if present. If no other L2 work is ready, resume when either (1) the owner supplies the two TSK-0514 phone observations, or (2) the owner identifies/provides the Azure-native backup/restore path required for TSK-0431. Do not bypass participant-activation, legal, Azure control-plane, provider, recovery, or target-device verification boundaries.
