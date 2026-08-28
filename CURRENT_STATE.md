@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T21:49:59Z
+**Updated:** 2026-08-28T21:53:56Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -550,14 +550,18 @@ ACC-0307 is satisfied for all nine current instruction classes: official/current
 
 This PASS defines internal L4 content semantics only. It does not prove representative-parent comprehension or localization usability; `RSK-0002` remains OPEN. Turkish/Arabic variants are provisional and do not activate markets. `REQ-0022` remains unresolved; LG-03/LG-04/LG-05/LG-06 remain non-PASS; account/dashboard remains deferred; no implementation/build, profile publication, participant processing, market activation, payment, publication or launch is authorized.
 
-## Queue status — TSK-0318 HUMAN_ONLY preparation selected
+### TSK-0318 preparation stable state
 
-`TSK-0318 — Design the public website IA and product/setup IA as distinct but connected systems` is the selected runtime **TODO** item for **preparation only**. Its sole hard dependency `TSK-0315` is runtime PASS. The WBS classifies TSK-0318 as L4 / HIGH / A1 / HUMAN_ONLY, so AI may prepare a complete candidate and verification packet but may not perform, fabricate, or self-certify the required human design disposition.
+`TSK-0318 — Design the public website IA and product/setup IA as distinct but connected systems`: runtime **WAITING**, not PASS. Bounded AI preparation is complete. Candidate `TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_CANDIDATE_2026-08-28.md`, exact Git blob `64f0e6382a5ce166c0aad2ad2e86a3796c5df379`, publication commit `e963f39684206bc08f5977957b0c9f379c82e716`; corrected preparation evidence `TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_PREPARATION_EVIDENCE_2026-08-28.md`, blob `4a4d766a2fb58e390c9ee80c93dfecf75d50b2eb`, correction commit `8dc7015fb6fa8826a8cc46f6899633a7b0053f3b`. The first evidence binding used a wrong candidate blob; the runtime guard prevented mutation, production-runner Git hashing established the exact blob above, and the evidence was corrected/read back before this reconciliation.
 
-Selection basis: TSK-0307 is PASS; nearby AUTO_ALLOWED branches remain dependency-blocked by HUMAN_ONLY or representative-parent/deferred work. TSK-0318 is a current HIGH HUMAN_ONLY dependency bottleneck for TSK-0311 and TSK-0310. TSK-0319 is independently preparable afterward and remains human-controlled.
+Preparation independently verifies complete ACC-0318 content coverage while preserving A1/HUMAN_ONLY authority. The candidate separates public information architecture from the task/state-driven setup product; gives every current page/screen one purpose, entry, exit, content owner, SEO/index intent, privacy requirement and accessibility requirement; maps every critical TSK-0315 service stage without duplicating mutable technical/support authority; preserves accountless/friction/protection-state/legal boundaries.
 
-All current fences remain unchanged: `RSK-0002` OPEN; `REQ-0022` unresolved; LG-03/LG-04/LG-05/LG-06 non-PASS; account/dashboard deferred under EXC-0001; no L5/L6 build, participant processing, legal completion, payment, publication, market activation or launch authority.
+TSK-0318 cannot become PASS until an authorized human explicitly APPROVES, REQUESTS CHANGES to, or REJECTS exact candidate blob `64f0e6382a5ce166c0aad2ad2e86a3796c5df379`. Approval remains provisional internal L4 only and does not authorize implementation, publication, market activation or launch.
+
+## Queue status after TSK-0318 preparation
+
+`TSK-0318` is **WAITING** on its HUMAN_ONLY design disposition. Its AUTO_ALLOWED successors remain blocked pending PASS. Independently eligible HUMAN_ONLY TSK-0319 may still be prepared because its own dependencies TSK-0315 and TSK-0320 are already PASS. Current global fences remain unchanged.
 
 ## Exact next authoritative step
 
-Prepare the smallest complete TSK-0318 IA candidate from the accepted product brief, accountless service blueprint, friction contract, platform setup design, instruction catalogue, protection-state model, accessibility/privacy requirements and current scope boundaries. Publish and independently verify the candidate, then classify TSK-0318 WAITING on the exact HUMAN_ONLY disposition without marking PASS.
+Complete the independent bounded preparation of TSK-0319, then obtain the smallest HUMAN_ONLY dispositions required for the exact TSK-0318 and TSK-0319 candidates.
