@@ -9,7 +9,7 @@
 
 ## Exact evidence set
 
-- Catalogue `TSK_0307_SOURCE_BACKED_INSTRUCTION_CONTENT_CATALOGUE_2026-08-28.md`, publication commit `c8c0fa314701190a0b5ade9b8e48d6cf6b19ce36`, read-back blob `b6d58ffca7af4124c563164361ff01043561abb9`.
+- Catalogue `TSK_0307_SOURCE_BACKED_INSTRUCTION_CONTENT_CATALOGUE_2026-08-28.md`, publication commit `c8c0fa314701190a0b5ade9b8e48d6cf6b19ce36`, read-back blob `d717c9b3f66197abe1f3e73361633f222b817e7c`.
 - Approved predecessor TSK-0317 candidate blob `d44daf376d0e8ed1d5839cc3b6b2ac10d090828d` and current runtime TSK-0317 PASS.
 - TSK-0408 DNS identity/platform contract blob `52860ce167fc8a31962cd412772e428d280c8184`.
 - Current accepted TSK-0409 support matrix, TSK-0320 protection-state contract, TSK-0511 supported-device evidence, TSK-0514 removal/recovery evidence and TSK-0207 privacy-persistence evidence.
