@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T07:53:53Z  
+**Updated:** 2026-08-28T07:57:18Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -51,6 +51,7 @@ GitHub is the active execution bridge for eligible AUTO_ALLOWED host work. Repos
 - `TSK-0168` — Experiment-1 qualification screener created and independently audited — artifact: `EXPERIMENT_01_QUALIFICATION_SCREENER.md`, blob `d35d3e0abfc3882d648df3c0c7458e216853b592`; evidence: `TSK_0168_QUALIFICATION_SCREENER_EVIDENCE_2026-08-28.md`, blob `760f881100e6221640c8afa86108665dc4ba1792`; independent audit run `33130918142` / job `98719985132`: PASS.
 - `TSK-0214` — Experiment-1 retention/deletion execution checklist independently verified with direct predecessor proof — artifact: `RETENTION_DELETION_EXECUTION_CHECKLIST.md`, blob `5c2d6edbfbabe9ed0fb9c309e7afca8c96fa9c9f`; evidence: `TSK_0214_RETENTION_DELETION_CHECKLIST_EVIDENCE_2026-08-28.md`, blob `0740743793e53c655f3ca447fddd51fd70b8d6e5`; independent audit run `33152847430` / job `98788653014`: PASS.
 - `TSK-0225` — protection-claims checklist independently verified with direct predecessor proof — artifact: `PROTECTION_CLAIMS_CHECKLIST.md`, blob `4bfc83421318fe761d06f9a63e052e3bff36070a`; evidence: `TSK_0225_PROTECTION_CLAIMS_CHECKLIST_EVIDENCE_2026-08-28.md`, blob `94206b6f41e401df396d79f4366122ebfa37f6d8`; corrected independent audit run `33153183138` / job `98789746523`: PASS.
+- `TSK-0227` — exceptional diagnostic-logging procedure independently verified with direct predecessor proof — artifact: `EXCEPTIONAL_DIAGNOSTIC_LOGGING_PROCEDURE.md`, blob `f9e1bb52582a69bc385aa69c93d02febb7b5cffa`; evidence: `TSK_0227_EXCEPTIONAL_DIAGNOSTIC_LOGGING_EVIDENCE_2026-08-28.md`, blob `3455c9077585a4727084ff61a791c31a90b9ad75`; independent audit run `33153403025` / job `98790453195`: PASS.
 
 ### TSK-0204 corrected stable state
 
@@ -148,6 +149,18 @@ Corrected independent read-only audit run `33153183138` / job `98789746523`: **P
 
 Evidence: `TSK_0225_PROTECTION_CLAIMS_CHECKLIST_EVIDENCE_2026-08-28.md`, blob `94206b6f41e401df396d79f4366122ebfa37f6d8`. ACC-0225 is fully satisfied. This is preparation only and does not prove protection on a real participant device or authorize recruitment/processing.
 
+### TSK-0227 accepted stable state
+
+The exact WBS row defines TSK-0227 as L2 / A3 / `AUTO_ALLOWED` / MEDIUM with hard predecessor `TSK-0224`, acceptance `ACC-0227`.
+
+The predecessor planning label was not accepted as sufficient evidence by itself. Current `VALIDATION_READINESS_GATE.md`, blob `b3b0efd0cc0f40faa1ecab190c7469b8dff12ec1`, directly re-proves TSK-0224's retention and deletion boundaries.
+
+The existing `EXCEPTIONAL_DIAGNOSTIC_LOGGING_PROCEDURE.md`, blob `f9e1bb52582a69bc385aa69c93d02febb7b5cffa`, requires incident/ticket identity, explicit necessity, exact field/scope allowlisting, approval, restricted access, preselected UTC start/end, notice decision, minimisation hierarchy, baseline restoration, deletion and recorded deletion verification; indefinite logging, GitHub raw diagnostic data and silent extension are prohibited.
+
+Independent read-only audit run `33153403025` / job `98790453195`: **PASS**. It returned `TSK_0224_DIRECT_PREDECESSOR_PROOF=PASS`, `TSK_0227_ACCEPTANCE_CLASSES=9/9`, exact diagnostic-runbook blob match and `TSK_0227_INDEPENDENT_AUDIT=PASS`.
+
+Evidence: `TSK_0227_EXCEPTIONAL_DIAGNOSTIC_LOGGING_EVIDENCE_2026-08-28.md`, blob `3455c9077585a4727084ff61a791c31a90b9ad75`. ACC-0227 is fully satisfied. No exceptional logging was enabled and no participant data was collected.
+
 ### WAITING — TSK-0431
 
 `TSK-0431` — test pilot restore or rebuild procedure: **WAITING on an independent clean recovery target and the owner-managed Azure/TLS inputs required by ACC-0431/REQ-0052; not PASS**.
@@ -191,4 +204,4 @@ Deterministic resumption condition: the owner/provider creates that record, or a
 
 ## Exact next authoritative step
 
-Recompute the current L2 queue after confirmed TSK-0225 PASS, with TSK-0431 and TSK-0441 held WAITING. Continue the highest-priority eligible autonomous preparation work only after its historical/planning predecessors are independently re-proven from current durable evidence; do not bypass legal/participant-activation, Azure control-plane, Cloudflare provider, recovery, or public-service readiness boundaries.
+Recompute the current L2 queue after confirmed TSK-0227 PASS, with TSK-0431 and TSK-0441 held WAITING. Continue the highest-priority eligible autonomous preparation work only after its historical/planning predecessors are independently re-proven from current durable evidence; do not bypass legal/participant-activation, Azure control-plane, Cloudflare provider, recovery, or public-service readiness boundaries.
