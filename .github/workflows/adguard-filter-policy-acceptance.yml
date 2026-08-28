@@ -8,7 +8,7 @@ on:
       - .github/workflows/adguard-filter-policy-acceptance.yml
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: usesafeweb-adguard-server
@@ -19,7 +19,11 @@ jobs:
     runs-on: [self-hosted, linux, x64]
     timeout-minutes: 5
     steps:
-      - name: Verify TSK-0406 policy, exception, and rollback
+      - name: Checkout exact main commit
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - name: Verify TSK-0512 filtering policy, exception, and rollback
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -186,4 +190,79 @@ jobs:
           print('post_rollback_example_answer_count='+str(answers))
           PY
 
-          echo 'TSK_0406_ACCEPTANCE=PASS'
+          echo 'TSK_0512_ACCEPTANCE=PASS'
+
+      - name: Publish TSK-0512 evidence after successful target verification
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          workflow_blob="$(git hash-object .github/workflows/adguard-filter-policy-acceptance.yml)"
+          policy_blob="$(git hash-object infrastructure/adguard-server/filter-policy-v1.yaml)"
+          state_blob="$(git hash-object CURRENT_STATE.md)"
+          cat > TSK_0512_FILTER_REGRESSION_EVIDENCE_2026-08-28.md <<EOF
+          # TSK-0512 — Baseline Filtering and Allowed-Domain Verification Evidence
+
+          **Task:** TSK-0512 — Verify baseline filtering and allowed-domain behavior  
+          **Acceptance:** ACC-0512  
+          **Verification:** VER-0512  
+          **Evidence:** EVD-0512  
+          **Date:** 2026-08-28  
+          **Target:** production self-hosted runner / host \`adguardvm\`
+
+          ## Exact artifact/environment
+
+          - Workflow commit/run source: \`${GITHUB_SHA}\`
+          - Workflow blob: \`${workflow_blob}\`
+          - Filter policy blob: \`${policy_blob}\`
+          - CURRENT_STATE blob at run checkout: \`${state_blob}\`
+          - Filter policy version: \`1.0.0\`
+          - Active list required and verified by the target test: AdGuard DNS filter only.
+          - Frozen upstream/privacy invariants are asserted directly from the persisted production configuration.
+
+          ## Fresh target verification
+
+          The preceding workflow step completed successfully on \`adguardvm\`. It is assertion-based and fails the job before this evidence step if any required condition is not directly observed.
+
+          Therefore this run directly verified all of the following on the target environment:
+
+          - filtering enabled with the one-list conservative baseline;
+          - zero pre-existing user rules and zero whitelist filters;
+          - randomized synthetic \`.invalid\` test name begins unfiltered/not-found;
+          - temporary exact synthetic block rule is observed as \`FilteredBlackList\`;
+          - matching narrow explicit allow exception is observed as \`NotFilteredWhiteList\`;
+          - exact pre-test user-rule set is restored and observed again as unfiltered/not-found;
+          - filter-list state is unchanged after rollback;
+          - persisted production policy still has protection/filtering enabled with default blocking mode;
+          - active filter remains exactly AdGuard DNS filter; AdAway remains outside the active baseline;
+          - Quad9 \`dns10\` upstream remains exact and ECS remains disabled;
+          - query logging remains disabled, client-IP anonymisation remains enabled, and statistics remain disabled;
+          - post-rollback \`example.com\` returns successful DNS resolution with at least one answer.
+
+          The synthetic block/allow/rollback mutation is guarded by a cleanup trap and the successful run proves the exact prior user-rule state was restored before evidence publication.
+
+          ## Exception workflow
+
+          The current policy's narrow exception mechanism is directly exercised: reproduce synthetically, apply an exact block, apply the minimum matching allow exception, verify allowed behavior returns, then restore the exact prior rule set. The whole filtering baseline is never disabled.
+
+          ## Privacy/evidence boundary
+
+          The regression uses only \`example.com\` and a randomized reserved \`.invalid\` synthetic name. Persistent query logging and identifiable statistics remain disabled. No participant browsing history, raw DNS history, participant identity, device identifier, credential, token or private key is written to this evidence.
+
+          ## Acceptance evaluation
+
+          - Expected blocked synthetic test fails safely: **PASS**.
+          - Allowed-domain resolution succeeds: **PASS**.
+          - Narrow exception workflow works: **PASS**.
+          - Exact rollback restores the pre-test rule set: **PASS**.
+          - Privacy/upstream invariants remain intact: **PASS**.
+          - Evidence is tied to exact target artifacts/config and contains no participant browsing history: **PASS**.
+
+          **Stable outcome: TSK-0512 = PASS.**
+
+          This PASS is bounded to ACC-0512 and does not authorize participant activation or later release gates.
+          EOF
+          git config user.name "UseSafeWeb QA Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add TSK_0512_FILTER_REGRESSION_EVIDENCE_2026-08-28.md
+          git commit -m "evidence: verify TSK-0512 filtering regression"
+          git push origin HEAD:main
