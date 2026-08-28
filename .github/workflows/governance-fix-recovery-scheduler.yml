@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   correct:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64]
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v6
@@ -45,7 +45,7 @@ jobs:
           assert s.count(old)==1
           s=s.replace(old,new)
 
-          s += """\n  confirm:\n    needs: recover\n    runs-on: ubuntu-latest\n    timeout-minutes: 3\n    permissions:\n      contents: read\n    steps:\n      - uses: actions/checkout@v6\n        with:\n          fetch-depth: 1\n      - name: Confirm durable recovery evidence exists\n        shell: bash\n        run: |\n          set -Eeuo pipefail\n          git fetch --quiet origin main\n          git show origin/main:TSK_0431_PROJECT_CONTROLLED_RECOVERY_DRILL_EVIDENCE_2026-08-28.md > /tmp/evidence.md\n          grep -Fq '**Project-controlled recovery drill: PASS.**' /tmp/evidence.md\n          grep -Fq 'azure_native_restore_exercised=false' /tmp/evidence.md\n          echo 'TSK_0431_DURABLE_RECOVERY_EVIDENCE=PASS'\n"""
+          s += """\n  confirm:\n    needs: recover\n    runs-on: [self-hosted, linux, x64]\n    timeout-minutes: 3\n    permissions:\n      contents: read\n    steps:\n      - uses: actions/checkout@v6\n        with:\n          fetch-depth: 1\n      - name: Confirm durable recovery evidence exists\n        shell: bash\n        run: |\n          set -Eeuo pipefail\n          git fetch --quiet origin main\n          git show origin/main:TSK_0431_PROJECT_CONTROLLED_RECOVERY_DRILL_EVIDENCE_2026-08-28.md > /tmp/evidence.md\n          grep -Fq '**Project-controlled recovery drill: PASS.**' /tmp/evidence.md\n          grep -Fq 'azure_native_restore_exercised=false' /tmp/evidence.md\n          echo 'TSK_0431_DURABLE_RECOVERY_EVIDENCE=PASS'\n"""
           p.write_text(s)
           PY
           rm -f .github/workflows/governance-fix-recovery-scheduler.yml
