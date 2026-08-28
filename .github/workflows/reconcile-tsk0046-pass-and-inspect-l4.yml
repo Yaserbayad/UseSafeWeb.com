@@ -25,7 +25,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$(sha256sum /etc/machine-id | awk '{print $1}')" = "e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2"
-          test "$(git hash-object CURRENT_STATE.md)" = "6928e90935f892587a40d3b4586e3e2f86e29e3e"
+          test "$(git hash-object CURRENT_STATE.md)" = "5545b219d8c3ccac7ff427b22d24ee08ab58efd5"
           test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "dce5b829c4d447eac180ae1e896e0019292cf971"
           test "$(git hash-object TSK_0046_PERFORMANCE_CAPACITY_NFR_2026-08-28.md)" = "2c48f975d557b1bb4ba6c58c2a8ad3580b2c7b06"
           test "$(git hash-object TSK_0046_PERFORMANCE_CAPACITY_NFR_EVIDENCE_2026-08-28.md)" = "09d111530c5e9c86feb2cafb54f62fb046a44b6f"
