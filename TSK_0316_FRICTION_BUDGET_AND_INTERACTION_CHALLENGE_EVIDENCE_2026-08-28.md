@@ -9,7 +9,7 @@
 ## Exact evidence index
 
 - Friction contract: `TSK_0316_FRICTION_BUDGET_AND_INTERACTION_CHALLENGE_2026-08-28.md`
-- Contract blob: `ce14cc85d4d134d48843ddf77d8f81fb2154409a`
+- Contract blob: `07df8b1909809a069e3ddba1ff10b688d2f5a5e0`
 - Contract commit: `5486ea1cebe8f533171edae128f47d22ad83d6fb`
 - TSK-0315 service blueprint blob: `f428f346d6e994d093b651d7b934e8610498c350`
 - TSK-0320 protection-state contract blob: `1146f7622f434590dde1253d11f14fb6a87e19de`
