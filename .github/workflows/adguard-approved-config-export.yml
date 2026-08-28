@@ -37,6 +37,7 @@ jobs:
           querylog=d.get('querylog') or {}
           statistics=d.get('statistics') or {}
           http=d.get('http') or {}
+          doh=http.get('doh') or {}
           tls=d.get('tls') or {}
           dhcp=d.get('dhcp') or {}
           filters=d.get('filters') or []
@@ -48,10 +49,15 @@ jobs:
           binds=list(dns.get('bind_hosts') or [])
           for value in binds:
               ip=ipaddress.ip_address(value)
-              assert ip.is_loopback, f'non-loopback bind is outside current approved pre-public baseline: {value}'
+              assert ip.is_loopback, f'non-loopback bind is outside current approved baseline: {value}'
 
-          # Current approved pre-public invariants from direct PASS evidence.
+          # Current approved invariants.  Public encrypted DNS terminates at the
+          # path-restricted same-host proxy; AdGuard admin/plain DNS stay loopback.
           assert http.get('address') == '127.0.0.1:3000', http.get('address')
+          assert bool(doh.get('insecure_enabled')) is True, doh
+          assert bool(tls.get('enabled')) is False, tls.get('enabled')
+          assert str(tls.get('server_name') or '') == ''
+          assert bool(tls.get('force_https')) is False
           assert list(dns.get('upstream_dns') or []) == ['https://dns10.quad9.net/dns-query']
           assert str(dns.get('upstream_dns_file') or '') == ''
           assert list(dns.get('fallback_dns') or []) == []
@@ -79,6 +85,9 @@ jobs:
             'schema_version': d.get('schema_version'),
             'http': {
               'address': http.get('address'),
+              'doh': {
+                'insecure_enabled': bool(doh.get('insecure_enabled')),
+              },
             },
             'dns': {
               'bind_hosts': binds,
@@ -161,6 +170,8 @@ jobs:
           print('admin_user_count='+str(len(users)))
           print('persistent_client_count='+str(len(clients)))
           print('approved_invariants=PASS')
+          print('local_doh_proxy_backend=true')
+          print('adguard_tls_listener_disabled=true')
           print('sensitive_field_guard=PASS')
           print('approved_config_json='+raw)
           print('approved_config_sha256='+hashlib.sha256(raw.encode()).hexdigest())
