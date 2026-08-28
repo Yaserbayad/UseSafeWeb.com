@@ -6,6 +6,13 @@
 **Status:** APPROVED L4 DATA CONTRACT / INTERNAL / IMPLEMENTATION NOT AUTHORIZED  
 **Date:** 2026-08-28  
 **Authority:** DEC-0042 / TSK-0146 accountless-first + TSK-0141 provisional minimum scope + CR-0003  
+**Verification state:** PASS candidate pending independent verification and runtime reconciliation.  
+
+## Provisional evidence limitation — RSK-0002 remains OPEN
+
+Real-participant Experiment-1/L3 behavioral evidence is deferred under DEC-0050/CR-0003. Therefore this L4 contract is a conservative **provisional design contract**, not a behaviorally validated result. There is no current real-participant evidence proving completion behavior, incremental value, comprehension, support burden, persistence, parent-perceived duplication, or that the provisional state/expiry choices are optimal for parents.
+
+`RSK-0002` remains OPEN and materially applies to this artifact. Synthetic/technical evidence and model judgment do not substitute for real-user evidence. When L3 is reactivated on 2027-08-27 or earlier by explicit owner authority, any materially dependent rule must be re-evaluated against real evidence and reopened if contradicted. This artifact does not make LG-05/LG-06 PASS and does not authorize implementation/build, real-participant processing, legal completion, payment activation, public release, or launch.
 
 ## 1. Contract objective
 
@@ -258,6 +265,7 @@ This contract:
 - prohibits cross-session/DNS/identity linkage;
 - separates exceptional diagnostics;
 - excludes ephemeral state from backups by default;
-- defines fourteen implementation-testable invariants.
+- defines fourteen implementation-testable invariants;
+- explicitly preserves the missing L3 behavioral evidence limitation and open `RSK-0002` required by DEC-0050/CR-0003.
 
 **TSK-0229 result: PASS candidate subject to independent verification and runtime read-back.**
