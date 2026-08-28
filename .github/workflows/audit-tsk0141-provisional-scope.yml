@@ -1,0 +1,77 @@
+name: Audit TSK-0141 provisional minimum scope
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-tsk0141-provisional-scope.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify ACC-0141 and extract successors
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object TSK_0141_PROVISIONAL_MINIMUM_PRODUCT_SCOPE_AND_NON_GOALS_2026-08-28.md)" = "c72bfd906fdca4a106dcd7d4ff458a2577e32c90"
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "dce5b829c4d447eac180ae1e896e0019292cf971"
+          python3 - <<'PY'
+          import csv, pathlib, re, subprocess
+          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',encoding='utf-8-sig',newline=''))); by={r['Task_ID']:r for r in rows}
+          t=by['TSK-0141']
+          assert t['Dependencies']=='TSK-0139'
+          assert t['Action_Authority']=='AUTO_ALLOWED'
+          assert t['Acceptance_ID']=='ACC-0141'
+          acc=t['Acceptance_Criteria']
+          for s in ['provisional current need assumption explicitly labelled unvalidated','mandatory operation/safety requirement','explicit owner-approved architectural decision','accountless-first','mandatory authentication','persistent parent dashboard','customer-facing AdGuard control plane','surveillance/activity history','child accounts','No capability may be described as behaviorally validated']:
+              assert s in acc, s
+          state=pathlib.Path('CURRENT_STATE.md').read_text()
+          assert '`TSK-0139 — Translate provisional L4 owner authorization into authorised product outcomes`: **PASS' in state
+          assert 'Selected next: `TSK-0141' in state
+          m=pathlib.Path('TSK_0141_PROVISIONAL_MINIMUM_PRODUCT_SCOPE_AND_NON_GOALS_2026-08-28.md').read_text()
+          required=['PROVISIONAL SCOPE FREEZE / INTERNAL / BEHAVIORALLY UNVALIDATED','No real-participant behavioral validation has occurred.','`RSK-0002` remains OPEN','**O — Owner-approved:**','**M — Mandatory:**','**P — Provisional/unvalidated need:**','accountless-first UseSafeWeb First Phone Safety Setup experience','Mandatory UseSafeWeb account, Google sign-in or other customer authentication','Persistent parent dashboard / persistent device list','Customer-facing AdGuard administrative/control plane','Browsing history, DNS query history, top-domain/activity reporting','Child account, child app/profile or behavioral profile','GROW lifecycle automation / AI parenting automation','this scope does not authorize L5/L6 or implementation work','a synthetic flow may verify internal completeness/logic but cannot upgrade a P item to validated need']
+          for s in required: assert s in m, s
+          # Included capability table rows all carry one of O/M/P basis markers.
+          mins=re.findall(r'^\| MIN-\d+ \|.*$',m,re.M)
+          assert len(mins)>=10
+          for row in mins:
+              cols=[x.strip() for x in row.split('|')[1:-1]]
+              assert len(cols)==5
+              assert re.search(r'\b[OMP]\b',cols[2]), row
+          # Ensure deferred account/dashboard wording does not get converted to active scope.
+          first_stmt=m[m.index('## 3. Frozen provisional first-product statement'):m.index('## 4. Included minimum capabilities')]
+          assert 'Persistence, accounts and a parent dashboard are not required in the active baseline.' in first_stmt
+          # No fake behavioral results.
+          assert not re.search(r'\b\d+%\s+(?:of\s+)?(?:parents|participants)',m,re.I)
+          print('TSK_0141_ACC_AUDIT=PASS')
+          succ=[]
+          for r in rows:
+              ds=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
+              if 'TSK-0141' in ds: succ.append(r)
+          out=['# TSK-0141 — Provisional minimum product scope verification evidence','', '**Task:** TSK-0141 — Freeze minimum product scope and non-goals  ','**Acceptance:** ACC-0141  ','**Date:** 2026-08-28  ','**Verification:** independent guarded repository audit','', '## Exact evidence','', '- Scope artifact: `TSK_0141_PROVISIONAL_MINIMUM_PRODUCT_SCOPE_AND_NON_GOALS_2026-08-28.md`','- Scope artifact blob: `c72bfd906fdca4a106dcd7d4ff458a2577e32c90`','- WBS blob: `dce5b829c4d447eac180ae1e896e0019292cf971`',f"- Runtime blob before PASS reconciliation: `{subprocess.check_output(['git','hash-object','CURRENT_STATE.md'],text=True).strip()}`",'- TSK-0139 mandate blob: `855628303b04bd48e9e8d51c4a6b9c221e343583`','', '## Audit result','', 'ACC-0141 is fully satisfied for the provisional L4 scope. Every included MIN capability is classified by an Owner-approved (O), Mandatory (M), or Provisional/unvalidated (P) basis; P-class items are explicitly unvalidated. The scope remains accountless-first, keeps authentication/persistent dashboard/customer AdGuard control plane deferred, excludes surveillance/activity history/child accounts/advanced scope, preserves RSK-0002, and states that synthetic evidence cannot become behavioral-validation proof.','', 'The artifact explicitly does not authorize L5/L6 implementation/build, LG-06 PASS, participants, legal completion, payment activation or public launch.','', '**Stable verification outcome: TSK-0141 = PASS candidate pending runtime reconciliation/read-back.**','', '## Direct WBS successors','']
+          if succ:
+              out += ['| Task | Stage | Title | Plan status | WBS state | Priority | Dependencies | AI capability | Action authority | Acceptance |','| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |']
+              for r in succ:
+                  vals=[r.get('Task_ID',''),r.get('Lifecycle_Stage',''),r.get('Title',''),r.get('Plan_Status',''),r.get('Execution_State',''),r.get('Priority',''),r.get('Dependencies',''),r.get('AI_Capability_A0_A4',''),r.get('Action_Authority',''),r.get('Acceptance_Criteria','')]
+                  vals=[v.replace('|','\\|').replace('\n',' ') for v in vals]
+                  out.append('| '+' | '.join(vals)+' |')
+          else: out.append('None.')
+          pathlib.Path('TSK_0141_PROVISIONAL_MINIMUM_PRODUCT_SCOPE_EVIDENCE_2026-08-28.md').write_text('\n'.join(out)+'\n')
+          PY
+          git diff --check
+      - name: Publish audit evidence
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add TSK_0141_PROVISIONAL_MINIMUM_PRODUCT_SCOPE_EVIDENCE_2026-08-28.md
+          git commit -m "evidence: verify TSK-0141 provisional minimum scope"
+          git push
