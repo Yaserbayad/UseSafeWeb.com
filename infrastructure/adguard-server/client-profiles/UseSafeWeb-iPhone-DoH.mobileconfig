@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>PayloadContent</key>
+    <array>
+        <dict>
+            <key>DNSSettings</key>
+            <dict>
+                <key>DNSProtocol</key>
+                <string>HTTPS</string>
+                <key>ServerURL</key>
+                <string>https://dns.usesafeweb.com/dns-query</string>
+            </dict>
+            <key>PayloadDescription</key>
+            <string>UseSafeWeb encrypted DNS over HTTPS for the first-phone pilot.</string>
+            <key>PayloadDisplayName</key>
+            <string>UseSafeWeb DNS</string>
+            <key>PayloadIdentifier</key>
+            <string>com.usesafeweb.profile.doh.dns</string>
+            <key>PayloadOrganization</key>
+            <string>UseSafeWeb</string>
+            <key>PayloadType</key>
+            <string>com.apple.dnsSettings.managed</string>
+            <key>PayloadUUID</key>
+            <string>CB1C1FBD-C86D-4100-8869-DAB8EF52B17B</string>
+            <key>PayloadVersion</key>
+            <integer>1</integer>
+        </dict>
+    </array>
+    <key>PayloadDescription</key>
+    <string>Configures UseSafeWeb encrypted DNS over HTTPS. Remove this profile to restore the device's normal DNS settings.</string>
+    <key>PayloadDisplayName</key>
+    <string>UseSafeWeb Encrypted DNS</string>
+    <key>PayloadIdentifier</key>
+    <string>com.usesafeweb.profile.doh</string>
+    <key>PayloadOrganization</key>
+    <string>UseSafeWeb</string>
+    <key>PayloadType</key>
+    <string>Configuration</string>
+    <key>PayloadUUID</key>
+    <string>01F1F05F-C018-40B3-AAED-AA66F9D9ACDA</string>
+    <key>PayloadVersion</key>
+    <integer>1</integer>
+</dict>
+</plist>
