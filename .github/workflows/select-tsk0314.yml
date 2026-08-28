@@ -1,0 +1,64 @@
+name: Select TSK-0314
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/select-tsk0314.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  select:
+    runs-on: [self-hosted, Linux, X64]
+    concurrency:
+      group: usesafeweb-governance-state-prod
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify queue and select TSK-0314
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(sha256sum /etc/machine-id | awk '{print $1}')" = "e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2"
+          test "$(git hash-object CURRENT_STATE.md)" = "97b6e9e5d8dc3ec09cfacfea4a64356895e7cb4b"
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "dce5b829c4d447eac180ae1e896e0019292cf971"
+          test "$(git hash-object TSK_0046_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md)" = "eb9c9c610f47d704469cc811500fe0396c1f8fa7"
+          python3 - <<'PY'
+          import csv, pathlib, re
+          from datetime import datetime, timezone
+          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',encoding='utf-8-sig',newline='')))
+          by={r['Task_ID']:r for r in rows}
+          t=by['TSK-0314']
+          assert [x.strip() for x in t['Dependencies'].split(';') if x.strip()]==['TSK-0046']
+          assert t['Lifecycle_Stage']=='L4' and t['Priority']=='MEDIUM'
+          assert t['AI_Capability_A0_A4']=='A3' and t['Action_Authority']=='AUTO_ALLOWED'
+          acc=t['Acceptance_Criteria']
+          for phrase in ['target WCAG level','keyboard/screen-reader/text-resize behavior','supported browsers/OS versions','device test tiers','unsupported-state messaging']:
+              assert phrase in acc, phrase
+          q=pathlib.Path('TSK_0046_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md').read_text()
+          seg=q.split('### TSK-0314',1)[1]
+          assert '- **Preflight flags:** (none)' in seg
+          assert '### TSK-0187' in q and 'REAL_OR_BEHAVIOR_EVIDENCE_CHECK' in q
+          assert '### TSK-0140' in q and 'OWNER_REVIEW_CHECK' in q
+          p=pathlib.Path('CURRENT_STATE.md')
+          text=p.read_text()
+          assert '### TSK-0046 accepted stable state' in text
+          assert 'No next task is selected by this write' in text
+          now=datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
+          text=re.sub(r'\*\*Updated:\*\* [^\n]+',f'**Updated:** {now}',text,count=1)
+          pos=text.rfind('\n## Queue status after current reconciliation')
+          assert pos>=0
+          text=text[:pos].rstrip()+'''\n\n## Queue status after current reconciliation\n\nThe TSK-0046 post-PASS queue was reread against current acceptance, CR-0003 and open security/privacy deviations. `TSK-0187` remains ineligible because it requires representative-parent evidence. `TSK-0140` remains ineligible for PASS because owner/multi-role review evidence is absent. `TSK-0314` is the only dependency-ready AUTO_ALLOWED L4 candidate with no preflight flag. Canonical WBS owns the TSK-0314 definition/dependency edge; canonical `CURRENT_STATE.md` proves TSK-0046 current PASS.\n\n- **Selected next: `TSK-0314 — Define accessibility, responsive, browser, OS, and device support NFRs`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).\n- Hard dependency: `TSK-0046` — current PASS in canonical runtime.\n- ACC-0314: requirements define target WCAG level, keyboard/screen-reader/text-resize behavior, supported browsers/OS versions, device test tiers, and unsupported-state messaging.\n- Selection boundary: internal accessibility/responsive/support NFR definition only. No web-app build, public support promise, platform-market activation, participant testing or release is authorized.\n\n## Exact next authoritative step\n\nExecute bounded TSK-0314: pin the applicable current WCAG target and authoritative browser/platform facts; distinguish web UI/browser support from the separately owned DNS install/mechanism support matrix; define keyboard, focus, screen-reader, text-resize/reflow, motion/contrast, responsive/mobile/RTL behavior, supported-browser/OS policy, device test tiers and truthful unsupported/degraded messaging; preserve accountless/multilingual and gate boundaries; persist/read back independent ACC-0314 evidence; reconcile runtime; then recompute.\n'''
+          p.write_text(text)
+          PY
+          git diff --check
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add CURRENT_STATE.md
+          git commit -m "state: select TSK-0314"
+          git push
