@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T16:52:35Z
+**Updated:** 2026-08-28T16:55:15Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -436,6 +436,12 @@ The UK government's current July 2026 response, updated 19 August 2026, plans un
 
 The standard preserves TSK-0558/CON-0014/CON-0015: approximately USD 20-50/month discretionary GTM maximum, earned distribution first, no paid-acquisition dependency, and no simultaneous platform-program sprawl. Current Google Search spam guidance independently identifies scaled low-value AI/translated/stitched content as abusive, but no ranking/traffic/conversion outcome is inferred. `RSK-0002` remains OPEN and publication itself remains separately gated.
 
+### TSK-0041 accepted stable state
+
+`TSK-0041 — Specify baseline DNS-protection activation requirements`: **PASS for the provisional internal L4 DNS-activation requirements under DEC-0050/CR-0003**. Contract `TSK_0041_BASELINE_DNS_PROTECTION_ACTIVATION_REQUIREMENTS_2026-08-28.md`, blob `95a5292223f1d2c3c8f79d4c889ad91e917478b2`; independent evidence `TSK_0041_BASELINE_DNS_PROTECTION_ACTIVATION_EVIDENCE_2026-08-28.md`, blob `66cdc50ae2fbb9ec4501b408837d01aafcba876d`. ACC-0041 is satisfied: exact endpoint formats, Apple DoH versus Android native DoT activation semantics, filtering verification, truthful fail-safe behavior, removal/recovery, Private Relay/VPN/browser/app/network conflicts, narrow reversible false-positive handling and no-history privacy constraints are explicit. Historical “DoH setup” wording is reconciled to stronger current target evidence rather than misapplied as a universal Android DoH workflow.
+
+Current direct target evidence proves the accepted phone encrypted-DNS paths, allowed/blocked/narrow-exception/rollback filtering semantics, normal-DNS removal recovery and no persistent raw query/client-history baseline. `RSK-0002` remains OPEN: final user-facing activation usability/comprehension is not representative-parent validated. This PASS does not authorize LG-05/LG-06, implementation/build, participants, legal completion, payment, public release or launch.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -447,13 +453,13 @@ The standard preserves TSK-0558/CON-0014/CON-0015: approximately USD 20-50/month
 
 ## Queue status after current reconciliation
 
-The TSK-0559 post-PASS queue was reread and independently screened. `TSK-0187` remains ineligible under CR-0003 because ACC-0187 requires representative-parent completion/comprehension evidence. `TSK-0140` remains ineligible for PASS because ACC-0140 requires owner/product/network/privacy/security/UX/support/finance review evidence not present. `TSK-0041` is the highest-priority remaining dependency-ready AUTO_ALLOWED provisional-L4 task.
+`TSK-0041` is runtime PASS. This satisfies the previously missing direct predecessor for `TSK-0313`; its other hard predecessors `TSK-0144` and `TSK-0146` are current PASS. `TSK-0187` remains ineligible under CR-0003 because it requires representative-parent evidence, and `TSK-0140` remains fenced by its own owner/multi-role review acceptance.
 
-- **Selected next: `TSK-0041 — Specify baseline DNS-protection activation requirements`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
-- Hard dependency: `TSK-0143` — current PASS.
-- ACC-0041: Requirements cover endpoint format, DoH setup, filtering verification, fail-safe behavior, uninstall/removal, Private Relay/VPN conflicts, false positives, and no-history constraints.
-- Selection rationale: current predecessor PASS; technical/product requirements can be frozen from accepted UseSafeWeb DNS evidence without real-participant behavior or an owner approval act; its prior “future gate” note is superseded for bounded internal L4 definition by DEC-0050/CR-0003, not by build/launch authority.
+- **Selected next: `TSK-0313 — Specify Protection Map state and evidence requirements`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
+- Hard dependencies: `TSK-0041`, `TSK-0144`, `TSK-0146` — current PASS.
+- ACC-0313: Every Protection Map state has entry/evidence rules, parent-facing copy, transition rules, unsupported behavior, persistence scope, device/journey-state boundary and testable examples; parent-confirmed and system-verified states are never conflated; no account ownership model is assumed in the active baseline.
+- Selection rationale: all direct predecessors now satisfy current evidence semantics; ACC-0313 is an internal Protection Map requirements contract that can be satisfied from the already accepted truth-state/data/journey evidence without representative-parent behavior or an owner approval act.
 
 ## Exact next authoritative step
 
-Execute bounded `TSK-0041`: specify the baseline DNS-protection activation requirements using the already accepted `dns.usesafeweb.com` Android DoT / Apple DoH profile contract, current filtering verification/rollback evidence, fail-safe/uncertainty rules, removal/recovery, Private Relay/VPN/browser/app/network conflict semantics, false-positive exception boundary and no-history privacy controls; carry `RSK-0002`; persist/read back independent ACC-0041 evidence; reconcile runtime; then recompute.
+Execute bounded `TSK-0313`: specify Protection Map entry/evidence rules, parent-facing state semantics, transitions, unsupported behavior, persistence scope, accountless device/journey boundary and testable examples; reuse but do not weaken TSK-0320, TSK-0229, TSK-0315 and TSK-0041; preserve parent-confirmed versus system-verified separation; carry `RSK-0002`; persist/read back independent ACC-0313 evidence; reconcile runtime; then recompute.
