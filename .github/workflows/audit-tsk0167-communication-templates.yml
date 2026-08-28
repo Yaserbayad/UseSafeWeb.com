@@ -1,0 +1,81 @@
+name: Audit TSK-0167 communication templates
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/audit-tsk0167-communication-templates.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: [self-hosted]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Audit TSK-0167 acceptance and source alignment
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(git hash-object EXPERIMENT_01_PARTICIPANT_COMMUNICATION_TEMPLATES.md)" == '1dd5aa88f200174d88d1422bbe0c11f7fc5ecbe8' ]]
+          [[ "$(git hash-object CURRENT_STATE.md)" == '2a5ffbf904fde625f0b9fd9d517a3485be3cb87c' ]]
+          [[ "$(git hash-object EXPERIMENT_01_QUALIFICATION_SCREENER.md)" == 'd35d3e0abfc3882d648df3c0c7458e216853b592' ]]
+          [[ "$(git hash-object EXPERIMENT_01_FACILITATOR_GUIDE.md)" == '7d80c1338acc1a5a4c1ff30c020ca39021d8dcb3' ]]
+          [[ "$(git hash-object RETENTION_DELETION_EXECUTION_CHECKLIST.md)" == '5c2d6edbfbabe9ed0fb9c309e7afca8c96fa9c9f' ]]
+          [[ "$(git hash-object PILOT_PRIVACY_NOTICE.md)" == '331f263388dfacfa73b6e9e556277d4230864ce8' ]]
+          python3 - <<'PY'
+          import csv
+          from pathlib import Path
+          wbs='Plans/Master/WBS/master-wbs.csv'
+          with open(wbs,encoding='utf-8-sig',newline='') as f:
+              rows={r['Task_ID']:r for r in csv.DictReader(f)}
+          r=rows['TSK-0167']
+          assert r['Title']=='Create invitation, scheduling, reminder, follow-up, and withdrawal templates'
+          assert r['Dependencies']=='TSK-0221; TSK-0168'
+          assert r['Action_Authority']=='AUTO_ALLOWED'
+          assert r['AI_Capability_A0_A4']=='A3'
+          assert r['Acceptance_ID']=='ACC-0167'
+          assert r['Acceptance_Criteria']=='Templates state voluntary participation, no payment ask, what to prepare, support boundaries, 14-day follow-up, withdrawal route, and current contacts.'
+
+          t=Path('EXPERIMENT_01_PARTICIPANT_COMMUNICATION_TEMPLATES.md').read_text(encoding='utf-8')
+          required=[
+              'INTERNAL PREPARATION ONLY — NOT FOR PARTICIPANT USE',
+              'Template A — Invitation',
+              'Template B — Scheduling confirmation',
+              'Template C — Session reminder',
+              'Template D — 14-day follow-up',
+              'Template E — Withdrawal acknowledgment',
+              'participation is voluntary',
+              'no payment',
+              'What to prepare',
+              'Support boundary for all templates',
+              '14-day follow-up',
+              'Withdrawal route boundary',
+              '{{CONTROLLER_CONTACT}}',
+              '{{UK_REP_CONTACT_OR_APPROVED_EXCEPTION_ROUTE}}',
+              'Current contact status at preparation time',
+              'must not be used with real participants',
+              'CR-0002',
+              'ACC-0167 trace',
+          ]
+          for x in required:
+              assert x in t, x
+          assert t.count('{{CONTROLLER_CONTACT}}') >= 5
+          assert t.count('{{UK_REP_CONTACT_OR_APPROVED_EXCEPTION_ROUTE}}') >= 5
+          assert 'participant-facing controller contact = unresolved/deferred' in t
+          assert 'UK representative/contact or approved Article-27 exception route = unresolved/deferred' in t
+          assert 'Recruitment authorized: YES' not in t
+          assert 'LG-03 = PASS' not in t
+          assert 'does **not** authorize recruitment' in t
+          assert 'no later than 30 days after that participant' in t
+          assert '90 days after Experiment 1 closes' in t
+          print('TSK_0167_WBS_ACCEPTANCE=PASS')
+          print('TSK_0167_SOURCE_BLOBS=PASS')
+          print('TSK_0167_COMMUNICATION_CLASSES=7/7')
+          print('TSK_0167_CR0002_BOUNDARY=PASS')
+          print('TSK_0167_INDEPENDENT_AUDIT=PASS')
+          PY
