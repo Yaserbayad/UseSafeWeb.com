@@ -1,0 +1,135 @@
+name: Reconcile TSK-0230 PASS and inspect L4 queue
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-tsk0230-pass-and-inspect-l4.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify privacy NFR evidence, reconcile runtime, inspect queue
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object CURRENT_STATE.md)" = "dfc2a8b90cd36d72c6f93902cfd0354a51cef64b"
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "dce5b829c4d447eac180ae1e896e0019292cf971"
+          test "$(git hash-object VALIDATION_READINESS_GATE.md)" = "1aef1c806a3fa4abcaf9e2feffa0ea093ec10ff9"
+          test "$(git hash-object TSK_0230_PRIVACY_DATA_MINIMISATION_RETENTION_DELETION_NFR_2026-08-28.md)" = "011caaa84dd3dec13bb608be30b15ec92a24f19e"
+          test "$(git hash-object TSK_0230_PRIVACY_DATA_MINIMISATION_RETENTION_DELETION_NFR_EVIDENCE_2026-08-28.md)" = "f44b4a41992cac42a7538b3aa424bdf282c38724"
+          test "$(git hash-object TSK_0230_RUNTIME_DATA_FOOTPRINT_INSPECTION_2026-08-28.md)" = "48d38b95f43e186624041d6c511412272f93305f"
+
+          python3 - <<'PY'
+          import csv, pathlib, re
+          from datetime import datetime, timezone
+
+          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',encoding='utf-8-sig',newline='')))
+          by={r['Task_ID']:r for r in rows}
+          t=by['TSK-0230']
+          assert set(x.strip() for x in t['Dependencies'].split(';'))=={'TSK-0313','TSK-0042'}
+          assert t['Lifecycle_Stage']=='L4' and t['Priority']=='MEDIUM'
+          assert t['AI_Capability_A0_A4']=='A3' and t['Action_Authority']=='AUTO_ALLOWED'
+          acc=t['Acceptance_Criteria']
+          for phrase in ['purpose, lawful basis, source, recipient, retention, deletion mechanism, access control, and prohibited use','identifiable browsing history remains excluded']:
+              assert phrase in acc, phrase
+
+          c=pathlib.Path('TSK_0230_PRIVACY_DATA_MINIMISATION_RETENTION_DELETION_NFR_2026-08-28.md').read_text()
+          e=pathlib.Path('TSK_0230_PRIVACY_DATA_MINIMISATION_RETENTION_DELETION_NFR_EVIDENCE_2026-08-28.md').read_text()
+          r=pathlib.Path('TSK_0230_RUNTIME_DATA_FOOTPRINT_INSPECTION_2026-08-28.md').read_text()
+          gate=pathlib.Path('VALIDATION_READINESS_GATE.md').read_text()
+
+          for phrase in [
+              '## 5. Accountless J0 session-only data classes',
+              '## 6. J1 optional anonymous short-lived field matrix',
+              '## 7. DNS/runtime data-element matrix — current actual service',
+              '## 9. Exceptional diagnostic data — conditional incident-only class',
+              '## 11. Current actual-runtime deviation register',
+              '## 13. Explicit prohibited data elements/classes',
+              'DVR-0230-01', 'RSK-0002', 'Article 6(1)(f)', 'identifiable browsing history'
+          ]:
+              assert phrase in c, phrase
+          assert '**VER-0230 independent guarded audit result: PASS for ACC-0230' in e
+          assert 'DVR-0230-01' in e and 'implementation deviation remains OPEN' in e
+          for phrase in ['access_log off;','querylog_enabled=false','querylog_file_enabled=false','statistics_enabled=false','anonymize_client_ip=true','rotate 14']:
+              assert phrase in r, phrase
+          assert 'DEFER' in gate and 'Do not recruit or activate real participants' in gate
+          assert 'legitimate interests' in gate.lower()
+
+          p=pathlib.Path('CURRENT_STATE.md')
+          text=p.read_text()
+          assert 'Selected next: `TSK-0230' in text
+          assert '### TSK-0230 accepted stable state' not in text
+          assert '### TSK-0313 accepted stable state' in text
+          assert '### TSK-0042 accepted stable state' in text
+
+          now=datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
+          text=re.sub(r'\*\*Updated:\*\* [^\n]+',f'**Updated:** {now}',text,count=1)
+          sec='''### TSK-0230 accepted stable state\n\n`TSK-0230 — Define privacy, data-minimisation, retention, and deletion NFRs`: **PASS for the provisional internal L4 NFR-definition acceptance under DEC-0050/CR-0003**. Contract `TSK_0230_PRIVACY_DATA_MINIMISATION_RETENTION_DELETION_NFR_2026-08-28.md`, blob `011caaa84dd3dec13bb608be30b15ec92a24f19e`; independent evidence `TSK_0230_PRIVACY_DATA_MINIMISATION_RETENTION_DELETION_NFR_EVIDENCE_2026-08-28.md`, blob `f44b4a41992cac42a7538b3aa424bdf282c38724`; fresh actual-runtime inspection `TSK_0230_RUNTIME_DATA_FOOTPRINT_INSPECTION_2026-08-28.md`, blob `48d38b95f43e186624041d6c511412272f93305f`, accepted run `33193644558` / job `98925167227`. ACC-0230 is satisfied: every currently allowed or conditional accountless/product/DNS/diagnostic data element/class is mapped to purpose, existing supported lawful-basis position, source, recipient, retention, deletion, access control and prohibited use, and identifiable browsing/DNS/domain history remains excluded.\n\nCurrent first-party ICO guidance was rechecked on 2026-08-28 for per-purpose lawful basis, children/legitimate-interests safeguards, data minimisation and storage limitation; Quad9 privacy policy version 1.1 (2026-06-24) was rechecked for the current upstream-recipient boundary. The contract preserves the canonical Article 6(1)(f) planning position without inventing final legal approval. `VALIDATION_READINESS_GATE.md` remains DEFER/non-PASS for the unresolved LIA/DPIA residual-risk approval, participant notice/contact release and ICO/UK-representative branch; real-participant activation remains prohibited.\n\n`DVR-0230-01` remains OPEN: the custom critical DoH Nginx error-log file is currently zero bytes but mode `0644 root:root`, broader than the new least-privilege NFR target (`<=0640`, service/admin only). This is a pre-activation implementation deviation, not hidden or certified compliant by the TSK-0230 PASS. Nginx access logging is currently explicitly off; AdGuard query/file logging and statistics are off; `dns.anonymize_client_ip=true`; Nginx critical logs currently use daily `rotate 14`. `RSK-0002` remains OPEN. This PASS does not authorize LG-03/LG-05/LG-06, implementation/build, participants, legal completion, payment, publication or launch.\n\n'''
+          marker='## Runtime safeguards'
+          assert marker in text
+          text=text.replace(marker,sec+marker,1)
+
+          pass_set={r['Task_ID'] for r in rows if r.get('Execution_State')=='PASS'}
+          pass_set.update(re.findall(r'^### (TSK-\d{4}) accepted stable state$', text, re.M))
+          pass_set.add('TSK-0230')
+          pri={'CRITICAL':0,'HIGH':1,'MEDIUM':2,'LOW':3}
+          candidates=[]
+          for idx,row in enumerate(rows):
+              if row.get('Lifecycle_Stage')!='L4':
+                  continue
+              if row['Task_ID'] in pass_set:
+                  continue
+              if row.get('Plan_Status') in {'DEFERRED','NOT_APPLICABLE'}:
+                  continue
+              if row.get('Action_Authority')!='AUTO_ALLOWED':
+                  continue
+              deps=[x.strip() for x in (row.get('Dependencies') or '').split(';') if x.strip()]
+              if not all(d in pass_set for d in deps):
+                  continue
+              flags=[]
+              hay=' '.join([row.get('Acceptance_Criteria',''),row.get('Preconditions',''),row.get('Notes',''),row.get('Trigger','')]).lower()
+              if any(k in hay for k in ['representative parent','real participant','cohort','usability','comprehension','behavioral','observed parent','user evidence']):
+                  flags.append('REAL_OR_BEHAVIOR_EVIDENCE_CHECK')
+              if any(k in hay for k in ['reviewed by owner','owner approval','explicit owner','approved by owner']):
+                  flags.append('OWNER_REVIEW_CHECK')
+              if any(k in hay for k in ['legal approval','legal review','privacy approval','dpia approval','lia approval']):
+                  flags.append('LEGAL_PRIVACY_APPROVAL_CHECK')
+              candidates.append((pri.get(row.get('Priority','LOW'),9),idx,row,deps,flags))
+          candidates.sort(key=lambda x:(x[0],x[1]))
+
+          report=['# TSK-0230 post-PASS L4 queue inspection','','**Date:** 2026-08-28','**Purpose:** conservative derived queue after TSK-0230 PASS. This report is not authority and does not change task state.','',f'- Conservative PASS set size: {len(pass_set)}',f'- Dependency-ready non-PASS AUTO_ALLOWED L4 candidates: {len(candidates)}','','## Candidates in deterministic priority/WBS order','']
+          for _,_,row,deps,flags in candidates:
+              report += [
+                  f"### {row['Task_ID']} — {row['Title']}",
+                  f"- **Priority:** {row['Priority']}",
+                  f"- **Dependencies:** {'; '.join(deps) if deps else '(none)'}",
+                  f"- **Acceptance:** {row['Acceptance_ID']} — {row['Acceptance_Criteria']}",
+                  f"- **AI / authority:** {row['AI_Capability_A0_A4']} / {row['Action_Authority']}",
+                  f"- **Requirements:** {row.get('Requirement_Reference','')}",
+                  f"- **Interfaces:** {row.get('Interface_Reference','')}",
+                  f"- **Notes:** {row.get('Notes','')}",
+                  f"- **Preflight flags:** {', '.join(flags) if flags else '(none)'}",
+                  ''
+              ]
+          pathlib.Path('TSK_0230_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md').write_text('\n'.join(report)+'\n')
+
+          q=text.rfind('\n## Queue status after current reconciliation')
+          assert q>=0
+          text=text[:q].rstrip()+'''\n\n## Queue status after current reconciliation\n\n`TSK-0230` is runtime PASS for its bounded provisional-L4 NFR-definition acceptance. `DVR-0230-01` remains an explicit pre-activation implementation deviation. A fresh conservative dependency-ready AUTO_ALLOWED L4 queue has been generated at `TSK_0230_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. No next task is selected by this write; the queue must be reread against acceptance, direct predecessor evidence, CR-0003, the legal/participant hold and the open privacy deviation before execution.\n\n## Exact next authoritative step\n\nRead back the TSK-0230 post-PASS L4 queue, reject any candidate requiring unavailable real-user evidence, owner/legal/privacy approval, unresolved trigger/gate or missing direct predecessor proof, account for `DVR-0230-01` where relevant, and persist the deterministic highest-priority eligible AUTO_ALLOWED selection.\n'''
+          p.write_text(text)
+          PY
+          git diff --check
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add CURRENT_STATE.md TSK_0230_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md
+          git commit -m "state: accept TSK-0230 and inspect L4 queue"
+          git push
