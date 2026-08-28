@@ -31,15 +31,6 @@ jobs:
           set -Eeuo pipefail
           [[ "$(hostname -s)" == "adguardvm" ]]
           command -v dig >/dev/null
-          command -v curl >/dev/null
-          command -v python3 >/dev/null
-
-          metadata="$(curl --fail --silent --show-error --max-time 3 \
-            -H Metadata:true \
-            'http://169.254.169.254/metadata/instance/network/interface?api-version=2021-02-01')"
-          public_ip="$(python3 -c 'import json,sys; d=json.load(sys.stdin); vals=[x.get("ipv4",{}).get("ipAddress",[]) for x in d]; ips=[i.get("publicIpAddress","") for a in vals for i in a if i.get("publicIpAddress")]; print(ips[0] if ips else "")' <<<"$metadata")"
-          [[ -n "$public_ip" ]] || { echo 'FAIL no Azure public IP in IMDS'; exit 1; }
-          echo "AZURE_IMDS_PUBLIC_IPV4=$public_ip"
 
           for resolver in system 1.1.1.1 8.8.8.8 9.9.9.9; do
             if [[ "$resolver" == system ]]; then
