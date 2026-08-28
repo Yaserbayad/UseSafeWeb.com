@@ -50,16 +50,18 @@ AdGuard's current Knowledge Base states that Android 9+ supports native DNS-over
 
 For the current UseSafeWeb iPhone/iPad DoH path:
 
-- **Display name:** `UseSafeWeb DNS`
+- **Base display name:** `UseSafeWeb DNS`.
 - **Purpose text:** encrypted DNS baseline for the UseSafeWeb first-phone setup; DNS-level protection only; not complete device safety.
 - **Protocol:** HTTPS / DoH.
 - **Server URL:** `https://dns.usesafeweb.com/dns-query`.
 - **Resolver hostname/certificate identity:** `dns.usesafeweb.com`.
 - **Payload type:** Apple DNS Settings payload (`com.apple.dnsSettings.managed`) where the profile format requires it.
-- **Profile identifier namespace:** production/pilot-facing profile identifiers must be under an explicit UseSafeWeb namespace such as `com.usesafeweb.dns.production`; non-production profiles must use a different environment-qualified identifier.
+- **Controlled-pilot identifier namespace:** any newly generated pilot profile must use an explicit pilot-qualified UseSafeWeb identifier such as `com.usesafeweb.dns.pilot` and, where user-visible differentiation is needed, an environment-qualified display name such as `UseSafeWeb DNS (Pilot)`.
+- **Future production namespace:** `com.usesafeweb.dns.production` is reserved for a later production profile and must not be used as evidence that production/public launch is already authorized.
+- **Non-production namespace:** test/staging profiles must use distinct environment-qualified identifiers and display metadata.
 - **Profile UUID/version:** generated/versioned per profile release; a later update must not silently reuse metadata in a way that obscures which resolver/environment is installed.
 
-The exact generated `.mobileconfig` artifact and signing/distribution method are later implementation/release work; this L4 task does not create or authorize a production profile package.
+This naming rule does not retroactively rename an already accepted controlled-test profile. The exact generated `.mobileconfig` artifact, signing/distribution method, and any production profile package are later implementation/release work; this L4 task does not create or authorize them.
 
 ## 4. Android native Private DNS identity and naming
 
@@ -138,13 +140,14 @@ The currently proven controlled pilot endpoint is `dns.usesafeweb.com`. It is no
 
 Environment rules:
 
-1. `dns.usesafeweb.com` is the canonical pilot/production-facing namespace reserved for the accepted service identity.
-2. Test/staging environments must **not** reuse the production/pilot endpoint as if evidence were interchangeable.
-3. Any non-production resolver must use an environment-qualified hostname, for example the pattern `dns-<environment>.usesafeweb.com`, plus an environment-qualified Apple profile display/identifier; the exact hostname becomes authoritative only when that environment is actually provisioned and accepted.
-4. Test/staging certificates, DNS records, profiles, monitoring and evidence must identify their environment explicitly.
-5. Synthetic/non-participant test data only is allowed in non-production under the current CR-0003 boundary.
-6. Public instructions must never point users at a non-production endpoint.
-7. Promotion of `dns.usesafeweb.com` from controlled pilot use to public production requires the later production/launch gates and fresh endpoint/certificate/compatibility evidence; TSK-0408 does not perform that promotion.
+1. `dns.usesafeweb.com` is the canonical controlled-pilot endpoint and reserved future public service identity; its current acceptance does not promote it to public production.
+2. Test/staging environments must **not** reuse the controlled-pilot endpoint as if evidence were interchangeable.
+3. Any non-production resolver must use an environment-qualified hostname, for example the pattern `dns-<environment>.usesafeweb.com`, plus environment-qualified Apple profile display/identifier metadata; the exact hostname becomes authoritative only when that environment is actually provisioned and accepted.
+4. Pilot, test/staging, and future production profile identifiers remain distinct: pilot uses a pilot-qualified namespace, future production uses a production-qualified namespace only after the relevant production/launch gates, and test/staging use their own environment-qualified namespaces.
+5. Test/staging certificates, DNS records, profiles, monitoring and evidence must identify their environment explicitly.
+6. Synthetic/non-participant test data only is allowed in non-production under the current CR-0003 boundary.
+7. Public instructions must never point users at a non-production endpoint.
+8. Promotion of `dns.usesafeweb.com` from controlled pilot use to public production requires the later production/launch gates and fresh endpoint/certificate/compatibility evidence; TSK-0408 does not perform that promotion.
 
 ## 10. Naming and instruction invariants
 
@@ -154,7 +157,7 @@ A later implementation/content catalogue must be testable against these invarian
 2. iOS/iPadOS DoH profile uses the full `https://dns.usesafeweb.com/dns-query` Server URL.
 3. `dns.usesafeweb.com` certificate identity is valid on each supported encrypted transport.
 4. No supported-platform instruction assumes that a hostname, URL, port, profile or FQDN entry mechanism is interchangeable across platforms.
-5. Profile/display names identify `UseSafeWeb DNS` and the environment where non-production is involved.
+5. Pilot, test/staging, and future production profile identifiers/display metadata are environment-distinguishable and cannot be used as interchangeable acceptance evidence.
 6. `verified` is never derived solely from parent confirmation or profile presence.
 7. Removal returns the platform to normal DNS behavior and clears the UseSafeWeb DNS protection claim.
 8. A failure/bypass/conflict that cannot be proven safe is `failed`, `uncertain` or unsupported — never silently `verified`.
@@ -181,13 +184,13 @@ A later implementation/content catalogue must be testable against these invarian
 - Android Developers — DevicePolicyManager Private DNS specified-host mode / RFC 7858: https://developer.android.com/reference/android/app/admin/DevicePolicyManager
 - Android Developers — LinkProperties strict-mode/certificate semantics: https://developer.android.com/reference/android/net/LinkProperties
 - Apple Platform Deployment — DNS Settings payload: https://support.apple.com/en-gb/guide/deployment/dep86469ba99/1/web/1.0
-- Apple Support — Install or remove configuration profiles on iPhone: https://support.apple.com/en-euro/guide/iphone/iph6c493b19/ios
+- Apple Support — Review/delete or install/remove configuration profiles on iPhone/iPad: https://support.apple.com/en-gb/guide/personal-safety/ips327569a75/1.0/web/1.0
 - AdGuard DNS Knowledge Base — AdGuard Home DNS encryption/device configuration: https://adguard-dns.io/kb/adguard-home/encryption/
 
 ## 12. ACC-0408 result
 
 ACC-0408 requires hostname/DoH path/profile naming, certificates, verification, removal, fallback, and environment separation to be clear without a false universal FQDN workflow.
 
-This contract supplies all of those elements and explicitly separates Android hostname/DoT from Apple profile/DoH, preserves the accepted `dns.usesafeweb.com` identity, defines certificate and verification truth rules, makes removal/recovery reversible, refuses silent false fallback, separates non-production evidence, and preserves current privacy and CR-0003 boundaries.
+This contract supplies all of those elements and explicitly separates Android hostname/DoT from Apple profile/DoH, preserves the accepted `dns.usesafeweb.com` identity, defines certificate and verification truth rules, makes removal/recovery reversible, refuses silent false fallback, separates pilot/test/staging/future-production evidence, and preserves current privacy and CR-0003 boundaries.
 
 **TSK-0408 result: PASS candidate subject to independent verification and runtime read-back.**
