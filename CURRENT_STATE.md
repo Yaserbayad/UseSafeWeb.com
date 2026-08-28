@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T16:34:24Z
+**Updated:** 2026-08-28T16:39:13Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -412,6 +412,12 @@ Independent source audit used current Google Android, Android Developers, Apple 
 
 `RSK-0002` remains OPEN: the minimized journey is not representative-parent validated, and no click-count/completion-time/abandonment/conversion claim is asserted. This PASS does not authorize LG-05/LG-06, implementation/build, participants, legal completion, payment, public release or launch.
 
+### TSK-0409 accepted stable state
+
+`TSK-0409 — Freeze supported OS/device/network install, verification, removal, and known-limit matrix`: **PASS for the provisional internal L4 technical support contract under DEC-0050/CR-0003**. Matrix `TSK_0409_SUPPORTED_OS_DEVICE_NETWORK_LIMIT_MATRIX_2026-08-28.md`, blob `09318534ec097849cbe8c7391e2a1acc3ba5a79a`; independent evidence `TSK_0409_SUPPORTED_OS_DEVICE_NETWORK_LIMIT_MATRIX_EVIDENCE_2026-08-28.md`, blob `87aac1d2affacacdbf1007581bce64d2383f5359`. ACC-0409 is satisfied: the accepted support baseline is limited to Android 9+ phones with usable native Private DNS hostname control and iPhone/iOS 14+ with the approved manual DoH profile; untested device families/networks are explicitly not-yet-supported; install/verification/removal are platform-specific; VPN, Private Relay, browser/app custom DNS, captive portal, managed-network, transport-blocking and IPv6-only/NAT64 limits are explicit.
+
+Current first-party source checks confirm Android Private DNS/DoT semantics, Android VPN DNS override capability, Chrome custom Secure DNS, Apple encrypted DNS profile semantics, Apple VPN DNS routing, and Private Relay DNS handling. Exact VPN/Private Relay/browser coexistence remains unproven and therefore cannot inherit S1 `Verified`. `RSK-0002` remains OPEN. This PASS does not authorize LG-05/LG-06, implementation/build, participants, legal completion, payment, public release or launch.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -423,13 +429,13 @@ Independent source audit used current Google Android, Android Developers, Apple 
 
 ## Queue status after current reconciliation
 
-`TSK-0316` is runtime PASS. `TSK-0317` is now dependency-ready but remains HUMAN_ONLY and is fenced. `TSK-0187` remains real-user-bound/deferred under CR-0003. The highest-priority executable AUTO_ALLOWED L4 candidate is `TSK-0409`.
+`TSK-0409` is runtime PASS. `TSK-0317` and `TSK-0319` remain HUMAN_ONLY and fenced; `TSK-0187` remains real-user-bound/deferred. `TSK-0140` is not selected despite WBS AUTO_ALLOWED metadata because its current acceptance explicitly requires owner and multi-role review evidence that is not present. The highest-priority executable provisional-L4 AUTO_ALLOWED candidate is `TSK-0143`; `TSK-0559` is also MEDIUM/AUTO_ALLOWED but later in WBS order.
 
-- **Selected next: `TSK-0409 — Freeze supported OS/device/network install, verification, removal, and known-limit matrix`** (L4 / A3 / AUTO_ALLOWED / HIGH).
-- Hard dependency: `TSK-0408` — current PASS.
-- ACC-0409: Every supported combination has a tested mechanism or explicit unsupported status; Private Relay/VPN/app/browser/network bypass limits are covered.
-- Selection rationale: HIGH/A3/AUTO_ALLOWED, current hard dependency PASS, no representative-parent evidence required to define a conservative supported/unsupported technical matrix; HUMAN_ONLY TSK-0317 remains fenced.
+- **Selected next: `TSK-0143 — Specify native-device safeguard routing requirements`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
+- Hard dependency: `TSK-0146` — current PASS.
+- ACC-0143: Requirements cover supported platform states, already-configured handling, parent confirmation, unsupported paths, stale guidance, and verification limitations.
+- Selection rationale: dependency-ready MEDIUM/A3/AUTO_ALLOWED; acceptance can be satisfied from current platform/support evidence without representative-parent behavior or a human approval act; earlier WBS order than the remaining MEDIUM AUTO candidate.
 
 ## Exact next authoritative step
 
-Execute bounded `TSK-0409`: freeze the supported OS/device/network matrix only where current direct technical evidence is sufficient; explicitly mark untested combinations unsupported/not-yet-supported rather than extrapolating; cover install, verification, removal/recovery, and Private Relay/VPN/app/browser/network bypass or conflict limits; carry `RSK-0002`; persist/read back independent ACC-0409 evidence; reconcile runtime; then recompute.
+Execute bounded `TSK-0143`: specify native-device safeguard routing requirements for supported, already-configured, unavailable/unsupported and verification-limited states; use only current authoritative platform evidence; preserve parent-confirmation versus system-verification truth; make stale-guidance/review triggers explicit; carry `RSK-0002`; persist/read back independent ACC-0143 evidence; reconcile runtime; then recompute.
