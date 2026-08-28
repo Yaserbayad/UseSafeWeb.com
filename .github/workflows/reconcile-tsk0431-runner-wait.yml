@@ -1,0 +1,93 @@
+name: Reconcile TSK-0431 recovery runner WAITING state
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/reconcile-tsk0431-runner-wait.yml
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - name: Reconcile canonical runtime state
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from datetime import datetime, timezone
+          p=Path('CURRENT_STATE.md')
+          s=p.read_text()
+
+          import re
+          s,n=re.subn(r'\*\*Updated:\*\* [^\n]+', '**Updated:** '+datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')+'  ', s, count=1)
+          assert n==1
+
+          old='Current direct fingerprint evidence proves two genuinely separate handed-off Azure VMs are now reachable through GitHub Actions:'
+          new='Historical direct fingerprint evidence proved two genuinely separate handed-off Azure VMs. Current execution evidence must now distinguish the previously proven recovery identity from present runner availability:'
+          assert s.count(old)==1
+          s=s.replace(old,new)
+
+          needle='- recovery runner `adguartestdvm_correct`: Azure VM `adguartestdvm`, VM ID `6e92a026-964c-4118-8312-f1d31c6ff4d2`, machine-id SHA-256 `e09868443c476b30eae778d191ceedee57ed6f27a74856eae1d0709c68f1c852`, Ubuntu 24.04, West Europe, AdGuard/Nginx inactive.\n'
+          assert s.count(needle)==1
+          s=s.replace(needle, needle+'\nCurrent recovery-attempt evidence from run `33169207187` shows both common-label jobs were scheduled on production runner `adguardvm`; neither reached `adguartestdvm_correct`. Therefore the recovery VM identity remains historically proven, but the recovery runner is currently treated as unavailable to GitHub Actions until directly re-proven. Evidence: `TSK_0431_RECOVERY_RUNNER_UNAVAILABLE_EVIDENCE_2026-08-28.md`.\n',1)
+
+          start=s.index('### WAITING — TSK-0431')
+          end=s.index('### TSK-0514 accepted stable state',start)
+          replacement='''### WAITING — TSK-0431
+
+`TSK-0431` — test pilot restore or rebuild procedure: **WAITING on recovery-runner availability and, after the project-controlled drill passes, direct owner evidence for the literal Azure-native restore element of REQ-0052; not PASS**.
+
+The exact WBS row is L2 / A3 / `AUTO_ALLOWED` / HIGH / critical path with hard predecessors `TSK-0430; TSK-0011`, both satisfied. ACC-0431 requires a functional test target that passes encrypted-DNS and privacy checks with recovery time/issues recorded. REQ-0052 requires a timed clean-server drill covering host baseline, packages, AdGuard, server-managed configuration recovery, firewall/network, endpoint, TLS, filters, privacy, startup, Azure-native backup/restore, verification and health.
+
+The former Azure Backup readiness blocker is resolved. On 2026-08-28 the Project Owner directly reported Azure Backup ready with status **Successful** and explicitly approved treating Azure Backup setup/readiness as done. Durable owner evidence: `TSK_0431_AZURE_BACKUP_OWNER_EVIDENCE_2026-08-28.md`, blob `fb846d5ab9a3ed3f4b52976273c92653d73db925`. No vault/policy/recovery-point values are invented, and this statement is not silently converted into proof that an Azure recovery-point restore was actually executed.
+
+The independent recovery target identity remains the previously proven Azure VM `adguartestdvm`, West Europe, Ubuntu 24.04, Azure VM ID `6e92a026-964c-4118-8312-f1d31c6ff4d2`, machine-id SHA-256 `e09868443c476b30eae778d191ceedee57ed6f27a74856eae1d0709c68f1c852`. Production remains VM ID `bc7f566f-7231-41fb-9fdd-49cf190fd5e1`.
+
+A production-safe, fingerprint-gated clean recovery drill was prepared as workflow `.github/workflows/adguard-clean-recovery-drill.yml` with versioned runtime/evidence scripts. Run `33169207187` attempted two common-label jobs so production could not be mistaken for recovery. Job `98841930651` ran on `adguardvm`, emitted `production_runner_no_mutation=PASS`, and skipped evidence publication. After it released the available runner, job `98841930635` was again scheduled on `adguardvm`, emitted the same no-mutation marker, and skipped publication. Final confirm job `98842441250` correctly failed because no recovery-drill evidence existed. No production or recovery host mutation was performed by those guarded jobs.
+
+Evidence: `TSK_0431_RECOVERY_RUNNER_UNAVAILABLE_EVIDENCE_2026-08-28.md`. The available evidence proves the recovery runner `adguartestdvm_correct` was not available to receive this governed run, but does not establish why; an offline service, disconnected runner, VM state, or another registration/scheduling condition must not be guessed.
+
+Deterministic resumption condition:
+
+1. make already-registered runner `adguartestdvm_correct` available to GitHub Actions again;
+2. re-prove its exact recovery VM fingerprint before any mutation;
+3. rerun the prepared clean-server recovery drill on that target and require encrypted DoH/DoT, filtering/rollback, privacy, admin/firewall, health and <30-minute evidence;
+4. after the project-controlled drill passes, provide direct owner evidence that an Azure-native recovery-point restore was actually exercised successfully, unless the owner explicitly changes that literal REQ-0052 requirement through governed change control.
+
+No recovery PASS is inferred from Azure Backup readiness alone.
+
+'''
+          s=s[:start]+replacement+s[end:]
+
+          old='- Azure control-plane provisioning/configuration remains owner-managed. The corrected recovery VM handoff is independently verified, but TSK-0431 still requires an owner-managed Azure-native backup/restore path/evidence before the full recovery drill can satisfy REQ-0052.'
+          new='- Azure control-plane provisioning/configuration remains owner-managed. Azure Backup readiness is owner-confirmed Successful. TSK-0431 is now immediately WAITING on `adguartestdvm_correct` becoming available to GitHub Actions; after the project-controlled drill passes, the literal Azure-native restore element of REQ-0052 still requires direct owner restore evidence unless changed by governed owner decision.'
+          assert s.count(old)==1
+          s=s.replace(old,new)
+
+          old='- `TSK-0431` — identify/provide the owner-managed Azure-native backup/restore path required by REQ-0052.'
+          new='- `TSK-0431` — make recovery runner `adguartestdvm_correct` available to GitHub Actions; then rerun the fingerprint-gated recovery drill. Azure Backup readiness itself is already owner-confirmed Successful.'
+          assert s.count(old)==1
+          s=s.replace(old,new)
+
+          old='No ordinary L2 work may progress until a dependency/gate condition changes. Separately, TSK-0431 remains WAITING on the owner-managed Azure-native backup/restore path. Do not bypass participant-activation, legal, Azure control-plane, provider, recovery, privacy or validation gates.'
+          new='No ordinary L2 work may progress until a dependency/gate condition changes. TSK-0431 next requires `adguartestdvm_correct` to become available to GitHub Actions so the already-prepared fingerprint-gated clean recovery drill can execute on the isolated recovery VM. After that drill passes, do not infer the literal Azure-native restore element from backup readiness; require direct owner restore evidence or an explicit governed owner change to REQ-0052. Do not bypass participant-activation, legal, Azure control-plane, provider, recovery, privacy or validation gates.'
+          assert s.count(old)==1
+          s=s.replace(old,new)
+
+          p.write_text(s)
+          PY
+          git config user.name 'UseSafeWeb Governance Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git diff --cached --check
+          git commit -m 'state: reconcile TSK-0431 recovery runner WAITING boundary'
+          git push origin HEAD:main
