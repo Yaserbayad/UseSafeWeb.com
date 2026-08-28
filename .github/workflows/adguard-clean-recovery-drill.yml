@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: usesafeweb-adguard-recovery-v2
+  group: usesafeweb-adguard-recovery-v3
   cancel-in-progress: false
 
 jobs:
