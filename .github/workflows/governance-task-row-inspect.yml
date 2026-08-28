@@ -15,73 +15,72 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  preflight:
-    strategy:
-      fail-fast: false
-      matrix:
-        slot: [1, 2]
+  issue:
     runs-on: [self-hosted, linux, x64]
-    timeout-minutes: 4
+    timeout-minutes: 10
     steps:
       - name: Checkout exact main commit
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Read-only TSK-0442 TLS preflight
+      - name: Staging validation then production certificate issuance
         shell: bash
         run: |
           set -Eeuo pipefail
-          . /etc/os-release
           MID="$(sha256sum /etc/machine-id | awk '{print $1}')"
-          AZ_JSON="$(python3 - <<'PY'
+          AZ_NAME="$(python3 - <<'PY'
           import json,urllib.request
           req=urllib.request.Request('http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01',headers={'Metadata':'true'})
-          with urllib.request.urlopen(req,timeout=3) as r: print(json.dumps(json.load(r)))
+          with urllib.request.urlopen(req,timeout=3) as r: print(json.load(r).get('name',''))
           PY
           )"
-          AZ_NAME="$(printf '%s' "$AZ_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("name",""))')"
-          AZ_LOC="$(printf '%s' "$AZ_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("location",""))')"
-          echo "SLOT=${{ matrix.slot }}"
-          echo "AZURE_VM_NAME=$AZ_NAME"
-          echo "AZURE_LOCATION=$AZ_LOC"
-          echo "OS_VERSION_ID=$VERSION_ID"
-          if [[ "$MID" != "e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2" || "$AZ_NAME" != "adguardvm" || "$AZ_LOC" != "westeurope" ]]; then
-            echo "PRODUCTION_GUARD=SKIP_NON_PRODUCTION"
-            exit 0
+          if [[ "$MID" != "e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2" || "$AZ_NAME" != "adguardvm" ]]; then
+            echo "PRODUCTION_GUARD=FAIL"
+            exit 1
           fi
           echo "PRODUCTION_GUARD=PASS"
-          if sudo -n true 2>/dev/null; then echo "NONINTERACTIVE_SUDO=PASS"; else echo "NONINTERACTIVE_SUDO=NO"; exit 1; fi
-          for c in openssl curl python3 ss systemctl apt-get; do command -v "$c" >/dev/null && echo "CMD_${c}=YES" || echo "CMD_${c}=NO"; done
-          command -v certbot >/dev/null && echo "CERTBOT_PRESENT=YES" || echo "CERTBOT_PRESENT=NO"
-          command -v lego >/dev/null && echo "LEGO_PRESENT=YES" || echo "LEGO_PRESENT=NO"
-          echo "LISTENERS_BEGIN"
-          sudo ss -lntupH | awk '$5 ~ /:(53|80|443|853)$/ {print $1,$5}' | sort -u
-          echo "LISTENERS_END"
-          if command -v ufw >/dev/null; then
-            echo "UFW_BEGIN"
-            sudo ufw status | grep -E '(^Status:|(^|[[:space:]])(53|80|443|853)(/|[[:space:]]))' || true
-            echo "UFW_END"
+          [[ "$(getent ahostsv4 dns.usesafeweb.com | awk 'NR==1{print $1}')" == "52.157.109.120" ]]
+          if ! command -v certbot >/dev/null; then
+            sudo apt-get update -y >/dev/null
+            DEBIAN_FRONTEND=noninteractive sudo apt-get install -y certbot >/dev/null
+            echo "CERTBOT_INSTALLED=YES"
+          else
+            echo "CERTBOT_INSTALLED=ALREADY"
           fi
-          sudo python3 - <<'PY'
-          import os,stat
-          try:
-              import yaml
-          except Exception:
-              print('YAML_MODULE=NO'); raise SystemExit(0)
-          print('YAML_MODULE=YES')
-          p='/opt/AdGuardHome/AdGuardHome.yaml'
-          d=yaml.safe_load(open(p,encoding='utf-8')) or {}
-          t=d.get('tls') or {}
-          safe=['enabled','server_name','force_https','port_https','port_dns_over_tls','port_dns_over_quic','strict_sni_check','allow_unencrypted_doh','certificate_path','private_key_path']
-          for k in safe: print('TLS_'+k.upper()+'='+str(t.get(k,'')))
-          for k in ['certificate_path','private_key_path']:
-              v=t.get(k)
-              if v:
-                  try:
-                      st=os.stat(v); print(k.upper()+'_EXISTS=YES'); print(k.upper()+'_MODE='+oct(stat.S_IMODE(st.st_mode))); print(k.upper()+'_UID='+str(st.st_uid)); print(k.upper()+'_GID='+str(st.st_gid))
-                  except FileNotFoundError: print(k.upper()+'_EXISTS=NO')
-          print('TLS_INLINE_CERT_PRESENT='+('YES' if bool(t.get('certificate_chain')) else 'NO'))
-          print('TLS_INLINE_PRIVATE_KEY_PRESENT='+('YES' if bool(t.get('private_key')) else 'NO'))
-          PY
-          echo "TSK_0442_PREFLIGHT=PASS"
+          certbot --version
+          if sudo ufw status | grep -Eq '^80/tcp[[:space:]]+ALLOW'; then
+            echo "UFW_HTTP80=ALREADY_ALLOWED"
+          else
+            sudo ufw allow 80/tcp comment 'UseSafeWeb ACME HTTP-01' >/dev/null
+            echo "UFW_HTTP80=ALLOWED"
+          fi
+          sudo certbot certonly --staging --standalone --preferred-challenges http \
+            --cert-name dns.usesafeweb.com-staging \
+            -d dns.usesafeweb.com \
+            --non-interactive --agree-tos --register-unsafely-without-email
+          echo "ACME_STAGING_HTTP01=PASS"
+          sudo certbot delete --cert-name dns.usesafeweb.com-staging --non-interactive >/dev/null || true
+          sudo certbot certonly --standalone --preferred-challenges http \
+            --cert-name dns.usesafeweb.com \
+            -d dns.usesafeweb.com \
+            --non-interactive --agree-tos --register-unsafely-without-email
+          echo "ACME_PRODUCTION_ISSUANCE=PASS"
+          CERT=/etc/letsencrypt/live/dns.usesafeweb.com/cert.pem
+          FULL=/etc/letsencrypt/live/dns.usesafeweb.com/fullchain.pem
+          KEY=/etc/letsencrypt/live/dns.usesafeweb.com/privkey.pem
+          sudo test -s "$CERT"; sudo test -s "$FULL"; sudo test -s "$KEY"
+          sudo openssl x509 -in "$CERT" -noout -checkhost dns.usesafeweb.com
+          sudo openssl verify -CApath /etc/ssl/certs "$FULL"
+          echo "CERT_HOSTNAME_AND_CHAIN=PASS"
+          echo "PRIVATE_KEY_MODE=$(sudo stat -Lc '%a' "$KEY")"
+          echo "PRIVATE_KEY_UID=$(sudo stat -Lc '%u' "$KEY")"
+          echo "PRIVATE_KEY_GID=$(sudo stat -Lc '%g' "$KEY")"
+          sudo test "$(sudo stat -Lc '%u' "$KEY")" = "0"
+          MODE="$(sudo stat -Lc '%a' "$KEY")"
+          [[ "$MODE" == "600" || "$MODE" == "640" ]]
+          echo "PRIVATE_KEY_ACCESS=PASS"
+          sudo certbot renew --cert-name dns.usesafeweb.com --dry-run --no-random-sleep-on-renew
+          echo "ACME_RENEWAL_DRY_RUN=PASS"
+          sudo systemctl is-enabled certbot.timer >/dev/null 2>&1 && echo "CERTBOT_TIMER_ENABLED=YES" || echo "CERTBOT_TIMER_ENABLED=NO"
+          echo "TSK_0442_CERTIFICATE_PHASE=PASS"
