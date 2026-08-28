@@ -1,6 +1,6 @@
 {
   "artifact_schema": "usesafeweb.adguard-approved-config.v1",
-  "artifact_version": "1.0.0",
+  "artifact_version": "1.1.0",
   "task_id": "TSK-0202",
   "acceptance_id": "ACC-0202",
   "target": {
@@ -10,14 +10,14 @@
     "azure_region": "westeurope",
     "adguard_home_version": "v0.107.79"
   },
-  "scope": "Secret-safe, version-controlled reproduction of the approved pre-public AdGuard settings. This is not a complete raw AdGuardHome.yaml backup and intentionally excludes authentication material, certificate private material, query history, client-identifying records, and volatile runtime data.",
+  "scope": "Secret-safe, version-controlled reproduction of the approved AdGuard settings after the TSK-0442 same-host TLS-proxy preparation. AdGuard administration and plain DNS remain loopback-only; local unencrypted DoH is enabled only as the loopback backend for the path-restricted encrypted-DNS proxy. AdGuard's own shared HTTPS/web-UI TLS listener remains disabled. This is not a complete raw AdGuardHome.yaml backup and intentionally excludes authentication material, certificate/private-key material, query history, client-identifying records, and volatile runtime data.",
   "source_export": {
     "workflow": ".github/workflows/adguard-approved-config-export.yml",
-    "workflow_blob": "a02dca9e536d7c036b44a5dadea19cd9cdb26a98",
-    "workflow_run": 33127050108,
-    "workflow_job": 98707574318,
-    "trigger_commit": "b977e55345c72ea7f9c4f42de194ab73589537e0",
-    "settings_sha256": "327c374d46fc40c03a847a57d7078df6035edc71710eb8725ce57c69ac8a93a8"
+    "workflow_blob": "d0c61bd472a79479187c8fb1e8b00cfa0d23baa2",
+    "workflow_run": 33158010249,
+    "workflow_job": 98805347681,
+    "trigger_commit": "3264de01df279985d3d078da306419d83958085d",
+    "settings_sha256": "fcedf8b67b5d4c43544d5a57b9f74b6a45e6f3be1d778c6fb6183e83802ac49d"
   },
   "linked_deployment_evidence": [
     {
@@ -126,7 +126,10 @@
       }
     ],
     "http": {
-      "address": "127.0.0.1:3000"
+      "address": "127.0.0.1:3000",
+      "doh": {
+        "insecure_enabled": true
+      }
     },
     "querylog": {
       "enabled": false,
