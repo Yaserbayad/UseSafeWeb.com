@@ -5,13 +5,15 @@
 **Evidence:** EVD-0430  
 **Verification:** VER-0430  
 **Target:** `srv.UseSafeWeb.com` / `adguardvm`  
-**Date:** 2026-08-27
+**Date:** 2026-08-27 / owner decryption proof 2026-08-28
 
 ## Current task outcome
 
-**TSK-0430 is WAITING, not PASS.**
+**TSK-0430 is PASS.**
 
-The encrypted configuration backup has been created and independently audited on the target, with recorded checksum/date and no prohibited query-history retention. The remaining ACC-0430 element is direct proof that the **authorised owner can decrypt this exact retained archive using the corresponding owner-held SSH private-key file**. That private key is correctly absent from the server/GitHub execution environment, so the owner-decryption step cannot be fabricated or performed autonomously without crossing the secret/access boundary.
+The encrypted configuration backup was created and independently audited on the target, with recorded checksum/date and no prohibited query-history retention. On 2026-08-28, the Project Owner directly executed the repository-pinned owner-side verifier from an owner-controlled workstation and successfully decrypted this exact retained archive using the corresponding owner-held SSH private key. No private-key material or passphrase was supplied to GitHub, the server, or ChatGPT as part of this proof.
+
+All elements of ACC-0430 are now directly proven.
 
 ## Authoritative task contract
 
@@ -143,45 +145,36 @@ Independent proof:
 - non-empty live `querylog.json*` file count remains `0`;
 - final marker: `TSK_0430_INDEPENDENT_AUDIT=PASS`.
 
-## Remaining owner-decryption acceptance proof
+## Owner-side direct decryption proof — 2026-08-28
 
-The server-side evidence proves that the archive was encrypted to the exact sole public key used for the owner-controlled SSH path. It does **not** prove that the owner-held private key is an ordinary SSH private-key file usable by `age -i`, rather than an ssh-agent/hardware-token-only identity, nor does it execute decryption of this exact ciphertext.
+The Project Owner executed the repository-pinned `infrastructure/adguard-server/verify-owner-encrypted-backup.sh` from an owner-controlled workstation against the retained archive on `srv.UseSafeWeb.com`. The private key remained owner-held and was not copied into the VM, GitHub, or project evidence.
 
-Because ACC-0430 explicitly requires that the backup **can be decrypted by the authorised owner**, the strongest practical acceptance evidence is one owner-side decryption/checksum run with the real owner private key while that key stays off the server.
+Safe reported verification outputs:
 
-A no-secret owner-side verifier has been prepared and read back:
+- `PASS ciphertext checksum verified locally`;
+- `owner_local_sidecar_verification=PASS`;
+- `PASS owner private key decrypted encrypted backup locally`;
+- `decrypted_package_member_scope=PASS`;
+- `decrypted_manifest_identity_and_scope=PASS`;
+- `PASS decrypted configuration checksum verified without printing configuration contents`;
+- `encrypted_archive_sha256=bd5cad421a44efb27a669a0119f6247f456e1e8e97a0f23bb628933e6208ccde`;
+- `owner_recipient_fingerprint=SHA256:682Jbw3baP6jxs57+1c5lchlkrNMELcvDk8bauEl51U`;
+- `decrypted_configuration_sha256=d8b6eae3b85edbaa1c49e318354389dc616099ecb3d2d90eff3c3dd8c663e1f2`;
+- `TSK_0430_OWNER_DECRYPTION=PASS`.
 
-`infrastructure/adguard-server/verify-owner-encrypted-backup.sh`
-
-Git blob:
-
-`d0d9c30bbb8f2b495f4cd852facf233ffab90843`
-
-The script:
-
-- takes the SSH target and local private-key path as arguments;
-- streams only the known ciphertext and non-secret sidecar from the server;
-- verifies ciphertext size/hash/date/recipient fingerprint locally;
-- decrypts locally using `age -d -i <owner-private-key>`;
-- verifies the decrypted package contains only `configuration.tar` and `manifest.json`;
-- verifies the manifest identity/scope;
-- verifies the inner archive and raw configuration checksums without printing configuration contents;
-- deletes all local plaintext through its cleanup trap;
-- emits only safe hashes/fingerprint and `TSK_0430_OWNER_DECRYPTION=PASS` on success.
-
-The owner's private key and any key passphrase remain solely on the owner workstation and must not be pasted into ChatGPT, GitHub, the VM, or workflow logs.
+The ciphertext SHA-256 and owner recipient fingerprint exactly match the independently audited retained backup. The decrypted package-member scope and manifest identity checks passed, and the raw configuration checksum was verified without printing configuration contents. This is direct owner evidence for decryptability of the exact retained archive and closes the remaining ACC-0430 element.
 
 ## Current acceptance evaluation
 
 | ACC-0430 element | State | Evidence |
 | --- | --- | --- |
 | Backup completes | PASS | creation run `33128004795` / job `98710652627` |
-| Contains no prohibited query history | PASS | fail-closed preflight + independent audit; querylog/filelog off, no persistent clients/query files, strict backup scope |
-| Recorded checksum/date | PASS | UTC `2026-08-27T23:56:12Z`, ciphertext SHA-256 `bd5cad421a44efb27a669a0119f6247f456e1e8e97a0f23bb628933e6208ccde`, independently reverified |
-| Can be decrypted by authorised owner | **WAITING direct owner proof** | encrypted to exact owner-controlled 3072-bit RSA public key and format is supported by `age`, but the corresponding owner private-key file is intentionally not available to server automation and actual owner decryption has not yet been executed |
+| Contains no prohibited query history | PASS | fail-closed preflight + independent audit + owner-side decrypted package/member scope verification |
+| Recorded checksum/date | PASS | UTC `2026-08-27T23:56:12Z`, ciphertext SHA-256 `bd5cad421a44efb27a669a0119f6247f456e1e8e97a0f23bb628933e6208ccde`, independently and owner-side reverified |
+| Can be decrypted by authorised owner | PASS | owner-side direct decryption of the exact retained ciphertext, ending `TSK_0430_OWNER_DECRYPTION=PASS`, with matching recipient fingerprint and verified decrypted configuration checksum |
 
 ## Stable current outcome
 
-**TSK-0430: WAITING.**
+**TSK-0430: PASS.**
 
-The encrypted backup itself is complete and independently stable. The deterministic resumption condition is a successful owner-side execution of `verify-owner-encrypted-backup.sh` against this exact archive, returning `TSK_0430_OWNER_DECRYPTION=PASS` and the expected ciphertext SHA-256 without exposing private-key material. Only then may ACC-0430 and TSK-0430 be marked PASS and the downstream restore task be considered for execution.
+ACC-0430 is fully satisfied with durable server-side creation/audit evidence plus direct owner-side decryption evidence. No private-key material or passphrase is stored in project evidence. Downstream work may now be evaluated from current WBS/graph authority.
