@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T13:38:44Z  
+**Updated:** 2026-08-28T14:23:29Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -8,10 +8,11 @@
 
 ## Canonical planning authority
 
-**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0001 PUBLISHED AND READ-BACK VERIFIED.**
+**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0002 PUBLISHED AND READ-BACK VERIFIED.**
 
-- Current validated `Plans/` tree: `c42616e92f0624aaf5caf788b2383a1402393dfd`.
-- CR-0001 publication commit: `904ca6cb0beca7a868d5ca64729d94f5b4d7217d`.
+- Current validated `Plans/` tree: `6e45973f0ec9c784ffb7774b149cdae559df3a1d`.
+- Latest post-freeze change: CR-0002, publication commit `9f770f23c257a960a59faefe70d245a3bab52ce2`; evidence `CR_0002_OWNER_LEGAL_SEQUENCING_OVERRIDE_EVIDENCE_2026-08-28.md`, blob `9234fe5b764801db513df0c477120efd2b096e18`.
+- CR-0001 dependency repair remains incorporated in the validated planning tree.
 - Validation: 641 tasks, 849 dependency edges, 5,178 relationship entities, 20,463 targets, 0 broken links, 0 generated missing task IDs, 51 checksum entries valid.
 
 ## Frozen technical identity
@@ -324,6 +325,16 @@ The first verifier run `33167781526` was rejected as a test false negative becau
 - TSK-0442 TLS target-device acceptance, TSK-0443 certificate renewal/expiry controls, TSK-0514 external-network/removal verification, TSK-0511 per-supported-device verification, TSK-0512 filtering/exception/rollback verification, and TSK-0207 privacy-persistence verification are satisfied. None of these PASS states by themselves authorize participant activation.
 - Owner-deferred UK representative/ICO fee planning remains unresolved until 2027-08-27 or earlier explicit reactivation; technical work does not imply validation-readiness legal gate PASS or authorize real England participant activation.
 
+## Owner-approved CR-0002 sequencing override
+
+The Project Owner explicitly instructed on 2026-08-28 that the legal/regulatory/compliance work deferred to 2027-08-27 is to be treated as done **for sequencing purposes until that date** so governed work can move further. Canonical DEC-0049 / CR-0002 implements this as a bounded dependency-satisfaction exception, not legal completion evidence.
+
+- Tasks carrying `OWNER_LEGAL_HOLD_2026-08-27` remain `DEFERRED`/`WAITING`, not `PASS`.
+- Through 2027-08-27 they may be conditionally dependency-satisfied only for internal, synthetic, non-participant, non-public preparatory descendants whose own acceptance does not require asserting the missing legal fact/approval.
+- Downstream evidence must preserve each deferred legal item as an unresolved deviation/limitation.
+- Real-participant recruitment/processing, child-linked DNS activation, public launch, legal attestation/signature, payment of regulated fees, and HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED decisions remain fenced by actual applicable authority.
+- The exception expires 2027-08-27 or on earlier explicit owner reactivation/supersession; affected downstream PASS is then re-evaluated where materially reliant on the exception.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -335,16 +346,16 @@ The first verifier run `33167781526` was rejected as a test false negative becau
 
 ## Queue status after current reconciliation
 
-TSK-0510 is runtime PASS with durable report/evidence and an independent repository audit. Recomputing the L2 dependency graph after that mutation yields **0 ordinary dependency-ready `AUTO_ALLOWED` tasks**.
+CR-0002 is canonically published/read-back verified with deterministic validation PASS. The WBS remains structurally unchanged at 641 tasks / 849 dependency edges. Applying DEC-0049 / Layer-5 section 5.3.1 to the current L2 queue makes two internal/preparatory AUTO_ALLOWED tasks dependency-eligible: `TSK-0026` and `TSK-0167`.
 
-The direct L2 successors remain constrained as follows:
+Priority selection is deterministic:
 
-- `TSK-0513` — end-to-end synthetic rehearsal — remains unavailable because hard predecessor `TSK-0167` is not PASS. TSK-0167 itself depends on `TSK-0221`, which is owner-deferred until 2027-08-27 or earlier explicit owner reactivation and is a HUMAN_ONLY notice-approval/release action.
-- `TSK-0026` — assemble the G-02/LG-03 evidence package — remains unavailable because required legal/privacy predecessors including `TSK-0211`, `TSK-0217`, and `TSK-0221` remain owner-deferred/unresolved.
-- `TSK-0215` and `TSK-0218`, although they depend on TSK-0510, remain explicitly `DEFERRED` under the 2026-08-27 owner legal hold and are not executable ordinary work.
+- **Selected next: `TSK-0026` — Assemble G-02 evidence package** (L2 / A3 / AUTO_ALLOWED / HIGH / critical path). Its legal-branch predecessors `TSK-0211`, `TSK-0208`, `TSK-0217`, and `TSK-0221` are conditionally dependency-satisfied only for preparation of a truthful evidence package; they remain unresolved deviations and cannot be represented as legal PASS. `TSK-0510` is current PASS and the canonical publication/read-back prerequisite is satisfied.
+- `TSK-0167` — invitation/scheduling/reminder/follow-up/withdrawal templates — is also preparatorily eligible because `TSK-0168` is PASS and deferred `TSK-0221` is conditionally dependency-satisfied for internal template preparation, but it is lower priority than TSK-0026.
+- `TSK-0513` remains unavailable until TSK-0167 itself becomes PASS.
 
-The accepted technical report does not alter the legal hold, does not satisfy LG-03, and does not authorize recruitment, participant processing, child-linked DNS activation, public launch, or any Project Owner/HUMAN_ONLY gate decision.
+LG-03 remains **NOT PASS**. CR-0002 does not authorize recruitment, participant processing, child-linked DNS activation, public launch, or any Project Owner/HUMAN_ONLY gate decision.
 
 ## Exact next authoritative step
 
-There is no ordinary dependency-ready L2 `AUTO_ALLOWED` work after TSK-0510. Preserve the current technical baseline and WAIT on the owner-deferred legal/regulatory/compliance branch until **2027-08-27** or an earlier explicit Project Owner reactivation. Do not recruit or activate real participants and do not infer LG-03 PASS. If the owner explicitly reactivates that branch earlier, reload its exact WBS rows/gates/requirements and resume from the highest-priority unresolved legal/privacy predecessor rather than bypassing it.
+Execute bounded `TSK-0026`: assemble the LG-03/G-02 evidence package against all eight current gate criteria, map each to current evidence/owner/status/deviation/source, explicitly retain every deferred legal item as unresolved rather than fabricated PASS, independently verify ACC-0026, persist/read back the package/evidence, then recompute selection. If that makes `TSK-0027` the highest-priority boundary, stop for the Project Owner's HUMAN_ONLY PASS/FAIL/DEFER decision rather than inferring it.
