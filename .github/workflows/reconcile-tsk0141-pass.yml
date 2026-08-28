@@ -1,0 +1,48 @@
+name: Reconcile TSK-0141 PASS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-tsk0141-pass.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify and reconcile
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object TSK_0141_PROVISIONAL_MINIMUM_PRODUCT_SCOPE_AND_NON_GOALS_2026-08-28.md)" = "c72bfd906fdca4a106dcd7d4ff458a2577e32c90"
+          test "$(git hash-object TSK_0141_PROVISIONAL_MINIMUM_PRODUCT_SCOPE_EVIDENCE_2026-08-28.md)" = "a7881f443a85c72cda63e628e0d6def8d41c6564"
+          python3 - <<'PY'
+          import csv, pathlib, re
+          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',encoding='utf-8-sig',newline=''))); by={r['Task_ID']:r for r in rows}
+          assert by['TSK-0141']['Dependencies']=='TSK-0139'
+          assert by['TSK-0138']['Dependencies']=='TSK-0141'
+          assert by['TSK-0138']['Action_Authority']=='AUTO_ALLOWED'
+          e=pathlib.Path('TSK_0141_PROVISIONAL_MINIMUM_PRODUCT_SCOPE_EVIDENCE_2026-08-28.md').read_text(); assert 'ACC-0141 is fully satisfied' in e
+          s=pathlib.Path('CURRENT_STATE.md').read_text(); assert 'Selected next: `TSK-0141' in s
+          p=pathlib.Path('CURRENT_STATE.md'); text=s
+          text=re.sub(r'\*\*Updated:\*\* [^\n]+','**Updated:** 2026-08-28T15:31:00Z',text,count=1)
+          sec='''### TSK-0141 accepted stable state\n\n`TSK-0141 — Freeze minimum product scope and non-goals`: **PASS for provisional L4 scope under DEC-0050/CR-0003**. Scope artifact `TSK_0141_PROVISIONAL_MINIMUM_PRODUCT_SCOPE_AND_NON_GOALS_2026-08-28.md`, blob `c72bfd906fdca4a106dcd7d4ff458a2577e32c90`; independent evidence `TSK_0141_PROVISIONAL_MINIMUM_PRODUCT_SCOPE_EVIDENCE_2026-08-28.md`, blob `a7881f443a85c72cda63e628e0d6def8d41c6564`. ACC-0141 is satisfied: every included capability has an Owner-approved, Mandatory, or Provisional/unvalidated basis; accountless-first is preserved; authentication/persistent dashboard/customer AdGuard control plane remain deferred; surveillance/history/child-account/advanced scope is excluded; synthetic evidence is not behavioral proof.\n\nThis PASS does not authorize LG-06, L5/L6 build, participants, legal completion, payment activation or public launch. RSK-0002 remains OPEN.\n\n'''
+          marker='## Runtime safeguards'
+          if '### TSK-0141 accepted stable state' not in text: text=text.replace(marker,sec+marker,1)
+          q=text.rfind('\n## Queue status after current reconciliation'); assert q>=0
+          text=text[:q].rstrip()+'''\n\n## Queue status after current reconciliation\n\n`TSK-0141` is runtime PASS for provisional scope. Its sole direct successor is dependency-ready.\n\n- **Selected next: `TSK-0138 — Register unresolved product assumptions and owner decisions`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).\n- Hard dependency: `TSK-0141` — current PASS.\n- ACC-0138 requires every unresolved item to have an owner, evidence needed, decision deadline/gate, safe default, and consequence of deferral, while preventing engineering/AI from silently making critical owner decisions.\n- The register must explicitly carry RSK-0002 and all provisional user-behavior unknowns created by CR-0003.\n\n## Exact next authoritative step\n\nExecute bounded `TSK-0138`: create a controlled unresolved-assumptions/owner-decisions register covering the provisional L4 scope, evidence gaps, deferred exceptions, legal/participant boundary and any later decision trigger. Use safe defaults that preserve minimum scope and stop progression where required; do not silently decide owner-only matters. Verify ACC-0138, persist/read back evidence, then recompute.\n'''
+          p.write_text(text)
+          PY
+          git diff --check
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add CURRENT_STATE.md
+          git commit -m "state: accept TSK-0141 and select TSK-0138"
+          git push
