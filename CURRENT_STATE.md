@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T16:27:32Z
+**Updated:** 2026-08-28T16:34:24Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -406,6 +406,12 @@ Independent source audit used current Google Android, Android Developers, Apple 
 
 `RSK-0002` remains OPEN: exact labels/copy are not representative-parent validated and must be reopened if later L3 evidence contradicts comprehension/usability assumptions. This PASS does not authorize LG-05/LG-06, implementation/build, participants, legal completion, payment, public release or launch.
 
+### TSK-0316 accepted stable state
+
+`TSK-0316 — Define a friction budget and challenge every click, field, choice, confirmation, account, and manual step`: **PASS for the provisional internal L4 friction/minimisation contract under DEC-0050/CR-0003**. Contract `TSK_0316_FRICTION_BUDGET_AND_INTERACTION_CHALLENGE_2026-08-28.md`, blob `07df8b1909809a069e3ddba1ff10b688d2f5a5e0`; corrected independent evidence `TSK_0316_FRICTION_BUDGET_AND_INTERACTION_CHALLENGE_EVIDENCE_2026-08-28.md`, blob `189a31eb56d877b1553251c2e6a1c6b18fd54616`. ACC-0316 is satisfied: every retained interaction is tied to a decision/technical/safety/evidence/recovery reason; removable friction is removed or conditionalized; Android/Apple platform-required actions remain explicit; unsupported one-click/universal protection claims are prohibited. The evidence-index mismatch discovered before PASS was corrected and read back against the actual contract blob before this transition.
+
+`RSK-0002` remains OPEN: the minimized journey is not representative-parent validated, and no click-count/completion-time/abandonment/conversion claim is asserted. This PASS does not authorize LG-05/LG-06, implementation/build, participants, legal completion, payment, public release or launch.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -417,13 +423,13 @@ Independent source audit used current Google Android, Android Developers, Apple 
 
 ## Queue status after current reconciliation
 
-`TSK-0320` is runtime PASS for the provisional internal L4 Protection Map state/copy contract. `TSK-0319` is now dependency-ready but remains HUMAN_ONLY and is fenced. The highest-priority executable AUTO_ALLOWED candidates are `TSK-0316` and `TSK-0409`, both HIGH/A3; current project tie-break by WBS order selects `TSK-0316`. `TSK-0187` remains real-user-bound/deferred.
+`TSK-0316` is runtime PASS. `TSK-0317` is now dependency-ready but remains HUMAN_ONLY and is fenced. `TSK-0187` remains real-user-bound/deferred under CR-0003. The highest-priority executable AUTO_ALLOWED L4 candidate is `TSK-0409`.
 
-- **Selected next: `TSK-0316 — Define a friction budget and challenge every click, field, choice, confirmation, account, and manual step`** (L4 / A3 / AUTO_ALLOWED / HIGH).
-- Hard dependency: `TSK-0315` — current PASS.
-- ACC-0316: Each retained interaction has a decision/technical/safety reason; removable steps are removed; platform constraints are explicit; unsupported one-click claims are absent.
-- Selection rationale: same HIGH priority/authority as TSK-0409, earlier WBS order; acceptance can be satisfied as provisional internal friction design without representative-user evidence if no unsupported quantitative behavioral claims are invented.
+- **Selected next: `TSK-0409 — Freeze supported OS/device/network install, verification, removal, and known-limit matrix`** (L4 / A3 / AUTO_ALLOWED / HIGH).
+- Hard dependency: `TSK-0408` — current PASS.
+- ACC-0409: Every supported combination has a tested mechanism or explicit unsupported status; Private Relay/VPN/app/browser/network bypass limits are covered.
+- Selection rationale: HIGH/A3/AUTO_ALLOWED, current hard dependency PASS, no representative-parent evidence required to define a conservative supported/unsupported technical matrix; HUMAN_ONLY TSK-0317 remains fenced.
 
 ## Exact next authoritative step
 
-Execute bounded `TSK-0316`: challenge every interaction in the TSK-0315 blueprint, remove/conditionalize any interaction lacking a current decision/technical/safety/evidence/recovery reason, identify unavoidable platform-specific manual steps from accepted TSK-0408 evidence, explicitly reject unsupported one-click/universal setup claims, and produce a friction budget framed as design constraints rather than fabricated user-performance metrics. Carry `RSK-0002`, persist/read back independent ACC-0316 evidence, reconcile runtime, then recompute.
+Execute bounded `TSK-0409`: freeze the supported OS/device/network matrix only where current direct technical evidence is sufficient; explicitly mark untested combinations unsupported/not-yet-supported rather than extrapolating; cover install, verification, removal/recovery, and Private Relay/VPN/app/browser/network bypass or conflict limits; carry `RSK-0002`; persist/read back independent ACC-0409 evidence; reconcile runtime; then recompute.
