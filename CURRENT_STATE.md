@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T15:24:00Z
+**Updated:** 2026-08-28T15:28:00Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -364,6 +364,12 @@ The Project Owner explicitly deferred the complete real-participant Experiment-1
 
 `RSK-0002` remains OPEN and explicitly represents the missing real-participant behavioral evidence. `TSK-0139` is rebaselined as the bounded provisional L4 entry, depending on current `TSK-0513` PASS. `ACC-0139` and `ACC-0141` prohibit claims that behavioral validation occurred. `TSK-0326` and any task whose own acceptance requires actual participant/user evidence remain deferred. No L3 gate PASS, LG-06 PASS, L5/L6 build authority, participant processing, legal completion or public-launch authority is inferred.
 
+### TSK-0139 accepted stable state
+
+`TSK-0139 — Translate provisional L4 owner authorization into authorised product outcomes`: **PASS for bounded provisional L4 definition/design scope under DEC-0050/CR-0003**. Mandate `TSK_0139_PROVISIONAL_L4_PRODUCT_OUTCOME_MANDATE_2026-08-28.md`, blob `855628303b04bd48e9e8d51c4a6b9c221e343583`; independent verification evidence `TSK_0139_PROVISIONAL_L4_PRODUCT_OUTCOME_MANDATE_EVIDENCE_2026-08-28.md`, blob `8838388287c44b0d37e43bde4244c912545da9be`. ACC-0139 is fully satisfied: the mandate defines the provisional job/user/outcome, exact evidence limits, RSK-0002, constraints, stop/revalidation conditions and only the L4 definition/design scope authorized.
+
+This PASS does not mean LG-03/LG-04/LG-05 or LG-06 passed, does not supply real-parent behavioral evidence, and does not authorize integrated build, participants, legal completion, payment activation or public launch.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -375,14 +381,14 @@ The Project Owner explicitly deferred the complete real-participant Experiment-1
 
 ## Queue status after current reconciliation
 
-CR-0003 is current canonical authority for L3→L4 sequencing. L3 real-participant work, LG-03/LG-04/LG-05 and real-evidence-dependent L4 research remain deferred. The previously accepted technical/synthetic evidence remains valid for its bounded scope.
+`TSK-0139` is runtime PASS for its bounded provisional scope. Its sole direct WBS successor is now dependency-ready.
 
-- **Selected next: `TSK-0139 — Translate provisional L4 owner authorization into authorised product outcomes`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
-- Hard dependency: `TSK-0513` — current runtime PASS.
-- Acceptance is explicitly provisional: it must identify the current technical/synthetic evidence basis, missing real-participant behavioral evidence, RSK-0002, constraints/stop conditions and only the L4 definition/design scope actually authorized.
-- `TSK-0326` remains unavailable because it still depends on the unexecuted real-participant Experiment-1 evidence chain.
-- The existing independent L4 owner-baseline tasks `TSK-0146`, `TSK-0147`, `TSK-0148` and `TSK-0558` remain preserved PASS; CR-0003 does not invalidate those owner decisions.
+- **Selected next: `TSK-0141 — Freeze minimum product scope and non-goals`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
+- Hard dependency: `TSK-0139` — current PASS.
+- ACC-0141 is explicitly provisional under CR-0003: every included capability must map to an unvalidated current-need assumption, mandatory operation/safety requirement, or explicit owner-approved architectural decision. No capability may be described as behaviorally validated.
+- Accountless-first remains authoritative; mandatory authentication, persistent parent dashboard and customer-facing AdGuard control plane remain deferred under EXC-0001. Surveillance/activity history, child accounts and other advanced capabilities remain excluded unless separately reauthorized.
+- Real-evidence-dependent L4 tasks remain deferred; LG-03/LG-04/LG-05 remain non-PASS.
 
 ## Exact next authoritative step
 
-Execute bounded `TSK-0139`: create a provisional L4 product-outcome mandate grounded only in current accepted technical/synthetic evidence and explicit owner decisions. State that real-participant behavioral validation has not occurred, keep RSK-0002 open, define stop/revalidation conditions, and authorize only internal L4 definition/design. Independently verify ACC-0139, persist/read back evidence, then recompute the L4 queue.
+Execute bounded `TSK-0141`: freeze the smallest provisional product scope and explicit non-goals using TSK-0139, DEC-0042/accountless authority, current technical constraints and owner decisions only. Label user-need-derived capabilities as provisional/unvalidated, exclude deferred/surveillance scope, preserve RSK-0002 and create independently auditable ACC-0141 evidence. Then recompute the L4 queue.
