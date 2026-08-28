@@ -157,7 +157,8 @@ sudo openssl req -x509 -newkey rsa:2048 -sha256 -nodes -days 1 \
   -out /etc/usesafeweb-recovery/recovery.crt \
   -subj '/CN=dns.usesafeweb.com' \
   -addext 'subjectAltName=DNS:dns.usesafeweb.com' >/dev/null 2>&1
-sudo chmod 0600 /etc/usesafeweb-recovery/recovery.key /etc/usesafeweb-recovery/recovery.crt
+sudo chmod 0600 /etc/usesafeweb-recovery/recovery.key
+sudo chmod 0644 /etc/usesafeweb-recovery/recovery.crt
 
 sudo tee /etc/nginx/nginx.conf >/dev/null <<'NGINX'
 user www-data;
