@@ -1,0 +1,62 @@
+name: Select TSK-0045
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/select-tsk0045.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  select:
+    runs-on: [self-hosted, Linux, X64]
+    concurrency:
+      group: usesafeweb-governance-state-prod
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify queue and select TSK-0045
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(sha256sum /etc/machine-id | awk '{print $1}')" = "e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2"
+          test "$(git hash-object CURRENT_STATE.md)" = "3c821b8524f96e4e1152a546a35eef319aeb1efb"
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "dce5b829c4d447eac180ae1e896e0019292cf971"
+          test "$(git hash-object TSK_0314_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md)" = "82f8d5392a8693aaf2a53b71b96e688142f38e09"
+          python3 - <<'PY'
+          import csv, pathlib, re
+          from datetime import datetime, timezone
+          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',encoding='utf-8-sig',newline='')))
+          by={r['Task_ID']:r for r in rows}
+          t=by['TSK-0045']
+          assert [x.strip() for x in t['Dependencies'].split(';') if x.strip()]==['TSK-0314']
+          assert t['Lifecycle_Stage']=='L4' and t['Priority']=='MEDIUM'
+          assert t['AI_Capability_A0_A4']=='A3' and t['Action_Authority']=='AUTO_ALLOWED'
+          acc=t['Acceptance_Criteria']
+          for phrase in ['repeatable deployment','versioning','rollback','documentation ownership','dependency update cadence','cost tagging/budgets','monthly cost-report inputs']:
+              assert phrase in acc, phrase
+          q=pathlib.Path('TSK_0314_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md').read_text()
+          seg=q.split('### TSK-0045',1)[1].split('### TSK-0140',1)[0]
+          assert '- **Preflight flags:** (none)' in seg
+          p=pathlib.Path('CURRENT_STATE.md')
+          text=p.read_text()
+          assert '### TSK-0314 accepted stable state' in text
+          assert 'No next task is selected by this write' in text
+          now=datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
+          text=re.sub(r'\*\*Updated:\*\* [^\n]+',f'**Updated:** {now}',text,count=1)
+          pos=text.rfind('\n## Queue status after current reconciliation')
+          assert pos>=0
+          text=text[:pos].rstrip()+'''\n\n## Queue status after current reconciliation\n\nThe TSK-0314 post-PASS queue was reread against current acceptance and gates. `TSK-0187` remains ineligible because it requires representative-parent evidence. `TSK-0140` remains ineligible for PASS because owner/multi-role review evidence is absent. `TSK-0045` is the only dependency-ready AUTO_ALLOWED L4 candidate with no preflight flag.\n\n- **Selected next: `TSK-0045 — Define maintainability, deployment, and cost-control NFRs`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).\n- Hard dependency: `TSK-0314` — current PASS in canonical runtime.\n- ACC-0045: define repeatable deployment, versioning, rollback, documentation ownership, dependency update cadence, cost tagging/budgets, and monthly cost-report inputs.\n- Selection boundary: internal maintainability/deployment/cost NFR definition only. No Azure control-plane mutation, deployment of the unbuilt web/app, purchase, release, participant processing or launch is authorized.\n\n## Exact next authoritative step\n\nExecute bounded TSK-0045: define deterministic GitHub-canonical deployment/version/rollback/documentation/dependency-maintenance requirements for the current DNS service and future separate web/app; define Azure cost tags, budget/alert semantics and monthly cost-report inputs without inventing future spend; preserve owner-managed Azure control-plane and action-authority boundaries; persist/read back independent ACC-0045 evidence; reconcile runtime; then recompute.\n'''
+          p.write_text(text)
+          PY
+          git diff --check
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add CURRENT_STATE.md
+          git commit -m "state: select TSK-0045"
+          git push
