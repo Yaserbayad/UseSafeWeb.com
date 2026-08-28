@@ -1,0 +1,62 @@
+name: Inspect post TSK-0513 queue
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/inspect-post-tsk0513-queue.yml
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    runs-on: [self-hosted]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - name: Inspect exact successor prerequisites and runtime references
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(git hash-object CURRENT_STATE.md)" == '4f438a44a51b9f77e1434f6a3b2e300bd5a1c819' ]]
+          [[ "$(git hash-object TSK_0513_END_TO_END_SYNTHETIC_REHEARSAL_EVIDENCE_2026-08-28.md)" == '717a59aaf8e748e302b4a1aa972c2d3d2936d3aa' ]]
+          python3 - <<'PY'
+          import csv
+          from pathlib import Path
+          with open('Plans/Master/WBS/master-wbs.csv',encoding='utf-8-sig',newline='') as f:
+              rows={r['Task_ID']:r for r in csv.DictReader(f)}
+          ids=['TSK-0028','TSK-0173','TSK-0037','TSK-0036','TSK-0035','TSK-0034','TSK-0033','TSK-0032','TSK-0031','TSK-0030','TSK-0029']
+          state=Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          with open('/tmp/post0513.txt','w',encoding='utf-8') as out:
+              for tid in ids:
+                  if tid not in rows: continue
+                  r=rows[tid]
+                  hits=[line.strip() for line in state.splitlines() if tid in line]
+                  out.write(f'## {tid} — {r["Title"]}\n\n')
+                  for k in ['Lifecycle_Stage','Plan_Status','Execution_State','Priority','Critical_Path','Dependencies','Trigger','Preconditions','Acceptance_ID','Acceptance_Criteria','Verification_Method','Evidence_Required','Primary_Owner','AI_Capability_A0_A4','Action_Authority','Requirement_Reference','Interface_Reference']:
+                      out.write(f'- **{k}:** {r[k]}\n')
+                  out.write('- **CURRENT_STATE references:**\n')
+                  if hits:
+                      for h in hits[:20]: out.write(f'  - {h}\n')
+                  else:
+                      out.write('  - none found\n')
+                  out.write('\n')
+          PY
+          cat > TSK_0513_POST_PASS_QUEUE_INSPECTION_2026-08-28.md <<EOF
+          # TSK-0513 post-verification queue inspection
+
+          **Date:** 2026-08-28  
+          **Run:** ${GITHUB_RUN_ID}  
+          **Purpose:** inspect exact WBS prerequisites around the sole direct TSK-0513 successor before runtime PASS reconciliation.  
+          **TSK-0513 evidence blob:** \`717a59aaf8e748e302b4a1aa972c2d3d2936d3aa\`.
+
+          EOF
+          cat /tmp/post0513.txt >> TSK_0513_POST_PASS_QUEUE_INSPECTION_2026-08-28.md
+          git config user.name 'UseSafeWeb Governance Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add TSK_0513_POST_PASS_QUEUE_INSPECTION_2026-08-28.md
+          git commit -m 'governance: inspect post-TSK-0513 queue'
+          git push origin HEAD:main
