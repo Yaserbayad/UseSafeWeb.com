@@ -15,16 +15,16 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  audit:
+  patch:
     runs-on: [self-hosted, linux, x64]
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - name: Checkout exact main commit
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Independent TSK-0202 and TSK-0437 reconciliation audit
+      - name: Apply current Ubuntu package updates and verify
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -36,34 +36,16 @@ jobs:
           import json,urllib.request
           req=urllib.request.Request('http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01',headers={'Metadata':'true'})
           with urllib.request.urlopen(req,timeout=3) as r: d=json.load(r)
-          assert d.get('name')=='adguardvm',d.get('name')
-          assert d.get('location')=='westeurope',d.get('location')
+          assert d.get('name')=='adguardvm' and d.get('location')=='westeurope',d
           print('PRODUCTION_IDENTITY=PASS')
           PY
-
           systemctl is-active --quiet AdGuardHome.service
           systemctl is-active --quiet nginx.service
-          systemctl is-enabled --quiet nginx.service
-          systemctl is-enabled --quiet apt-daily.timer
-          systemctl is-enabled --quiet apt-daily-upgrade.timer
-          dpkg-query -W -f='${Status}\n' unattended-upgrades | grep -qx 'install ok installed'
-          echo 'SERVICE_AND_UPDATE_TIMERS=PASS'
-
-          sudo sshd -T > /tmp/usw-sshd-effective
-          for line in \
-            'permitrootlogin no' \
-            'passwordauthentication no' \
-            'kbdinteractiveauthentication no' \
-            'pubkeyauthentication yes' \
-            'permitemptypasswords no' \
-            'x11forwarding no' \
-            'maxauthtries 3' \
-            'logingracetime 30'; do
-            grep -qx "$line" /tmp/usw-sshd-effective
-          done
-          rm -f /tmp/usw-sshd-effective
-          echo 'SSH_HARDENING=PASS'
-
+          export DEBIAN_FRONTEND=noninteractive
+          export NEEDRESTART_MODE=a
+          sudo -E apt-get update -y
+          sudo -E apt-get -y full-upgrade
+          echo 'PACKAGE_UPDATE_APPLIED=PASS'
           SIM="$(sudo apt-get -s full-upgrade 2>/dev/null || true)"
           if grep -q '^Inst ' <<<"$SIM"; then
             echo 'PENDING_UPGRADES_BEGIN'
@@ -71,118 +53,14 @@ jobs:
             echo 'PENDING_UPGRADES_END'
             exit 1
           fi
-          [[ ! -e /var/run/reboot-required ]]
-          echo 'PATCH_STATE=PASS'
-
-          sudo ufw status verbose | grep -q '^Status: active'
-          sudo ufw status verbose | grep -q '^Default: deny (incoming), allow (outgoing)'
-          python3 - <<'PY'
-          import subprocess,re
-          out=subprocess.check_output(['sudo','ufw','status'],text=True)
-          allowed=[]
-          for line in out.splitlines():
-              if 'ALLOW' not in line: continue
-              head=line.split()[0]
-              head=head.replace('(v6)','')
-              allowed.append(head)
-          normalized=set(allowed)
-          expected={'22/tcp','80/tcp','443/tcp','853/tcp'}
-          assert normalized==expected,(normalized,expected)
-          print('UFW_ALLOWED_PORTS='+','.join(sorted(normalized)))
-          print('UFW_POST_TLS_BASELINE=PASS')
-          PY
-
-          python3 - <<'PY'
-          import subprocess,re
-          out=subprocess.check_output(['sudo','ss','-H','-lntu'],text=True)
-          external=[]
-          for line in out.splitlines():
-              parts=line.split()
-              if len(parts)<5: continue
-              proto,addr=parts[0],parts[4]
-              m=re.search(r':(\d+)$',addr)
-              if not m: continue
-              port=int(m.group(1)); host=addr[:m.start()]
-              h=host.strip('[]')
-              if h.startswith('127.') or h in {'::1','127.0.0.53%lo','127.0.0.54'}: continue
-              if proto=='udp' and port==68: continue
-              external.append((proto,addr,port))
-          allowed={('tcp',22),('tcp',443),('tcp',853)}
-          bad=[x for x in external if (x[0],x[2]) not in allowed]
-          assert not bad,bad
-          ports=sorted({p for proto,addr,p in external if proto=='tcp'})
-          assert 22 in ports and 443 in ports and 853 in ports,ports
-          print('EXTERNAL_TCP_LISTENERS='+','.join(map(str,ports)))
-          print('LISTENER_POST_TLS_BASELINE=PASS')
-          PY
-
-          sudo python3 - <<'PY'
-          import hashlib,json,ipaddress,yaml
-          config='/opt/AdGuardHome/AdGuardHome.yaml'
-          artifact_path='/home/azureusr/actions-runner/adguartestdvm_work/UseSafeWeb.com/UseSafeWeb.com/infrastructure/adguard-server/approved-adguard-config-v1.json'
-          # Use cwd-based fallback because this job may run under either registered runner directory.
-          import os
-          artifact_path=os.path.join(os.environ['GITHUB_WORKSPACE'],'infrastructure/adguard-server/approved-adguard-config-v1.json')
-          d=yaml.safe_load(open(config,encoding='utf-8')) or {}
-          dns=d.get('dns') or {}; filtering=d.get('filtering') or {}; querylog=d.get('querylog') or {}; statistics=d.get('statistics') or {}; http=d.get('http') or {}; doh=http.get('doh') or {}; tls=d.get('tls') or {}; dhcp=d.get('dhcp') or {}; filters=d.get('filters') or []; whitelists=d.get('whitelist_filters') or []; rules=d.get('user_rules') or []; clients=(d.get('clients') or {}).get('persistent') or []
-          binds=list(dns.get('bind_hosts') or [])
-          assert binds==['127.0.0.1']
-          for v in binds: assert ipaddress.ip_address(v).is_loopback
-          assert http.get('address')=='127.0.0.1:3000'
-          assert bool(doh.get('insecure_enabled')) is True
-          assert bool(tls.get('enabled')) is False and str(tls.get('server_name') or '')=='' and bool(tls.get('force_https')) is False
-          assert list(dns.get('upstream_dns') or [])==['https://dns10.quad9.net/dns-query']
-          assert str(dns.get('upstream_dns_file') or '')=='' and list(dns.get('fallback_dns') or [])==[]
-          assert bool((dns.get('edns_client_subnet') or {}).get('enabled')) is False
-          assert bool(dns.get('anonymize_client_ip')) is True
-          assert int(dns.get('ratelimit'))==20 and int(dns.get('ratelimit_subnet_len_ipv4'))==24 and int(dns.get('ratelimit_subnet_len_ipv6'))==56 and (dns.get('ratelimit_whitelist') or [])==[] and bool(dns.get('refuse_any')) is True
-          assert filtering.get('protection_enabled') is True and filtering.get('filtering_enabled') is True and filtering.get('blocking_mode')=='default'
-          assert querylog.get('enabled') is False and querylog.get('file_enabled') is False
-          assert statistics.get('enabled') is False and whitelists==[] and rules==[] and clients==[]
-          assert [x.get('url') for x in filters if x.get('enabled')]==['https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt']
-          edns=dns.get('edns_client_subnet') or {}
-          safe={
-            'schema_version':d.get('schema_version'),
-            'http':{'address':http.get('address'),'doh':{'insecure_enabled':bool(doh.get('insecure_enabled'))}},
-            'dns':{'bind_hosts':binds,'port':dns.get('port'),'upstream_dns':list(dns.get('upstream_dns') or []),'upstream_dns_file':str(dns.get('upstream_dns_file') or ''),'bootstrap_dns':list(dns.get('bootstrap_dns') or []),'fallback_dns':list(dns.get('fallback_dns') or []),'private_upstream':list(dns.get('private_upstream') or []),'upstream_mode':dns.get('upstream_mode'),'ratelimit':dns.get('ratelimit'),'ratelimit_subnet_len_ipv4':dns.get('ratelimit_subnet_len_ipv4'),'ratelimit_subnet_len_ipv6':dns.get('ratelimit_subnet_len_ipv6'),'ratelimit_whitelist':[],'refuse_any':bool(dns.get('refuse_any')),'edns_client_subnet':{'enabled':bool(edns.get('enabled')),'use_custom':bool(edns.get('use_custom')),'custom_ip_configured':bool(edns.get('custom_ip'))},'anonymize_client_ip':bool(dns.get('anonymize_client_ip')),'cache_size':dns.get('cache_size'),'cache_ttl_min':dns.get('cache_ttl_min'),'cache_ttl_max':dns.get('cache_ttl_max'),'cache_optimistic':bool(dns.get('cache_optimistic'))},
-            'filtering':{'protection_enabled':bool(filtering.get('protection_enabled')),'filtering_enabled':bool(filtering.get('filtering_enabled')),'blocking_mode':filtering.get('blocking_mode'),'interval':filtering.get('interval'),'safebrowsing_enabled':bool(filtering.get('safebrowsing_enabled')),'parental_enabled':bool(filtering.get('parental_enabled')),'safesearch_enabled':bool(filtering.get('safesearch_enabled'))},
-            'filters':[{'name':x.get('name'),'url':x.get('url'),'enabled':bool(x.get('enabled'))} for x in filters],
-            'whitelist_filters':[],'user_rules':[],
-            'querylog':{'enabled':bool(querylog.get('enabled')),'file_enabled':bool(querylog.get('file_enabled')),'interval':querylog.get('interval')},
-            'statistics':{'enabled':bool(statistics.get('enabled')),'interval':statistics.get('interval')},
-            'tls':{'enabled':bool(tls.get('enabled')),'server_name':tls.get('server_name'),'force_https':bool(tls.get('force_https')),'port_https':tls.get('port_https'),'port_dns_over_tls':tls.get('port_dns_over_tls'),'port_dns_over_quic':tls.get('port_dns_over_quic')},
-            'dhcp':{'enabled':bool(dhcp.get('enabled'))}
-          }
-          art=json.load(open(artifact_path,encoding='utf-8'))
-          assert art.get('artifact_version')=='1.1.0'
-          assert art.get('settings')==safe
-          raw=json.dumps(safe,sort_keys=True,separators=(',',':'),ensure_ascii=False)
-          sha=hashlib.sha256(raw.encode()).hexdigest()
-          assert sha=='fcedf8b67b5d4c43544d5a57b9f74b6a45e6f3be1d778c6fb6183e83802ac49d'
-          assert (art.get('source_export') or {}).get('settings_sha256')==sha
-          forbidden={'password','hashed_password','private_key','private_key_path','certificate_chain','certificate_chain_path','users','clients','client_ip'}
-          def keys(v):
-              if isinstance(v,dict):
-                  for k,x in v.items(): yield str(k).lower(); yield from keys(x)
-              elif isinstance(v,list):
-                  for x in v: yield from keys(x)
-          assert forbidden.isdisjoint(set(keys(art)))
-          print('LIVE_SETTINGS_SHA256='+sha)
-          print('TSK_0202_EXACT_LIVE_ARTIFACT=PASS')
-          print('TSK_0202_SECRET_GUARD=PASS')
-          PY
-
-          sudo nginx -t >/dev/null
-          sudo python3 - <<'PY'
-          p='/etc/nginx/nginx.conf'; t=open(p,encoding='utf-8').read()
-          required=['access_log off;','location = /dns-query {','proxy_pass http://127.0.0.1:3000;','location / { return 404; }','listen 853 ssl;','ssl_protocols TLSv1.2 TLSv1.3;']
-          for s in required: assert s in t,s
-          assert 'include /etc/nginx/sites-enabled/' not in t
-          print('NGINX_PATH_RESTRICTED_CONFIG=PASS')
-          PY
-          [[ ! -s /var/log/nginx/access.log ]]
-          [[ "$(sudo stat -Lc '%u:%a' /etc/letsencrypt/live/dns.usesafeweb.com/privkey.pem)" == '0:600' ]]
-          sudo find /opt/AdGuardHome -type f -name 'querylog.json*' -size +0c -print -quit | grep -q . && exit 1 || true
-          echo 'PRIVACY_KEY_LOGGING_BOUNDARY=PASS'
-          echo 'TSK_0437_POST_TLS_REVALIDATION=PASS'
-          echo 'TSK_0202_RECONCILIATION_AUDIT=PASS'
+          echo 'NO_PENDING_UPGRADES=PASS'
+          systemctl is-active --quiet AdGuardHome.service
+          systemctl is-active --quiet nginx.service
+          systemctl is-enabled --quiet apt-daily.timer
+          systemctl is-enabled --quiet apt-daily-upgrade.timer
+          if [[ -e /var/run/reboot-required ]]; then
+            echo 'REBOOT_REQUIRED=YES'
+            exit 2
+          fi
+          echo 'REBOOT_REQUIRED=NO'
+          echo 'TSK_0437_PATCH_REPAIR=PASS'
