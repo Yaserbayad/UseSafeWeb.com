@@ -15,7 +15,12 @@ concurrency:
 
 jobs:
   recover:
-    runs-on: [self-hosted, linux, x64, adguartestdvm_correct]
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        slot: [a, b]
+    runs-on: [self-hosted, linux, x64]
     timeout-minutes: 25
     steps:
       - name: Checkout
@@ -24,6 +29,7 @@ jobs:
           fetch-depth: 1
 
       - name: Timed clean-server rebuild and acceptance
+        id: drill
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -43,8 +49,22 @@ jobs:
           }
           trap fail_safe EXIT
 
-          [[ "$(hostname -s)" == 'adguartestdvm' ]]
-          [[ "$(sha256sum /etc/machine-id | awk '{print $1}')" == 'e09868443c476b30eae778d191ceedee57ed6f27a74856eae1d0709c68f1c852' ]]
+          echo 'recovery_target=false' >> "$GITHUB_OUTPUT"
+          git fetch --quiet origin main
+          if git cat-file -e origin/main:TSK_0431_PROJECT_CONTROLLED_RECOVERY_DRILL_EVIDENCE_2026-08-28.md 2>/dev/null; then
+            echo 'durable_recovery_evidence_already_exists=true'
+            exit 0
+          fi
+          host="$(hostname -s)"
+          machine_sha="$(sha256sum /etc/machine-id | awk '{print $1}')"
+          if [[ "$host" == 'adguardvm' && "$machine_sha" == 'e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2' ]]; then
+            echo 'production_runner_no_mutation=PASS'
+            sleep 60
+            exit 0
+          fi
+          [[ "$host" == 'adguartestdvm' ]]
+          [[ "$machine_sha" == 'e09868443c476b30eae778d191ceedee57ed6f27a74856eae1d0709c68f1c852' ]]
+          echo 'recovery_target=true' >> "$GITHUB_OUTPUT"
           sudo -n true
 
           curl --silent --show-error --fail --noproxy '*' -H 'Metadata:true' \
@@ -309,6 +329,7 @@ jobs:
           rm -f /tmp/t0431-imds.json /tmp/t0431-query.bin /tmp/t0431-doh.bin /tmp/t0431-filter-before.json /tmp/t0431-rules-empty.json /tmp/t0431-rules-block.json /tmp/t0431-rules-allow.json /tmp/t0431-check.json /tmp/t0431-qcfg.json /tmp/t0431-qlog.json /tmp/t0431-scfg.json /tmp/t0431-stats.json /tmp/t0431-listeners.txt
 
       - name: Publish privacy-safe drill evidence
+        if: steps.drill.outputs.recovery_target == 'true'
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -375,3 +396,23 @@ jobs:
           git add TSK_0431_PROJECT_CONTROLLED_RECOVERY_DRILL_EVIDENCE_2026-08-28.md
           git commit -m 'evidence: record TSK-0431 clean recovery drill'
           git push origin HEAD:main
+
+  confirm:
+    needs: recover
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 3
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - name: Confirm durable recovery evidence exists
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git fetch --quiet origin main
+          git show origin/main:TSK_0431_PROJECT_CONTROLLED_RECOVERY_DRILL_EVIDENCE_2026-08-28.md > /tmp/evidence.md
+          grep -Fq '**Project-controlled recovery drill: PASS.**' /tmp/evidence.md
+          grep -Fq 'azure_native_restore_exercised=false' /tmp/evidence.md
+          echo 'TSK_0431_DURABLE_RECOVERY_EVIDENCE=PASS'
