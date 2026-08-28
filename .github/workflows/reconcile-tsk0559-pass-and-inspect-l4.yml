@@ -1,0 +1,81 @@
+name: Reconcile TSK-0559 PASS and inspect L4 queue
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-tsk0559-pass-and-inspect-l4.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify evidence, reconcile runtime, inspect queue
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object TSK_0559_FIRST_PHONE_CONTENT_QUALITY_SOURCE_UPDATE_PRUNING_STANDARD_2026-08-28.md)" = "b2039d48e2356c0ea37fafe4fadc59d065cca6c8"
+          test "$(git hash-object TSK_0559_FIRST_PHONE_CONTENT_QUALITY_SOURCE_UPDATE_PRUNING_EVIDENCE_2026-08-28.md)" = "6448c2b73bb71eaf93c8e8af4083eebcec7d1d7b"
+          test "$(git hash-object TSK_0558_DIRECT_PREDECESSOR_INSPECTION_2026-08-28.md)" = "bf1acce59112910622fb787e740415f03e986808"
+          python3 - <<'PY'
+          import csv, pathlib, re
+          from datetime import datetime, timezone
+          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',encoding='utf-8-sig',newline='')))
+          by={r['Task_ID']:r for r in rows}
+          t=by['TSK-0559']
+          assert t['Dependencies']=='TSK-0558'
+          assert t['Priority']=='MEDIUM' and t['Action_Authority']=='AUTO_ALLOWED' and t['AI_Capability_A0_A4']=='A3'
+          assert 'Mass low-quality AI SEO is prohibited' in t['Acceptance_Criteria']
+          e=pathlib.Path('TSK_0559_FIRST_PHONE_CONTENT_QUALITY_SOURCE_UPDATE_PRUNING_EVIDENCE_2026-08-28.md').read_text()
+          assert 'directly satisfies every ACC-0559 clause' in e
+          assert 'TSK-0558 = COMPLETED_CANDIDATE / PASS' in e
+          assert 'CON-0014' in e and 'CON-0015' in e and 'RSK-0002' in e
+          p=pathlib.Path('CURRENT_STATE.md'); text=p.read_text()
+          assert '### TSK-0144 accepted stable state' in text
+          assert '### TSK-0559 accepted stable state' not in text
+          now=datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
+          text=re.sub(r'\*\*Updated:\*\* [^\n]+',f'**Updated:** {now}',text,count=1)
+          sec='''### TSK-0559 accepted stable state\n\n`TSK-0559 — Define the research, originality, usefulness, source, claims, update, localization, and pruning standard for first-phone content`: **PASS for the provisional internal L4 content-governance contract under DEC-0050/CR-0003**. Standard `TSK_0559_FIRST_PHONE_CONTENT_QUALITY_SOURCE_UPDATE_PRUNING_STANDARD_2026-08-28.md`, blob `b2039d48e2356c0ea37fafe4fadc59d065cca6c8`; independent evidence `TSK_0559_FIRST_PHONE_CONTENT_QUALITY_SOURCE_UPDATE_PRUNING_EVIDENCE_2026-08-28.md`, blob `6448c2b73bb71eaf93c8e8af4083eebcec7d1d7b`; direct predecessor inspection `TSK_0558_DIRECT_PREDECESSOR_INSPECTION_2026-08-28.md`, blob `bf1acce59112910622fb787e740415f03e986808`. ACC-0559 is satisfied: mass low-quality AI SEO and query-variant page generation are prohibited; every content item must solve one concrete first-phone parent job, add distinct UseSafeWeb value, connect to a legitimate product/help/decision outcome, and carry current sources, claim evidence, owner/reviewer, review triggers, locale state and a privacy-safe usefulness metric.\n\nThe standard preserves TSK-0558/CON-0014/CON-0015: approximately USD 20-50/month discretionary GTM maximum, earned distribution first, no paid-acquisition dependency, and no simultaneous platform-program sprawl. Current Google Search spam guidance independently identifies scaled low-value AI/translated/stitched content as abusive, but no ranking/traffic/conversion outcome is inferred. `RSK-0002` remains OPEN and publication itself remains separately gated.\n\n'''
+          marker='## Runtime safeguards'; assert marker in text
+          text=text.replace(marker,sec+marker,1)
+          # Build conservative PASS set: WBS current PASS plus explicit accepted-stable runtime headings, including TSK-0559 now.
+          pass_set={r['Task_ID'] for r in rows if r.get('Execution_State')=='PASS'}
+          pass_set.update(re.findall(r'^### (TSK-\d{4}) accepted stable state$', text, re.M))
+          pass_set.add('TSK-0559')
+          pri={'CRITICAL':0,'HIGH':1,'MEDIUM':2,'LOW':3}
+          candidates=[]
+          for idx,r in enumerate(rows):
+              if r.get('Lifecycle_Stage')!='L4': continue
+              if r['Task_ID'] in pass_set: continue
+              if r.get('Plan_Status') in {'DEFERRED','NOT_APPLICABLE'}: continue
+              if r.get('Action_Authority')!='AUTO_ALLOWED': continue
+              deps=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
+              if not all(d in pass_set for d in deps): continue
+              flags=[]
+              hay=' '.join([r.get('Acceptance_Criteria',''),r.get('Preconditions',''),r.get('Notes',''),r.get('Trigger','')]).lower()
+              if any(k in hay for k in ['representative parent','real participant','cohort','usability','comprehension','behavioral','observed parent','user evidence']): flags.append('REAL_OR_BEHAVIOR_EVIDENCE_CHECK')
+              if any(k in hay for k in ['reviewed by owner','owner approval','explicit owner','approved by owner']): flags.append('OWNER_REVIEW_CHECK')
+              candidates.append((pri.get(r.get('Priority','LOW'),9),idx,r,deps,flags))
+          candidates.sort(key=lambda x:(x[0],x[1]))
+          report=['# TSK-0559 post-PASS L4 queue inspection','','**Date:** 2026-08-28  ','**Purpose:** conservative derived queue after TSK-0559 PASS. This report is not authority and does not change task state.','',f'- Conservative PASS set size: {len(pass_set)}',f'- Dependency-ready non-PASS AUTO_ALLOWED L4 candidates: {len(candidates)}','', '## Candidates in deterministic priority/WBS order','']
+          for _,_,r,deps,flags in candidates:
+              report += [f"### {r['Task_ID']} — {r['Title']}",f"- **Priority:** {r['Priority']}",f"- **Dependencies:** {'; '.join(deps) if deps else '(none)'}",f"- **Acceptance:** {r['Acceptance_ID']} — {r['Acceptance_Criteria']}",f"- **AI / authority:** {r['AI_Capability_A0_A4']} / {r['Action_Authority']}",f"- **Requirements:** {r.get('Requirement_Reference','')}",f"- **Interfaces:** {r.get('Interface_Reference','')}",f"- **Notes:** {r.get('Notes','')}",f"- **Preflight flags:** {', '.join(flags) if flags else '(none)'}",'']
+          pathlib.Path('TSK_0559_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md').write_text('\n'.join(report)+'\n')
+          # Runtime states PASS, but selection is intentionally deferred until the derived queue is reread and acceptance/gates are independently checked.
+          q=text.rfind('\n## Queue status after current reconciliation'); assert q>=0
+          text=text[:q].rstrip()+'''\n\n## Queue status after current reconciliation\n\n`TSK-0559` is runtime PASS. A fresh conservative dependency-ready AUTO_ALLOWED L4 queue has been generated at `TSK_0559_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. No next task is selected by this write: the derived queue must first be reread against current acceptance, gate, CR-0003 behavioral-evidence limits and direct predecessor evidence. HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED and real-user-bound work remain fenced.\n\n## Exact next authoritative step\n\nRead back the TSK-0559 post-PASS L4 queue, reject any candidate whose own acceptance/preconditions require unavailable real-user evidence, owner review/approval or missing direct predecessor proof, then select the deterministic highest-priority eligible AUTO_ALLOWED task and persist that selection before execution.\n'''
+          p.write_text(text)
+          PY
+          git diff --check
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add CURRENT_STATE.md TSK_0559_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md
+          git commit -m "state: accept TSK-0559 and inspect L4 queue"
+          git push
