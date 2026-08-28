@@ -51,6 +51,23 @@ echo 'recovery_vm_id=6e92a026-964c-4118-8312-f1d31c6ff4d2' >> "$summary"
 [[ "$(git hash-object infrastructure/adguard-server/install-adguard.sh)" == '5891f79b531ac2f0366374a8f4bec8fa560a2496' ]]
 [[ "$(git hash-object infrastructure/adguard-server/initialize-admin.sh)" == '0fa0b3481d9b7173649c72606b40642c278e9c32' ]]
 
+# A failed recovery attempt may leave project-controlled application state on
+# the disposable recovery VM. Reset only that state after the immutable host,
+# Azure VM, and source-artifact checks above. The recovery timer deliberately
+# includes this cleanup, making a retry conservative rather than faster.
+sudo systemctl stop nginx.service >/dev/null 2>&1 || true
+sudo systemctl stop AdGuardHome.service >/dev/null 2>&1 || true
+if [[ -x /opt/AdGuardHome/AdGuardHome ]]; then
+  (cd /opt/AdGuardHome && sudo ./AdGuardHome -s uninstall) >/dev/null 2>&1 || true
+fi
+sudo rm -rf /opt/AdGuardHome /var/lib/usesafeweb/adguard /etc/usesafeweb-recovery
+sudo systemctl daemon-reload
+if systemctl list-unit-files 'AdGuardHome.service' --no-legend 2>/dev/null | grep -q '^AdGuardHome.service'; then
+  echo 'AdGuardHome.service remained after recovery-target cleanup' >&2
+  exit 1
+fi
+echo 'prior_project_state_cleanup=PASS' >> "$summary"
+
 export DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a
 sudo apt-get update -qq
 sudo apt-get install -y -qq ufw nginx libnginx-mod-stream openssl python3-yaml curl ca-certificates >/dev/null
@@ -175,7 +192,12 @@ stream {
 }
 NGINX
 sudo nginx -t
-sudo systemctl enable --now nginx.service
+sudo systemctl enable nginx.service >/dev/null
+sudo systemctl restart nginx.service
+sudo systemctl is-active --quiet nginx.service
+sudo ss -H -lnt | awk '$4=="127.0.0.1:443" {found=1} END {exit !found}'
+sudo ss -H -lnt | awk '$4=="127.0.0.1:853" {found=1} END {exit !found}'
+echo 'nginx_local_tls_listeners=PASS' >> "$summary"
 
 python3 - <<'PY'
 import random,struct
