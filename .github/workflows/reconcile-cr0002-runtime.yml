@@ -1,0 +1,63 @@
+name: Reconcile runtime to CR-0002
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/reconcile-cr0002-runtime.yml
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - name: Reconcile CURRENT_STATE to owner sequencing override
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(git hash-object CURRENT_STATE.md)" == '1df441daee18eb5a21b39687c3edaa002c5772e1' ]]
+          [[ "$(git hash-object Plans/Master/MANIFEST.yaml)" == '9813d0972ccbe33c5cbf96bebaa552b1afe5969c' ]]
+          [[ "$(git hash-object Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md)" == '5e3137861f546f2b5f7bd6ac152b1b32694a439a' ]]
+          [[ "$(git hash-object CR_0002_OWNER_LEGAL_SEQUENCING_OVERRIDE_EVIDENCE_2026-08-28.md)" == '9234fe5b764801db513df0c477120efd2b096e18' ]]
+          python3 - <<'PY'
+          from pathlib import Path
+          from datetime import datetime, timezone
+          import re, subprocess
+          p=Path('CURRENT_STATE.md')
+          s=p.read_text(encoding='utf-8')
+          s,n=re.subn(r'\*\*Updated:\*\* [^\n]+', '**Updated:** '+datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')+'  ', s, count=1)
+          assert n==1
+          old='**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0001 PUBLISHED AND READ-BACK VERIFIED.**'
+          assert s.count(old)==1
+          s=s.replace(old,'**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0002 PUBLISHED AND READ-BACK VERIFIED.**',1)
+          plans_tree=subprocess.check_output(['git','rev-parse','HEAD:Plans'],text=True).strip()
+          s,n=re.subn(r'- Current validated `Plans/` tree: `[^`]+`\.', f'- Current validated `Plans/` tree: `{plans_tree}`.', s, count=1)
+          assert n==1
+          oldcr='- CR-0001 publication commit: `904ca6cb0beca7a868d5ca64729d94f5b4d7217d`.'
+          assert s.count(oldcr)==1
+          s=s.replace(oldcr,'- Latest post-freeze change: CR-0002, publication commit `9f770f23c257a960a59faefe70d245a3bab52ce2`; evidence `CR_0002_OWNER_LEGAL_SEQUENCING_OVERRIDE_EVIDENCE_2026-08-28.md`, blob `9234fe5b764801db513df0c477120efd2b096e18`.\n- CR-0001 dependency repair remains incorporated in the validated planning tree.',1)
+          marker='## Runtime safeguards'
+          assert s.count(marker)==1
+          if '## Owner-approved CR-0002 sequencing override' not in s:
+              section='''## Owner-approved CR-0002 sequencing override\n\nThe Project Owner explicitly instructed on 2026-08-28 that the legal/regulatory/compliance work deferred to 2027-08-27 is to be treated as done **for sequencing purposes until that date** so governed work can move further. Canonical DEC-0049 / CR-0002 implements this as a bounded dependency-satisfaction exception, not legal completion evidence.\n\n- Tasks carrying `OWNER_LEGAL_HOLD_2026-08-27` remain `DEFERRED`/`WAITING`, not `PASS`.\n- Through 2027-08-27 they may be conditionally dependency-satisfied only for internal, synthetic, non-participant, non-public preparatory descendants whose own acceptance does not require asserting the missing legal fact/approval.\n- Downstream evidence must preserve each deferred legal item as an unresolved deviation/limitation.\n- Real-participant recruitment/processing, child-linked DNS activation, public launch, legal attestation/signature, payment of regulated fees, and HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED decisions remain fenced by actual applicable authority.\n- The exception expires 2027-08-27 or on earlier explicit owner reactivation/supersession; affected downstream PASS is then re-evaluated where materially reliant on the exception.\n\n'''
+              s=s.replace(marker,section+marker,1)
+          q=s.index('## Queue status after current reconciliation')
+          tail='''## Queue status after current reconciliation\n\nCR-0002 is canonically published/read-back verified with deterministic validation PASS. The WBS remains structurally unchanged at 641 tasks / 849 dependency edges. Applying DEC-0049 / Layer-5 section 5.3.1 to the current L2 queue makes two internal/preparatory AUTO_ALLOWED tasks dependency-eligible: `TSK-0026` and `TSK-0167`.\n\nPriority selection is deterministic:\n\n- **Selected next: `TSK-0026` — Assemble G-02 evidence package** (L2 / A3 / AUTO_ALLOWED / HIGH / critical path). Its legal-branch predecessors `TSK-0211`, `TSK-0208`, `TSK-0217`, and `TSK-0221` are conditionally dependency-satisfied only for preparation of a truthful evidence package; they remain unresolved deviations and cannot be represented as legal PASS. `TSK-0510` is current PASS and the canonical publication/read-back prerequisite is satisfied.\n- `TSK-0167` — invitation/scheduling/reminder/follow-up/withdrawal templates — is also preparatorily eligible because `TSK-0168` is PASS and deferred `TSK-0221` is conditionally dependency-satisfied for internal template preparation, but it is lower priority than TSK-0026.\n- `TSK-0513` remains unavailable until TSK-0167 itself becomes PASS.\n\nLG-03 remains **NOT PASS**. CR-0002 does not authorize recruitment, participant processing, child-linked DNS activation, public launch, or any Project Owner/HUMAN_ONLY gate decision.\n\n## Exact next authoritative step\n\nExecute bounded `TSK-0026`: assemble the LG-03/G-02 evidence package against all eight current gate criteria, map each to current evidence/owner/status/deviation/source, explicitly retain every deferred legal item as unresolved rather than fabricated PASS, independently verify ACC-0026, persist/read back the package/evidence, then recompute selection. If that makes `TSK-0027` the highest-priority boundary, stop for the Project Owner's HUMAN_ONLY PASS/FAIL/DEFER decision rather than inferring it.\n'''
+          s=s[:q]+tail
+          p.write_text(s,encoding='utf-8')
+          PY
+          grep -Fq 'POST-FREEZE CR-0002 PUBLISHED AND READ-BACK VERIFIED' CURRENT_STATE.md
+          grep -Fq 'Selected next: `TSK-0026`' CURRENT_STATE.md
+          grep -Fq 'LG-03 remains **NOT PASS**' CURRENT_STATE.md
+          git diff --check
+          git config user.name 'UseSafeWeb Governance Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: adopt CR-0002 and select TSK-0026'
+          git push origin HEAD:main
