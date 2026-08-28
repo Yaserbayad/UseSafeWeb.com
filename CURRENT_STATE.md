@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T16:55:15Z
+**Updated:** 2026-08-28T16:57:53Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -442,6 +442,12 @@ The standard preserves TSK-0558/CON-0014/CON-0015: approximately USD 20-50/month
 
 Current direct target evidence proves the accepted phone encrypted-DNS paths, allowed/blocked/narrow-exception/rollback filtering semantics, normal-DNS removal recovery and no persistent raw query/client-history baseline. `RSK-0002` remains OPEN: final user-facing activation usability/comprehension is not representative-parent validated. This PASS does not authorize LG-05/LG-06, implementation/build, participants, legal completion, payment, public release or launch.
 
+### TSK-0313 accepted stable state
+
+`TSK-0313 — Specify Protection Map state and evidence requirements`: **PASS for the provisional internal L4 product requirements under DEC-0050/CR-0003**. Requirements `TSK_0313_PROTECTION_MAP_STATE_EVIDENCE_REQUIREMENTS_2026-08-28.md`, blob `521c9cc5073aa289281acade12a66a9e979e197d`; independent evidence `TSK_0313_PROTECTION_MAP_STATE_EVIDENCE_REQUIREMENTS_EVIDENCE_2026-08-28.md`, blob `c9b0b890a43680b45afe72f73ff5ffc268fb1b79`. ACC-0313 is satisfied: S1-S6 entry/evidence requirements, parent-facing semantic requirements, transitions, unsupported/mixed-state behavior, accountless persistence scope, device-versus-journey boundary, testable examples and no-account-ownership rules are explicit; parent confirmation can never masquerade as system verification.
+
+Authority remains non-duplicative: TSK-0320 owns exact state/copy semantics; TSK-0229 owns J0/J1 data/TTL/deletion/no-linkage semantics; TSK-0313 owns cross-layer Product Map application and QA requirements. `RSK-0002` remains OPEN because representative-parent comprehension/usefulness is unvalidated. This PASS does not authorize LG-05/LG-06, implementation/build, participants, legal completion, payment, public release or launch.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -453,13 +459,8 @@ Current direct target evidence proves the accepted phone encrypted-DNS paths, al
 
 ## Queue status after current reconciliation
 
-`TSK-0041` is runtime PASS. This satisfies the previously missing direct predecessor for `TSK-0313`; its other hard predecessors `TSK-0144` and `TSK-0146` are current PASS. `TSK-0187` remains ineligible under CR-0003 because it requires representative-parent evidence, and `TSK-0140` remains fenced by its own owner/multi-role review acceptance.
-
-- **Selected next: `TSK-0313 — Specify Protection Map state and evidence requirements`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
-- Hard dependencies: `TSK-0041`, `TSK-0144`, `TSK-0146` — current PASS.
-- ACC-0313: Every Protection Map state has entry/evidence rules, parent-facing copy, transition rules, unsupported behavior, persistence scope, device/journey-state boundary and testable examples; parent-confirmed and system-verified states are never conflated; no account ownership model is assumed in the active baseline.
-- Selection rationale: all direct predecessors now satisfy current evidence semantics; ACC-0313 is an internal Protection Map requirements contract that can be satisfied from the already accepted truth-state/data/journey evidence without representative-parent behavior or an owner approval act.
+`TSK-0313` is runtime PASS. A fresh conservative dependency-ready AUTO_ALLOWED L4 queue has been generated at `TSK_0313_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. No next task is selected by this write; the queue must be reread against acceptance, direct predecessor evidence, gate/trigger conditions and CR-0003 before execution. HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED and representative-parent work remain fenced.
 
 ## Exact next authoritative step
 
-Execute bounded `TSK-0313`: specify Protection Map entry/evidence rules, parent-facing state semantics, transitions, unsupported behavior, persistence scope, accountless device/journey boundary and testable examples; reuse but do not weaken TSK-0320, TSK-0229, TSK-0315 and TSK-0041; preserve parent-confirmed versus system-verified separation; carry `RSK-0002`; persist/read back independent ACC-0313 evidence; reconcile runtime; then recompute.
+Read back the TSK-0313 post-PASS L4 queue, reject any candidate requiring unavailable real-user evidence, owner review/approval, unresolved trigger/gate or missing direct predecessor proof, and persist the deterministic highest-priority eligible AUTO_ALLOWED selection.
