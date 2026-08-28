@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T19:46:48Z
+**Updated:** 2026-08-28T19:49:50Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -498,6 +498,12 @@ The production host baseline was captured read-only and proves only current reso
 
 This PASS defines requirements only. It does not prove implemented WCAG conformance, manual assistive-technology release testing, representative-parent accessibility/usability (`RSK-0002`), any DNS mechanism beyond its separately owned accepted support matrix, market activation, build, publication or launch.
 
+### TSK-0045 accepted stable state
+
+`TSK-0045 — Define maintainability, deployment, and cost-control NFRs`: **PASS for the provisional internal L4 maintainability/deployment/cost-control-NFR-definition acceptance under DEC-0050/CR-0003**. Contract `TSK_0045_MAINTAINABILITY_DEPLOYMENT_COST_CONTROL_NFR_2026-08-28.md`, blob `cec8ba92151318cc399586ea230ccc399eea6e8b`; independent evidence `TSK_0045_MAINTAINABILITY_DEPLOYMENT_COST_CONTROL_NFR_EVIDENCE_2026-08-28.md`, blob `e8f79871379288e5595cdeef0deb3a1997b3e223`. ACC-0045 is satisfied: deterministic source-controlled deployment/read-back, versioning, preplanned rollback/drift reconciliation, documentation ownership, weekly security/monthly dependency review cadence, privacy-safe Azure cost tagging, owner-authorized budget/alert semantics and monthly cost-report inputs are explicit and testable.
+
+The infrastructure currency budget remains `UNFROZEN` until explicit owner authority supplies it. This PASS does not implement new Azure tags/budgets/reports, mutate Azure, authorize spend/deployment, build the future web/app, activate participants, publish or launch. `RSK-0002` remains OPEN.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -509,13 +515,8 @@ This PASS defines requirements only. It does not prove implemented WCAG conforma
 
 ## Queue status after current reconciliation
 
-The TSK-0314 post-PASS queue was reread against current acceptance and gates. `TSK-0187` remains ineligible because it requires representative-parent evidence. `TSK-0140` remains ineligible for PASS because owner/multi-role review evidence is absent. `TSK-0045` is the only dependency-ready AUTO_ALLOWED L4 candidate with no preflight flag.
-
-- **Selected next: `TSK-0045 — Define maintainability, deployment, and cost-control NFRs`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
-- Hard dependency: `TSK-0314` — current PASS in canonical runtime.
-- ACC-0045: define repeatable deployment, versioning, rollback, documentation ownership, dependency update cadence, cost tagging/budgets, and monthly cost-report inputs.
-- Selection boundary: internal maintainability/deployment/cost NFR definition only. No Azure control-plane mutation, deployment of the unbuilt web/app, purchase, release, participant processing or launch is authorized.
+`TSK-0045` is runtime PASS for its bounded provisional-L4 maintainability/deployment/cost-control-NFR-definition acceptance. No deployment, Azure mutation/spend, numeric infrastructure budget, future app or launch is inferred. A fresh conservative dependency-ready AUTO_ALLOWED L4 queue has been generated at `TSK_0045_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. No next task is selected by this write; the queue must be reread against acceptance, direct predecessor evidence, CR-0003, human/legal/participant holds and open security/privacy deviations before execution.
 
 ## Exact next authoritative step
 
-Execute bounded TSK-0045: define deterministic GitHub-canonical deployment/version/rollback/documentation/dependency-maintenance requirements for the current DNS service and future separate web/app; define Azure cost tags, budget/alert semantics and monthly cost-report inputs without inventing future spend; preserve owner-managed Azure control-plane and action-authority boundaries; persist/read back independent ACC-0045 evidence; reconcile runtime; then recompute.
+Read back the TSK-0045 post-PASS L4 queue, reject any candidate requiring unavailable real-user evidence, owner/legal/privacy approval, unresolved trigger/gate or missing predecessor proof, account for open security/privacy deviations where relevant, and persist the deterministic highest-priority eligible AUTO_ALLOWED selection.
