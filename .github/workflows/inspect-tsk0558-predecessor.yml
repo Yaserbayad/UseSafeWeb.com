@@ -1,0 +1,49 @@
+name: Inspect TSK-0558 direct predecessor
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/inspect-tsk0558-predecessor.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Inspect canonical WBS/source references
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv, pathlib
+          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',encoding='utf-8-sig',newline=''))); by={r['Task_ID']:r for r in rows}
+          keys=['TSK-0558','TSK-0559']
+          out=['# TSK-0558 direct predecessor inspection','','Date: 2026-08-28','Purpose: derived read-only inspection for TSK-0559 eligibility; this report is not a second state store.','']
+          for k in keys:
+              r=by[k]
+              out += [f'## {k}']
+              for field in ['Title','Plan_Status','Execution_State','Priority','Dependencies','Acceptance_ID','Acceptance_Criteria','Verification_ID','Evidence_ID','AI_Capability_A0_A4','Action_Authority','Source_Reference','Legacy_ID','Notes']:
+                  out.append(f'- **{field}:** {r.get(field, "")}')
+              out.append('')
+          cs=pathlib.Path('CURRENT_STATE.md').read_text()
+          out += ['## Runtime direct-reference check',f'- CURRENT_STATE contains literal `TSK-0558`: {"YES" if "TSK-0558" in cs else "NO"}',f'- CURRENT_STATE contains literal `TSK-0559`: {"YES" if "TSK-0559" in cs else "NO"}','']
+          # List repository root files whose names contain likely source task/phase hints without interpreting them as PASS.
+          candidates=[]
+          for p in pathlib.Path('.').iterdir():
+              if p.is_file() and any(x in p.name.upper() for x in ['BUSINESS','GTM','CONTENT','0558']): candidates.append(p.name)
+          out += ['## Candidate root source artifacts'] + [f'- `{x}`' for x in sorted(candidates)]
+          pathlib.Path('TSK_0558_DIRECT_PREDECESSOR_INSPECTION_2026-08-28.md').write_text('\n'.join(out)+'\n')
+          PY
+          git diff --check
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add TSK_0558_DIRECT_PREDECESSOR_INSPECTION_2026-08-28.md
+          git commit -m "evidence: inspect TSK-0558 predecessor state"
+          git push
