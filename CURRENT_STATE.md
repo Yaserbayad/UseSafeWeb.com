@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T20:56:42Z
+**Updated:** 2026-08-28T21:01:44Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -528,10 +528,10 @@ The matrix is explicitly derived/non-authoritative and does not duplicate the re
 
 ## Queue status after TSK-0043 reconciliation
 
-`TSK-0043` is runtime **PASS** for its bounded cross-functional requirements-review acceptance. The review and independent acceptance evidence were published and read back from `main`. No successor is selected by this reconciliation write.
+`TSK-0140 — Issue the post-validation product brief` is the selected runtime **TODO** work item for bounded preparation only. Its sole hard dependency `TSK-0138` is runtime PASS. WBS classifies TSK-0140 as L4 / A3 / AUTO_ALLOWED, but ACC-0140 additionally requires review by the Project Owner plus product, network, privacy, security, UX, support and finance before approval. Current DEC-0050/CR-0003 permits internal provisional L4 preparation but does not permit this brief to claim real behavioral validation or substitute AI review for the mandatory owner review.
 
-Current fences remain unchanged: `RSK-0002` OPEN; `REQ-0022` unresolved; LG-03/LG-04/LG-05/LG-06 non-PASS; account/dashboard deferred; L5/L6 build, real-participant processing, legal completion, payment, publication and launch not authorized.
+All higher-priority remaining L4 branches currently fail eligibility for autonomous completion: representative-parent evidence remains unavailable under `RSK-0002`; `TSK-0317` and dependent UX work cross HUMAN_ONLY authority; account/persistence work remains deferred under EXC-0001; L5/L6 progression remains unauthorized.
 
 ## Exact next authoritative step
 
-Recompute the deterministic eligible queue from the current canonical WBS/runtime/gates after this TSK-0043 PASS read-back. Consider only current bounded L4 AUTO_ALLOWED work whose hard dependencies are directly satisfied and whose own acceptance does not require real-participant evidence, an owner-only decision, unresolved legal fact, L5/L6 authority, or public/production activation. Persist and read back the selected successor before executing it.
+Prepare the smallest source-traceable provisional TSK-0140 product brief from current accepted L4 artifacts and canonical requirements. Perform all non-owner cross-functional conflict checks that can be truthfully completed from current evidence. Do not call the brief approved, post-validation in the behavioral sense, or PASS. After durable publication/read-back, classify TSK-0140 WAITING if Project Owner review remains the only unsatisfied ACC-0140 condition; record the exact owner-review input needed and preserve all DEC-0050/CR-0003, privacy, accountless, build and launch fences.
