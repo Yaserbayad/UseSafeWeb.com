@@ -47,7 +47,7 @@ jobs:
               case "$path" in
                 syslog:*) meta="${meta}${path}: non-file target configured\n" ;;
                 *)
-                  if [ -e "$path" ]; then
+                  if sudo test -e "$path"; then
                     size="$(sudo stat -c '%s' "$path")"
                     mode="$(sudo stat -c '%a' "$path")"
                     owner="$(sudo stat -c '%U:%G' "$path")"
@@ -60,16 +60,15 @@ jobs:
             done <<< "$enabled_access_paths"
           fi
 
+          # The accepted production AdGuard configuration is root-protected; probe readability with sudo.
           adguard_yaml=/opt/AdGuardHome/AdGuardHome.yaml
-          test -r "$adguard_yaml" || adguard_yaml=/opt/AdGuardHome/conf/AdGuardHome.yaml
-          test -r "$adguard_yaml"
-          qlog="$(sudo python3 - <<'PY'
-          import yaml
-          p='/opt/AdGuardHome/AdGuardHome.yaml'
-          try:
-              d=yaml.safe_load(open(p))
-          except FileNotFoundError:
-              d=yaml.safe_load(open('/opt/AdGuardHome/conf/AdGuardHome.yaml'))
+          if ! sudo test -r "$adguard_yaml"; then
+            adguard_yaml=/opt/AdGuardHome/conf/AdGuardHome.yaml
+          fi
+          sudo test -r "$adguard_yaml"
+          qlog="$(sudo python3 - "$adguard_yaml" <<'PY'
+          import sys, yaml
+          d=yaml.safe_load(open(sys.argv[1]))
           q=d.get('querylog',{}) or {}
           s=d.get('statistics',{}) or {}
           print('querylog_enabled='+str(bool(q.get('enabled',False))).lower())
