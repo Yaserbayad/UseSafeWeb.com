@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T17:19:35Z
+**Updated:** 2026-08-28T17:20:40Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -473,8 +473,13 @@ Current first-party ICO guidance was rechecked on 2026-08-28 for per-purpose law
 
 ## Queue status after current reconciliation
 
-`TSK-0230` is runtime PASS for its bounded provisional-L4 NFR-definition acceptance. `DVR-0230-01` remains an explicit pre-activation implementation deviation. A fresh conservative dependency-ready AUTO_ALLOWED L4 queue has been generated at `TSK_0230_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. No next task is selected by this write; the queue must be reread against acceptance, direct predecessor evidence, CR-0003, the legal/participant hold and the open privacy deviation before execution.
+The TSK-0230 post-PASS queue was reread against current acceptance, CR-0003 and open deviation `DVR-0230-01`. `TSK-0187` remains ineligible because it requires representative-parent evidence. `TSK-0140` remains ineligible for PASS because owner/multi-role review evidence is absent. `TSK-0484` is the highest eligible AUTO_ALLOWED provisional-L4 task and precedes the equal-priority TSK-0497 in WBS order.
+
+- **Selected next: `TSK-0484 — Define security and abuse-resistance NFRs`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
+- Hard dependency: `TSK-0230` — current PASS.
+- ACC-0484: Requirements map to identified threats, include measurable controls and verification, and distinguish public resolver abuse from user-data security.
+- Selection boundary: internal security/abuse-resistance NFR definition only. Threat modeling must distinguish availability/abuse of the public encrypted resolver from confidentiality/integrity/privacy of user-related data; controls must be measurable and tied to verification. `DVR-0230-01` must be treated as an existing access-control deviation where relevant, not normalized away.
 
 ## Exact next authoritative step
 
-Read back the TSK-0230 post-PASS L4 queue, reject any candidate requiring unavailable real-user evidence, owner/legal/privacy approval, unresolved trigger/gate or missing direct predecessor proof, account for `DVR-0230-01` where relevant, and persist the deterministic highest-priority eligible AUTO_ALLOWED selection.
+Execute bounded `TSK-0484`: load current threat/risk/security authority and direct production security/abuse evidence; enumerate trust boundaries/assets/abuse cases; define measurable controls and verification for network abuse, service integrity, admin/change authority, secrets, software/supply chain, data/log access, web/product input/output and recovery; preserve accountless/privacy/legal/build gates; persist/read back independent ACC-0484 evidence; reconcile runtime; then recompute.
