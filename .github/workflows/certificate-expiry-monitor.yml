@@ -1,0 +1,139 @@
+name: UseSafeWeb TLS certificate expiry monitor
+
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/certificate-expiry-monitor.yml
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: usesafeweb-tls-expiry-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      HOSTNAME: dns.usesafeweb.com
+      THRESHOLD_DAYS: '30'
+      OWNER_LOGIN: Yaserbayad
+      ALERT_TITLE: '[ALERT] UseSafeWeb TLS certificate expiry or validation failure'
+      TEST_TITLE: '[TEST] UseSafeWeb TLS expiry owner-alert route'
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Validate public TLS endpoints and calculate remaining lifetime
+        id: tls
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY' > /tmp/usesafeweb-tls-status.json
+          import datetime, json, socket, ssl, time
+
+          host = 'dns.usesafeweb.com'
+          results = []
+          errors = []
+          for port in (443, 853):
+              try:
+                  ctx = ssl.create_default_context()
+                  with socket.create_connection((host, port), timeout=12) as raw:
+                      with ctx.wrap_socket(raw, server_hostname=host) as tls:
+                          cert = tls.getpeercert()
+                          not_after = cert['notAfter']
+                          expiry_epoch = ssl.cert_time_to_seconds(not_after)
+                          days = int((expiry_epoch - time.time()) // 86400)
+                          results.append({
+                              'port': port,
+                              'days_remaining': days,
+                              'not_after': datetime.datetime.fromtimestamp(expiry_epoch, datetime.timezone.utc).isoformat(),
+                              'protocol': tls.version(),
+                          })
+              except Exception as exc:
+                  errors.append({'port': port, 'error_type': type(exc).__name__, 'error': str(exc)[:240]})
+
+          if errors or len(results) != 2:
+              status = 'ERROR'
+              minimum_days = None
+          else:
+              status = 'OK'
+              minimum_days = min(x['days_remaining'] for x in results)
+
+          print(json.dumps({'status': status, 'minimum_days_remaining': minimum_days, 'results': results, 'errors': errors}, sort_keys=True))
+          PY
+          cat /tmp/usesafeweb-tls-status.json
+          STATUS="$(python3 -c "import json; print(json.load(open('/tmp/usesafeweb-tls-status.json'))['status'])")"
+          MIN_DAYS="$(python3 -c "import json; d=json.load(open('/tmp/usesafeweb-tls-status.json')); print('' if d['minimum_days_remaining'] is None else d['minimum_days_remaining'])")"
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+          echo "minimum_days=$MIN_DAYS" >> "$GITHUB_OUTPUT"
+          echo "TLS_EXTERNAL_CHECK=$STATUS"
+          echo "TLS_MINIMUM_DAYS=${MIN_DAYS:-UNKNOWN}"
+
+      - name: Create, update, or recover owner alert
+        shell: bash
+        env:
+          TLS_STATUS: ${{ steps.tls.outputs.status }}
+          TLS_MINIMUM_DAYS: ${{ steps.tls.outputs.minimum_days }}
+        run: |
+          set -Eeuo pipefail
+
+          existing_issue() {
+            gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 100 --json number,title \
+              --jq ".[] | select(.title == \"$ALERT_TITLE\") | .number" | head -n 1
+          }
+
+          ISSUE_NUMBER="$(existing_issue || true)"
+          DETAILS="$(cat /tmp/usesafeweb-tls-status.json)"
+
+          if [[ "$TLS_STATUS" != 'OK' || -z "$TLS_MINIMUM_DAYS" || "$TLS_MINIMUM_DAYS" -le "$THRESHOLD_DAYS" ]]; then
+            BODY=$(cat <<EOF
+          The automated external TLS monitor detected a certificate condition requiring owner attention.
+
+          - Resolver: \`$HOSTNAME\`
+          - Threshold: $THRESHOLD_DAYS days
+          - Status: $TLS_STATUS
+          - Minimum observed days remaining: ${TLS_MINIMUM_DAYS:-unknown}
+          - Workflow run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+
+          Privacy-safe endpoint result:
+          \`\`\`json
+          $DETAILS
+          \`\`\`
+
+          Follow \`infrastructure/adguard-server/TLS_CERTIFICATE_RENEWAL_RUNBOOK.md\`. Do not fail open to plaintext DNS and do not place private keys or ACME credentials in this issue.
+          EOF
+          )
+            if [[ -z "$ISSUE_NUMBER" ]]; then
+              gh issue create --repo "$GITHUB_REPOSITORY" --title "$ALERT_TITLE" --body "$BODY" --assignee "$OWNER_LOGIN"
+              echo 'OWNER_ALERT_ROUTE=CREATED'
+            else
+              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "$BODY"
+              echo "OWNER_ALERT_ROUTE=UPDATED issue=$ISSUE_NUMBER"
+            fi
+          else
+            if [[ -n "$ISSUE_NUMBER" ]]; then
+              gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" \
+                --comment "External TLS validation has recovered and the minimum remaining lifetime is now $TLS_MINIMUM_DAYS days (> $THRESHOLD_DAYS). Closing this certificate alert."
+              echo "OWNER_ALERT_ROUTE=RECOVERED issue=$ISSUE_NUMBER"
+            else
+              echo 'OWNER_ALERT_ROUTE=HEALTHY_NO_OPEN_ALERT'
+            fi
+          fi
+
+      - name: Prove owner notification route on initial installation
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          TEST_URL="$(gh issue create --repo "$GITHUB_REPOSITORY" --title "$TEST_TITLE" --assignee "$OWNER_LOGIN" --body "TSK-0443 installation test: this temporary issue proves the certificate-expiry monitor can create a durable GitHub alert assigned to the Project Owner. No certificate failure is asserted. Workflow: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID")"
+          TEST_NUMBER="${TEST_URL##*/}"
+          [[ "$TEST_NUMBER" =~ ^[0-9]+$ ]]
+          gh issue close "$TEST_NUMBER" --repo "$GITHUB_REPOSITORY" --comment 'Owner-alert route test completed successfully; closing the temporary test issue.'
+          echo "OWNER_ALERT_TEST_ISSUE=$TEST_NUMBER"
+          echo 'OWNER_ALERT_TEST=PASS'
