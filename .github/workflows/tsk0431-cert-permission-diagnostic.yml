@@ -1,0 +1,30 @@
+name: TSK-0431 recovery certificate permission diagnostic
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/tsk0431-cert-permission-diagnostic.yml
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: [self-hosted, rec-v1]
+    timeout-minutes: 3
+    steps:
+      - name: Inspect certificate path permissions
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          echo "runner_user=$(id -un)"
+          stat -c 'mode=%a owner=%U:%G path=%n' /etc/usesafeweb-recovery /etc/usesafeweb-recovery/recovery.crt /etc/usesafeweb-recovery/recovery.key
+          namei -l /etc/usesafeweb-recovery/recovery.crt
+          if test -r /etc/usesafeweb-recovery/recovery.crt; then
+            echo 'runner_can_read_cert=true'
+          else
+            echo 'runner_can_read_cert=false'
+          fi
+          sudo test -r /etc/usesafeweb-recovery/recovery.crt
+          echo 'root_can_read_cert=true'
