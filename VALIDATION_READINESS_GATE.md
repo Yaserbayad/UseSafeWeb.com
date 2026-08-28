@@ -1,8 +1,9 @@
 # UseSafeWeb.com — Validation Readiness Gate
 
 **Date:** 2026-08-26  
-**Status:** IN PROGRESS — owner/environment facts substantially resolved; remaining blockers are minimum UK representation/fee handling plus deployment verification.  
-**Purpose:** prerequisite to Experiment 1. No real child-linked DNS processing is authorised until this gate is PASS.
+**Updated:** 2026-08-28  
+**Status:** **DEFER — Project Owner decision recorded 2026-08-28.** Current technical readiness is accepted for its bounded scope; final LIA/DPIA approval, participant-facing notice/contact release, and ICO/UK-representation resolution remain deferred/open.  
+**Purpose:** prerequisite to Experiment 1. No real child-linked DNS processing is authorised while this gate is DEFER/non-PASS.
 
 ## 1. Gate completion criteria
 
@@ -136,7 +137,7 @@ Primary sources:
 - https://commission.europa.eu/law/law-topic/data-protection/information-business-and-organisations/application-gdpr_en
 - https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/personal-information-what-is-it/who-does-the-uk-gdpr-apply-to/
 
-**LIA state:** substantively complete; final approval remains tied to deployment verification and the UK representative/fee decision below.
+**LIA state:** substantively complete for preparation. Current deployment/privacy/region evidence is now technically verified, but final LIA/DPIA residual-risk approval remains deferred/open with the participant-facing notice/contact and UK representative/ICO branch. No legal approval is inferred from technical PASS evidence or CR-0002.
 
 ## 6. Mandatory AdGuard configuration for pilot/production
 
@@ -157,6 +158,8 @@ For Experiment-1 participant traffic:
 
 **Verification rule:** before the first real participant, inspect the deployed configuration and confirm every requirement directly. Planned settings are not execution evidence.
 
+**Current technical verification (2026-08-28):** the deployed AdGuard/privacy/upstream/ECS baseline has direct accepted evidence through TSK-0202, TSK-0204, TSK-0205, TSK-0206, TSK-0207, TSK-0407, TSK-0428, TSK-0511, TSK-0512 and TSK-0510. Any material deployment/configuration change requires re-verification before participant use.
+
 ## 7. Hosting / processor / transfer review
 
 ### Microsoft Azure
@@ -165,7 +168,7 @@ Selected provider: **Microsoft Azure**. Pilot region: **West Europe, Netherlands
 
 Microsoft's current Products and Services Data Protection Addendum provides the standard processor/data-protection terms for Azure, and Microsoft documents that Azure customer data can be provisioned at rest within selected geographic regions, subject to the DPA/Product Terms and service-specific exceptions. Microsoft also provides contractual transfer safeguards for relevant cross-border processing.
 
-This is sufficient for the **design-stage processor selection**, but deployment acceptance still requires verifying that the actual pilot VM/resources are created in `westeurope` and that no optional service added to the pilot creates an unreviewed data flow.
+The design-stage selection is now supplemented by current deployment evidence: TSK-0428 directly verifies the active UseSafeWeb DNS VM in Azure `westeurope`, the current Quad9 dns10 path, ECS disabled, and no unreviewed CDN/analytics/payment/email/application processor in the active child-linked DNS query path. Any later processor/service or region change requires renewed review before participant use.
 
 Primary sources:
 - https://learn.microsoft.com/en-us/compliance/regulatory/gdpr-dpia-azure
@@ -192,12 +195,12 @@ None currently selected. If CDN/proxy, third-party analytics, email/scheduling, 
 
 | Risk | Required mitigation | State |
 |---|---|---|
-| identifiable DNS history | query/file log off; no history feature | design resolved; deployment verification pending |
-| client/IP statistics | exclude/disable + anonymise | design resolved; deployment verification pending |
-| client subnet disclosed upstream | ECS off | resolved requirement; deployment verification pending |
+| identifiable DNS history | query/file log off; no history feature | **RESOLVED for current technical baseline** — TSK-0204/0207 direct evidence |
+| client/IP statistics | exclude/disable + anonymise | **RESOLVED for current technical baseline** — TSK-0205/0206/0207 direct evidence |
+| client subnet disclosed upstream | ECS off | **RESOLVED for current technical baseline** — TSK-0407/0428 direct evidence |
 | upstream privacy/retention | Quad9 `dns10`; privacy policy reviewed; Swiss adequacy | RESOLVED |
 | US transfer during England pilot | EU-only Azure node | RESOLVED |
-| Azure hosting processor | West Europe + Microsoft DPA/transfer terms | design RESOLVED; deployment region verification pending |
+| Azure hosting processor | West Europe + Microsoft DPA/transfer terms | **RESOLVED for current technical baseline** — TSK-0428 directly verifies `westeurope`; legal/provider terms remain subject to ordinary current review |
 | extra pilot processors | none currently selected | RESOLVED subject to no scope change |
 | UK representative | resolve before pilot unless a defensible Article-27 exception is established | OPEN/BLOCKING |
 | ICO fee | zero turnover means Tier 1 if fee due; applicability/self-assessment still to close | OPEN, low burden |
@@ -254,35 +257,31 @@ No £2/month or £20/year supporter payment in Experiment 1. Payment willingness
 
 ## 13. Current gate result
 
-**NOT READY FOR REAL PARTICIPANTS YET, but owner/environment fact collection is complete.**
+**PROJECT OWNER DECISION: DEFER (2026-08-28).**
 
-Resolved:
-- data flow/data minimisation;
-- privacy-minimal AdGuard target configuration;
-- Azure as hosting provider;
-- Azure West Europe (Netherlands) as the pilot region;
-- EU-only England-pilot data plane;
-- Quad9 `dns10` upstream and ECS-off requirement;
-- no extra pilot processors;
-- controller = individual established in Netherlands;
-- turnover = 0 / pre-revenue;
-- staff information not required at this stage;
-- draft LIA/DPIA substance;
-- retention rules;
-- transparency requirements;
-- payment exclusion;
-- 500 active users retained only as an internal formalisation/scale-review milestone, not a legal threshold.
+Decision evidence: `TSK_0027_G02_LG03_OWNER_DEFER_DECISION_EVIDENCE_2026-08-28.md`. Decision package: `TSK_0026_G02_LG03_EVIDENCE_PACKAGE_2026-08-28.md`.
 
-Remaining before PASS:
-1. complete ICO fee self-assessment and pay Tier 1 if the assessment says a fee is due;
-2. appoint a UK representative, or obtain a defensible documented Article-27 exception conclusion;
-3. deploy/configure the Azure West Europe pilot node to the mandatory AdGuard requirements;
-4. directly verify the deployed Azure region and AdGuard privacy/upstream/ECS settings;
-5. issue the final parent/child privacy notice with the actual controller/UK-representative contact information;
-6. approve final LIA/DPIA residual risks after steps 1–5.
+Current eight-criterion disposition:
+
+- **PASS for bounded current criterion scope:** 1 data flow/data inventory; 3 lawful-basis documentation; 4 deployed AdGuard privacy settings; 7 hosting/upstream/recipient/data-path review; 8 payments/marketing disabled for Experiment 1.
+- **DEFERRED / OPEN:** 2 final LIA/DPIA approval against the actual participant-ready environment; 5 final participant-facing notice/contact release; 6 ICO-fee/UK-representative or verified non-applicability resolution.
+
+Technical readiness now additionally includes accepted encrypted-DNS endpoint/TLS, supported-device tests, filtering/exception/rollback, privacy persistence, Azure region/data path, clean recovery/rebuild and Azure-native restore evidence, compiled under TSK-0510. The prior deployment-verification items are therefore no longer listed as open blockers.
+
+**Gate effect:** LG-03/G-02 is **DEFER, not PASS**. Recruitment, real-participant processing and child-linked DNS activation for a real participant remain unauthorized.
+
+**CR-0002 sequencing effect:** through 2027-08-27, owner-deferred legal/regulatory/compliance dependencies may be conditionally treated as satisfied only for qualifying internal, synthetic, non-participant, non-public preparatory work. This does not convert criteria 2, 5 or 6 to PASS.
+
+### Remaining before any future LG-03 PASS / real-participant authorization
+
+1. complete/approve the final LIA/DPIA residual-risk position against the then-current participant-ready environment;
+2. complete and release the final parent/child privacy/protection notice with actual approved participant-facing contact route;
+3. resolve the ICO-fee and UK-representative position, or establish verified current non-applicability where legally valid;
+4. reverify any technical/control evidence that has become stale or changed;
+5. obtain a new explicit Project Owner gate decision authorizing the resulting scope.
 
 ## 14. Exact next authoritative step
 
-The next human-only issue is **UK representation**. The simplest compliant path is to nominate a trusted person/entity established in the UK to act as the pilot's UK representative under a short written authorisation, while keeping the project otherwise informal and pre-revenue.
+The current gate outcome is **DEFER**. Do not recruit or activate real participants. Governed project execution may continue only through work independently eligible under CR-0002 and the current WBS/action-authority rules.
 
-In parallel, all technical readiness work may proceed: provision an Azure `westeurope` pilot VM, deploy AdGuard to the mandatory settings, then inspect and record the resulting configuration evidence.
+The owner-deferred legal/regulatory/compliance branch must be reactivated by **2027-08-27** or earlier explicit Project Owner instruction if the project intends to pursue real-participant authorization. Before any such authorization, the remaining items above must be resolved with current evidence and a fresh owner gate decision.

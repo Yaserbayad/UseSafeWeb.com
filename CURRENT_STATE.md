@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T14:41:56Z  
+**Updated:** 2026-08-28T14:47:27Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -348,6 +348,10 @@ The task PASS means the required HUMAN_ONLY decision was actually made and recor
 
 This PASS closes internal preparation only. The artifact remains **NOT FOR PARTICIPANT USE** until the real participant-facing contact/notice/legal/gate conditions are actually satisfied. No recruitment or participant processing is authorized.
 
+### TSK-0028 accepted stable state
+
+`TSK-0028 — Update canonical state after G-02 decision`: **PASS**. The canonical validation-readiness artifact now records the Project Owner's TSK-0027 outcome as **DEFER**, removes stale claims that already-proven deployment/technical verification is pending, preserves the three deferred/open legal/privacy/contact criterion classes, and retains recruitment authorization = NO. Updated `VALIDATION_READINESS_GATE.md` blob `1aef1c806a3fa4abcaf9e2feffa0ea093ec10ff9`; reconciliation evidence `TSK_0028_CANONICAL_GATE_STATE_RECONCILIATION_EVIDENCE_2026-08-28.md`, blob `e8231f6902cbcf0fd5b515b6f8a2ad6303d07a31`. ACC-0028 is satisfied: canonical gate/runtime files now agree on DEFER and preserve the evidence links without contradictory ready/blocked wording.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -359,12 +363,12 @@ This PASS closes internal preparation only. The artifact remains **NOT FOR PARTI
 
 ## Queue status after current reconciliation
 
-`TSK-0167` is runtime PASS for internal preparatory scope. Its hard successors are recomputed against current authority. `TSK-0513 — Run end-to-end synthetic rehearsal` now has all four hard predecessors satisfied for synthetic execution: TSK-0167 PASS, TSK-0169 PASS, TSK-0214 PASS and TSK-0510 PASS.
+`TSK-0028` is runtime PASS and the canonical G-02/LG-03 outcome is reconciled as **DEFER**. The previously executed TSK-0513 synthetic rehearsal already has durable machine-verification evidence (`TSK_0513_END_TO_END_SYNTHETIC_REHEARSAL_EVIDENCE_2026-08-28.md`, blob `717a59aaf8e748e302b4a1aa972c2d3d2936d3aa`) created after the prior checkpoint. Under interrupted-work recovery rules, that durable result must be reconciled before selecting unrelated work.
 
-- **Selected next: `TSK-0513` — Run end-to-end synthetic rehearsal** (L2 / A3 / AUTO_ALLOWED / MEDIUM).
-- LG-03/G-02 remains **DEFER**. Recruitment and real-participant processing remain unauthorized.
-- The synthetic rehearsal must use synthetic data only, capture no prohibited participant data, preserve CR-0002 legal/contact limitations, and record/fix or explicitly disposition blockers before any later real-participant gate.
+- **Selected next: reconcile the already-verified `TSK-0513` outcome against the now-current DEFER baseline.**
+- Direct TSK-0513 successor `TSK-0173` remains dependent on both TSK-0028 and TSK-0513 and is HUMAN_APPROVAL_REQUIRED; it cannot be dispatched until TSK-0513 is formally reconciled PASS and its own gate/preconditions are checked.
+- Recruitment and real-participant processing remain unauthorized.
 
 ## Exact next authoritative step
 
-Execute bounded `TSK-0513` against the accepted Experiment-1 preparation artifacts and current technical evidence. Rehearse the full path with synthetic data only, verify every step completes or record a blocker/deviation, verify no prohibited data is captured, persist/read back the rehearsal/evidence, and recompute selection. Do not convert successful synthetic rehearsal into recruitment authorization or LG-03 PASS.
+Re-read the durable TSK-0513 rehearsal report/fixture/evidence against the reconciled TSK-0028 DEFER baseline. If its acceptance proof remains valid, persist TSK-0513 PASS without re-executing equivalent rehearsal work; then recompute the queue.
