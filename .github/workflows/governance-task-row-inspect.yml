@@ -10,28 +10,321 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
 jobs:
-  inspect:
+  configure:
     runs-on: [self-hosted, linux, x64]
-    timeout-minutes: 3
+    timeout-minutes: 10
     steps:
       - name: Checkout exact main commit
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Print remaining L2 PKG-09 task boundaries
+      - name: Configure path-restricted DoH and DoT TLS proxy
         shell: bash
         run: |
           set -Eeuo pipefail
-          python3 - <<'PY'
-          import csv,json
-          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',newline='',encoding='utf-8-sig')))
-          for r in rows:
-              tid=(r.get('Task_ID') or '').strip()
-              try: n=int(tid.split('-')[1])
-              except Exception: continue
-              if 448 <= n <= 482:
-                  keys=['Task_ID','Title','Lifecycle_Stage','Priority','Critical_Path','Plan_Status','Execution_State','Dependencies','Action_Authority','Acceptance_ID','Acceptance_Criteria','Requirement_Reference','Risk_Reference']
-                  print(json.dumps({k:r.get(k,'') for k in keys},sort_keys=True,ensure_ascii=False))
+          CONFIG=/opt/AdGuardHome/AdGuardHome.yaml
+          CERT=/etc/letsencrypt/live/dns.usesafeweb.com/fullchain.pem
+          KEY=/etc/letsencrypt/live/dns.usesafeweb.com/privkey.pem
+          ADMIN_SECRET=/var/lib/usesafeweb/adguard/admin.env
+          ADG_BACKUP=''
+          NGINX_BACKUP=''
+          POLICY_BACKUP=''
+          HAD_NGINX=0
+          HAD_POLICY=0
+          ADG_CHANGED=0
+          NGINX_CHANGED=0
+          UFW443_ADDED=0
+          UFW853_ADDED=0
+          SUCCESS=0
+
+          fail(){ printf 'FAIL  %s\n' "$*" >&2; exit 1; }
+          pass(){ printf 'PASS  %s\n' "$*"; }
+          wait_admin(){
+            local user="$1" pw="$2" code
+            for _ in $(seq 1 100); do
+              code="$(curl --silent --show-error --max-time 2 --user "$user:$pw" -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/control/status 2>/dev/null || true)"
+              [[ "$code" == '200' ]] && return 0
+              sleep 0.1
+            done
+            return 1
+          }
+          cleanup(){
+            local rc=$?
+            if [[ "$SUCCESS" != 1 ]]; then
+              if [[ "$UFW443_ADDED" == 1 ]]; then sudo ufw delete allow 443/tcp >/dev/null 2>&1 || true; fi
+              if [[ "$UFW853_ADDED" == 1 ]]; then sudo ufw delete allow 853/tcp >/dev/null 2>&1 || true; fi
+              if [[ "$NGINX_CHANGED" == 1 ]]; then
+                sudo systemctl stop nginx.service >/dev/null 2>&1 || true
+                if [[ "$HAD_NGINX" == 1 && -n "$NGINX_BACKUP" ]] && sudo test -f "$NGINX_BACKUP"; then
+                  sudo cp --preserve=mode,ownership,timestamps "$NGINX_BACKUP" /etc/nginx/nginx.conf >/dev/null 2>&1 || true
+                  sudo nginx -t >/dev/null 2>&1 && sudo systemctl start nginx.service >/dev/null 2>&1 || true
+                fi
+              fi
+              if [[ "$ADG_CHANGED" == 1 && -n "$ADG_BACKUP" ]] && sudo test -f "$ADG_BACKUP"; then
+                sudo systemctl stop AdGuardHome.service >/dev/null 2>&1 || true
+                sudo cp --preserve=mode,ownership,timestamps "$ADG_BACKUP" "$CONFIG" >/dev/null 2>&1 || true
+                sudo systemctl start AdGuardHome.service >/dev/null 2>&1 || true
+              fi
+            fi
+            if [[ "$HAD_POLICY" == 1 && -n "$POLICY_BACKUP" ]] && sudo test -f "$POLICY_BACKUP"; then
+              sudo cp --preserve=mode,ownership,timestamps "$POLICY_BACKUP" /usr/sbin/policy-rc.d >/dev/null 2>&1 || true
+            elif [[ "$HAD_POLICY" == 0 ]]; then
+              sudo rm -f /usr/sbin/policy-rc.d >/dev/null 2>&1 || true
+            fi
+            [[ -n "$ADG_BACKUP" ]] && sudo rm -f "$ADG_BACKUP" >/dev/null 2>&1 || true
+            [[ -n "$NGINX_BACKUP" ]] && sudo rm -f "$NGINX_BACKUP" >/dev/null 2>&1 || true
+            [[ -n "$POLICY_BACKUP" ]] && sudo rm -f "$POLICY_BACKUP" >/dev/null 2>&1 || true
+            rm -f /tmp/usw-doh-query.bin /tmp/usw-doh-response.bin
+            exit "$rc"
+          }
+          trap cleanup EXIT
+
+          sudo -n true || fail 'non-interactive sudo unavailable'
+          for c in curl openssl python3 systemctl ss sha256sum; do command -v "$c" >/dev/null || fail "$c missing"; done
+          MID="$(sha256sum /etc/machine-id | awk '{print $1}')"
+          AZ_META="$(python3 - <<'PY'
+          import json,urllib.request
+          req=urllib.request.Request('http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01',headers={'Metadata':'true'})
+          with urllib.request.urlopen(req,timeout=3) as r: print(json.dumps(json.load(r)))
           PY
+          )"
+          AZ_NAME="$(printf '%s' "$AZ_META" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("name",""))')"
+          AZ_LOC="$(printf '%s' "$AZ_META" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("location",""))')"
+          [[ "$MID" == 'e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2' ]] || fail 'machine identity is not approved production target'
+          [[ "$AZ_NAME" == 'adguardvm' && "$AZ_LOC" == 'westeurope' ]] || fail 'Azure identity/region mismatch'
+          pass 'production identity guard'
+
+          sudo test -s "$CERT" || fail 'certificate missing'
+          sudo test -s "$KEY" || fail 'private key missing'
+          [[ "$(sudo stat -Lc '%u:%a' "$KEY")" == '0:600' ]] || fail 'private key is not root-owned mode 600'
+          sudo openssl x509 -in "$CERT" -noout -checkhost dns.usesafeweb.com >/dev/null || fail 'certificate hostname mismatch'
+          systemctl is-active --quiet AdGuardHome.service || fail 'AdGuard Home inactive before change'
+          [[ "$(sudo stat -c '%a %U:%G' "$ADMIN_SECRET")" == '600 root:root' ]] || fail 'admin credential is not root restricted'
+          ADMIN_USER="$(sudo awk -F= '$1=="ADGUARD_ADMIN_USER" {sub(/^[^=]*=/,""); print; exit}' "$ADMIN_SECRET")"
+          ADMIN_PASS="$(sudo awk -F= '$1=="ADGUARD_ADMIN_PASSWORD" {sub(/^[^=]*=/,""); print; exit}' "$ADMIN_SECRET")"
+          [[ -n "$ADMIN_USER" && -n "$ADMIN_PASS" ]] || fail 'admin credential unavailable'
+
+          # Prove the current privacy/security/filter/admin baseline before mutation.
+          sudo python3 - "$CONFIG" <<'PY'
+          import sys,yaml
+          d=yaml.safe_load(open(sys.argv[1],encoding='utf-8')) or {}
+          dns=d.get('dns') or {}; q=d.get('querylog') or {}; s=d.get('statistics') or {}; f=d.get('filtering') or {}
+          assert (d.get('http') or {}).get('address') == '127.0.0.1:3000'
+          assert list(dns.get('bind_hosts') or []) == ['127.0.0.1']
+          assert q.get('enabled') is False and q.get('file_enabled') is False
+          assert s.get('enabled') is False and dns.get('anonymize_client_ip') is True
+          assert list(dns.get('upstream_dns') or []) == ['https://dns10.quad9.net/dns-query']
+          assert bool((dns.get('edns_client_subnet') or {}).get('enabled')) is False
+          assert dns.get('ratelimit') == 20 and dns.get('refuse_any') is True
+          assert f.get('protection_enabled') is True and f.get('filtering_enabled') is True
+          assert (d.get('user_rules') or []) == []
+          print('PRECHANGE_BASELINE=PASS')
+          PY
+
+          # Install nginx without allowing the package post-install script to expose its default site.
+          if [[ -e /usr/sbin/policy-rc.d ]]; then
+            HAD_POLICY=1
+            POLICY_BACKUP="$(sudo mktemp /var/lib/usesafeweb/adguard/policy-rc.d.tsk0442.XXXXXX)"
+            sudo cp --preserve=mode,ownership,timestamps /usr/sbin/policy-rc.d "$POLICY_BACKUP"
+          fi
+          printf '#!/bin/sh\nexit 101\n' | sudo tee /usr/sbin/policy-rc.d >/dev/null
+          sudo chmod 755 /usr/sbin/policy-rc.d
+          sudo apt-get update -y >/dev/null
+          DEBIAN_FRONTEND=noninteractive sudo apt-get install -y nginx libnginx-mod-stream >/dev/null
+          sudo systemctl stop nginx.service >/dev/null 2>&1 || true
+          if [[ "$HAD_POLICY" == 1 ]]; then
+            sudo cp --preserve=mode,ownership,timestamps "$POLICY_BACKUP" /usr/sbin/policy-rc.d
+          else
+            sudo rm -f /usr/sbin/policy-rc.d
+          fi
+          pass 'nginx installed without default-site activation'
+
+          HAD_NGINX=1
+          NGINX_BACKUP="$(sudo mktemp /var/lib/usesafeweb/adguard/nginx.conf.tsk0442.XXXXXX)"
+          sudo cp --preserve=mode,ownership,timestamps /etc/nginx/nginx.conf "$NGINX_BACKUP"
+          sudo chmod 600 "$NGINX_BACKUP"
+
+          ADG_BACKUP="$(sudo mktemp /var/lib/usesafeweb/adguard/AdGuardHome.yaml.tsk0442.XXXXXX)"
+          sudo cp --preserve=mode,ownership,timestamps "$CONFIG" "$ADG_BACKUP"
+          sudo chmod 600 "$ADG_BACKUP"
+
+          # Enable only loopback unencrypted DoH as the reverse-proxy backend.
+          sudo systemctl stop AdGuardHome.service
+          ADG_CHANGED=1
+          sudo python3 - "$CONFIG" <<'PY'
+          import os,sys,yaml
+          p=sys.argv[1]; st=os.stat(p)
+          with open(p,encoding='utf-8') as fh: d=yaml.safe_load(fh) or {}
+          h=d.setdefault('http',{})
+          if h.get('address') != '127.0.0.1:3000': raise SystemExit('admin bind changed unexpectedly')
+          doh=h.setdefault('doh',{})
+          doh['insecure_enabled']=True
+          tmp=p+'.tsk0442.tmp'
+          with open(tmp,'w',encoding='utf-8') as fh:
+              yaml.safe_dump(d,fh,sort_keys=False,default_flow_style=False)
+              fh.flush(); os.fsync(fh.fileno())
+          os.chmod(tmp,st.st_mode); os.chown(tmp,st.st_uid,st.st_gid); os.replace(tmp,p)
+          PY
+          sudo systemctl start AdGuardHome.service
+          wait_admin "$ADMIN_USER" "$ADMIN_PASS" || fail 'AdGuard control API failed after local DoH enablement'
+          pass 'loopback DoH backend enabled'
+
+          # Dedicated minimal proxy: no request/access logs, no public admin route.
+          sudo tee /etc/nginx/nginx.conf >/dev/null <<'NGINX'
+          user www-data;
+          worker_processes auto;
+          pid /run/nginx.pid;
+          error_log /var/log/nginx/error.log crit;
+          include /etc/nginx/modules-enabled/*.conf;
+
+          events { worker_connections 1024; }
+
+          http {
+              access_log off;
+              server_tokens off;
+              limit_req_zone $binary_remote_addr zone=usesafeweb_doh:10m rate=20r/s;
+
+              server {
+                  listen 443 ssl default_server;
+                  ssl_reject_handshake on;
+              }
+
+              server {
+                  listen 443 ssl http2;
+                  server_name dns.usesafeweb.com;
+                  access_log off;
+                  error_log /var/log/nginx/usesafeweb-doh-error.log crit;
+                  ssl_certificate /etc/letsencrypt/live/dns.usesafeweb.com/fullchain.pem;
+                  ssl_certificate_key /etc/letsencrypt/live/dns.usesafeweb.com/privkey.pem;
+                  ssl_protocols TLSv1.2 TLSv1.3;
+                  ssl_session_tickets off;
+                  client_max_body_size 4k;
+
+                  location = /dns-query {
+                      limit_except GET POST { deny all; }
+                      limit_req zone=usesafeweb_doh burst=40 nodelay;
+                      proxy_pass http://127.0.0.1:3000;
+                      proxy_http_version 1.1;
+                      proxy_set_header Host dns.usesafeweb.com;
+                      proxy_set_header X-Forwarded-Proto https;
+                      proxy_set_header Connection "";
+                      proxy_connect_timeout 2s;
+                      proxy_send_timeout 10s;
+                      proxy_read_timeout 10s;
+                      proxy_buffering off;
+                  }
+
+                  location / { return 404; }
+              }
+          }
+
+          stream {
+              limit_conn_zone $binary_remote_addr zone=usesafeweb_dot:10m;
+              server {
+                  listen 853 ssl;
+                  proxy_pass 127.0.0.1:53;
+                  proxy_connect_timeout 2s;
+                  proxy_timeout 15s;
+                  limit_conn usesafeweb_dot 20;
+                  ssl_certificate /etc/letsencrypt/live/dns.usesafeweb.com/fullchain.pem;
+                  ssl_certificate_key /etc/letsencrypt/live/dns.usesafeweb.com/privkey.pem;
+                  ssl_protocols TLSv1.2 TLSv1.3;
+                  ssl_session_tickets off;
+                  ssl_handshake_timeout 5s;
+              }
+          }
+          NGINX
+          NGINX_CHANGED=1
+          sudo chmod 644 /etc/nginx/nginx.conf
+          sudo nginx -t
+          sudo systemctl enable nginx.service >/dev/null
+          sudo systemctl start nginx.service
+          systemctl is-active --quiet nginx.service || fail 'nginx failed to start'
+          pass 'nginx encrypted DNS proxy active'
+
+          # Local functional verification using only synthetic .invalid data.
+          python3 - <<'PY'
+          import random,struct
+          name='usesafeweb-tls-check.invalid'
+          qid=random.randrange(65536)
+          q=b''.join(bytes([len(x)])+x.encode() for x in name.split('.'))+b'\x00'
+          open('/tmp/usw-doh-query.bin','wb').write(struct.pack('!HHHHHH',qid,0x0100,1,0,0,0)+q+struct.pack('!HH',1,1))
+          PY
+          curl --silent --show-error --fail --max-time 5 \
+            --header 'Content-Type: application/dns-message' --header 'Accept: application/dns-message' \
+            --data-binary @/tmp/usw-doh-query.bin \
+            --resolve dns.usesafeweb.com:443:127.0.0.1 \
+            https://dns.usesafeweb.com/dns-query -o /tmp/usw-doh-response.bin
+          python3 - <<'PY'
+          import struct
+          q=open('/tmp/usw-doh-query.bin','rb').read(); r=open('/tmp/usw-doh-response.bin','rb').read()
+          assert len(r)>=12 and struct.unpack('!H',r[:2])[0]==struct.unpack('!H',q[:2])[0]
+          assert struct.unpack('!H',r[2:4])[0] & 0x8000
+          print('LOCAL_DOH=PASS')
+          PY
+          python3 - <<'PY'
+          import random,socket,ssl,struct
+          name='usesafeweb-dot-check.invalid'; qid=random.randrange(65536)
+          q=b''.join(bytes([len(x)])+x.encode() for x in name.split('.'))+b'\x00'
+          pkt=struct.pack('!HHHHHH',qid,0x0100,1,0,0,0)+q+struct.pack('!HH',1,1)
+          ctx=ssl.create_default_context(); raw=socket.create_connection(('127.0.0.1',853),timeout=5)
+          s=ctx.wrap_socket(raw,server_hostname='dns.usesafeweb.com'); s.sendall(struct.pack('!H',len(pkt))+pkt)
+          n=struct.unpack('!H',s.recv(2))[0]; data=b''
+          while len(data)<n:
+              chunk=s.recv(n-len(data));
+              if not chunk: break
+              data+=chunk
+          s.close(); assert len(data)==n and struct.unpack('!H',data[:2])[0]==qid and (struct.unpack('!H',data[2:4])[0]&0x8000)
+          print('LOCAL_DOT=PASS')
+          PY
+          [[ "$(curl --silent --show-error --max-time 5 --resolve dns.usesafeweb.com:443:127.0.0.1 -o /dev/null -w '%{http_code}' https://dns.usesafeweb.com/control/status)" == '404' ]] || fail 'public TLS listener exposes control path'
+          [[ "$(curl --silent --show-error --max-time 5 --resolve dns.usesafeweb.com:443:127.0.0.1 -o /dev/null -w '%{http_code}' https://dns.usesafeweb.com/)" == '404' ]] || fail 'public TLS listener exposes non-DoH surface'
+          pass 'admin/non-DoH routes are not public through proxy'
+
+          # Weak TLS versions must fail; current versions must succeed.
+          ! timeout 5 openssl s_client -connect 127.0.0.1:443 -servername dns.usesafeweb.com -tls1 </dev/null >/dev/null 2>&1 || fail 'TLS 1.0 unexpectedly accepted on 443'
+          ! timeout 5 openssl s_client -connect 127.0.0.1:443 -servername dns.usesafeweb.com -tls1_1 </dev/null >/dev/null 2>&1 || fail 'TLS 1.1 unexpectedly accepted on 443'
+          timeout 5 openssl s_client -connect 127.0.0.1:443 -servername dns.usesafeweb.com -tls1_2 </dev/null 2>/dev/null | grep -q 'Verify return code: 0 (ok)' || fail 'TLS 1.2 failed on 443'
+          timeout 5 openssl s_client -connect 127.0.0.1:443 -servername dns.usesafeweb.com -tls1_3 </dev/null 2>/dev/null | grep -q 'Verify return code: 0 (ok)' || fail 'TLS 1.3 failed on 443'
+          ! timeout 5 openssl s_client -connect 127.0.0.1:853 -servername dns.usesafeweb.com -tls1 </dev/null >/dev/null 2>&1 || fail 'TLS 1.0 unexpectedly accepted on 853'
+          ! timeout 5 openssl s_client -connect 127.0.0.1:853 -servername dns.usesafeweb.com -tls1_1 </dev/null >/dev/null 2>&1 || fail 'TLS 1.1 unexpectedly accepted on 853'
+          pass 'weak TLS protocols rejected'
+
+          # Re-prove accepted privacy, abuse, upstream, filter and admin boundaries.
+          sudo python3 - "$CONFIG" <<'PY'
+          import sys,yaml
+          d=yaml.safe_load(open(sys.argv[1],encoding='utf-8')) or {}; h=d.get('http') or {}; dns=d.get('dns') or {}; q=d.get('querylog') or {}; s=d.get('statistics') or {}; f=d.get('filtering') or {}
+          assert h.get('address')=='127.0.0.1:3000'
+          assert bool((h.get('doh') or {}).get('insecure_enabled')) is True
+          assert list(dns.get('bind_hosts') or [])==['127.0.0.1']
+          assert q.get('enabled') is False and q.get('file_enabled') is False
+          assert s.get('enabled') is False and dns.get('anonymize_client_ip') is True
+          assert list(dns.get('upstream_dns') or [])==['https://dns10.quad9.net/dns-query']
+          assert bool((dns.get('edns_client_subnet') or {}).get('enabled')) is False
+          assert dns.get('ratelimit')==20 and dns.get('refuse_any') is True
+          assert f.get('protection_enabled') is True and f.get('filtering_enabled') is True
+          print('POSTCHANGE_PRIVACY_ABUSE_FILTER=PASS')
+          PY
+          [[ "$(sudo ss -lntH 'sport = :3000' | awk '{print $4}' | sort -u)" == '127.0.0.1:3000' ]] || fail 'admin listener is not loopback-only'
+          sudo ss -lntH 'sport = :53' | awk '{print $4}' | grep -qx '127.0.0.1:53' || fail 'plain DNS TCP listener changed from loopback'
+          sudo ss -lnuH 'sport = :53' | awk '{print $4}' | grep -qx '127.0.0.1:53' || fail 'plain DNS UDP listener changed from loopback'
+          [[ ! -s /var/log/nginx/access.log ]] || fail 'nginx access log contains data'
+          pass 'admin/plain-DNS/privacy/logging boundaries preserved'
+
+          # Only now open encrypted service ports at the host firewall. Azure control plane is untouched.
+          if ! sudo ufw status | grep -Eq '^443/tcp[[:space:]]+ALLOW'; then sudo ufw allow 443/tcp comment 'UseSafeWeb DoH TLS' >/dev/null; UFW443_ADDED=1; fi
+          if ! sudo ufw status | grep -Eq '^853/tcp[[:space:]]+ALLOW'; then sudo ufw allow 853/tcp comment 'UseSafeWeb DoT TLS' >/dev/null; UFW853_ADDED=1; fi
+          sudo ufw status | grep -Eq '^443/tcp[[:space:]]+ALLOW' || fail '443 host firewall rule absent'
+          sudo ufw status | grep -Eq '^853/tcp[[:space:]]+ALLOW' || fail '853 host firewall rule absent'
+          ! sudo ufw status | grep -Eq '^53(/tcp|/udp|[[:space:]])[[:space:]]+ALLOW' || fail 'plain DNS unexpectedly public in host firewall'
+          pass 'host firewall exposes only encrypted DNS ports; plain DNS remains closed'
+
+          unset ADMIN_PASS
+          SUCCESS=1
+          echo 'TSK_0442_LOCAL_INSTALL=PASS'
