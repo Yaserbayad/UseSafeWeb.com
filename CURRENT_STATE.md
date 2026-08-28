@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T21:43:21Z
+**Updated:** 2026-08-28T21:46:42Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -542,10 +542,18 @@ ACC-0317 is satisfied: automatic behavior is limited to reliable routing/copy/al
 
 This PASS remains provisional internal L4 design evidence only. It does not make representative-parent behavioral validation true; `RSK-0002` remains OPEN; `REQ-0022` remains unresolved; LG-03/LG-04/LG-05/LG-06 remain non-PASS; account/dashboard remains deferred under EXC-0001; no implementation/build, production profile publication, participant processing, legal completion, payment, publication or launch is authorized.
 
-## Queue status after TSK-0317 acceptance
+### TSK-0307 accepted stable state
 
-`TSK-0317` is runtime **PASS**. Its direct AUTO_ALLOWED successor `TSK-0307` may become eligible subject to fresh deterministic queue recomputation; `TSK-0310` still also depends on HUMAN_ONLY TSK-0318 and other current dependencies and must not be inferred eligible solely from this PASS.
+`TSK-0307 — Create the source-backed instruction/content catalogue with applicability and review triggers`: **PASS for the provisional internal L4 content/instruction-definition acceptance under DEC-0050/CR-0003**. Catalogue `TSK_0307_SOURCE_BACKED_INSTRUCTION_CONTENT_CATALOGUE_2026-08-28.md`, blob `d717c9b3f66197abe1f3e73361633f222b817e7c`, publication commit `c8c0fa314701190a0b5ade9b8e48d6cf6b19ce36`; independent evidence `TSK_0307_SOURCE_BACKED_INSTRUCTION_CONTENT_CATALOGUE_EVIDENCE_2026-08-28.md`, blob `7bc98f1b18f3a20c9a6be75138a4704b2002bf2f`, corrected evidence commit `8aec0378f0e15ba3b2dac37edafa6591ea8ca39d`.
+
+ACC-0307 is satisfied for all nine current instruction classes: official/current source, platform/version/region applicability, owner, last verification, review trigger, en-GB plus explicit provisional tr-TR/ar variants, known limits and test references are present. The catalogue preserves Android DoT-hostname versus iPhone DoH-profile asymmetry, truthful verification/conflict/removal semantics, accountless privacy constraints and source-change review triggers. The first evidence draft contained an incorrect catalogue blob reference; that binding defect was detected before runtime mutation and corrected/read back in the accepted evidence above.
+
+This PASS defines internal L4 content semantics only. It does not prove representative-parent comprehension or localization usability; `RSK-0002` remains OPEN. Turkish/Arabic variants are provisional and do not activate markets. `REQ-0022` remains unresolved; LG-03/LG-04/LG-05/LG-06 remain non-PASS; account/dashboard remains deferred; no implementation/build, profile publication, participant processing, market activation, payment, publication or launch is authorized.
+
+## Queue status after TSK-0307 acceptance
+
+`TSK-0307` is runtime **PASS**. No successor is selected by this reconciliation write.
 
 ## Exact next authoritative step
 
-Recompute the deterministic L4 queue from current WBS/runtime/gates. Execute the highest-priority current AUTO_ALLOWED item whose hard dependencies are PASS and whose own acceptance can be proven within DEC-0050/CR-0003 without representative-participant evidence, unresolved legal fact, deferred account/persistence scope, HUMAN_ONLY action, L5/L6 build authority or public/production activation.
+Recompute the deterministic current L4 queue from WBS/runtime/relationship authority. Continue with the highest-priority eligible AUTO_ALLOWED work; if none remains, prepare the highest-impact eligible HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED item only to the permitted boundary and stop for the smallest required human disposition.
