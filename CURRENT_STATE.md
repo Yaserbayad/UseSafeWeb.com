@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T00:35:28Z  
+**Updated:** 2026-08-28T00:40:00Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -108,9 +108,23 @@ No Azure control-plane action, new VM creation, or production mutation was perfo
 
 Deterministic resumption condition: an owner-provided reachable fresh Ubuntu 24.04 LTS Azure test target in the approved West Europe boundary is handed off with approved automation access and no participant data; the endpoint/TLS inputs needed for encrypted-DNS verification are available; and an owner-managed Azure-native backup/restore interface or evidence path is available for the REQ-0052 drill. Only then may the timed clean-server restore/rebuild acceptance execute.
 
+### WAITING — TSK-0441
+
+`TSK-0441` — create public DNS records for the pilot endpoint: **WAITING on the owner/provider Cloudflare DNS zone mutation; not PASS**.
+
+The exact WBS row is L2 / A3 / `AUTO_ALLOWED` / HIGH / critical path with hard predecessors `TSK-0440; TSK-0435; TSK-0011`, all satisfied. ACC-0441 requires `dns.usesafeweb.com` to resolve to the correct pilot target from multiple resolvers with no stale/conflicting record.
+
+Read-only public DNS verification proved the record is currently absent. The system resolver, Cloudflare `1.1.1.1`, Google `8.8.8.8`, and Quad9 `9.9.9.9` all return no A, AAAA or CNAME for `dns.usesafeweb.com`, while all four resolve `srv.usesafeweb.com` to `52.157.109.120`. Corrected DNS-state run `33130366213` / job `98718208157`: PASS for inspection.
+
+Authoritative DNS-provider inspection proved the zone is hosted by Cloudflare nameservers `devin.ns.cloudflare.com` and `haley.ns.cloudflare.com`. Provider run `33130403163` / job `98718326300`: PASS. No Cloudflare account-control plugin is available in the current execution environment and no existing repository Cloudflare DNS automation/token path was found. No credential was requested or stored.
+
+Exact required provider action under the approved endpoint contract: create an **A** record `dns.usesafeweb.com` -> `52.157.109.120`, **DNS only / not proxied**, with no AAAA or CNAME for this baseline. Evidence: `TSK_0441_PUBLIC_DNS_PREFLIGHT_EVIDENCE_2026-08-28.md`, blob `a4c5365507fa9ffb9803872ace7fe78a4c9aec01`.
+
+Deterministic resumption condition: the owner/provider creates that record, or an explicitly authorized Cloudflare zone-control interface becomes available; then multi-resolver read-back must prove the intended direct target with no conflicting A/AAAA/CNAME state before PASS.
+
 ### External/provider and legal boundaries
 
-- `TSK-0441` — public `dns.usesafeweb.com` DNS record: no record is claimed created; no authorized DNS-provider account action is currently available through connected tools.
+- Cloudflare authoritative DNS is owner/provider-controlled; no account-control integration is currently available. TSK-0441 is WAITING on the exact DNS-only A-record mutation above.
 - Azure control-plane provisioning/configuration remains owner-managed; no backup vault/storage account or other Azure control-plane resource is assumed or created by project automation.
 - Owner-deferred UK representative/ICO fee planning remains unresolved until 2027-08-27 or earlier explicit reactivation; technical work does not imply validation-readiness legal gate PASS or authorize real England participant activation.
 
@@ -125,4 +139,4 @@ Deterministic resumption condition: an owner-provided reachable fresh Ubuntu 24.
 
 ## Exact next authoritative step
 
-Recompute the authoritative L2 queue with TSK-0431 held WAITING. Do not bypass its clean-target acceptance. Continue the highest-priority eligible task that does not require unavailable Azure control-plane or DNS-provider authority; record any further external boundary truthfully and continue autonomous work where safe.
+Recompute the full current L2 queue with TSK-0431 and TSK-0441 held WAITING. Continue any lower-priority eligible autonomous work that does not bypass their acceptance semantics, unavailable Azure control-plane authority, Cloudflare provider authority, legal gates, or public-service readiness controls. Stop only if no safe useful eligible work remains.
