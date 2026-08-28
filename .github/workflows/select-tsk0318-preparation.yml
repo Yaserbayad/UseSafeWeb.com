@@ -1,0 +1,73 @@
+name: Select TSK-0318 HUMAN_ONLY preparation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/select-tsk0318-preparation.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  select:
+    runs-on: [self-hosted, Linux, X64]
+    concurrency:
+      group: usesafeweb-governance-state-prod
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify exact governed pre-state
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(sha256sum /etc/machine-id | awk '{print $1}')" = "e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2"
+          test "$(git hash-object CURRENT_STATE.md)" = "3fb022ef741833b776c4a2c25d2d26e3cf121d37"
+          grep -Fq '### TSK-0307 accepted stable state' CURRENT_STATE.md
+          grep -Fq '`TSK-0307` is runtime **PASS**' CURRENT_STATE.md
+          grep -Fq 'TSK-0315' CURRENT_STATE.md
+      - name: Persist bounded TSK-0318 preparation selection
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from datetime import datetime, timezone
+          p = Path('CURRENT_STATE.md')
+          text = p.read_text(encoding='utf-8')
+          old_updated = '**Updated:** 2026-08-28T21:46:42Z'
+          if text.count(old_updated) != 1:
+              raise SystemExit('unexpected Updated pre-state')
+          updated = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
+          text = text.replace(old_updated, f'**Updated:** {updated}', 1)
+          marker = '## Queue status after TSK-0307 acceptance\n'
+          i = text.find(marker)
+          if i < 0 or text.find(marker, i + 1) >= 0:
+              raise SystemExit('queue marker mismatch')
+          tail = (
+              '## Queue status — TSK-0318 HUMAN_ONLY preparation selected\n\n'
+              '`TSK-0318 — Design the public website IA and product/setup IA as distinct but connected systems` is the selected runtime **TODO** item for **preparation only**. Its sole hard dependency `TSK-0315` is runtime PASS. The WBS classifies TSK-0318 as L4 / HIGH / A1 / HUMAN_ONLY, so AI may prepare a complete candidate and verification packet but may not perform, fabricate, or self-certify the required human design disposition.\n\n'
+              'Selection basis: TSK-0307 is PASS; nearby AUTO_ALLOWED branches remain dependency-blocked by HUMAN_ONLY or representative-parent/deferred work. TSK-0318 is a current HIGH HUMAN_ONLY dependency bottleneck for TSK-0311 and TSK-0310. TSK-0319 is independently preparable afterward and remains human-controlled.\n\n'
+              'All current fences remain unchanged: `RSK-0002` OPEN; `REQ-0022` unresolved; LG-03/LG-04/LG-05/LG-06 non-PASS; account/dashboard deferred under EXC-0001; no L5/L6 build, participant processing, legal completion, payment, publication, market activation or launch authority.\n\n'
+              '## Exact next authoritative step\n\n'
+              'Prepare the smallest complete TSK-0318 IA candidate from the accepted product brief, accountless service blueprint, friction contract, platform setup design, instruction catalogue, protection-state model, accessibility/privacy requirements and current scope boundaries. Publish and independently verify the candidate, then classify TSK-0318 WAITING on the exact HUMAN_ONLY disposition without marking PASS.\n'
+          )
+          text = text[:i] + tail
+          p.write_text(text, encoding='utf-8')
+          PY
+      - name: Verify diff and commit selection
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          grep -Fq 'TSK-0318 HUMAN_ONLY preparation selected' CURRENT_STATE.md
+          grep -Fq 'selected runtime **TODO** item for **preparation only**' CURRENT_STATE.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: select TSK-0318 HUMAN_ONLY preparation'
+          git push
