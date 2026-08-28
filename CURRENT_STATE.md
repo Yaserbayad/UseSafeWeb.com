@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T11:15:07Z  
+**Updated:** 2026-08-28T11:25:58Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -48,6 +48,7 @@ This supersedes the earlier duplicate-runner condition in which `adguartestdvm` 
 - `TSK-0443` — certificate renewal dry-run, Nginx deploy hook, daily expiry monitoring, owner alert route and recovery runbook fully verified — evidence: `TSK_0443_CERTIFICATE_RENEWAL_ALERT_EVIDENCE_2026-08-28.md`, blob `c2f3b3b35c9d8e2ec33f473d72c508ebde30348d`; production renewal run `33162046237` / job `98818564431`: PASS; external monitor run `33161991492` / job `98818390448`: PASS; final monitor blob `b565df52182e325d1d416a07be31f152078fd373`; runbook blob `881d797ea6f69879d0c8696d61e596733c38c3c5`.
 - `TSK-0514` — external cellular endpoint test and removal/recovery verification — evidence: `TSK_0514_EXTERNAL_ENDPOINT_COMPLETION_EVIDENCE_2026-08-28.md`, blob `c5d004d0e0a8c58d1056b3aaad38034ae4188a68`; owner observation: external cellular UseSafeWeb test PASS, no network-specific failure reported, and normal DNS/internet resolution restored after removing/resetting UseSafeWeb.
 - `TSK-0511` — encrypted DNS resolution verified for both accepted supported phone families: Android/native Private DNS/DoT and iPhone/iOS DoH profile, including iPhone Wi-Fi, cellular and removal/recovery — evidence: `TSK_0511_SUPPORTED_DEVICE_VERIFICATION_COMPLETION_EVIDENCE_2026-08-28.md`, blob `ecd959f93ab7dff62aba6529ce66b45d59c3ed27`, publication commit `72c21844059ad1c9ea63992fac41af7428f40906`.
+- `TSK-0512` — baseline filtering and allowed-domain behavior verified on production with fresh synthetic blocked/allowed/exception/rollback regression while privacy/upstream invariants remained intact — evidence: `TSK_0512_FILTER_REGRESSION_EVIDENCE_2026-08-28.md`, blob `cc21f4574a2ca7e721a7da961baef727350af1d3`, publication commit `91dcc6a8b1304c291a706edf6f2ebd014031a8c0`; confirmatory rerun `TSK_0512_FILTER_REGRESSION_RESULT_2026-08-28.md`, blob `0de3c62c034263f85635d5a304875d2f98c29480`, commit `63601ea302ccf1d96ad2216a0c35dd41ce5b1f1f`.
 - `TSK-0203` — supported AdGuard release installed — evidence blob `382b70ca971739712ff8ad5668d03841d5493d62`.
 - `TSK-0201` — restricted authenticated administration/change path — evidence blob `ae06672e1cebdf87d006b85b80e5a7977f4e69b9`.
 - `TSK-0204` — persistent query logging and file query logging explicitly disabled — corrected evidence: `TSK_0204_QUERYLOG_PRIVACY_EVIDENCE_2026-08-27.md`, blob `aa84d93d33d789fe4ff74ea12bcc2e5ffccd5b06`.
@@ -286,11 +287,23 @@ Completion evidence: `TSK_0511_SUPPORTED_DEVICE_VERIFICATION_COMPLETION_EVIDENCE
 
 The direct supported-device evidence gap is resolved and **ACC-0511 is satisfied. TSK-0511: PASS.** This bounded PASS does not authorize participant activation, launch, legal-gate bypass, or broader unsupported-device claims.
 
+### TSK-0512 accepted stable state
+
+`TSK-0512` — verify baseline filtering and allowed-domain behavior: **PASS**.
+
+ACC-0512 requires expected blocked tests to fail safely, allowed tests to resolve, the narrow exception workflow to work, and results to be recorded without participant browsing history. Fresh production evidence `TSK_0512_FILTER_REGRESSION_EVIDENCE_2026-08-28.md`, blob `cc21f4574a2ca7e721a7da961baef727350af1d3`, publication commit `91dcc6a8b1304c291a706edf6f2ebd014031a8c0`, executed on production host `adguardvm` from workflow source commit `217f7172efd52f467cf2bde5555c9bc65130350d`, filter-policy blob `333a4ef8cd34719d66056aa608ab19473f839634`, and runtime-state blob `c050dda72a0fa684e2efdc444d3d577289ab7d63`.
+
+The assertion-based target run directly proved the exact one-list conservative baseline; zero pre-existing user rules and whitelist filters; randomized reserved `.invalid` synthetic baseline behavior; temporary exact block as `FilteredBlackList`; matching narrow allow exception as `NotFilteredWhiteList`; exact rule rollback; unchanged filter-list state; protection/filtering/default-blocking enabled; Quad9 dns10 exact; ECS off; query logging off; IP anonymization on; statistics off; and successful post-rollback `example.com` resolution. No participant browsing or raw DNS history was retained.
+
+A later self-reporting rerun independently returned the same PASS result in `TSK_0512_FILTER_REGRESSION_RESULT_2026-08-28.md`, blob `0de3c62c034263f85635d5a304875d2f98c29480`, commit `63601ea302ccf1d96ad2216a0c35dd41ce5b1f1f`. No contradictory target evidence exists. The temporary write-capable filtering workflow was restored exactly to the original read-only blob `5ffaf1e1e77273cb77a21afd03c4800a230b45a9` at commit `6a1134fce5874cca7ed9ef1d301f051540384c02`.
+
+**ACC-0512 is fully satisfied. TSK-0512: PASS.** This bounded PASS does not authorize participant activation or later release/legal gates.
+
 ### External/provider and legal boundaries
 
 - TSK-0441 Cloudflare DNS is satisfied and independently verified. Any further Cloudflare account/zone mutation remains owner/provider-controlled unless an explicitly authorized interface becomes available.
 - Azure control-plane provisioning/configuration remains owner-managed. The corrected recovery VM handoff is independently verified, but TSK-0431 still requires an owner-managed Azure-native backup/restore path/evidence before the full recovery drill can satisfy REQ-0052.
-- TSK-0442 TLS target-device acceptance, TSK-0443 certificate renewal/expiry controls, TSK-0514 external-network/removal verification, and TSK-0511 per-supported-device verification are satisfied. None of these technical PASS states by themselves authorize participant activation.
+- TSK-0442 TLS target-device acceptance, TSK-0443 certificate renewal/expiry controls, TSK-0514 external-network/removal verification, TSK-0511 per-supported-device verification, and TSK-0512 filtering/exception/rollback verification are satisfied. None of these technical PASS states by themselves authorize participant activation.
 - Owner-deferred UK representative/ICO fee planning remains unresolved until 2027-08-27 or earlier explicit reactivation; technical work does not imply validation-readiness legal gate PASS or authorize real England participant activation.
 
 ## Runtime safeguards
@@ -299,14 +312,12 @@ The direct supported-device evidence gap is resolved and **ACC-0511 is satisfied
 - PASS requires all applicable current acceptance criteria with durable/reconstructable proof.
 - Current contradictory direct evidence reopens stale PASS rather than being ignored.
 - No secrets, credentials, password hashes, private keys, unnecessary personal data, or raw DNS query history may be exported to GitHub.
-- Plain DNS 53 remains non-public. TSK-0442 TLS, TSK-0443 certificate renewal/expiry controls, TSK-0514 external-network/removal verification and TSK-0511 supported-device verification are PASS, but broader participant/public readiness remains gated by validation, privacy/legal and activation evidence.
+- Plain DNS 53 remains non-public. TSK-0442 TLS, TSK-0443 certificate renewal/expiry controls, TSK-0514 external-network/removal verification, TSK-0511 supported-device verification and TSK-0512 filtering regression are PASS, but broader participant/public readiness remains gated by validation, privacy/legal and activation evidence.
 - Azure control-plane remains owner-managed; runner autonomy applies to handed-off VM/repository-authorized tasks only after target identity and scope are verified.
 
 ## Queue status after current reconciliation
 
-TSK-0514 and TSK-0511 are runtime PASS with durable completion evidence. The earlier dependency evaluation run `33164135015` / job `98825388572` established TSK-0511 as the sole candidate released by TSK-0514; that candidate is now complete.
-
-No downstream task is selected from memory or from the stale pre-TSK-0511 queue result. The governed queue must be recomputed from the canonical WBS/relationship authority against this updated runtime PASS set before any later ordinary work is dispatched.
+TSK-0511 and TSK-0512 are runtime PASS with durable completion evidence. No downstream task is selected from memory or from the stale pre-TSK-0512 queue result. The governed queue must be recomputed from the canonical WBS/relationship authority against this updated runtime PASS set before any later ordinary work is dispatched.
 
 Current explicit WAITING boundary:
 
@@ -314,4 +325,4 @@ Current explicit WAITING boundary:
 
 ## Exact next authoritative step
 
-Recompute current eligible work deterministically from `Plans/Master/WBS/master-wbs.csv`, `Plans/Master/RELATIONSHIP_INDEX.yaml`, applicable gates/constraints/interfaces and this runtime state now that TSK-0511 is PASS. Continue the highest-priority safe `AUTO_ALLOWED` work if one exists. Separately, TSK-0431 remains WAITING until the owner identifies/provides the Azure-native backup/restore path required by REQ-0052. Do not bypass participant-activation, legal, Azure control-plane, provider, recovery, privacy or validation gates.
+Recompute current eligible work deterministically from `Plans/Master/WBS/master-wbs.csv`, `Plans/Master/RELATIONSHIP_INDEX.yaml`, applicable gates/constraints/interfaces and this runtime state now that TSK-0512 is PASS. Continue the highest-priority safe `AUTO_ALLOWED` work if one exists. Separately, TSK-0431 remains WAITING until the owner identifies/provides the Azure-native backup/restore path required by REQ-0052. Do not bypass participant-activation, legal, Azure control-plane, provider, recovery, privacy or validation gates.
