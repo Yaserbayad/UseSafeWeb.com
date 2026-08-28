@@ -1,0 +1,63 @@
+name: Select TSK-0145
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/select-tsk0145.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  select:
+    runs-on: [self-hosted, Linux, X64]
+    concurrency:
+      group: usesafeweb-governance-state-prod
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify queue and select TSK-0145
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(sha256sum /etc/machine-id | awk '{print $1}')" = "e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2"
+          test "$(git hash-object CURRENT_STATE.md)" = "53a0a89b462973206fa5172345ca0a5c7d1abd72"
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "dce5b829c4d447eac180ae1e896e0019292cf971"
+          test "$(git hash-object TSK_0045_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md)" = "0ef517e9ab8d47d96213d2baa0de87abd6fa8fb5"
+          python3 - <<'PY'
+          import csv, pathlib, re
+          from datetime import datetime, timezone
+          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',encoding='utf-8-sig',newline='')))
+          by={r['Task_ID']:r for r in rows}
+          t=by['TSK-0145']
+          assert [x.strip() for x in t['Dependencies'].split(';') if x.strip()]==['TSK-0313','TSK-0045','TSK-0497','TSK-0146']
+          assert t['Lifecycle_Stage']=='L4' and t['Priority']=='MEDIUM'
+          assert t['AI_Capability_A0_A4']=='A3' and t['Action_Authority']=='AUTO_ALLOWED'
+          acc=t['Acceptance_Criteria']
+          for phrase in ['Every requirement has source','rationale','priority','acceptance test','owner','release target','status','orphan requirements']:
+              assert phrase in acc, phrase
+          q=pathlib.Path('TSK_0045_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md').read_text()
+          seg=q.split('### TSK-0145',1)[1]
+          assert '- **Preflight flags:** (none)' in seg
+          p=pathlib.Path('CURRENT_STATE.md')
+          text=p.read_text()
+          for dep in ['TSK-0313','TSK-0045','TSK-0497','TSK-0146']:
+              assert (f'### {dep} accepted stable state' in text) or (dep=='TSK-0146'), dep
+          assert 'No next task is selected by this write' in text
+          now=datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
+          text=re.sub(r'\*\*Updated:\*\* [^\n]+',f'**Updated:** {now}',text,count=1)
+          pos=text.rfind('\n## Queue status after current reconciliation')
+          assert pos>=0
+          text=text[:pos].rstrip()+'''\n\n## Queue status after current reconciliation\n\nThe TSK-0045 post-PASS queue was reread against current acceptance and gates. `TSK-0187` remains ineligible because it requires representative-parent evidence. `TSK-0140` remains ineligible for PASS because owner/multi-role review evidence is absent. `TSK-0145` is the only dependency-ready AUTO_ALLOWED L4 candidate with no preflight flag.\n\n- **Selected next: `TSK-0145 — Build requirement-to-evidence traceability matrix`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).\n- Hard dependencies: `TSK-0313; TSK-0045; TSK-0497; TSK-0146` — dependency readiness established by the generated queue/current conservative PASS set; current runtime directly proves TSK-0313/0045/0497 and canonical planning state retains TSK-0146.\n- ACC-0145: every requirement has source, rationale, priority, acceptance test, owner, release target, and status; orphan requirements are removed or explicitly authorised.\n- Selection boundary: generate/verify traceability from canonical sources without creating a second mutable requirement/task state store. No requirement is silently changed, approved or removed by this task.\n\n## Exact next authoritative step\n\nExecute bounded TSK-0145: load the canonical requirement register and WBS/interface/decision ownership needed to resolve ACC fields; generate a derived requirement-to-evidence traceability artifact with source/rationale/priority/acceptance/owner/release-target/status plus implementing tasks and current evidence disposition; identify every orphan/missing mapping explicitly; validate coverage against the source requirement set; persist/read back independent ACC-0145 evidence; reconcile runtime; then recompute.\n'''
+          p.write_text(text)
+          PY
+          git diff --check
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add CURRENT_STATE.md
+          git commit -m "state: select TSK-0145"
+          git push
