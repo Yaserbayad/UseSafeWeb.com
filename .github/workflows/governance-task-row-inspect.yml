@@ -25,54 +25,80 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Recompute queue after TSK-0430 PASS
+      - name: Inspect TSK-0207 and TSK-0431 authority
         shell: bash
         run: |
           set -Eeuo pipefail
           [[ "$(hostname -s)" == "adguardvm" ]]
           python3 - <<'PY'
           import csv, json, re
-          path='Plans/Master/WBS/master-wbs.csv'
-          with open(path, newline='', encoding='utf-8-sig') as f:
-              reader=csv.DictReader(f)
-              rows=list(reader)
-              print('WBS_FIELDS='+json.dumps(reader.fieldnames, ensure_ascii=False))
-          by_id={r.get('Task_ID','').strip():r for r in rows if r.get('Task_ID','').strip()}
 
-          focus={'TSK-0430','TSK-0431','TSK-0441','TSK-0442','TSK-0443','TSK-0511','TSK-0514'}
-          for task_id in list(focus):
-              if task_id in by_id:
-                  focus.update(x.strip() for x in (by_id[task_id].get('Dependencies') or '').split(';') if x.strip())
-          for task_id in sorted(focus):
-              if task_id in by_id:
-                  print(task_id.replace('-','_')+'_WBS_ROW='+json.dumps(by_id[task_id], sort_keys=True, ensure_ascii=False))
-              else:
-                  print(task_id.replace('-','_')+'_WBS_ROW=MISSING')
+          with open('Plans/Master/WBS/master-wbs.csv', newline='', encoding='utf-8-sig') as f:
+              rows=list(csv.DictReader(f))
+          by_id={r['Task_ID'].strip():r for r in rows if (r.get('Task_ID') or '').strip()}
 
-          for target in ['TSK-0430','TSK-0431','TSK-0441','TSK-0442','TSK-0443','TSK-0511','TSK-0514']:
+          focus={'TSK-0207','TSK-0431','TSK-0441'}
+          for tid in list(focus):
+              r=by_id.get(tid)
+              if r:
+                  focus.update(x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip())
+          for tid in sorted(focus):
+              print(tid.replace('-','_')+'_WBS_ROW='+json.dumps(by_id.get(tid), sort_keys=True, ensure_ascii=False))
+
+          for target in ['TSK-0207','TSK-0431']:
               successors=[]
               for r in rows:
                   deps=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
                   if target in deps:
-                      successors.append(r['Task_ID'].strip())
-              print(target.replace('-','_')+'_DIRECT_SUCCESSOR_IDS='+','.join(successors))
+                      successors.append((r['Task_ID'].strip(),r.get('Title',''),r.get('Priority',''),r.get('Critical_Path','')))
+              print(target.replace('-','_')+'_SUCCESSORS='+json.dumps(successors, ensure_ascii=False))
 
-          with open('CURRENT_STATE.md', encoding='utf-8') as f:
-              state=f.read()
-          pass_ids=set(re.findall(r'`(TSK-\d+)`\s+—', state.split('### External/provider and legal boundaries')[0]))
-          # Historical foundation TSK-0011 is explicitly established as satisfied by current runtime/task evidence.
-          pass_ids.add('TSK-0011')
-          print('RUNTIME_PASS_IDS='+','.join(sorted(pass_ids)))
+          ids=set()
+          for tid in ['TSK-0207','TSK-0431']:
+              r=by_id[tid]
+              for field in ['Requirement_Reference','Interface_Reference','Risk_Reference','Acceptance_ID','Verification_ID','Evidence_ID']:
+                  ids.update(x.strip() for x in re.split(r'[;,]', r.get(field,'') or '') if x.strip())
+          print('REFERENCE_IDS='+','.join(sorted(ids)))
 
-          ready=[]
-          for r in rows:
-              tid=(r.get('Task_ID') or '').strip()
-              if not tid or tid in pass_ids:
+          files=[
+              'Plans/Master/Registers/REQUIREMENTS.md',
+              'Plans/Master/Registers/CONSTRAINTS.md',
+              'Plans/Master/Registers/INTERFACES.md',
+              'Plans/Master/Registers/RISKS.md',
+              'Plans/Master/Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md',
+              'Plans/Master/Registers/GATES.md',
+              'Plans/Master/Registers/DECISIONS_TRIGGERS.md',
+          ]
+          # Add CON references explicitly from both task rows.
+          for tid in ['TSK-0207','TSK-0431']:
+              r=by_id[tid]
+              ids.update(re.findall(r'CON-\d+', r.get('Requirement_Reference','') or ''))
+              ids.update(re.findall(r'CON-\d+', r.get('Preconditions','') or ''))
+          ids.update(['REQ-0049','REQ-0050','REQ-0052','CON-0004','CON-0005','CON-0019','INT-0014','RSK-0048'])
+
+          def snippets(text, rid):
+              lines=text.splitlines()
+              hits=[i for i,l in enumerate(lines) if rid in l]
+              out=[]
+              for i in hits[:4]:
+                  a=max(0,i-2); b=min(len(lines),i+7)
+                  out.append('\n'.join(lines[a:b]))
+              return '\n---\n'.join(out)
+
+          for path in files:
+              try:
+                  text=open(path,encoding='utf-8').read()
+              except FileNotFoundError:
                   continue
-              deps=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
-              if all(d in pass_ids for d in deps):
-                  ready.append(r)
-          print('DEPENDENCY_READY_COUNT='+str(len(ready)))
-          for r in ready:
-              print('DEPENDENCY_READY_ROW='+json.dumps(r, sort_keys=True, ensure_ascii=False))
+              for rid in sorted(ids):
+                  if rid in text:
+                      s=snippets(text,rid)
+                      if s:
+                          print('REF_SNIPPET '+path+' '+rid+'\n'+s)
+
+          graph='Plans/Master/RELATIONSHIP_INDEX.yaml'
+          text=open(graph,encoding='utf-8').read()
+          for tid in ['TSK-0207','TSK-0431']:
+              s=snippets(text,tid)
+              print('GRAPH_SNIPPET '+tid+'\n'+s)
           PY
