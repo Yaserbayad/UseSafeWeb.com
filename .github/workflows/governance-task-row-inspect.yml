@@ -10,162 +10,125 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
 jobs:
-  external:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
+  audit:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 4
     steps:
-      - name: Checkout exact main commit
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 1
-          persist-credentials: false
-      - name: Print exact governed task rows
+      - name: Audit exact production network and TLS state
         shell: bash
         run: |
           set -Eeuo pipefail
+          sudo -n true
+          MID="$(sha256sum /etc/machine-id | awk '{print $1}')"
+          [[ "$MID" == 'e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2' ]]
           python3 - <<'PY'
-          import csv,json
-          wanted={'TSK-0431','TSK-0437','TSK-0442','TSK-0443','TSK-0444','TSK-0445','TSK-0446','TSK-0447'}
-          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',newline='',encoding='utf-8-sig')))
-          found=0
-          for r in rows:
-              if (r.get('Task_ID') or '').strip() in wanted:
-                  keys=['Task_ID','Title','Lifecycle_Stage','Priority','Critical_Path','Plan_Status','Execution_State','Dependencies','Action_Authority','Acceptance_ID','Acceptance_Criteria','Verification_ID','Requirement_Reference','Risk_Reference']
-                  print('WBS='+json.dumps({k:r.get(k,'') for k in keys},sort_keys=True,ensure_ascii=False))
-                  found+=1
-          assert found==len(wanted),(found,len(wanted))
-          PY
-      - name: Verify external DNS DoH DoT TLS and closed plain DNS
-        shell: bash
-        run: |
-          set -Eeuo pipefail
-          HOST=dns.usesafeweb.com
-          EXPECTED_IP=52.157.109.120
-          python3 - <<'PY'
-          import socket
-          host='dns.usesafeweb.com'; expected='52.157.109.120'
-          ips=sorted({x[4][0] for x in socket.getaddrinfo(host,None,socket.AF_INET,socket.SOCK_STREAM)})
-          assert ips==[expected],ips
-          print('EXTERNAL_A='+','.join(ips))
-          print('EXTERNAL_DNS_TARGET=PASS')
-          PY
-          timeout 8 openssl s_client -connect "$HOST:443" -servername "$HOST" -verify_hostname "$HOST" -verify_return_error </dev/null 2>/tmp/usw-sclient.err | grep -q 'Verify return code: 0 (ok)'
-          echo 'EXTERNAL_TLS_443_CHAIN_HOSTNAME=PASS'
-          ! timeout 5 openssl s_client -connect "$HOST:443" -servername "$HOST" -tls1 </dev/null >/dev/null 2>&1
-          ! timeout 5 openssl s_client -connect "$HOST:443" -servername "$HOST" -tls1_1 </dev/null >/dev/null 2>&1
-          timeout 5 openssl s_client -connect "$HOST:443" -servername "$HOST" -tls1_2 </dev/null 2>/dev/null | grep -q 'Verify return code: 0 (ok)'
-          timeout 5 openssl s_client -connect "$HOST:443" -servername "$HOST" -tls1_3 </dev/null 2>/dev/null | grep -q 'Verify return code: 0 (ok)'
-          echo 'EXTERNAL_TLS_PROTOCOL_POLICY=PASS'
-          python3 - <<'PY'
-          import random,ssl,socket,struct,urllib.request
-          host='dns.usesafeweb.com'
-          def query(name):
-              qid=random.randrange(65536)
-              q=b''.join(bytes([len(x)])+x.encode() for x in name.split('.'))+b'\x00'
-              pkt=struct.pack('!HHHHHH',qid,0x0100,1,0,0,0)+q+struct.pack('!HH',1,1)
-              return qid,pkt
-          qid,pkt=query('usesafeweb-external-doh.invalid')
-          req=urllib.request.Request('https://'+host+'/dns-query',data=pkt,method='POST',headers={'Content-Type':'application/dns-message','Accept':'application/dns-message'})
-          with urllib.request.urlopen(req,timeout=8,context=ssl.create_default_context()) as r:
-              body=r.read(); ctype=r.headers.get_content_type()
-          assert ctype=='application/dns-message',ctype
-          assert len(body)>=12 and struct.unpack('!H',body[:2])[0]==qid and (struct.unpack('!H',body[2:4])[0]&0x8000)
-          print('EXTERNAL_DOH=PASS')
-          for path in ('/','/control/status'):
-              req=urllib.request.Request('https://'+host+path)
-              try:
-                  urllib.request.urlopen(req,timeout=8,context=ssl.create_default_context())
-              except urllib.error.HTTPError as e:
-                  assert e.code==404,(path,e.code)
-              else:
-                  raise SystemExit('unexpected public non-DoH route: '+path)
-          print('EXTERNAL_ADMIN_SURFACE=PASS')
-          qid,pkt=query('usesafeweb-external-dot.invalid')
-          ctx=ssl.create_default_context(); raw=socket.create_connection((host,853),timeout=8)
-          s=ctx.wrap_socket(raw,server_hostname=host)
-          s.sendall(struct.pack('!H',len(pkt))+pkt)
-          h=s.recv(2); assert len(h)==2
-          n=struct.unpack('!H',h)[0]; body=b''
-          while len(body)<n:
-              chunk=s.recv(n-len(body))
-              if not chunk: break
-              body+=chunk
-          s.close()
-          assert len(body)==n and struct.unpack('!H',body[:2])[0]==qid and (struct.unpack('!H',body[2:4])[0]&0x8000)
-          print('EXTERNAL_DOT=PASS')
-          # Plain DNS must remain unavailable externally.
-          tcp=socket.socket(socket.AF_INET,socket.SOCK_STREAM); tcp.settimeout(3)
-          rc=tcp.connect_ex((host,53)); tcp.close(); assert rc!=0,rc
-          qid,pkt=query('usesafeweb-external-plain.invalid')
-          udp=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); udp.settimeout(3); udp.sendto(pkt,(host,53))
+          import json,urllib.request
+          def get(path):
+              req=urllib.request.Request('http://169.254.169.254/metadata/'+path,headers={'Metadata':'true'})
+              with urllib.request.urlopen(req,timeout=3) as r: return json.load(r)
+          c=get('instance/compute?api-version=2021-02-01')
+          assert c.get('name')=='adguardvm',c.get('name')
+          assert c.get('location')=='westeurope',c.get('location')
+          assert c.get('vmId')=='bc7f566f-7231-41fb-9fdd-49cf190fd5e1',c.get('vmId')
+          print('PRODUCTION_AZURE_IDENTITY=PASS')
           try:
-              udp.recvfrom(4096)
-          except socket.timeout:
+              n=get('instance/network/interface/0/ipv4/ipAddress/0?api-version=2021-02-01')
+              print('AZURE_PRIVATE_IP='+str(n.get('privateIpAddress','')))
+              print('AZURE_PUBLIC_IP='+str(n.get('publicIpAddress','')))
+          except Exception as e:
+              print('AZURE_NETWORK_METADATA_ERROR='+type(e).__name__)
+          PY
+          . /etc/os-release
+          [[ "$ID" == ubuntu && "$VERSION_ID" == 24.04 ]]
+          echo 'OS_BASELINE=PASS'
+          systemctl is-active --quiet AdGuardHome.service
+          systemctl is-active --quiet nginx.service
+          systemctl is-enabled --quiet nginx.service
+          echo 'SERVICE_STATE=PASS'
+          SIM="$(sudo apt-get -s full-upgrade 2>/dev/null || true)"
+          ! grep -q '^Inst ' <<<"$SIM"
+          [[ ! -e /var/run/reboot-required ]]
+          echo 'PATCH_STATE=PASS'
+          echo 'LISTENERS_BEGIN'
+          sudo ss -H -lntup | grep -E '(:22|:53|:443|:853|:3000)([[:space:]]|$)' | sort -u || true
+          echo 'LISTENERS_END'
+          sudo ss -lntH 'sport = :443' | grep -Eq '(^|[[:space:]])(0\.0\.0\.0|\*|\[::\]|:::):443'
+          sudo ss -lntH 'sport = :853' | grep -Eq '(^|[[:space:]])(0\.0\.0\.0|\*|\[::\]|:::):853'
+          [[ "$(sudo ss -lntH 'sport = :3000' | awk '{print $4}' | sort -u)" == '127.0.0.1:3000' ]]
+          sudo ss -lntH 'sport = :53' | awk '{print $4}' | grep -qx '127.0.0.1:53'
+          sudo ss -lnuH 'sport = :53' | awk '{print $4}' | grep -qx '127.0.0.1:53'
+          echo 'LISTENER_BINDINGS=PASS'
+          echo 'UFW_BEGIN'
+          sudo ufw status verbose
+          echo 'UFW_END'
+          sudo ufw status verbose | grep -q '^Status: active'
+          sudo ufw status verbose | grep -q '^Default: deny (incoming), allow (outgoing)'
+          sudo ufw status | grep -Eq '^443/tcp[[:space:]]+ALLOW'
+          sudo ufw status | grep -Eq '^853/tcp[[:space:]]+ALLOW'
+          ! sudo ufw status | grep -Eq '^53(/tcp|/udp|[[:space:]])[[:space:]]+ALLOW'
+          echo 'UFW_ENCRYPTED_DNS_ONLY=PASS'
+          sudo nginx -t >/dev/null
+          sudo python3 - <<'PY'
+          t=open('/etc/nginx/nginx.conf',encoding='utf-8').read()
+          for s in ['access_log off;','location = /dns-query {','proxy_pass http://127.0.0.1:3000;','location / { return 404; }','listen 853 ssl;','ssl_protocols TLSv1.2 TLSv1.3;']:
+              assert s in t,s
+          assert 'include /etc/nginx/sites-enabled/' not in t
+          print('NGINX_PATH_RESTRICTION=PASS')
+          PY
+          CERT=/etc/letsencrypt/live/dns.usesafeweb.com/fullchain.pem
+          KEY=/etc/letsencrypt/live/dns.usesafeweb.com/privkey.pem
+          sudo openssl x509 -in "$CERT" -noout -checkhost dns.usesafeweb.com >/dev/null
+          [[ "$(sudo stat -Lc '%u:%a' "$KEY")" == '0:600' ]]
+          sudo openssl x509 -in "$CERT" -noout -checkend 2592000 >/dev/null
+          echo 'CERTIFICATE_KEY_STATE=PASS'
+          timeout 5 openssl s_client -connect 127.0.0.1:443 -servername dns.usesafeweb.com -verify_hostname dns.usesafeweb.com -verify_return_error </dev/null 2>/dev/null | grep -q 'Verify return code: 0 (ok)'
+          timeout 5 openssl s_client -connect 127.0.0.1:853 -servername dns.usesafeweb.com -verify_hostname dns.usesafeweb.com -verify_return_error </dev/null 2>/dev/null | grep -q 'Verify return code: 0 (ok)'
+          echo 'LOCAL_TLS_443_853=PASS'
+          python3 - <<'PY'
+          import random,ssl,socket,struct,urllib.request,urllib.error
+          host='dns.usesafeweb.com'
+          def q(name):
+              qid=random.randrange(65536)
+              wire=b''.join(bytes([len(x)])+x.encode() for x in name.split('.'))+b'\x00'
+              pkt=struct.pack('!HHHHHH',qid,0x0100,1,0,0,0)+wire+struct.pack('!HH',1,1)
+              return qid,pkt
+          qid,pkt=q('usesafeweb-local-doh-recheck.invalid')
+          req=urllib.request.Request('https://'+host+'/dns-query',data=pkt,method='POST',headers={'Content-Type':'application/dns-message','Accept':'application/dns-message'})
+          class LocalHTTPS(urllib.request.HTTPSHandler):
               pass
-          else:
-              raise SystemExit('external UDP/53 unexpectedly answered')
-          udp.close()
-          print('EXTERNAL_PLAIN_DNS_CLOSED=PASS')
+          # urllib cannot override DNS cleanly; use direct loopback TLS socket for DoT below and curl handles DoH outside Python.
+          qid,pkt=q('usesafeweb-local-dot-recheck.invalid')
+          ctx=ssl.create_default_context(); raw=socket.create_connection(('127.0.0.1',853),timeout=5)
+          s=ctx.wrap_socket(raw,server_hostname=host); s.sendall(struct.pack('!H',len(pkt))+pkt)
+          h=s.recv(2); assert len(h)==2; n=struct.unpack('!H',h)[0]; body=b''
+          while len(body)<n:
+              c=s.recv(n-len(body))
+              if not c: break
+              body+=c
+          s.close(); assert len(body)==n and struct.unpack('!H',body[:2])[0]==qid and (struct.unpack('!H',body[2:4])[0]&0x8000)
+          print('LOCAL_DOT_FUNCTIONAL=PASS')
           PY
-          echo 'TSK_0442_EXTERNAL_TECHNICAL_PROBE=PASS'
-
-  probe_a:
-    runs-on: [self-hosted, linux, x64]
-    timeout-minutes: 3
-    steps:
-      - name: Fingerprint self-hosted runner A
-        shell: bash
-        env:
-          RUNNER_CONTEXT_NAME: ${{ runner.name }}
-        run: |
-          set -Eeuo pipefail
-          sudo -n true
-          echo "RUNNER_NAME=$RUNNER_CONTEXT_NAME"
-          echo "MACHINE_NAME=$(hostname -s)"
-          echo "MACHINE_ID_SHA256=$(sha256sum /etc/machine-id | awk '{print $1}')"
-          . /etc/os-release
-          echo "OS_ID=$ID"
-          echo "OS_VERSION_ID=$VERSION_ID"
           python3 - <<'PY'
-          import json,urllib.request
-          req=urllib.request.Request('http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01',headers={'Metadata':'true'})
-          with urllib.request.urlopen(req,timeout=3) as r: d=json.load(r)
-          print('AZURE_NAME='+str(d.get('name','')))
-          print('AZURE_LOCATION='+str(d.get('location','')))
-          print('AZURE_VM_ID='+str(d.get('vmId','')))
+          import random,struct
+          name='usesafeweb-local-doh-recheck.invalid'; qid=random.randrange(65536)
+          wire=b''.join(bytes([len(x)])+x.encode() for x in name.split('.'))+b'\x00'
+          open('/tmp/usw-doh-recheck.bin','wb').write(struct.pack('!HHHHHH',qid,0x0100,1,0,0,0)+wire+struct.pack('!HH',1,1))
+          open('/tmp/usw-doh-qid','w').write(str(qid))
           PY
-          echo "ADGUARD_ACTIVE=$(systemctl is-active AdGuardHome.service 2>/dev/null || true)"
-          echo "NGINX_ACTIVE=$(systemctl is-active nginx.service 2>/dev/null || true)"
-          sleep 12
-          echo 'RUNNER_FINGERPRINT=PASS'
-
-  probe_b:
-    runs-on: [self-hosted, linux, x64]
-    timeout-minutes: 3
-    steps:
-      - name: Fingerprint self-hosted runner B
-        shell: bash
-        env:
-          RUNNER_CONTEXT_NAME: ${{ runner.name }}
-        run: |
-          set -Eeuo pipefail
-          sudo -n true
-          echo "RUNNER_NAME=$RUNNER_CONTEXT_NAME"
-          echo "MACHINE_NAME=$(hostname -s)"
-          echo "MACHINE_ID_SHA256=$(sha256sum /etc/machine-id | awk '{print $1}')"
-          . /etc/os-release
-          echo "OS_ID=$ID"
-          echo "OS_VERSION_ID=$VERSION_ID"
+          curl --silent --show-error --fail --max-time 5 --resolve dns.usesafeweb.com:443:127.0.0.1 --header 'Content-Type: application/dns-message' --header 'Accept: application/dns-message' --data-binary @/tmp/usw-doh-recheck.bin https://dns.usesafeweb.com/dns-query -o /tmp/usw-doh-recheck.out
           python3 - <<'PY'
-          import json,urllib.request
-          req=urllib.request.Request('http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01',headers={'Metadata':'true'})
-          with urllib.request.urlopen(req,timeout=3) as r: d=json.load(r)
-          print('AZURE_NAME='+str(d.get('name','')))
-          print('AZURE_LOCATION='+str(d.get('location','')))
-          print('AZURE_VM_ID='+str(d.get('vmId','')))
+          import struct
+          qid=int(open('/tmp/usw-doh-qid').read()); b=open('/tmp/usw-doh-recheck.out','rb').read()
+          assert len(b)>=12 and struct.unpack('!H',b[:2])[0]==qid and (struct.unpack('!H',b[2:4])[0]&0x8000)
+          print('LOCAL_DOH_FUNCTIONAL=PASS')
           PY
-          echo "ADGUARD_ACTIVE=$(systemctl is-active AdGuardHome.service 2>/dev/null || true)"
-          echo "NGINX_ACTIVE=$(systemctl is-active nginx.service 2>/dev/null || true)"
-          sleep 12
-          echo 'RUNNER_FINGERPRINT=PASS'
+          rm -f /tmp/usw-doh-recheck.bin /tmp/usw-doh-recheck.out /tmp/usw-doh-qid
+          [[ "$(curl --silent --show-error --max-time 5 --resolve dns.usesafeweb.com:443:127.0.0.1 -o /dev/null -w '%{http_code}' https://dns.usesafeweb.com/control/status)" == 404 ]]
+          [[ "$(curl --silent --show-error --max-time 5 --resolve dns.usesafeweb.com:443:127.0.0.1 -o /dev/null -w '%{http_code}' https://dns.usesafeweb.com/)" == 404 ]]
+          echo 'PUBLIC_ROUTE_RESTRICTION_LOCAL=PASS'
+          echo 'PRODUCTION_POST_INGRESS_AUDIT=PASS'
