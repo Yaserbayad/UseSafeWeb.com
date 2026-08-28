@@ -25,35 +25,37 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Recompute L2 queue after TSK-0166 PASS
+      - name: Independent TSK-0168 screener audit
         shell: bash
         run: |
           set -Eeuo pipefail
           [[ "$(hostname -s)" == "adguardvm" ]]
           python3 - <<'PY'
-          import csv,json,re
-          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',newline='',encoding='utf-8-sig')))
-          state=open('CURRENT_STATE.md',encoding='utf-8').read()
-          pass_block=state.split('### PASS',1)[1].split('### TSK-0204 corrected stable state',1)[0]
-          runtime_pass=set(re.findall(r'`(TSK-\d+)`\s+—',pass_block)); runtime_pass.add('TSK-0011')
-          runtime_wait=set(re.findall(r'### WAITING — (TSK-\d+)',state))
-          planning_pass={r['Task_ID'].strip() for r in rows if (r.get('Execution_State') or '').strip()=='PASS'}
-          satisfied=runtime_pass|planning_pass
-          rank={'CRITICAL':0,'HIGH':1,'MEDIUM':2,'LOW':3}
-          ready=[]
-          for i,r in enumerate(rows):
-              tid=(r.get('Task_ID') or '').strip()
-              if not tid or tid in runtime_pass or tid in runtime_wait: continue
-              if (r.get('Lifecycle_Stage') or '').strip()!='L2': continue
-              if (r.get('Action_Authority') or '').strip()!='AUTO_ALLOWED': continue
-              if (r.get('Plan_Status') or '').strip() not in {'PLANNED','ACTIVE'}: continue
-              deps=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
-              if all(d in satisfied for d in deps):
-                  ready.append((rank.get((r.get('Priority') or '').strip(),9),i,r,deps))
-          ready.sort(key=lambda x:(x[0],x[1],x[2]['Task_ID']))
-          print('READY_COUNT='+str(len(ready)))
-          for _,__,r,deps in ready[:30]:
-              out={k:r.get(k,'') for k in ['Task_ID','Title','Priority','Critical_Path','Plan_Status','Execution_State','Dependencies','Trigger','Preconditions','Action_Authority','Acceptance_ID','Acceptance_Criteria','Verification_ID','Evidence_ID','Required_Tools_or_Access','Requirement_Reference','Interface_Reference','Risk_Reference','Notes','Source_Reference']}
-              out['PlanningOnlySatisfiedDeps']=[d for d in deps if d in planning_pass and d not in runtime_pass]
-              print('READY='+json.dumps(out,sort_keys=True,ensure_ascii=False))
+          import subprocess
+          p='EXPERIMENT_01_QUALIFICATION_SCREENER.md'
+          text=open(p,encoding='utf-8').read()
+          blob=subprocess.check_output(['git','hash-object',p],text=True).strip()
+          assert blob=='d35d3e0abfc3882d648df3c0c7458e216853b592',blob
+          required=[
+            'Q1 — Caregiver setup responsibility','Q2 — First-phone life stage','Q3 — Phone timing',
+            'Q4 — Platform','Q5 — Willingness to make real appropriate changes','Q6 — Non-surveillance fit',
+            "Do not ask for the child's name or exact date of birth.",
+            'Do not collect an address, postcode, school or precise location in this screener.',
+            'Do not add free-text rejection notes.',
+            '`VALIDATION_READINESS_GATE.md` must be PASS before this screener is used with a real England participant.',
+            '20–30 qualified England parents/caregivers','Wave A first 10 and Wave B remaining 10–20'
+          ]
+          for s in required: assert s in text,'missing '+s
+          protocol=open('EXPERIMENT_01_CONCIERGE_VALIDATION.md',encoding='utf-8').read()
+          for s in ['responsible for setting up the child’s phone','child roughly 10–12','within about 30 days','iPhone or Android','willing to make real appropriate safety-setting changes','not primarily seeking covert surveillance/maximal monitoring']:
+              assert s in protocol,'protocol predecessor gap '+s
+          # The only output fields must be controlled fields already present in the accepted TSK-0166 schema.
+          schema=open('EXPERIMENT_01_PARTICIPANT_RECORD_SCHEMA.md',encoding='utf-8').read()
+          outputs=['qualification_result','qualification_reason_code','caregiver_setup_responsibility','child_stage_band','phone_timing_band','device_family','willing_real_changes','non_surveillance_fit']
+          for f in outputs: assert '`'+f+'`' in text and '`'+f+'`' in schema,'output mismatch '+f
+          print('TSK_0164_DIRECT_PREDECESSOR_PROOF=PASS')
+          print('TSK_0168_ACCEPTANCE_ITEM_COUNT=8')
+          print('TSK_0168_OUTPUT_SCHEMA_ALIGNMENT=PASS')
+          print('TSK_0168_SCREENER_BLOB='+blob)
+          print('TSK_0168_INDEPENDENT_AUDIT=PASS')
           PY
