@@ -51,22 +51,16 @@ jobs:
           i = text.find(marker)
           if i < 0 or text.find(marker, i + 1) >= 0:
               raise SystemExit('TSK-0317 stable-state marker mismatch')
-          tail = '''### TSK-0317 accepted stable state
-
-`TSK-0317 — Design the simplest technically correct install, verification, removal, and recovery path for each supported platform`: **PASS for the provisional internal L4 design acceptance under DEC-0050/CR-0003**. Approved candidate `TSK_0317_PLATFORM_INSTALL_VERIFICATION_REMOVAL_RECOVERY_DESIGN_CANDIDATE_2026-08-28.md`, blob `d44daf376d0e8ed1d5839cc3b6b2ac10d090828d`, publication commit `28156f75728c28333c61c33313007556839329e6`; preparation evidence `TSK_0317_PLATFORM_DESIGN_PREPARATION_EVIDENCE_2026-08-28.md`, blob `8a233a40ec549a5ded9377048eb1ef365e9b31f3`, publication commit `719ec389e22f5626bab412b8dc6d1223739559eb`; Project Owner HUMAN_ONLY approval `TSK_0317_OWNER_APPROVAL_2026-08-28.md`, blob `260fe3795772c2e2928b86844172d5cad8407ba3`, publication commit `7f271d09eb9f2ac8b16d616e9b5ac1868bbbc762`; final acceptance evidence `TSK_0317_PLATFORM_DESIGN_ACCEPTANCE_EVIDENCE_2026-08-28.md`, blob `71eff82ab1194da7ca8666fe6f90f3d4244bb5fe`, publication commit `a2d6d2bf662d55de32d42942095e8c5930c99efd`.
-
-ACC-0317 is satisfied: automatic behavior is limited to reliable routing/copy/already-verified artifact delivery/controlled verification/state rendering; Android system DNS changes and Apple profile authorization/removal remain user/OS controlled; canonical Android DoT-hostname versus iPhone DoH-profile asymmetry, manual fallback, conflicts, verification truth and reversible removal/recovery are explicit. The exact unchanged candidate received the required HUMAN_ONLY Project Owner approval.
-
-This PASS remains provisional internal L4 design evidence only. It does not make representative-parent behavioral validation true; `RSK-0002` remains OPEN; `REQ-0022` remains unresolved; LG-03/LG-04/LG-05/LG-06 remain non-PASS; account/dashboard remains deferred under EXC-0001; no implementation/build, production profile publication, participant processing, legal completion, payment, publication or launch is authorized.
-
-## Queue status after TSK-0317 acceptance
-
-`TSK-0317` is runtime **PASS**. Its direct AUTO_ALLOWED successor `TSK-0307` may become eligible subject to fresh deterministic queue recomputation; `TSK-0310` still also depends on HUMAN_ONLY TSK-0318 and other current dependencies and must not be inferred eligible solely from this PASS.
-
-## Exact next authoritative step
-
-Recompute the deterministic L4 queue from current WBS/runtime/gates. Execute the highest-priority current AUTO_ALLOWED item whose hard dependencies are PASS and whose own acceptance can be proven within DEC-0050/CR-0003 without representative-participant evidence, unresolved legal fact, deferred account/persistence scope, HUMAN_ONLY action, L5/L6 build authority or public/production activation.
-'''
+          tail = (
+              '### TSK-0317 accepted stable state\n\n'
+              '`TSK-0317 — Design the simplest technically correct install, verification, removal, and recovery path for each supported platform`: **PASS for the provisional internal L4 design acceptance under DEC-0050/CR-0003**. Approved candidate `TSK_0317_PLATFORM_INSTALL_VERIFICATION_REMOVAL_RECOVERY_DESIGN_CANDIDATE_2026-08-28.md`, blob `d44daf376d0e8ed1d5839cc3b6b2ac10d090828d`, publication commit `28156f75728c28333c61c33313007556839329e6`; preparation evidence `TSK_0317_PLATFORM_DESIGN_PREPARATION_EVIDENCE_2026-08-28.md`, blob `8a233a40ec549a5ded9377048eb1ef365e9b31f3`, publication commit `719ec389e22f5626bab412b8dc6d1223739559eb`; Project Owner HUMAN_ONLY approval `TSK_0317_OWNER_APPROVAL_2026-08-28.md`, blob `260fe3795772c2e2928b86844172d5cad8407ba3`, publication commit `7f271d09eb9f2ac8b16d616e9b5ac1868bbbc762`; final acceptance evidence `TSK_0317_PLATFORM_DESIGN_ACCEPTANCE_EVIDENCE_2026-08-28.md`, blob `71eff82ab1194da7ca8666fe6f90f3d4244bb5fe`, publication commit `a2d6d2bf662d55de32d42942095e8c5930c99efd`.\n\n'
+              'ACC-0317 is satisfied: automatic behavior is limited to reliable routing/copy/already-verified artifact delivery/controlled verification/state rendering; Android system DNS changes and Apple profile authorization/removal remain user/OS controlled; canonical Android DoT-hostname versus iPhone DoH-profile asymmetry, manual fallback, conflicts, verification truth and reversible removal/recovery are explicit. The exact unchanged candidate received the required HUMAN_ONLY Project Owner approval.\n\n'
+              'This PASS remains provisional internal L4 design evidence only. It does not make representative-parent behavioral validation true; `RSK-0002` remains OPEN; `REQ-0022` remains unresolved; LG-03/LG-04/LG-05/LG-06 remain non-PASS; account/dashboard remains deferred under EXC-0001; no implementation/build, production profile publication, participant processing, legal completion, payment, publication or launch is authorized.\n\n'
+              '## Queue status after TSK-0317 acceptance\n\n'
+              '`TSK-0317` is runtime **PASS**. Its direct AUTO_ALLOWED successor `TSK-0307` may become eligible subject to fresh deterministic queue recomputation; `TSK-0310` still also depends on HUMAN_ONLY TSK-0318 and other current dependencies and must not be inferred eligible solely from this PASS.\n\n'
+              '## Exact next authoritative step\n\n'
+              'Recompute the deterministic L4 queue from current WBS/runtime/gates. Execute the highest-priority current AUTO_ALLOWED item whose hard dependencies are PASS and whose own acceptance can be proven within DEC-0050/CR-0003 without representative-participant evidence, unresolved legal fact, deferred account/persistence scope, HUMAN_ONLY action, L5/L6 build authority or public/production activation.\n'
+          )
           text = text[:i] + tail
           p.write_text(text, encoding='utf-8')
           PY
