@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T18:05:27Z
+**Updated:** 2026-08-28T18:06:16Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -479,8 +479,13 @@ Current first-party OWASP ASVS/Input-Validation/XSS/SSRF guidance and AdGuard an
 
 ## Queue status after current reconciliation
 
-`TSK-0484` is runtime PASS for its bounded provisional-L4 security-NFR-definition acceptance. `DVR-0230-01`, `DVR-0484-01` and `GAP-0484-02` remain explicit open implementation/verification items. A fresh conservative dependency-ready AUTO_ALLOWED L4 queue has been generated at `TSK_0484_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. No next task is selected by this write; the queue must be reread against acceptance, direct predecessor evidence, CR-0003, human/legal/participant holds and the open security/privacy deviations before execution.
+The TSK-0484 post-PASS queue was reread against current acceptance, CR-0003 and the open security/privacy deviations. `TSK-0187` remains ineligible because it requires representative-parent evidence. `TSK-0140` remains ineligible for PASS because owner/multi-role review evidence is absent. `TSK-0497` and `TSK-0538` are both MEDIUM/A3/AUTO_ALLOWED with no preflight flag; WBS order places TSK-0497 first.
+
+- **Selected next: `TSK-0497 — Define minimal product event and KPI catalogue`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
+- Hard dependency: `TSK-0230` — current PASS.
+- ACC-0497: every approved event has purpose, exact definition, properties, prohibited fields, collection point, denominator, retention and owner; accountless/device-configuration/Protection-Map/self-service/support measurement may be minimal; login/account/dashboard events remain absent unless EXC-0001 activates; DNS/domain history, visited-domain and child-activity events remain prohibited.
+- Selection boundary: internal measurement-contract definition only. No telemetry implementation, new persistent data store, account/dashboard activation, DNS-history collection, behavioral validation, real participants or release is authorized.
 
 ## Exact next authoritative step
 
-Read back the TSK-0484 post-PASS L4 queue, reject any candidate requiring unavailable real-user evidence, owner/legal/privacy approval, unresolved trigger/gate or missing predecessor proof, account for the open security/privacy deviations where relevant, and persist the deterministic highest-priority eligible AUTO_ALLOWED selection.
+Execute bounded TSK-0497: load TSK-0230/0229/0313/0320/0042 plus REQ-0060/0061 and INT-0016; define the minimum event/KPI catalogue with exact event semantics, properties, prohibited fields, collection point, denominator, retention and owner; ensure account/login/dashboard and DNS/domain/visited-domain/child-activity telemetry are absent; preserve RSK-0002 and all legal/build/participant gates; persist/read back independent ACC-0497 evidence; reconcile runtime; then recompute.
