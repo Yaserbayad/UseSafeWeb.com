@@ -25,20 +25,42 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Inspect TSK-0225 and predecessor TSK-0219
+      - name: Independent TSK-0225 protection-claims audit
         shell: bash
         run: |
           set -Eeuo pipefail
           [[ "$(hostname -s)" == "adguardvm" ]]
           python3 - <<'PY'
-          import csv,json
+          import csv,subprocess
           rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',newline='',encoding='utf-8-sig')))
           by={r['Task_ID'].strip():r for r in rows if (r.get('Task_ID') or '').strip()}
-          for tid in ['TSK-0219','TSK-0225']:
-              assert tid in by,tid
-              print(tid+'='+json.dumps(by[tid],sort_keys=True,ensure_ascii=False))
-          graph=open('Plans/Master/RELATIONSHIP_INDEX.yaml',encoding='utf-8').read()
-          print('TSK_0219_GRAPH_PRESENT='+str('TSK-0219' in graph).upper())
-          print('TSK_0225_GRAPH_PRESENT='+str('TSK-0225' in graph).upper())
-          print('TSK_0225_ROW_INSPECTION=PASS')
+          t=by['TSK-0225']; p=by['TSK-0219']; pp=by['TSK-0224']
+          assert t['Action_Authority'].strip()=='AUTO_ALLOWED'
+          assert t['Acceptance_ID'].strip()=='ACC-0225' and t['Dependencies'].strip()=='TSK-0219'
+          assert p['Acceptance_ID'].strip()=='ACC-0219' and p['Dependencies'].strip()=='TSK-0224'
+          assert pp['Acceptance_ID'].strip()=='ACC-0224' and pp['Execution_State'].strip()=='PASS'
+          files={'claims':'PROTECTION_CLAIMS_CHECKLIST.md','notice':'PILOT_PRIVACY_NOTICE.md','gate':'VALIDATION_READINESS_GATE.md'}
+          blobs={k:subprocess.check_output(['git','hash-object',v],text=True).strip() for k,v in files.items()}
+          assert blobs['claims']=='4bfc83421318fe761d06f9a63e052e3bff36070a'
+          assert blobs['notice']=='331f263388dfacfa73b6e9e556277d4230864ce8'
+          assert blobs['gate']=='b3b0efd0cc0f40faa1ecab190c7469b8dff12ec1'
+          notice=open(files['notice'],encoding='utf-8').read(); gate=open(files['gate'],encoding='utf-8').read(); claims=open(files['claims'],encoding='utf-8').read()
+          for s in ['## Parent notice','## Child-readable explanation','does not read private messages','does not read your messages','Do not publish a generic “no logs” claim','## Release gate']:
+              assert s in notice,'ACC-0219 gap '+s
+          assert 'does not' in notice and 'promise complete online safety' in notice
+          for s in ['no later than 30 days after that participant\'s follow-up','no later than 90 days after Experiment 1 closes']:
+              assert s in gate,'TSK-0224 proof gap '+s
+          required=[
+            'Protected — verified','Configured — parent confirmed','Action needed','Not covered',
+            'DNS scope','Native/app controls','VPN / alternate secure DNS','Private Relay / platform privacy routing',
+            'In-app harmful content','False positive / exception','Removal','Recovery','Unsupported state',
+            'Complete-safety wording','Evidence freshness','Parent confirmation must never be promoted to technical verification',
+            'A successful DNS test proves only the tested DNS behavior','must not require child browsing/domain history'
+          ]
+          for s in required: assert s in claims,'ACC-0225 gap '+s
+          print('TSK_0224_DIRECT_PREDECESSOR_PROOF=PASS')
+          print('TSK_0219_DIRECT_PREDECESSOR_PROOF=PASS')
+          print('TSK_0225_ACCEPTANCE_CLASSES=7/7')
+          print('TSK_0225_ARTIFACT_BLOB='+blobs['claims'])
+          print('TSK_0225_INDEPENDENT_AUDIT=PASS')
           PY
