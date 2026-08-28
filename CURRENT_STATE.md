@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T15:36:00Z
+**Updated:** 2026-08-28T16:11:46Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -382,6 +382,12 @@ This PASS does not authorize LG-06, L5/L6 build, participants, legal completion,
 
 The register does not resolve its assumptions. RSK-0002 and all real-behavior unknowns remain open; owner-only decisions are fenced.
 
+### TSK-0229 accepted stable state
+
+`TSK-0229 — Define and approve the accountless journey data model, expiry, deletion, and no-linkage rules`: **PASS for the provisional internal L4 data contract under DEC-0050/CR-0003**. Contract `TSK_0229_ACCOUNTLESS_JOURNEY_DATA_MODEL_EXPIRY_DELETION_NO_LINKAGE_2026-08-28.md`, blob `3fa48b11b6c7704ecc3748bcd865f77aa54f5605`; independent evidence `TSK_0229_ACCOUNTLESS_JOURNEY_DATA_MODEL_EVIDENCE_2026-08-28.md`, blob `a087c63a0556db549ead4f40805e435725709251`. ACC-0229 is satisfied: the active journey is accountless-first; persistent identity, browsing/query history and persistent child/family profile are prohibited; J1 is optional/transient with fixed expiry/deletion/no-linkage rules; diagnostics/logging/backups are separated; fourteen implementation-testable invariants are defined.
+
+The first artifact revision omitted the mandatory CR-0003/RSK-0002 behavioral-evidence limitation; it was corrected before PASS. `RSK-0002` remains OPEN. This PASS is provisional design evidence only and does not authorize LG-05/LG-06, L5/L6 build, participants, legal completion, payment activation, public release or launch.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -393,16 +399,13 @@ The register does not resolve its assumptions. RSK-0002 and all real-behavior un
 
 ## Queue status after current reconciliation
 
-The post-TSK-0138 full L4 inspection found seven dependency-ready candidates. `TSK-0187` is HIGH but not executable under CR-0003 because ACC-0187 explicitly requires representative parents to complete the prototype and demonstrate comprehension/recovery. It remains deferred as real-user-evidence-dependent.
+`TSK-0229` is runtime PASS for the provisional internal L4 data contract. The previously generated full L4 queue inspection remains current for dependency structure. `TSK-0187` is still deferred because its acceptance requires representative-parent evidence unavailable under CR-0003.
 
-Among genuinely executable candidates, privacy/safety precedence selects:
-
-- **Selected next: `TSK-0229 — Define and approve the accountless journey data model, expiry, deletion, and no-linkage rules`** (L4 / A3 / AUTO_ALLOWED / HIGH).
-- Hard dependency `TSK-0146` is preserved PASS.
-- ACC-0229 can be satisfied internally: define only fields necessary for the active journey, prohibit browsing history/persistent child profile, and make expiry/deletion/diagnostic boundaries testable.
-- `TSK-0408` remains the next HIGH technical candidate after recomputation.
-- `TSK-0140` remains potentially owner-review-bound by its own ACC; `TSK-0330` is HUMAN_ONLY.
+- **Selected next: `TSK-0408 — Define one coherent UseSafeWeb DNS identity and approved platform-specific endpoint/profile mechanisms`** (L4 / A3 / AUTO_ALLOWED / HIGH).
+- Hard dependency: `TSK-0146` — current PASS.
+- ACC-0408: Hostname/DoH path/profile naming, certificates, verification, removal, fallback, and environment separation are clear; no false universal FQDN workflow.
+- Execution remains internal definition/design only; current official platform evidence must be used where technical behavior is material, and `RSK-0002` must remain explicit.
 
 ## Exact next authoritative step
 
-Execute `TSK-0229` as an accountless/privacy-minimal L4 data contract. Define necessary fields/state classes, prohibited fields/linkages, expiry/deletion semantics, diagnostic separation, logs/backups boundaries and testable invariants. Do not introduce mandatory identity, browsing/query history or architecture beyond what is necessary to specify the contract. Verify ACC-0229, persist/read back, then recompute.
+Execute bounded `TSK-0408`: reconcile the already proven UseSafeWeb DNS identity (`dns.usesafeweb.com`, DoH `/dns-query`, Android native DoT where applicable) with current authoritative platform mechanisms. Define platform-specific endpoint/profile naming, certificate expectations, verification, removal/recovery, fallback/unsupported states and environment separation without inventing a universal FQDN workflow. Verify ACC-0408 against canonical runtime evidence plus current official sources, persist/read back, then recompute.
