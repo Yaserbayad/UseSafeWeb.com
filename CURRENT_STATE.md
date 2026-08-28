@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T19:45:50Z
+**Updated:** 2026-08-28T19:46:48Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -509,8 +509,13 @@ This PASS defines requirements only. It does not prove implemented WCAG conforma
 
 ## Queue status after current reconciliation
 
-`TSK-0314` is runtime PASS for its bounded provisional-L4 accessibility/responsive/browser/OS/device-support-NFR-definition acceptance. No implemented WCAG conformance, public support promise, broader DNS mechanism, participant evidence, market activation or release is inferred. A fresh conservative dependency-ready AUTO_ALLOWED L4 queue has been generated at `TSK_0314_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. No next task is selected by this write; the queue must be reread against acceptance, direct predecessor evidence, CR-0003, human/legal/participant holds and open security/privacy deviations before execution.
+The TSK-0314 post-PASS queue was reread against current acceptance and gates. `TSK-0187` remains ineligible because it requires representative-parent evidence. `TSK-0140` remains ineligible for PASS because owner/multi-role review evidence is absent. `TSK-0045` is the only dependency-ready AUTO_ALLOWED L4 candidate with no preflight flag.
+
+- **Selected next: `TSK-0045 — Define maintainability, deployment, and cost-control NFRs`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
+- Hard dependency: `TSK-0314` — current PASS in canonical runtime.
+- ACC-0045: define repeatable deployment, versioning, rollback, documentation ownership, dependency update cadence, cost tagging/budgets, and monthly cost-report inputs.
+- Selection boundary: internal maintainability/deployment/cost NFR definition only. No Azure control-plane mutation, deployment of the unbuilt web/app, purchase, release, participant processing or launch is authorized.
 
 ## Exact next authoritative step
 
-Read back the TSK-0314 post-PASS L4 queue, reject any candidate requiring unavailable real-user evidence, owner/legal/privacy approval, unresolved trigger/gate or missing predecessor proof, account for open security/privacy deviations where relevant, and persist the deterministic highest-priority eligible AUTO_ALLOWED selection.
+Execute bounded TSK-0045: define deterministic GitHub-canonical deployment/version/rollback/documentation/dependency-maintenance requirements for the current DNS service and future separate web/app; define Azure cost tags, budget/alert semantics and monthly cost-report inputs without inventing future spend; preserve owner-managed Azure control-plane and action-authority boundaries; persist/read back independent ACC-0045 evidence; reconcile runtime; then recompute.
