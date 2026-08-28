@@ -31,7 +31,6 @@ jobs:
           trap 'rm -f "$tmp"' EXIT
           sudo nginx -T >"$tmp" 2>/dev/null
 
-          # Never read or print access/error log contents. Inspect config directives and file metadata only.
           access_directives="$(grep -E '^[[:space:]]*access_log[[:space:]]+' "$tmp" | sed -E 's/^[[:space:]]+//' | sort -u || true)"
           error_directives="$(grep -E '^[[:space:]]*error_log[[:space:]]+' "$tmp" | sed -E 's/^[[:space:]]+//' | sort -u || true)"
           log_formats="$(grep -E '^[[:space:]]*log_format[[:space:]]+' "$tmp" | sed -E 's/^[[:space:]]+//' | sed -E 's/\$remote_addr/[REMOTE_ADDR]/g;s/\$http_[A-Za-z0-9_]+/[HTTP_FIELD]/g;s/\$request[^ ]*/[REQUEST_FIELD]/g' | sort -u || true)"
@@ -60,7 +59,6 @@ jobs:
             done <<< "$enabled_access_paths"
           fi
 
-          # The accepted production AdGuard configuration is root-protected; probe readability with sudo.
           adguard_yaml=/opt/AdGuardHome/AdGuardHome.yaml
           if ! sudo test -r "$adguard_yaml"; then
             adguard_yaml=/opt/AdGuardHome/conf/AdGuardHome.yaml
@@ -84,23 +82,25 @@ jobs:
           grep -q '^querylog_file_enabled=false$' <<< "$qlog"
           grep -q '^statistics_enabled=false$' <<< "$qlog"
           grep -q '^anonymize_client_ip=true$' <<< "$qlog"
+          test "$access_enabled" = NO
 
           cat > TSK_0230_RUNTIME_DATA_FOOTPRINT_INSPECTION_2026-08-28.md <<EOF
           # TSK-0230 runtime data-footprint inspection
 
-          **Date:** 2026-08-28  
-          **Target:** production runner host adguardvm  
+          **Date:** 2026-08-28
+          **Target:** production runner host adguardvm
           **Purpose:** privacy-safe read-only inspection for TSK-0230. No access/error log contents or DNS query records were read or exported.
 
           ## Verifier correction history
 
           - Run 33193360160 failed before evidence because the verifier tested root-protected AdGuard config readability as the unprivileged runner user. No target mutation occurred.
-          - Run 33193437786 corrected that permission probe and exposed a second verifier defect: it read `anonymize_client_ip` from the YAML root instead of the accepted AdGuard schema path `dns.anonymize_client_ip`. That false negative contradicted TSK-0206 and is not accepted as runtime evidence.
-          - This revision reads and asserts the accepted schema path `dns.anonymize_client_ip` and fails closed unless all four privacy flags match the accepted baseline.
+          - Run 33193437786 corrected that permission probe but read anonymize_client_ip from the YAML root instead of the accepted AdGuard schema path dns.anonymize_client_ip. That false negative is not accepted as runtime evidence.
+          - Run 33193504036 used the correct schema and all privacy assertions passed; only report rendering failed because Markdown backticks were interpreted by the shell and diff-check rejected trailing whitespace. No target mutation occurred.
+          - This revision preserves the same successful privacy assertions and corrects report rendering only.
 
           ## Target identity
 
-          - machine-id SHA-256: \`${mid_hash}\`
+          - machine-id SHA-256: ${mid_hash}
           - expected accepted production fingerprint: MATCH
 
           ## Nginx effective logging configuration
@@ -141,14 +141,22 @@ jobs:
 
           This inspection intentionally did not read, sample, grep, print or commit any Nginx log record, DNS query, source IP, domain, URL payload, user agent, participant identifier, credential or secret. It records configuration directives and file metadata only.
 
+          ## Accepted runtime facts
+
+          - Nginx access logging: explicitly off.
+          - AdGuard persistent query logging: off.
+          - AdGuard file query logging: off.
+          - AdGuard statistics: off.
+          - AdGuard client-IP anonymisation at dns.anonymize_client_ip: enabled.
+
           ## Disposition
 
-          Nginx access logging is acceptable for TSK-0230 only if the effective target remains explicitly off, or a future governed necessity case defines its data/purpose/lawful basis/retention/access/deletion before activation. AdGuard query/file logging and statistics must remain disabled and `dns.anonymize_client_ip` must remain enabled. Any material change reopens the privacy/data-flow acceptance that depends on these facts.
+          TSK-0230 must preserve these privacy-minimal facts. Any future access-log enablement or material AdGuard logging/statistics/anonymisation change requires a governed necessity case, purpose/lawful-basis/retention/access/deletion definition, actual-runtime verification, and impact review before participant/public use.
           EOF
 
           git diff --check
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add TSK_0230_RUNTIME_DATA_FOOTPRINT_INSPECTION_2026-08-28.md
-          git commit -m "evidence: correct TSK-0230 runtime data footprint"
+          git commit -m "evidence: finalize TSK-0230 runtime data footprint"
           git push
