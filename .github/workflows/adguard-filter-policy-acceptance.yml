@@ -8,7 +8,7 @@ on:
       - .github/workflows/adguard-filter-policy-acceptance.yml
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: usesafeweb-adguard-server
@@ -19,13 +19,7 @@ jobs:
     runs-on: [self-hosted, linux, x64]
     timeout-minutes: 5
     steps:
-      - name: Checkout exact main commit
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 1
-
-      - name: Verify TSK-0512 filtering policy, exception, and rollback
-        id: regression
+      - name: Verify TSK-0406 policy, exception, and rollback
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -192,66 +186,4 @@ jobs:
           print('post_rollback_example_answer_count='+str(answers))
           PY
 
-          echo 'TSK_0512_ACCEPTANCE=PASS'
-
-      - name: Publish deterministic TSK-0512 run result
-        if: always()
-        shell: bash
-        env:
-          REGRESSION_OUTCOME: ${{ steps.regression.outcome }}
-        run: |
-          set -Eeuo pipefail
-          workflow_blob="$(git hash-object .github/workflows/adguard-filter-policy-acceptance.yml)"
-          policy_blob="$(git hash-object infrastructure/adguard-server/filter-policy-v1.yaml)"
-          state_blob="$(git hash-object CURRENT_STATE.md)"
-          result_path='TSK_0512_FILTER_REGRESSION_RESULT_2026-08-28.md'
-          if [[ "$REGRESSION_OUTCOME" == 'success' ]]; then
-            cat > "$result_path" <<EOF
-          # TSK-0512 — Filtering Regression Result
-
-          **Date:** 2026-08-28  
-          **Run source commit:** \`${GITHUB_SHA}\`  
-          **Target:** production host \`adguardvm\`  
-          **Regression outcome:** **PASS**
-
-          - Workflow blob: \`${workflow_blob}\`
-          - Filter policy blob: \`${policy_blob}\`
-          - CURRENT_STATE blob at run checkout: \`${state_blob}\`
-          - Exact active baseline asserted: one enabled AdGuard DNS filter; no whitelist filters; no pre-existing user rules.
-          - Randomized reserved \`.invalid\` synthetic name was verified unfiltered before mutation.
-          - Temporary exact block was verified as \`FilteredBlackList\`.
-          - Matching narrow allow exception was verified as \`NotFilteredWhiteList\`.
-          - Exact pre-test user-rule set was restored and filter-list state remained unchanged.
-          - Persisted protection/filtering/default-blocking, Quad9 dns10, ECS-off, query-log-off, anonymisation-on and statistics-off invariants all passed assertions.
-          - Post-rollback \`example.com\` resolved successfully with at least one DNS answer.
-          - Cleanup/rollback assertions completed before this PASS result was published.
-          - No participant browsing history or raw DNS history was collected or retained.
-
-          ACC-0512 requires expected blocked tests to fail safely, allowed tests to resolve, the exception workflow to work, and results to be recorded without participant browsing history. **All applicable criteria are directly covered by this successful target-environment assertion run.**
-
-          **Stable acceptance result: TSK-0512 = PASS.**
-          EOF
-          else
-            cat > "$result_path" <<EOF
-          # TSK-0512 — Filtering Regression Result
-
-          **Date:** 2026-08-28  
-          **Run source commit:** \`${GITHUB_SHA}\`  
-          **Target:** production host \`adguardvm\`  
-          **Regression outcome:** **FAILURE — NOT ACCEPTED**
-
-          - Workflow blob: \`${workflow_blob}\`
-          - Filter policy blob: \`${policy_blob}\`
-          - CURRENT_STATE blob at run checkout: \`${state_blob}\`
-          - The assertion-based production regression did not complete successfully.
-          - No TSK-0512 PASS is claimed from this run.
-          - The test contains a cleanup trap that attempts restoration of the exact pre-test user-rule set if a temporary rule mutation had begun.
-
-          **Stable task disposition from this evidence alone: TSK-0512 remains not-PASS pending failure diagnosis and direct recovery verification.**
-          EOF
-          fi
-          git config user.name "UseSafeWeb QA Bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add "$result_path"
-          git commit -m "evidence: record TSK-0512 regression result"
-          git push origin HEAD:main
+          echo 'TSK_0406_ACCEPTANCE=PASS'
