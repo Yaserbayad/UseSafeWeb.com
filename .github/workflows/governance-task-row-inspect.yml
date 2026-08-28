@@ -20,16 +20,18 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Print TSK-0442 through TSK-0447 authority rows
+      - name: Print remaining L2 PKG-09 task boundaries
         shell: bash
         run: |
           set -Eeuo pipefail
           python3 - <<'PY'
           import csv,json
           rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',newline='',encoding='utf-8-sig')))
-          wanted={f'TSK-{i:04d}' for i in range(442,448)}
           for r in rows:
-              if (r.get('Task_ID') or '').strip() in wanted:
-                  keys=['Task_ID','Title','Lifecycle_Stage','Priority','Critical_Path','Plan_Status','Execution_State','Dependencies','Trigger','Preconditions','Action_Authority','Acceptance_ID','Acceptance_Criteria','Verification_ID','Required_Tools_or_Access','Requirement_Reference','Constraint_Reference','Interface_Reference','Risk_Reference','Notes']
+              tid=(r.get('Task_ID') or '').strip()
+              try: n=int(tid.split('-')[1])
+              except Exception: continue
+              if 448 <= n <= 482:
+                  keys=['Task_ID','Title','Lifecycle_Stage','Priority','Critical_Path','Plan_Status','Execution_State','Dependencies','Action_Authority','Acceptance_ID','Acceptance_Criteria','Requirement_Reference','Risk_Reference']
                   print(json.dumps({k:r.get(k,'') for k in keys},sort_keys=True,ensure_ascii=False))
           PY
