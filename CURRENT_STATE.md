@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T19:49:50Z
+**Updated:** 2026-08-28T19:50:38Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -515,8 +515,13 @@ The infrastructure currency budget remains `UNFROZEN` until explicit owner autho
 
 ## Queue status after current reconciliation
 
-`TSK-0045` is runtime PASS for its bounded provisional-L4 maintainability/deployment/cost-control-NFR-definition acceptance. No deployment, Azure mutation/spend, numeric infrastructure budget, future app or launch is inferred. A fresh conservative dependency-ready AUTO_ALLOWED L4 queue has been generated at `TSK_0045_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. No next task is selected by this write; the queue must be reread against acceptance, direct predecessor evidence, CR-0003, human/legal/participant holds and open security/privacy deviations before execution.
+The TSK-0045 post-PASS queue was reread against current acceptance and gates. `TSK-0187` remains ineligible because it requires representative-parent evidence. `TSK-0140` remains ineligible for PASS because owner/multi-role review evidence is absent. `TSK-0145` is the only dependency-ready AUTO_ALLOWED L4 candidate with no preflight flag.
+
+- **Selected next: `TSK-0145 — Build requirement-to-evidence traceability matrix`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
+- Hard dependencies: `TSK-0313; TSK-0045; TSK-0497; TSK-0146` — dependency readiness established by the generated queue/current conservative PASS set; current runtime directly proves TSK-0313/0045/0497 and canonical planning state retains TSK-0146.
+- ACC-0145: every requirement has source, rationale, priority, acceptance test, owner, release target, and status; orphan requirements are removed or explicitly authorised.
+- Selection boundary: generate/verify traceability from canonical sources without creating a second mutable requirement/task state store. No requirement is silently changed, approved or removed by this task.
 
 ## Exact next authoritative step
 
-Read back the TSK-0045 post-PASS L4 queue, reject any candidate requiring unavailable real-user evidence, owner/legal/privacy approval, unresolved trigger/gate or missing predecessor proof, account for open security/privacy deviations where relevant, and persist the deterministic highest-priority eligible AUTO_ALLOWED selection.
+Execute bounded TSK-0145: load the canonical requirement register and WBS/interface/decision ownership needed to resolve ACC fields; generate a derived requirement-to-evidence traceability artifact with source/rationale/priority/acceptance/owner/release-target/status plus implementing tasks and current evidence disposition; identify every orphan/missing mapping explicitly; validate coverage against the source requirement set; persist/read back independent ACC-0145 evidence; reconcile runtime; then recompute.
