@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T16:17:07Z
+**Updated:** 2026-08-28T16:24:47Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -394,6 +394,12 @@ The first artifact revision omitted the mandatory CR-0003/RSK-0002 behavioral-ev
 
 Independent source audit used current Google Android, Android Developers, Apple Support/Platform Deployment, AdGuard Knowledge Base and current canonical UseSafeWeb evidence. The Apple device-management payload reference does not by itself prove the later manual consumer-profile package; any release `.mobileconfig` still requires artifact-level verification. `RSK-0002` remains OPEN and this PASS does not authorize LG-05/LG-06, implementation/build, participants, public release or launch.
 
+### TSK-0315 accepted stable state
+
+`TSK-0315 — Create the accountless end-to-end service blueprint from discovery through recovery/removal`: **PASS for the provisional internal L4 service blueprint under DEC-0050/CR-0003**. Blueprint `TSK_0315_ACCOUNTLESS_END_TO_END_SERVICE_BLUEPRINT_2026-08-28.md`, blob `f428f346d6e994d093b651d7b934e8610498c350`; independent evidence `TSK_0315_ACCOUNTLESS_END_TO_END_SERVICE_BLUEPRINT_EVIDENCE_2026-08-28.md`, blob `72d375ed4b783b56572012a0e48716b1314c0be6`. ACC-0315 is satisfied: parent/system actions, evidence states, dependencies, failures/recovery, automated support, privacy boundaries, owner-only exceptions and interaction necessity are explicit from public discovery through removal/exit. The blueprint preserves accountless J0-first/J1-bounded state, consumes TSK-0408 platform-specific DNS semantics, and does not fabricate unfinished TSK-0143/0144/0320/0409 detail.
+
+`RSK-0002` remains OPEN: no representative-parent evidence proves completion, comprehension, support burden, persistence, perceived duplication or optimal ordering/copy. This PASS is provisional internal design only and does not authorize LG-05/LG-06, implementation/build, participants, legal completion, payment, public release or launch.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -405,8 +411,13 @@ Independent source audit used current Google Android, Android Developers, Apple 
 
 ## Queue status after current reconciliation
 
-`TSK-0408` is runtime PASS for provisional internal L4 technical design. A fresh full L4 dependency-ready queue inspection has been generated as `TSK_0408_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. Selection is intentionally deferred until that report is read back because newly unlocked tasks may have HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED, current-source, or real-user-evidence acceptance boundaries.
+`TSK-0315` is runtime PASS for the provisional internal L4 service blueprint. Its completion unlocks `TSK-0316` and `TSK-0320`; `TSK-0320` is CRITICAL/A3/AUTO_ALLOWED with sole hard dependency `TSK-0315`, while `TSK-0316` and `TSK-0409` are HIGH/A3/AUTO_ALLOWED. `TSK-0187` remains deferred because representative-parent evidence is unavailable under CR-0003. Human-only successors remain fenced.
+
+- **Selected next: `TSK-0320 — Freeze the protection-state model and copy rules`** (L4 / A3 / AUTO_ALLOWED / CRITICAL).
+- Hard dependency: `TSK-0315` — current PASS.
+- ACC-0320: Protected/verified, configured/parent-confirmed, action-needed, not-covered, uncertain/error, and removed states have exact evidence and transition rules; no confirmation masquerades as verification.
+- Selection rationale: newly eligible CRITICAL product-truth state contract outranks HIGH design/technical candidates and can be satisfied without real-participant evidence.
 
 ## Exact next authoritative step
 
-Read back `TSK_0408_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`, apply DEC-0050/CR-0003, RSK-0002, current action authority and task-specific acceptance, then select the highest-priority genuinely executable AUTO_ALLOWED L4 task. Do not choose a task merely because its hard dependencies are satisfied.
+Execute bounded `TSK-0320`: freeze the provisional Protection Map/protection-state evidence and transition rules for protected/verified, configured/parent-confirmed, action-needed, not-covered, uncertain/error and removed states. Ground DNS truth in TSK-0408 and current accepted technical evidence, keep parent confirmation distinct from system verification, preserve TSK-0229 accountless/no-history rules, explicitly carry `RSK-0002`, and do not imply real-user validation or implementation authority. Persist/read back independent ACC-0320 evidence, reconcile runtime, then recompute.
