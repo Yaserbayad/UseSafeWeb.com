@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T14:39:06Z  
+**Updated:** 2026-08-28T14:41:56Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -342,6 +342,12 @@ The Project Owner explicitly instructed on 2026-08-28 that the legal/regulatory/
 
 The task PASS means the required HUMAN_ONLY decision was actually made and recorded; it does **not** mean LG-03 passed. **LG-03/G-02 disposition is DEFER. Recruitment authorized: NO.** Criteria 2, 5 and 6 remain DEFERRED/OPEN in the accepted TSK-0026 package. CR-0002 remains the bounded authority for internal/synthetic/non-participant/non-public preparatory continuation through 2027-08-27.
 
+### TSK-0167 accepted stable state
+
+`TSK-0167` — invitation, scheduling, reminder, 14-day follow-up and withdrawal templates: **PASS for internal preparatory scope under CR-0002**. Artifact `EXPERIMENT_01_PARTICIPANT_COMMUNICATION_TEMPLATES.md`, blob `1dd5aa88f200174d88d1422bbe0c11f7fc5ecbe8`; verification evidence `TSK_0167_PARTICIPANT_COMMUNICATION_TEMPLATES_EVIDENCE_2026-08-28.md`, blob `06506a61d8065bfa812f6df49006d840ef2339ff`. ACC-0167's seven required classes are covered. The unresolved controller/UK-representative contact fields are truthfully preserved as release-blocking placeholders rather than fabricated contacts.
+
+This PASS closes internal preparation only. The artifact remains **NOT FOR PARTICIPANT USE** until the real participant-facing contact/notice/legal/gate conditions are actually satisfied. No recruitment or participant processing is authorized.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -353,15 +359,12 @@ The task PASS means the required HUMAN_ONLY decision was actually made and recor
 
 ## Queue status after current reconciliation
 
-`TSK-0027` is complete: runtime task state **PASS**, owner gate disposition **DEFER**. LG-03 remains deferred/non-PASS and recruitment remains unauthorized. The immediate HUMAN_ONLY decision boundary is resolved.
+`TSK-0167` is runtime PASS for internal preparatory scope. Its hard successors are recomputed against current authority. `TSK-0513 — Run end-to-end synthetic rehearsal` now has all four hard predecessors satisfied for synthetic execution: TSK-0167 PASS, TSK-0169 PASS, TSK-0214 PASS and TSK-0510 PASS.
 
-Applying current WBS priority plus CR-0002 after that decision selects the next eligible preparatory task:
-
-- **Selected next: `TSK-0167` — Create invitation, scheduling, reminder, follow-up, and withdrawal templates** (L2 / A3 / AUTO_ALLOWED / MEDIUM). `TSK-0168` is current PASS. Its deferred `TSK-0221` notice-approval/release predecessor is conditionally dependency-satisfied only for internal template preparation under CR-0002; the final participant-facing notice/contact/legal release remains unresolved and must be preserved as a limitation.
-- `TSK-0513` remains unavailable until `TSK-0167` itself is verified PASS.
-
-No real-participant recruitment, participant processing, child-linked DNS activation, or public launch is authorized by the DEFER decision.
+- **Selected next: `TSK-0513` — Run end-to-end synthetic rehearsal** (L2 / A3 / AUTO_ALLOWED / MEDIUM).
+- LG-03/G-02 remains **DEFER**. Recruitment and real-participant processing remain unauthorized.
+- The synthetic rehearsal must use synthetic data only, capture no prohibited participant data, preserve CR-0002 legal/contact limitations, and record/fix or explicitly disposition blockers before any later real-participant gate.
 
 ## Exact next authoritative step
 
-Execute bounded `TSK-0167`: prepare the invitation, scheduling, reminder, 14-day follow-up, and withdrawal templates; include voluntary participation, no payment ask, preparation requirements, support boundaries, 14-day follow-up, withdrawal route, and the truthful current contact status. Because final controller/UK-representative contacts remain deferred, the templates must explicitly retain that unresolved release/contact limitation and remain **INTERNAL / NOT FOR PARTICIPANT USE** until the participant-facing release gate is actually satisfied. Independently verify ACC-0167, persist/read back the artifact/evidence, then recompute selection.
+Execute bounded `TSK-0513` against the accepted Experiment-1 preparation artifacts and current technical evidence. Rehearse the full path with synthetic data only, verify every step completes or record a blocker/deviation, verify no prohibited data is captured, persist/read back the rehearsal/evidence, and recompute selection. Do not convert successful synthetic rehearsal into recruitment authorization or LG-03 PASS.
