@@ -1,0 +1,61 @@
+name: Reconcile TSK-0139 PASS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-tsk0139-pass.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify durable TSK-0139 outcome
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object TSK_0139_PROVISIONAL_L4_PRODUCT_OUTCOME_MANDATE_2026-08-28.md)" = "855628303b04bd48e9e8d51c4a6b9c221e343583"
+          test "$(git hash-object TSK_0139_PROVISIONAL_L4_PRODUCT_OUTCOME_MANDATE_EVIDENCE_2026-08-28.md)" = "8838388287c44b0d37e43bde4244c912545da9be"
+          python3 - <<'PY'
+          import csv, pathlib
+          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',encoding='utf-8-sig',newline=''))); by={r['Task_ID']:r for r in rows}
+          assert by['TSK-0139']['Dependencies']=='TSK-0513'
+          assert by['TSK-0139']['Action_Authority']=='AUTO_ALLOWED'
+          assert by['TSK-0141']['Dependencies']=='TSK-0139'
+          e=pathlib.Path('TSK_0139_PROVISIONAL_L4_PRODUCT_OUTCOME_MANDATE_EVIDENCE_2026-08-28.md').read_text()
+          assert 'ACC-0139 is fully satisfied' in e
+          assert 'PASS candidate pending runtime reconciliation' in e
+          s=pathlib.Path('CURRENT_STATE.md').read_text()
+          assert 'Selected next: `TSK-0139' in s
+          print('TSK0139_RECONCILIATION_PREFLIGHT=PASS')
+          PY
+      - name: Reconcile runtime PASS and next task
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('CURRENT_STATE.md'); text=p.read_text()
+          text=re.sub(r'\*\*Updated:\*\* [^\n]+','**Updated:** 2026-08-28T15:28:00Z',text,count=1)
+          sec='''### TSK-0139 accepted stable state\n\n`TSK-0139 — Translate provisional L4 owner authorization into authorised product outcomes`: **PASS for bounded provisional L4 definition/design scope under DEC-0050/CR-0003**. Mandate `TSK_0139_PROVISIONAL_L4_PRODUCT_OUTCOME_MANDATE_2026-08-28.md`, blob `855628303b04bd48e9e8d51c4a6b9c221e343583`; independent verification evidence `TSK_0139_PROVISIONAL_L4_PRODUCT_OUTCOME_MANDATE_EVIDENCE_2026-08-28.md`, blob `8838388287c44b0d37e43bde4244c912545da9be`. ACC-0139 is fully satisfied: the mandate defines the provisional job/user/outcome, exact evidence limits, RSK-0002, constraints, stop/revalidation conditions and only the L4 definition/design scope authorized.\n\nThis PASS does not mean LG-03/LG-04/LG-05 or LG-06 passed, does not supply real-parent behavioral evidence, and does not authorize integrated build, participants, legal completion, payment activation or public launch.\n\n'''
+          marker='## Runtime safeguards'
+          if '### TSK-0139 accepted stable state' not in text:
+              text=text.replace(marker,sec+marker,1)
+          q=text.rfind('\n## Queue status after current reconciliation')
+          if q<0: raise SystemExit('queue marker missing')
+          text=text[:q].rstrip()+'''\n\n## Queue status after current reconciliation\n\n`TSK-0139` is runtime PASS for its bounded provisional scope. Its sole direct WBS successor is now dependency-ready.\n\n- **Selected next: `TSK-0141 — Freeze minimum product scope and non-goals`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).\n- Hard dependency: `TSK-0139` — current PASS.\n- ACC-0141 is explicitly provisional under CR-0003: every included capability must map to an unvalidated current-need assumption, mandatory operation/safety requirement, or explicit owner-approved architectural decision. No capability may be described as behaviorally validated.\n- Accountless-first remains authoritative; mandatory authentication, persistent parent dashboard and customer-facing AdGuard control plane remain deferred under EXC-0001. Surveillance/activity history, child accounts and other advanced capabilities remain excluded unless separately reauthorized.\n- Real-evidence-dependent L4 tasks remain deferred; LG-03/LG-04/LG-05 remain non-PASS.\n\n## Exact next authoritative step\n\nExecute bounded `TSK-0141`: freeze the smallest provisional product scope and explicit non-goals using TSK-0139, DEC-0042/accountless authority, current technical constraints and owner decisions only. Label user-need-derived capabilities as provisional/unvalidated, exclude deferred/surveillance scope, preserve RSK-0002 and create independently auditable ACC-0141 evidence. Then recompute the L4 queue.\n'''
+          p.write_text(text)
+          PY
+          git diff --check
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add CURRENT_STATE.md
+          git commit -m "state: accept TSK-0139 and select TSK-0141"
+          git push
