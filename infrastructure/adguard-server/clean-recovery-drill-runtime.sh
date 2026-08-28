@@ -316,4 +316,4 @@ echo 'project_controlled_rebuild=PASS' >> "$summary"
 unset password
 echo 'TSK_0431_PROJECT_CONTROLLED_DRILL=PASS'
 trap - EXIT
-rm -f /tmp/t0431-imds.json /tmp/t0431-query.bin /tmp/t0431-doh.bin /tmp/t0431-filter-before.json /tmp/t0431-rules-empty.json /tmp/t0431-rules-block.json /tmp/t0431-rules-allow.json /tmp/t0431-check.json /tmp/t0431-qcfg.json /tmp/t0431-qlog.json /tmp/t0431-scfg.json /tmp/t0431-stats.json /tmp/t0431-listeners.txt
+sudo rm -f /tmp/t0431-imds.json /tmp/t0431-query.bin /tmp/t0431-doh.bin /tmp/t0431-filter-before.json /tmp/t0431-rules-empty.json /tmp/t0431-rules-block.json /tmp/t0431-rules-allow.json /tmp/t0431-check.json /tmp/t0431-qcfg.json /tmp/t0431-qlog.json /tmp/t0431-scfg.json /tmp/t0431-stats.json /tmp/t0431-listeners.txt
