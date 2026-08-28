@@ -25,29 +25,54 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Recompute affected queue after TSK-0202 PASS
+      - name: Recompute queue after TSK-0430 PASS
         shell: bash
         run: |
           set -Eeuo pipefail
           [[ "$(hostname -s)" == "adguardvm" ]]
           python3 - <<'PY'
-          import csv, json
+          import csv, json, re
           path='Plans/Master/WBS/master-wbs.csv'
           with open(path, newline='', encoding='utf-8-sig') as f:
-              rows=list(csv.DictReader(f))
+              reader=csv.DictReader(f)
+              rows=list(reader)
+              print('WBS_FIELDS='+json.dumps(reader.fieldnames, ensure_ascii=False))
           by_id={r.get('Task_ID','').strip():r for r in rows if r.get('Task_ID','').strip()}
-          wanted={'TSK-0429','TSK-0430','TSK-0443','TSK-0514','TSK-0511'}
-          for task_id in list(wanted):
-              assert task_id in by_id, task_id
-              wanted.update(x.strip() for x in (by_id[task_id].get('Dependencies') or '').split(';') if x.strip())
-          for task_id in sorted(wanted):
-              assert task_id in by_id, task_id
-              print(task_id.replace('-','_')+'_WBS_ROW='+json.dumps(by_id[task_id], sort_keys=True, ensure_ascii=False))
-          for target in ['TSK-0429','TSK-0430','TSK-0443','TSK-0514','TSK-0511']:
+
+          focus={'TSK-0430','TSK-0431','TSK-0441','TSK-0442','TSK-0443','TSK-0511','TSK-0514'}
+          for task_id in list(focus):
+              if task_id in by_id:
+                  focus.update(x.strip() for x in (by_id[task_id].get('Dependencies') or '').split(';') if x.strip())
+          for task_id in sorted(focus):
+              if task_id in by_id:
+                  print(task_id.replace('-','_')+'_WBS_ROW='+json.dumps(by_id[task_id], sort_keys=True, ensure_ascii=False))
+              else:
+                  print(task_id.replace('-','_')+'_WBS_ROW=MISSING')
+
+          for target in ['TSK-0430','TSK-0431','TSK-0441','TSK-0442','TSK-0443','TSK-0511','TSK-0514']:
               successors=[]
               for r in rows:
                   deps=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
                   if target in deps:
                       successors.append(r['Task_ID'].strip())
               print(target.replace('-','_')+'_DIRECT_SUCCESSOR_IDS='+','.join(successors))
+
+          with open('CURRENT_STATE.md', encoding='utf-8') as f:
+              state=f.read()
+          pass_ids=set(re.findall(r'`(TSK-\d+)`\s+—', state.split('### External/provider and legal boundaries')[0]))
+          # Historical foundation TSK-0011 is explicitly established as satisfied by current runtime/task evidence.
+          pass_ids.add('TSK-0011')
+          print('RUNTIME_PASS_IDS='+','.join(sorted(pass_ids)))
+
+          ready=[]
+          for r in rows:
+              tid=(r.get('Task_ID') or '').strip()
+              if not tid or tid in pass_ids:
+                  continue
+              deps=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
+              if all(d in pass_ids for d in deps):
+                  ready.append(r)
+          print('DEPENDENCY_READY_COUNT='+str(len(ready)))
+          for r in ready:
+              print('DEPENDENCY_READY_ROW='+json.dumps(r, sort_keys=True, ensure_ascii=False))
           PY
