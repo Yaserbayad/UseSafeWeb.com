@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T13:30:38Z  
+**Updated:** 2026-08-28T13:38:44Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -65,6 +65,7 @@ This supersedes the earlier duplicate-runner condition in which `adguartestdvm` 
 - `TSK-0429` — privacy-minimal AdGuard backup scope documented and independently verified against current DPIA/retention/live state — policy: `infrastructure/adguard-server/BACKUP_SCOPE_POLICY.md`, blob `e62b48a3e746b1be90881bbffab3b7680384cc16`; evidence: `TSK_0429_PRIVACY_MINIMAL_BACKUP_SCOPE_EVIDENCE_2026-08-27.md`, blob `b77c6d7a2e17adc5e653151b55137467a8c5b62f`.
 - `TSK-0430` — encrypted configuration backup created, independently audited and directly decrypted by the authorised owner — evidence: `TSK_0430_ENCRYPTED_CONFIG_BACKUP_EVIDENCE_2026-08-27.md`, blob `de1820cb2a9fc5b175c5e5eb1e18b45e6a430a82`; ciphertext SHA-256 `bd5cad421a44efb27a669a0119f6247f456e1e8e97a0f23bb628933e6208ccde`; owner recipient fingerprint `SHA256:682Jbw3baP6jxs57+1c5lchlkrNMELcvDk8bauEl51U`; owner-side decrypted configuration SHA-256 `d8b6eae3b85edbaa1c49e318354389dc616099ecb3d2d90eff3c3dd8c663e1f2`.
 - `TSK-0431` — pilot restore/rebuild recovery acceptance fully satisfied: project-controlled isolated recovery drill PASS with deterministic `rec-v1` routing, encrypted DoH/DoT, filtering/rollback, privacy, health and 12-second recovery evidence; owner-managed Azure-native restore subsequently reported successful by the Project Owner — project recovery evidence `TSK_0431_PROJECT_CONTROLLED_RECOVERY_DRILL_EVIDENCE_2026-08-28.md`, blob `2df5c05767fe326e38c609d37888f672dcb9dd48`; Azure restore owner evidence `TSK_0431_AZURE_RESTORE_OWNER_EVIDENCE_2026-08-28.md`, blob `e077165e98fa4460fba84466ffe28953ad53dec0`. **ACC-0431 and REQ-0052 recovery acceptance are satisfied.**
+- `TSK-0510` — pilot technical acceptance report compiled and independently audited against ACC-0510, REQ-0065/REQ-0066, current predecessor evidence and the LG-03 boundary — report `TSK_0510_PILOT_TECHNICAL_ACCEPTANCE_REPORT_2026-08-28.md`, blob `fbc41f65ec56e7e9ea8873e9a995b66ae9e8f2c9`; evidence `TSK_0510_PILOT_TECHNICAL_ACCEPTANCE_EVIDENCE_2026-08-28.md`, blob `ce833b35f904c7657b5cc69419ec388b84e1a611`; independent audit run `33175993512` / job `98864628019`: PASS. The evidence signature is Git/repository evidence only; no human/legal signature or gate approval is fabricated. **TSK-0510 = PASS; LG-03 remains NOT PASS.**
 - `TSK-0166` — pseudonymous Experiment-1 participant record/metric schema created and independently audited with direct predecessor proof — artifact: `EXPERIMENT_01_PARTICIPANT_RECORD_SCHEMA.md`, blob `c7706fceced87c797b8cd92179198754e2b08ffe`; evidence: `TSK_0166_PARTICIPANT_RECORD_SCHEMA_EVIDENCE_2026-08-28.md`, blob `d043370a9c1efc99ccf8f65b813733b4c832c3f0`; independent audit run `33130737625` / job `98719395096`: PASS.
 - `TSK-0168` — Experiment-1 qualification screener created and independently audited — artifact: `EXPERIMENT_01_QUALIFICATION_SCREENER.md`, blob `d35d3e0abfc3882d648df3c0c7458e216853b592`; evidence: `TSK_0168_QUALIFICATION_SCREENER_EVIDENCE_2026-08-28.md`, blob `760f881100e6221640c8afa86108665dc4ba1792`; independent audit run `33130918142` / job `98719985132`: PASS.
 - `TSK-0214` — Experiment-1 retention/deletion execution checklist independently verified with direct predecessor proof — artifact: `RETENTION_DELETION_EXECUTION_CHECKLIST.md`, blob `5c2d6edbfbabe9ed0fb9c309e7afca8c96fa9c9f`; evidence: `TSK_0214_RETENTION_DELETION_CHECKLIST_EVIDENCE_2026-08-28.md`, blob `0740743793e53c655f3ca447fddd51fd70b8d6e5`; independent audit run `33152847430` / job `98788653014`: PASS.
@@ -334,12 +335,16 @@ The first verifier run `33167781526` was rejected as a test false negative becau
 
 ## Queue status after current reconciliation
 
-TSK-0428 and TSK-0431 are runtime PASS with current direct evidence. The dependency change makes **1** ordinary L2 `AUTO_ALLOWED` task newly dependency-ready:
+TSK-0510 is runtime PASS with durable report/evidence and an independent repository audit. Recomputing the L2 dependency graph after that mutation yields **0 ordinary dependency-ready `AUTO_ALLOWED` tasks**.
 
-- `TSK-0510` — Compile signed pilot technical acceptance report. Hard predecessors `TSK-0511; TSK-0512; TSK-0207; TSK-0428; TSK-0431; TSK-0011` are now satisfied. WBS classification: L2 / A3 / `AUTO_ALLOWED` / HIGH / critical path.
+The direct L2 successors remain constrained as follows:
 
-No participant/public activation, legal approval, launch, Azure control-plane mutation, or other HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED act is authorized by this dependency change.
+- `TSK-0513` — end-to-end synthetic rehearsal — remains unavailable because hard predecessor `TSK-0167` is not PASS. TSK-0167 itself depends on `TSK-0221`, which is owner-deferred until 2027-08-27 or earlier explicit owner reactivation and is a HUMAN_ONLY notice-approval/release action.
+- `TSK-0026` — assemble the G-02/LG-03 evidence package — remains unavailable because required legal/privacy predecessors including `TSK-0211`, `TSK-0217`, and `TSK-0221` remain owner-deferred/unresolved.
+- `TSK-0215` and `TSK-0218`, although they depend on TSK-0510, remain explicitly `DEFERRED` under the 2026-08-27 owner legal hold and are not executable ordinary work.
+
+The accepted technical report does not alter the legal hold, does not satisfy LG-03, and does not authorize recruitment, participant processing, child-linked DNS activation, public launch, or any Project Owner/HUMAN_ONLY gate decision.
 
 ## Exact next authoritative step
 
-Execute bounded TSK-0510 preparation/verification under its existing AUTO_ALLOWED authority: compile the pilot technical acceptance report from the current mandatory technical evidence, map every mandatory gate requirement to durable evidence, record reviewer/date/deviations/disposition, verify the report against ACC-0510, persist/read back the artifact/evidence, then recompute the queue. Do not treat the technical report as participant-activation, legal, privacy, launch, or owner gate approval.
+There is no ordinary dependency-ready L2 `AUTO_ALLOWED` work after TSK-0510. Preserve the current technical baseline and WAIT on the owner-deferred legal/regulatory/compliance branch until **2027-08-27** or an earlier explicit Project Owner reactivation. Do not recruit or activate real participants and do not infer LG-03 PASS. If the owner explicitly reactivates that branch earlier, reload its exact WBS rows/gates/requirements and resume from the highest-priority unresolved legal/privacy predecessor rather than bypassing it.
