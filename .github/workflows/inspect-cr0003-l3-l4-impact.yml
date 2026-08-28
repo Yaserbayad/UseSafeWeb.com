@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   inspect:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -23,54 +23,31 @@ jobs:
           import csv, pathlib
           p = pathlib.Path('Plans/Master/WBS/master-wbs.csv')
           rows = list(csv.DictReader(p.open(newline='', encoding='utf-8-sig')))
-          by_id = {r.get('Task_ID','').strip(): r for r in rows}
-          def stage(r): return r.get('Lifecycle_Stage','').strip()
-          def deps(r):
-              s=r.get('Dependencies','') or ''
-              return [x.strip() for x in s.split(';') if x.strip()]
+          def stage(r): return (r.get('Lifecycle_Stage') or '').strip()
+          def deps(r): return [x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
           l3_ids={r['Task_ID'].strip() for r in rows if stage(r)=='L3'}
           l4=[r for r in rows if stage(r)=='L4']
-          roots=[]
-          cross=[]
-          for r in l4:
-              ds=deps(r)
-              if not any(d in {x['Task_ID'].strip() for x in l4} for d in ds):
-                  roots.append(r)
-              if any(d in l3_ids for d in ds):
-                  cross.append(r)
-          l3_with_l4=[]
-          for r in rows:
-              tid=r.get('Task_ID','').strip()
-              if tid in l3_ids and any(tid in deps(x) for x in l4):
-                  l3_with_l4.append(r)
-          cols=['Task_ID','Title','Lifecycle_Stage','Plan_Status','Execution_State','Priority','Critical_Path','Dependencies','Trigger','Preconditions','Acceptance_ID','Acceptance_Criteria','Verification_Method','Evidence_Required','Primary_Owner','AI_Capability_A0_A4','Action_Authority','Requirement_Reference','Constraint_Reference','Interface_Reference','Gate_Reference','Source_Reference','Notes']
-          out=[]
-          out.append('# CR-0003 L3 to L4 impact inspection')
-          out.append('')
-          out.append(f'- WBS rows: {len(rows)}')
-          out.append(f'- L3 tasks: {len(l3_ids)}')
-          out.append(f'- L4 tasks: {len(l4)}')
-          out.append(f'- L4 roots (no L4 predecessor): {len(roots)}')
-          out.append(f'- L4 tasks with direct L3 dependency: {len(cross)}')
-          out.append('')
+          l4_ids={r['Task_ID'].strip() for r in l4}
+          roots=[r for r in l4 if not any(d in l4_ids for d in deps(r))]
+          cross=[r for r in l4 if any(d in l3_ids for d in deps(r))]
+          l3_with_l4=[r for r in rows if (r.get('Task_ID') or '').strip() in l3_ids and any((r.get('Task_ID') or '').strip() in deps(x) for x in l4)]
+          cols=['Lifecycle_Stage','Plan_Status','Execution_State','Priority','Critical_Path','Dependencies','Trigger','Preconditions','Acceptance_ID','Acceptance_Criteria','Verification_Method','Evidence_Required','Primary_Owner','AI_Capability_A0_A4','Action_Authority','Requirement_Reference','Constraint_Reference','Interface_Reference','Gate_Reference','Source_Reference','Notes']
+          out=['# CR-0003 L3 to L4 impact inspection','',f'- WBS rows: {len(rows)}',f'- L3 tasks: {len(l3_ids)}',f'- L4 tasks: {len(l4)}',f'- L4 roots (no L4 predecessor): {len(roots)}',f'- L4 tasks with direct L3 dependency: {len(cross)}','']
           def emit(title, items):
-              out.append(f'## {title}')
-              out.append('')
+              out.extend([f'## {title}',''])
               for r in items:
-                  out.append(f"### {r.get('Task_ID','')} — {r.get('Title','')}")
-                  for c in cols[2:]:
-                      if c in r and (r.get(c) or '').strip():
-                          out.append(f'- **{c}:** {(r.get(c) or '').strip()}')
+                  out.append(f"### {(r.get('Task_ID') or '').strip()} — {(r.get('Title') or '').strip()}")
+                  for c in cols:
+                      v=(r.get(c) or '').strip()
+                      if v: out.append(f'- **{c}:** {v}')
                   out.append('')
           emit('L3 tasks directly feeding L4', l3_with_l4)
           emit('L4 roots', roots)
           emit('L4 tasks with direct L3 dependencies', cross)
-          # Also capture likely gate/decision tasks around L3 exit.
           likely=[]
           for r in rows:
-              txt=(' '.join([r.get('Title',''),r.get('Acceptance_Criteria',''),r.get('Notes','')])).lower()
-              if stage(r)=='L3' and any(k in txt for k in ['experiment-1', 'behavioral', 'behavioural', 'gate', 'proceed', 'pivot', 'outcome', 'canonical state']):
-                  likely.append(r)
+              txt=' '.join([(r.get('Title') or ''),(r.get('Acceptance_Criteria') or ''),(r.get('Notes') or '')]).lower()
+              if stage(r)=='L3' and any(k in txt for k in ['experiment-1','behavioral','behavioural','gate','proceed','pivot','outcome','canonical state']): likely.append(r)
           emit('L3 exit / gate / outcome candidates', likely)
           pathlib.Path('CR_0003_L3_L4_IMPACT_INSPECTION_2026-08-28.md').write_text('\n'.join(out)+'\n', encoding='utf-8')
           print('CR0003_IMPACT_INSPECTION=PASS')
