@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T18:14:06Z
+**Updated:** 2026-08-28T18:19:14Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -474,6 +474,12 @@ Current first-party OWASP ASVS/Input-Validation/XSS/SSRF guidance and AdGuard an
 
 The measurement architecture creates no approved persistent raw event stream, analytics identity, full journey-token field, session replay or cross-session profile. Human-assistance incidence/minutes remain dormant definitions requiring a future reopened governed measurement contract before collection. `RSK-0002` remains OPEN: no real-user KPI value, support burden, completion or comprehension result is inferred. This PASS does not activate telemetry/storage, accounts, participants, legal completion, build, publication or launch.
 
+### TSK-0538 accepted stable state
+
+`TSK-0538 — Define reliability, observability, recovery, and service-level NFRs`: **PASS for the provisional internal L4 reliability/operability-NFR-definition acceptance under DEC-0050/CR-0003**. Contract `TSK_0538_RELIABILITY_OBSERVABILITY_RECOVERY_SERVICE_LEVEL_NFR_2026-08-28.md`, blob `d81537ef3ef66789528336e101d1e05f30030892`; independent evidence `TSK_0538_RELIABILITY_OBSERVABILITY_RECOVERY_SERVICE_LEVEL_NFR_EVIDENCE_2026-08-28.md`, blob `bd7a9f0d8a54dd28d423587257f1cd226b3e5dbc`. ACC-0538 is satisfied: critical journeys, privacy-safe signals, provisional internal SLI/SLO targets, symptom-based alert conditions, <=30-minute end-to-end recovery objective, privacy-minimal backup/restore scope, restore-test contract/cadence, maintenance behavior and incident/escalation ownership are explicit and testable.
+
+The internal 99.9% DoH/DoT 30-day target is provisional and intentionally compatible with the accepted single-node approximately-30-minute recovery model; it is not a public SLA and does not authorize HA spend. The new monitoring set/future web-app observability are not implemented by this PASS. `DVR-0230-01`, `DVR-0484-01`, `GAP-0484-02` and `RSK-0002` remain OPEN. This PASS does not authorize a new monitoring vendor, Azure control-plane mutation, staffed support, implementation/build, participants, publication or launch.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -485,13 +491,8 @@ The measurement architecture creates no approved persistent raw event stream, an
 
 ## Queue status after current reconciliation
 
-The TSK-0497 post-PASS queue was reread against current acceptance, CR-0003 and open security/privacy deviations. `TSK-0187` remains ineligible because it requires representative-parent evidence. `TSK-0140` remains ineligible for PASS because owner/multi-role review evidence is absent. `TSK-0538` is the only dependency-ready AUTO_ALLOWED L4 candidate with no preflight flag.
-
-- **Selected next: `TSK-0538 — Define reliability, observability, recovery, and service-level NFRs`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
-- Hard dependency: `TSK-0484` — current PASS.
-- ACC-0538: specification defines critical user journeys, provisional SLI/SLO targets, alert conditions, recovery objectives, backup scope, restore test, maintenance behavior, and escalation ownership.
-- Selection boundary: internal reliability/operability NFR definition only. No new monitoring vendor, public SLA, HA/multi-node infrastructure, Azure control-plane mutation, staffed-support promise, implementation/build, participants or launch is authorized.
+`TSK-0538` is runtime PASS for its bounded provisional-L4 reliability/operability-NFR-definition acceptance. No public SLA or implementation is inferred. A fresh conservative dependency-ready AUTO_ALLOWED L4 queue has been generated at `TSK_0538_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. No next task is selected by this write; the queue must be reread against acceptance, direct predecessor evidence, CR-0003, human/legal/participant holds and the open security/privacy deviations before execution.
 
 ## Exact next authoritative step
 
-Execute bounded TSK-0538: define the critical user/operational journeys and on-call questions; specify privacy-safe SLIs and provisional SLOs consistent with the accepted approximately-30-minute single-node recovery baseline; define symptom-based alerts, recovery/backup/restore objectives, maintenance behavior, incident severity/escalation ownership and verification; use only aggregate/service-health signals and preserve DNS/query-history prohibitions; persist/read back independent ACC-0538 evidence; reconcile runtime; then recompute.
+Read back the TSK-0538 post-PASS L4 queue, reject any candidate requiring unavailable real-user evidence, owner/legal/privacy approval, unresolved trigger/gate or missing predecessor proof, account for open security/privacy deviations where relevant, and persist the deterministic highest-priority eligible AUTO_ALLOWED selection.
