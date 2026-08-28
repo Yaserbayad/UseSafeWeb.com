@@ -21,20 +21,16 @@ jobs:
           ref: main
           fetch-depth: 0
           persist-credentials: true
-      - name: Verify exact pre-state and preparation evidence
+      - name: Verify exact pre-state and corrected preparation evidence
         shell: bash
         run: |
           set -euo pipefail
-          echo "machine=$(sha256sum /etc/machine-id | awk '{print $1}')"
-          echo "state=$(git hash-object CURRENT_STATE.md)"
-          echo "candidate=$(git hash-object TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_CANDIDATE_2026-08-28.md)"
-          echo "evidence=$(git hash-object TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_PREPARATION_EVIDENCE_2026-08-28.md)"
-          grep -F 'TSK-0318 HUMAN_ONLY preparation selected' CURRENT_STATE.md >/dev/null
-          grep -F 'selected runtime **TODO** item for **preparation only**' CURRENT_STATE.md >/dev/null
           test "$(sha256sum /etc/machine-id | awk '{print $1}')" = "e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2"
           test "$(git hash-object CURRENT_STATE.md)" = "61cdb05991f01526bf09d7cee3b94f27ae62d542"
-          test "$(git hash-object TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_CANDIDATE_2026-08-28.md)" = "e5f7cd082397966893864213d43c634e62c0e701"
-          test "$(git hash-object TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_PREPARATION_EVIDENCE_2026-08-28.md)" = "c7cd8fa2b9759ceb33ee68064f7d258608fd77ee"
+          test "$(git hash-object TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_CANDIDATE_2026-08-28.md)" = "64f0e6382a5ce166c0aad2ad2e86a3796c5df379"
+          test "$(git hash-object TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_PREPARATION_EVIDENCE_2026-08-28.md)" = "4a4d766a2fb58e390c9ee80c93dfecf75d50b2eb"
+          grep -Fq 'TSK-0318 HUMAN_ONLY preparation selected' CURRENT_STATE.md
+          grep -Fq 'selected runtime **TODO** item for **preparation only**' CURRENT_STATE.md
       - name: Apply bounded WAITING reconciliation
         shell: bash
         run: |
@@ -55,9 +51,9 @@ jobs:
               raise SystemExit('queue marker mismatch')
           tail = (
               '### TSK-0318 preparation stable state\n\n'
-              '`TSK-0318 — Design the public website IA and product/setup IA as distinct but connected systems`: runtime **WAITING**, not PASS. Bounded AI preparation is complete. Candidate `TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_CANDIDATE_2026-08-28.md`, blob `e5f7cd082397966893864213d43c634e62c0e701`, publication commit `e963f39684206bc08f5977957b0c9f379c82e716`; preparation evidence `TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_PREPARATION_EVIDENCE_2026-08-28.md`, blob `c7cd8fa2b9759ceb33ee68064f7d258608fd77ee`, publication commit `229b069bb67c3d6f07f2aae03a6933c9b9d8017d`. Preparation independently verifies complete ACC-0318 content coverage while preserving A1/HUMAN_ONLY authority.\n\n'
-              'The candidate separates public information architecture from the task/state-driven setup product; gives every current page/screen one purpose, entry, exit, content owner, SEO/index intent, privacy requirement and accessibility requirement; maps every critical TSK-0315 service stage without duplicating mutable technical/support authority; preserves accountless/friction/protection-state/legal boundaries.\n\n'
-              'TSK-0318 cannot become PASS until an authorized human explicitly APPROVES, REQUESTS CHANGES to, or REJECTS exact candidate blob `e5f7cd082397966893864213d43c634e62c0e701`. Approval remains provisional internal L4 only and does not authorize implementation, publication, market activation or launch.\n\n'
+              '`TSK-0318 — Design the public website IA and product/setup IA as distinct but connected systems`: runtime **WAITING**, not PASS. Bounded AI preparation is complete. Candidate `TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_CANDIDATE_2026-08-28.md`, exact Git blob `64f0e6382a5ce166c0aad2ad2e86a3796c5df379`, publication commit `e963f39684206bc08f5977957b0c9f379c82e716`; corrected preparation evidence `TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_PREPARATION_EVIDENCE_2026-08-28.md`, blob `4a4d766a2fb58e390c9ee80c93dfecf75d50b2eb`, correction commit `8dc7015fb6fa8826a8cc46f6899633a7b0053f3b`. The first evidence binding used a wrong candidate blob; the runtime guard prevented mutation, production-runner Git hashing established the exact blob above, and the evidence was corrected/read back before this reconciliation.\n\n'
+              'Preparation independently verifies complete ACC-0318 content coverage while preserving A1/HUMAN_ONLY authority. The candidate separates public information architecture from the task/state-driven setup product; gives every current page/screen one purpose, entry, exit, content owner, SEO/index intent, privacy requirement and accessibility requirement; maps every critical TSK-0315 service stage without duplicating mutable technical/support authority; preserves accountless/friction/protection-state/legal boundaries.\n\n'
+              'TSK-0318 cannot become PASS until an authorized human explicitly APPROVES, REQUESTS CHANGES to, or REJECTS exact candidate blob `64f0e6382a5ce166c0aad2ad2e86a3796c5df379`. Approval remains provisional internal L4 only and does not authorize implementation, publication, market activation or launch.\n\n'
               '## Queue status after TSK-0318 preparation\n\n'
               '`TSK-0318` is **WAITING** on its HUMAN_ONLY design disposition. Its AUTO_ALLOWED successors remain blocked pending PASS. Independently eligible HUMAN_ONLY TSK-0319 may still be prepared because its own dependencies TSK-0315 and TSK-0320 are already PASS. Current global fences remain unchanged.\n\n'
               '## Exact next authoritative step\n\n'
@@ -73,7 +69,7 @@ jobs:
           git diff --check
           grep -Fq '### TSK-0318 preparation stable state' CURRENT_STATE.md
           grep -Fq '`TSK-0318` is **WAITING**' CURRENT_STATE.md
-          grep -Fq 'e5f7cd082397966893864213d43c634e62c0e701' CURRENT_STATE.md
+          grep -Fq '64f0e6382a5ce166c0aad2ad2e86a3796c5df379' CURRENT_STATE.md
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add CURRENT_STATE.md
