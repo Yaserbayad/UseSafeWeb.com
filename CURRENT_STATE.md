@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T08:32:29Z  
+**Updated:** 2026-08-28T08:47:54Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -36,6 +36,7 @@ GitHub is the active execution bridge for eligible AUTO_ALLOWED host work. Repos
 - `TSK-0438` — domain/control owner condition.
 - `TSK-0439` — pilot device DNS methods — evidence blob `f9af8b18cdc85bfe9b120661776172ab8581c2c9`.
 - `TSK-0440` — encrypted-DNS hostname/path — evidence blob `9e0f15d0e1f11c892cf51317b705ac21c9563e53`.
+- `TSK-0441` — public DNS for `dns.usesafeweb.com` independently verified from system, Cloudflare, Google and Quad9 resolvers with exact A `52.157.109.120` and no AAAA/CNAME — evidence: `TSK_0441_PUBLIC_DNS_EVIDENCE_2026-08-28.md`, blob `91369bbe33eb608361e8b7b771ceca0a5cd42d50`; verification run `33156757093`, jobs `98801252982` and `98801253193`: PASS.
 - `TSK-0203` — supported AdGuard release installed — evidence blob `382b70ca971739712ff8ad5668d03841d5493d62`.
 - `TSK-0201` — restricted authenticated administration/change path — evidence blob `ae06672e1cebdf87d006b85b80e5a7977f4e69b9`.
 - `TSK-0204` — persistent query logging and file query logging explicitly disabled — corrected evidence: `TSK_0204_QUERYLOG_PRIVACY_EVIDENCE_2026-08-27.md`, blob `aa84d93d33d789fe4ff74ea12bcc2e5ffccd5b06`.
@@ -196,35 +197,29 @@ Independent read-only audit run `33155547694` / job `98797333013`: **PASS**. It 
 
 Evidence: `TSK_0169_SUPPORT_FALSE_POSITIVE_INTAKE_EVIDENCE_2026-08-28.md`, blob `30a4d4380f0aa475a90c1719408663d7a43df384`. ACC-0169 is fully satisfied. This is support-process preparation only; no participant support case, diagnostic logging or participant processing occurred.
 
+### TSK-0441 accepted stable state
+
+The exact WBS/runtime preflight defines TSK-0441 as L2 / A3 / `AUTO_ALLOWED` / HIGH / critical path with hard predecessors `TSK-0440; TSK-0435; TSK-0011`, all satisfied, acceptance `ACC-0441`.
+
+After the owner completed the Cloudflare-side record, independent read-only verification run `33156757093` executed on two repository-scoped self-hosted runners. Jobs `98801252982` (`adguardvm`) and `98801253193` (`adguartestdvm`) both returned the exact same public state: the system resolver, Cloudflare `1.1.1.1`, Google `8.8.8.8` and Quad9 `9.9.9.9` resolve `dns.usesafeweb.com` to `52.157.109.120`, with no AAAA or CNAME observed.
+
+Evidence: `TSK_0441_PUBLIC_DNS_EVIDENCE_2026-08-28.md`, blob `91369bbe33eb608361e8b7b771ceca0a5cd42d50`. ACC-0441 is fully satisfied. This proves public DNS only and does not prove TLS/DoH/DoT readiness, open public resolver ports, or authorize participant activation.
+
 ### WAITING — TSK-0431
 
-`TSK-0431` — test pilot restore or rebuild procedure: **WAITING on an independent clean recovery target and the owner-managed Azure/TLS inputs required by ACC-0431/REQ-0052; not PASS**.
+`TSK-0431` — test pilot restore or rebuild procedure: **WAITING on an independently confirmed clean recovery target plus the owner-managed Azure/TLS inputs required by ACC-0431/REQ-0052; not PASS**.
 
 The exact WBS row is L2 / A3 / `AUTO_ALLOWED` / HIGH / critical path with hard predecessors `TSK-0430; TSK-0011`, both satisfied. ACC-0431 requires a functional test target that passes encrypted-DNS and privacy checks with recovery time/issues recorded. REQ-0052 requires a timed clean-server drill covering host baseline, packages, AdGuard, server-managed configuration, firewall/network, endpoint, TLS, filters, privacy, startup, Azure-native backup/restore, verification and health.
 
-CON-0019 and CON-0004 require a fresh owner-provided Ubuntu 24.04 LTS Azure VM and keep Azure VM/control-plane creation/configuration outside project automation. The live `adguardvm` is the current single DNS node and is not an independent clean test target; destructively rebuilding it merely to generate evidence would create avoidable outage/security/privacy risk. In addition, TSK-0441 public DNS and TSK-0442 TLS are not yet PASS, so the encrypted-DNS/TLS portion of the acceptance is not presently available end-to-end.
+CON-0019 and CON-0004 require a fresh owner-provided Ubuntu 24.04 LTS Azure VM and keep Azure VM/control-plane creation/configuration outside project automation. The owner has now registered repository runner `adguartestdvm`; read-only probe job `98801253193` proves Ubuntu 24.04 and non-interactive sudo, but the machine reports hostname `adguardvm` and an active AdGuard service. Independent-machine identity/freshness therefore remains to be directly established before any recovery mutation. TSK-0441 public DNS is now PASS, while TSK-0442 TLS is not yet PASS.
 
-No Azure control-plane action, new VM creation, or production mutation was performed. Preflight evidence: `TSK_0431_RECOVERY_DRILL_PREFLIGHT_EVIDENCE_2026-08-28.md`, blob `701398159b8b35d5c48ca9b8e3b193acfa038b1e`.
+No Azure control-plane action, rebuild, or recovery mutation has been performed on the reported test runner. Preflight evidence remains `TSK_0431_RECOVERY_DRILL_PREFLIGHT_EVIDENCE_2026-08-28.md`, blob `701398159b8b35d5c48ca9b8e3b193acfa038b1e`.
 
-Deterministic resumption condition: an owner-provided reachable fresh Ubuntu 24.04 LTS Azure test target in the approved West Europe boundary is handed off with approved automation access and no participant data; the endpoint/TLS inputs needed for encrypted-DNS verification are available; and an owner-managed Azure-native backup/restore interface or evidence path is available for the REQ-0052 drill. Only then may the timed clean-server restore/rebuild acceptance execute.
-
-### WAITING — TSK-0441
-
-`TSK-0441` — create public DNS records for the pilot endpoint: **WAITING on the owner/provider Cloudflare DNS zone mutation; not PASS**.
-
-The exact WBS row is L2 / A3 / `AUTO_ALLOWED` / HIGH / critical path with hard predecessors `TSK-0440; TSK-0435; TSK-0011`, all satisfied. ACC-0441 requires `dns.usesafeweb.com` to resolve to the correct pilot target from multiple resolvers with no stale/conflicting record.
-
-Read-only public DNS verification proved the record is currently absent. The system resolver, Cloudflare `1.1.1.1`, Google `8.8.8.8`, and Quad9 `9.9.9.9` all return no A, AAAA or CNAME for `dns.usesafeweb.com`, while all four resolve `srv.usesafeweb.com` to `52.157.109.120`. Corrected DNS-state run `33130366213` / job `98718208157`: PASS for inspection.
-
-Authoritative DNS-provider inspection proved the zone is hosted by Cloudflare nameservers `devin.ns.cloudflare.com` and `haley.ns.cloudflare.com`. Provider run `33130403163` / job `98718326300`: PASS. No Cloudflare account-control plugin is available in the current execution environment and no existing repository Cloudflare DNS automation/token path was found. No credential was requested or stored.
-
-Exact required provider action under the approved endpoint contract: create an **A** record `dns.usesafeweb.com` -> `52.157.109.120`, **DNS only / not proxied**, with no AAAA or CNAME for this baseline. Evidence: `TSK_0441_PUBLIC_DNS_PREFLIGHT_EVIDENCE_2026-08-28.md`, blob `a4c5365507fa9ffb9803872ace7fe78a4c9aec01`.
-
-Deterministic resumption condition: the owner/provider creates that record, or an explicitly authorized Cloudflare zone-control interface becomes available; then multi-resolver read-back must prove the intended direct target with no conflicting A/AAAA/CNAME state before PASS.
+Deterministic resumption condition: prove that `adguartestdvm` is an independent clean Ubuntu 24.04 LTS Azure target inside the approved West Europe boundary with no participant data; confirm the endpoint/TLS inputs needed for encrypted-DNS verification; and provide/verify an owner-managed Azure-native backup/restore interface or evidence path for the REQ-0052 drill. Only then may the timed clean-server restore/rebuild acceptance execute.
 
 ### External/provider and legal boundaries
 
-- Cloudflare authoritative DNS is owner/provider-controlled; no account-control integration is currently available. TSK-0441 is WAITING on the exact DNS-only A-record mutation above.
+- The TSK-0441 Cloudflare DNS mutation is satisfied and independently verified. Any further Cloudflare account/zone mutation remains owner/provider-controlled unless an explicitly authorized interface becomes available.
 - Azure control-plane provisioning/configuration remains owner-managed; no backup vault/storage account or other Azure control-plane resource is assumed or created by project automation.
 - Owner-deferred UK representative/ICO fee planning remains unresolved until 2027-08-27 or earlier explicit reactivation; technical work does not imply validation-readiness legal gate PASS or authorize real England participant activation.
 
@@ -235,12 +230,12 @@ Deterministic resumption condition: the owner/provider creates that record, or a
 - Current contradictory direct evidence reopens stale PASS rather than being ignored.
 - No secrets, credentials, password hashes, private keys, unnecessary personal data, or raw DNS query history may be exported to GitHub.
 - Public resolver ports remain closed until exact privacy/security/abuse/TLS controls are verified.
-- Azure control-plane remains owner-managed; runner autonomy applies to the handed-off VM and repository-authorized tasks.
+- Azure control-plane remains owner-managed; runner autonomy applies to handed-off VM/repository-authorized tasks only after target identity and scope are verified.
 
-## Queue status after TSK-0169
+## Queue status after TSK-0441
 
-Read-only queue derivation run `33155747475` / job `98797968263` completed successfully on exact `main` commit `9615fce3d096d9be7215dfae75bfedc3e65653d1` and returned `READY_COUNT=0` for L2 / `AUTO_ALLOWED` / dependency-ready work while current WAITING items were excluded.
+TSK-0441 has transitioned from WAITING to PASS. The L2 queue has not yet been recomputed against this new confirmed runtime state.
 
 ## Exact next authoritative step
 
-No further eligible autonomous L2 work remains in the current state. Hold `TSK-0431` and `TSK-0441` at their deterministic WAITING boundaries and recompute eligibility when one of their stated external conditions becomes true, or when a newer explicit owner instruction lawfully changes scope/authority. Do not bypass participant-activation, legal, Azure control-plane, Cloudflare provider, recovery, or public-service readiness boundaries.
+Recompute the current L2 queue after confirmed TSK-0441 PASS. In parallel only as read-only preflight, establish whether runner `adguartestdvm` is a genuinely independent Azure recovery target before allowing TSK-0431 mutation. Continue only the highest-priority eligible autonomous work after direct dependency/gate verification; do not bypass TLS/public-service readiness, participant-activation, legal, Azure control-plane, recovery, or provider boundaries.
