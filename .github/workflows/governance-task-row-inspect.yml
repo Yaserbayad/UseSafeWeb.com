@@ -25,20 +25,51 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Inspect TSK-0214 and predecessor TSK-0224
+      - name: Independent TSK-0214 retention checklist audit
         shell: bash
         run: |
           set -Eeuo pipefail
           [[ "$(hostname -s)" == "adguardvm" ]]
           python3 - <<'PY'
-          import csv,json
+          import csv,subprocess
           rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',newline='',encoding='utf-8-sig')))
           by={r['Task_ID'].strip():r for r in rows if (r.get('Task_ID') or '').strip()}
-          for tid in ['TSK-0224','TSK-0214']:
-              assert tid in by, tid
-              print(tid+'='+json.dumps(by[tid],sort_keys=True,ensure_ascii=False))
-          graph=open('Plans/Master/RELATIONSHIP_INDEX.yaml',encoding='utf-8').read()
-          for tid in ['TSK-0224','TSK-0214']:
-              print(tid+'_GRAPH_PRESENT='+str(tid in graph).upper())
-          print('TSK_0214_ROW_INSPECTION=PASS')
+          t=by['TSK-0214']; p=by['TSK-0224']
+          assert t['Action_Authority'].strip()=='AUTO_ALLOWED'
+          assert t['Acceptance_ID'].strip()=='ACC-0214'
+          assert t['Dependencies'].strip()=='TSK-0224; TSK-0166'
+          assert p['Acceptance_ID'].strip()=='ACC-0224' and p['Execution_State'].strip()=='PASS'
+          files={
+            'check':'RETENTION_DELETION_EXECUTION_CHECKLIST.md',
+            'gate':'VALIDATION_READINESS_GATE.md',
+            'schema':'EXPERIMENT_01_PARTICIPANT_RECORD_SCHEMA.md',
+          }
+          blobs={k:subprocess.check_output(['git','hash-object',v],text=True).strip() for k,v in files.items()}
+          assert blobs['check']=='5c2d6edbfbabe9ed0fb9c309e7afca8c96fa9c9f',blobs['check']
+          assert blobs['gate']=='b3b0efd0cc0f40faa1ecab190c7469b8dff12ec1',blobs['gate']
+          assert blobs['schema']=='c7706fceced87c797b8cd92179198754e2b08ffe',blobs['schema']
+          gate=open(files['gate'],encoding='utf-8').read()
+          schema=open(files['schema'],encoding='utf-8').read()
+          text=open(files['check'],encoding='utf-8').read()
+          predecessor=[
+            'identifiable DNS/domain history: **not retained**',
+            'no later than 30 days after that participant\'s follow-up',
+            'no later than 90 days after Experiment 1 closes',
+            'aggregate/anonymised business findings may remain in the canonical repository'
+          ]
+          for s in predecessor: assert s in gate,'predecessor gap '+s
+          assert 'Real participant records are not committed to GitHub.' in schema
+          required=[
+            '## Data-location register','Participant/contact record location','Pseudonymous experiment metric store',
+            'AdGuard/DNS service','Exceptional diagnostic location','GitHub canonical repository',
+            'Responsible owner','Exact deletion due date','Verification method','Aggregate output allowed?',
+            'follow-up completion + 30 days','Experiment-1 close + 90 days','## Exception handling',
+            'Deletion event ID:','Verification result: PASS/FAIL','does not authorise participant activation'
+          ]
+          for s in required: assert s in text,'ACC-0214 gap '+s
+          print('TSK_0224_DIRECT_PREDECESSOR_PROOF=PASS')
+          print('TSK_0166_CURRENT_ARTIFACT_BOUNDARY_PROOF=PASS')
+          print('TSK_0214_ACCEPTANCE_CLASSES=6/6')
+          print('TSK_0214_ARTIFACT_BLOB='+blobs['check'])
+          print('TSK_0214_INDEPENDENT_AUDIT=PASS')
           PY
