@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T14:48:43Z  
+**Updated:** 2026-08-28T15:24:00Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -358,6 +358,12 @@ This PASS closes internal preparation only. The artifact remains **NOT FOR PARTI
 
 The PASS remains valid against the reconciled TSK-0028 baseline because both the rehearsal and current gate state explicitly preserve G-02/LG-03 = DEFER and recruitment/real-participant processing = unauthorized. No equivalent re-execution was needed.
 
+### CR-0003 owner-authorized L3 deferral / provisional L4 baseline
+
+The Project Owner explicitly deferred the complete real-participant Experiment-1/L3 behavioral-validation branch through **2027-08-27**, kept LG-03/LG-04/LG-05 non-PASS/DEFER, and authorized bounded internal L4 Product, Brand and Experience definition/design from current technical/synthetic evidence only. Canonical planning publication commit `a7e536e444e9db4415374a794ca43980f69ba803`; evidence `CR_0003_OWNER_L3_DEFERRAL_PROVISIONAL_L4_EVIDENCE_2026-08-28.md`, blob `8d90d06e547d15cf4dd11c0ba1dccdd115bda4b3`; WBS blob `dce5b829c4d447eac180ae1e896e0019292cf971`; manifest blob `00feca027babfd99dcd1992e3e0abd6ef2d3380b`. Full deterministic validation remained PASS with 641 tasks and 849 dependency edges.
+
+`RSK-0002` remains OPEN and explicitly represents the missing real-participant behavioral evidence. `TSK-0139` is rebaselined as the bounded provisional L4 entry, depending on current `TSK-0513` PASS. `ACC-0139` and `ACC-0141` prohibit claims that behavioral validation occurred. `TSK-0326` and any task whose own acceptance requires actual participant/user evidence remain deferred. No L3 gate PASS, LG-06 PASS, L5/L6 build authority, participant processing, legal completion or public-launch authority is inferred.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -369,16 +375,14 @@ The PASS remains valid against the reconciled TSK-0028 baseline because both the
 
 ## Queue status after current reconciliation
 
-`TSK-0513` is runtime PASS. L2 technical and synthetic pre-experiment preparation is complete through the currently executable CR-0002 path.
+CR-0003 is current canonical authority for L3→L4 sequencing. L3 real-participant work, LG-03/LG-04/LG-05 and real-evidence-dependent L4 research remain deferred. The previously accepted technical/synthetic evidence remains valid for its bounded scope.
 
-Direct successor `TSK-0173 — Verify Experiment-1 launch entry criteria` now has both hard dependencies satisfied (`TSK-0028`, `TSK-0513`) but is **not eligible for dispatch**: its WBS precondition requires `no unresolved safety/privacy blocker`, its acceptance requires unresolved safety/privacy/technical blockers to result in DEFER or FAIL, and current canonical LG-03/G-02 remains DEFER with three unresolved legal/privacy/contact criterion classes. TSK-0173 is also A2 / HUMAN_APPROVAL_REQUIRED.
-
-Downstream recruitment task `TSK-0037` remains unavailable because it depends on TSK-0173 and is HUMAN_ONLY. No real-participant Wave A/B or behavioral-analysis tasks can become current without the launch-entry/recruitment chain.
-
-**Ordinary dependency-ready AUTO_ALLOWED work after this reconciliation: 0.**
-
-CR-0002 has been fully used for the presently identified internal/synthetic L2 preparation path; it does not authorize crossing the real-participant launch-entry gate, fabricating behavioral evidence, or advancing lifecycle gates that require actual participant outcomes.
+- **Selected next: `TSK-0139 — Translate provisional L4 owner authorization into authorised product outcomes`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
+- Hard dependency: `TSK-0513` — current runtime PASS.
+- Acceptance is explicitly provisional: it must identify the current technical/synthetic evidence basis, missing real-participant behavioral evidence, RSK-0002, constraints/stop conditions and only the L4 definition/design scope actually authorized.
+- `TSK-0326` remains unavailable because it still depends on the unexecuted real-participant Experiment-1 evidence chain.
+- The existing independent L4 owner-baseline tasks `TSK-0146`, `TSK-0147`, `TSK-0148` and `TSK-0558` remain preserved PASS; CR-0003 does not invalidate those owner decisions.
 
 ## Exact next authoritative step
 
-Preserve the current completed technical/synthetic baseline. To advance into real Experiment-1 execution, the Project Owner must reactivate and resolve the deferred legal/privacy/contact branch (or provide current verified non-applicability where valid), bring LG-03/G-02 to an explicit PASS with current evidence, and then provide any required approval for TSK-0173/TSK-0037. Until then, do not recruit, process real participants, or infer behavioral-validation outcomes.
+Execute bounded `TSK-0139`: create a provisional L4 product-outcome mandate grounded only in current accepted technical/synthetic evidence and explicit owner decisions. State that real-participant behavioral validation has not occurred, keep RSK-0002 open, define stop/revalidation conditions, and authorize only internal L4 definition/design. Independently verify ACC-0139, persist/read back evidence, then recompute the L4 queue.
