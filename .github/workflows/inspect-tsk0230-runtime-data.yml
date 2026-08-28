@@ -71,19 +71,32 @@ jobs:
           d=yaml.safe_load(open(sys.argv[1]))
           q=d.get('querylog',{}) or {}
           s=d.get('statistics',{}) or {}
+          dns=d.get('dns',{}) or {}
           print('querylog_enabled='+str(bool(q.get('enabled',False))).lower())
           print('querylog_file_enabled='+str(bool(q.get('file_enabled',False))).lower())
           print('statistics_enabled='+str(bool(s.get('enabled',False))).lower())
-          print('anonymize_client_ip='+str(bool(d.get('anonymize_client_ip',False))).lower())
+          print('anonymize_client_ip='+str(bool(dns.get('anonymize_client_ip',False))).lower())
+          print('anonymize_client_ip_schema=dns.anonymize_client_ip')
           PY
           )"
+
+          grep -q '^querylog_enabled=false$' <<< "$qlog"
+          grep -q '^querylog_file_enabled=false$' <<< "$qlog"
+          grep -q '^statistics_enabled=false$' <<< "$qlog"
+          grep -q '^anonymize_client_ip=true$' <<< "$qlog"
 
           cat > TSK_0230_RUNTIME_DATA_FOOTPRINT_INSPECTION_2026-08-28.md <<EOF
           # TSK-0230 runtime data-footprint inspection
 
           **Date:** 2026-08-28  
-          **Target:** production runner host `adguardvm`  
+          **Target:** production runner host adguardvm  
           **Purpose:** privacy-safe read-only inspection for TSK-0230. No access/error log contents or DNS query records were read or exported.
+
+          ## Verifier correction history
+
+          - Run 33193360160 failed before evidence because the verifier tested root-protected AdGuard config readability as the unprivileged runner user. No target mutation occurred.
+          - Run 33193437786 corrected that permission probe and exposed a second verifier defect: it read `anonymize_client_ip` from the YAML root instead of the accepted AdGuard schema path `dns.anonymize_client_ip`. That false negative contradicted TSK-0206 and is not accepted as runtime evidence.
+          - This revision reads and asserts the accepted schema path `dns.anonymize_client_ip` and fails closed unless all four privacy flags match the accepted baseline.
 
           ## Target identity
 
@@ -130,12 +143,12 @@ jobs:
 
           ## Disposition
 
-          TSK-0230 must treat any enabled Nginx access-log target as an actual potential source-IP/request-metadata processing location and must define purpose, lawful basis, retention/deletion, access and prohibited use before later participant/public use. If no such target is enabled, the NFR must preserve that privacy-minimal state unless a governed necessity case authorizes a change.
+          Nginx access logging is acceptable for TSK-0230 only if the effective target remains explicitly off, or a future governed necessity case defines its data/purpose/lawful basis/retention/access/deletion before activation. AdGuard query/file logging and statistics must remain disabled and `dns.anonymize_client_ip` must remain enabled. Any material change reopens the privacy/data-flow acceptance that depends on these facts.
           EOF
 
           git diff --check
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add TSK_0230_RUNTIME_DATA_FOOTPRINT_INSPECTION_2026-08-28.md
-          git commit -m "evidence: record TSK-0230 runtime data footprint"
+          git commit -m "evidence: correct TSK-0230 runtime data footprint"
           git push
