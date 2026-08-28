@@ -1,0 +1,119 @@
+name: Reconcile TSK-0046 PASS and inspect L4 queue
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-tsk0046-pass-and-inspect-l4.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted, Linux, X64]
+    concurrency:
+      group: usesafeweb-governance-state-prod
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify runner identity and immutable inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(sha256sum /etc/machine-id | awk '{print $1}')" = "e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2"
+          test "$(git hash-object CURRENT_STATE.md)" = "6928e90935f892587a40d3b4586e3e2f86e29e3e"
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "dce5b829c4d447eac180ae1e896e0019292cf971"
+          test "$(git hash-object TSK_0046_PERFORMANCE_CAPACITY_NFR_2026-08-28.md)" = "2c48f975d557b1bb4ba6c58c2a8ad3580b2c7b06"
+          test "$(git hash-object TSK_0046_PERFORMANCE_CAPACITY_NFR_EVIDENCE_2026-08-28.md)" = "09d111530c5e9c86feb2cafb54f62fb046a44b6f"
+          test "$(git hash-object TSK_0046_HOST_CAPACITY_BASELINE_EVIDENCE_2026-08-28.md)" = "f43d237b3f6a7135aa498ce4627f8cd7ca59682e"
+          test "$(git hash-object infrastructure/adguard-server/approved-adguard-config-v1.json)" = "e9975c4e75c2a68131f049da942468d8d1952d8d"
+      - name: Verify ACC-0046 and reconcile runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv, pathlib, re
+          from datetime import datetime, timezone
+          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',encoding='utf-8-sig',newline='')))
+          by={r['Task_ID']:r for r in rows}
+          t=by['TSK-0046']
+          deps=[x.strip() for x in t['Dependencies'].split(';') if x.strip()]
+          assert deps==['TSK-0538'], deps
+          assert t['Lifecycle_Stage']=='L4' and t['Priority']=='MEDIUM'
+          assert t['AI_Capability_A0_A4']=='A3' and t['Action_Authority']=='AUTO_ALLOWED'
+          acc=t['Acceptance_Criteria']
+          for phrase in ['expected pilot load','safety margin','DNS latency/availability test method','web journey performance','degradation behavior','capacity-review trigger']:
+              assert phrase in acc, phrase
+
+          c=pathlib.Path('TSK_0046_PERFORMANCE_CAPACITY_NFR_2026-08-28.md').read_text()
+          e=pathlib.Path('TSK_0046_PERFORMANCE_CAPACITY_NFR_EVIDENCE_2026-08-28.md').read_text()
+          b=pathlib.Path('TSK_0046_HOST_CAPACITY_BASELINE_EVIDENCE_2026-08-28.md').read_text()
+          for phrase in [
+              '## 2. Expected pilot load',
+              'currently authorized real-participant pilot load: 0 real-participant devices',
+              'future planned pilot cohort size: UNFROZEN',
+              'minimum 2× verified capacity margin',
+              '## 5. DNS latency/availability/correctness test method',
+              '## 7. Future web/application journey performance',
+              '## 8. Resource headroom and early capacity-review thresholds',
+              '## 9. Degradation behavior',
+              'ratelimit=20',
+              'RSK-0002'
+          ]:
+              assert phrase in c, phrase
+          assert '**VER-0046 independent audit result: PASS for ACC-0046' in e
+          for phrase in ['expected-pilot-load audit','Safety-margin audit','DNS latency/availability test-method audit','Web-journey performance audit','Capacity-review-trigger audit','Degradation-behavior audit']:
+              assert phrase in e, phrase
+          assert '**Host baseline capture: PASS.**' in b
+
+          p=pathlib.Path('CURRENT_STATE.md')
+          text=p.read_text()
+          assert 'Selected next: `TSK-0046' in text
+          assert '### TSK-0046 accepted stable state' not in text
+          assert '### TSK-0538 accepted stable state' in text
+          now=datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
+          text=re.sub(r'\*\*Updated:\*\* [^\n]+',f'**Updated:** {now}',text,count=1)
+          sec='''### TSK-0046 accepted stable state\n\n`TSK-0046 — Define performance and capacity NFRs`: **PASS for the provisional internal L4 performance/capacity-NFR-definition acceptance under DEC-0050/CR-0003**. Contract `TSK_0046_PERFORMANCE_CAPACITY_NFR_2026-08-28.md`, blob `2c48f975d557b1bb4ba6c58c2a8ad3580b2c7b06`; independent evidence `TSK_0046_PERFORMANCE_CAPACITY_NFR_EVIDENCE_2026-08-28.md`, blob `09d111530c5e9c86feb2cafb54f62fb046a44b6f`; read-only host baseline `TSK_0046_HOST_CAPACITY_BASELINE_EVIDENCE_2026-08-28.md`, blob `f43d237b3f6a7135aa498ce4627f8cd7ca59682e`. ACC-0046 is satisfied without fabricating future adoption: current authorized real-participant load is zero while CR-0003 remains active, future numeric cohort/load is explicitly unfrozen and must be derived from approved active-device count plus privacy-safe workload characterization before reactivation, a 2× verified capacity margin is required, DNS DoH/DoT synthetic performance testing and rate-limit handling are explicit, future web/backend/Core-Web-Vitals targets are defined without claiming an unbuilt app, degradation preserves hard controls, and measurable early capacity-review triggers precede incident thresholds.\n\nThe production host baseline was captured read-only and proves only current resource state, not QPS capacity. No production stress test, infrastructure resize, HA, participant traffic, future numeric cohort, web implementation or field-performance result is inferred. `DVR-0230-01`, `DVR-0484-01`, `GAP-0484-02` and `RSK-0002` remain OPEN. This PASS does not authorize build, participants, legal completion, publication or launch.\n\n'''
+          marker='## Runtime safeguards'
+          assert marker in text
+          text=text.replace(marker,sec+marker,1)
+
+          pass_set={r['Task_ID'] for r in rows if r.get('Execution_State')=='PASS'}
+          pass_set.update(re.findall(r'^### (TSK-\d{4}) accepted stable state$', text, re.M))
+          pass_set.add('TSK-0046')
+          pri={'CRITICAL':0,'HIGH':1,'MEDIUM':2,'LOW':3}
+          candidates=[]
+          for idx,row in enumerate(rows):
+              if row.get('Lifecycle_Stage')!='L4': continue
+              if row['Task_ID'] in pass_set: continue
+              if row.get('Plan_Status') in {'DEFERRED','NOT_APPLICABLE'}: continue
+              if row.get('Action_Authority')!='AUTO_ALLOWED': continue
+              deps=[x.strip() for x in (row.get('Dependencies') or '').split(';') if x.strip()]
+              if not all(d in pass_set for d in deps): continue
+              flags=[]
+              hay=' '.join([row.get('Acceptance_Criteria',''),row.get('Preconditions',''),row.get('Notes',''),row.get('Trigger','')]).lower()
+              if any(k in hay for k in ['representative parent','real participant','cohort','usability','comprehension','behavioral','observed parent','user evidence']): flags.append('REAL_OR_BEHAVIOR_EVIDENCE_CHECK')
+              if any(k in hay for k in ['reviewed by owner','owner approval','explicit owner','approved by owner']): flags.append('OWNER_REVIEW_CHECK')
+              if any(k in hay for k in ['legal approval','legal review','privacy approval','dpia approval','lia approval']): flags.append('LEGAL_PRIVACY_APPROVAL_CHECK')
+              candidates.append((pri.get(row.get('Priority','LOW'),9),idx,row,deps,flags))
+          candidates.sort(key=lambda x:(x[0],x[1]))
+          report=['# TSK-0046 post-PASS L4 queue inspection','','**Date:** 2026-08-28','**Purpose:** conservative derived queue after TSK-0046 PASS. This report is not authority and does not change task state.','',f'- Conservative PASS set size: {len(pass_set)}',f'- Dependency-ready non-PASS AUTO_ALLOWED L4 candidates: {len(candidates)}','','## Candidates in deterministic priority/WBS order','']
+          for _,_,row,deps,flags in candidates:
+              report += [f"### {row['Task_ID']} — {row['Title']}",f"- **Priority:** {row['Priority']}",f"- **Dependencies:** {'; '.join(deps) if deps else '(none)'}",f"- **Acceptance:** {row['Acceptance_ID']} — {row['Acceptance_Criteria']}",f"- **AI / authority:** {row['AI_Capability_A0_A4']} / {row['Action_Authority']}",f"- **Requirements:** {row.get('Requirement_Reference','')}",f"- **Interfaces:** {row.get('Interface_Reference','')}",f"- **Notes:** {row.get('Notes','')}",f"- **Preflight flags:** {', '.join(flags) if flags else '(none)'}",'']
+          pathlib.Path('TSK_0046_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md').write_text('\n'.join(report)+'\n')
+
+          q=text.rfind('\n## Queue status after current reconciliation')
+          assert q>=0
+          text=text[:q].rstrip()+'''\n\n## Queue status after current reconciliation\n\n`TSK-0046` is runtime PASS for its bounded provisional-L4 performance/capacity-NFR-definition acceptance. No future numeric cohort, QPS capacity, production stress test, scale action, HA or web-app result is inferred. A fresh conservative dependency-ready AUTO_ALLOWED L4 queue has been generated at `TSK_0046_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. No next task is selected by this write; the queue must be reread against acceptance, direct predecessor evidence, CR-0003, human/legal/participant holds and open security/privacy deviations before execution.\n\n## Exact next authoritative step\n\nRead back the TSK-0046 post-PASS L4 queue, reject any candidate requiring unavailable real-user evidence, owner/legal/privacy approval, unresolved trigger/gate or missing predecessor proof, account for open security/privacy deviations where relevant, and persist the deterministic highest-priority eligible AUTO_ALLOWED selection.\n'''
+          p.write_text(text)
+          PY
+          git diff --check
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add CURRENT_STATE.md TSK_0046_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md
+          git commit -m "state: accept TSK-0046 and inspect L4 queue"
+          git push
