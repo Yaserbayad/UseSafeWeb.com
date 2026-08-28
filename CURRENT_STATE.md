@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-27T23:51:18Z  
+**Updated:** 2026-08-28T00:01:50Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -85,18 +85,38 @@ First audit run `33127565783` / job `98709225350` was not accepted because a lit
 
 ACC-0429 is fully satisfied.
 
-### Selected next
+### WAITING — TSK-0430
 
-`TSK-0430` — create encrypted configuration backup: **TODO / selected**.
+`TSK-0430` — create encrypted configuration backup: **WAITING on direct owner decryption proof; not PASS**.
 
-Current exact WBS metadata from queue recomputation:
+Current exact WBS metadata:
 
 - A3 / AUTO_ALLOWED / HIGH / critical path;
-- hard predecessors `TSK-0202`, `TSK-0429`, `TSK-0011`, all now satisfied;
+- hard predecessors `TSK-0202`, `TSK-0429`, `TSK-0011`, all satisfied;
 - ACC-0430: backup completes, can be decrypted by the authorised owner, contains no prohibited query history, and has a recorded checksum/date;
 - REQ-0049, REQ-0050, REQ-0051; CON-0004, CON-0005, CON-0018; INT-0014; RSK-0048.
 
-TSK-0429 deliberately left the exact encryption/key mechanism to TSK-0430 because no existing owner decryption key or approved external secret-store object is canonical. TSK-0430 may proceed only if it can establish a real owner-authorised decryption path without publishing or co-locating unrecoverable key material in a way that defeats the recovery objective.
+All safe autonomous execution has been completed:
+
+- owner-recipient preflight run `33127873331` / job `98710219734`: PASS; the sole authorised key is 3072-bit `ssh-rsa`, public-key SSH authentication is enabled, password/keyboard-interactive/GSSAPI/host-based authentication are disabled, and prior TSK-0435 evidence proves the owner successfully used the SSH deployment path;
+- Ubuntu `age` package `1.1.1-1ubuntu0.24.04.3` was installed from the current Ubuntu 24.04 package candidate and verified as `age 1.1.1`;
+- encrypted backup creation run `33128004795` / job `98710652627`: PASS;
+- retained archive: `/var/backups/usesafeweb/adguard/usesafeweb-adguard-config-20260827T235612Z.tar.age`;
+- created UTC: `2026-08-27T23:56:12Z`;
+- encrypted SHA-256: `bd5cad421a44efb27a669a0119f6247f456e1e8e97a0f23bb628933e6208ccde`;
+- encrypted size: `21121` bytes;
+- owner recipient public fingerprint: `SHA256:682Jbw3baP6jxs57+1c5lchlkrNMELcvDk8bauEl51U`;
+- retained encrypted generations: `1`;
+- plaintext staging left behind: `0`;
+- independent retained-backup audit run `33128142374` / job `98711096972`: PASS after one verifier-only environment-inheritance failure in run `33128102728` / job `98710969640` that performed no backup mutation;
+- final audit proves backup directory `0700 root:root`, archive/sidecar `0600 root:root`, exact checksum/size/sidecar, same owner-recipient continuity, no dedicated server-side backup decryption key, no GPG secret keys, no plaintext/temp stage, unchanged live approved privacy settings, and zero non-empty query-log files;
+- evidence: `TSK_0430_ENCRYPTED_CONFIG_BACKUP_EVIDENCE_2026-08-27.md`, blob `627985a2a3d679b95fb2663eaf2b279c2de960bb`.
+
+The remaining ACC-0430 element cannot be truthfully marked complete from server automation: the corresponding owner SSH private key is intentionally absent from the VM/GitHub environment. Official `age` behavior supports decryption with the corresponding SSH private-key file, but actual owner decryption of this exact archive has not been executed. The owner private key must not be uploaded, pasted, committed or copied to the VM to close this evidence gap.
+
+A minimal owner-side verifier is prepared at `infrastructure/adguard-server/verify-owner-encrypted-backup.sh`, blob `d0d9c30bbb8f2b495f4cd852facf233ffab90843`. It streams the known ciphertext/sidecar to the owner workstation, verifies the recorded hash/metadata, decrypts locally using the owner SSH private-key file, verifies package/member/configuration checksums without printing configuration contents, cleans local plaintext, and emits `TSK_0430_OWNER_DECRYPTION=PASS` on success.
+
+Deterministic resumption condition: owner-side execution of that verifier against the exact retained archive returns `TSK_0430_OWNER_DECRYPTION=PASS` and the expected ciphertext SHA-256 `bd5cad421a44efb27a669a0119f6247f456e1e8e97a0f23bb628933e6208ccde`, without exposing the private key. Only then may TSK-0430 transition to PASS and downstream restore work be evaluated.
 
 ### External/provider and legal boundaries
 
@@ -115,4 +135,4 @@ TSK-0429 deliberately left the exact encryption/key mechanism to TSK-0430 becaus
 
 ## Exact next authoritative step
 
-Execute TSK-0430 preflight first: inspect available cryptographic tooling and any already-existing owner-authorised recovery key/recipient mechanism on `adguardvm` without revealing secret contents; verify the backup scope policy can be implemented with encrypted/authenticated output, separate decryption material, root-only staging, checksum/date, prohibited-data exclusion and immediate plaintext cleanup. If a valid owner-decryption path exists, create and independently decrypt/verify the encrypted backup without logging secret material. If no such path exists, complete the script/design/preflight work possible and stop at the smallest owner-access/key boundary rather than fabricating owner recoverability.
+Complete the human-only decryption evidence for TSK-0430 on the Project Owner's workstation using the existing owner SSH private-key file and the prepared `infrastructure/adguard-server/verify-owner-encrypted-backup.sh`. The private key/passphrase remains local and must not be shared with ChatGPT, GitHub or the VM. Persist only the safe verifier result (`TSK_0430_OWNER_DECRYPTION=PASS`, encrypted archive SHA-256 and public recipient fingerprint). After that proof is supplied, re-read current authority, mark TSK-0430 PASS only if the exact archive/hash still match, then recompute the WBS queue before beginning any restore task.
