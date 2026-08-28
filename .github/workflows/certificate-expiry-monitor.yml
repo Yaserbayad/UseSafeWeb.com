@@ -3,11 +3,6 @@ name: UseSafeWeb TLS certificate expiry monitor
 on:
   schedule:
     - cron: '17 6 * * *'
-  push:
-    branches:
-      - main
-    paths:
-      - .github/workflows/certificate-expiry-monitor.yml
 
 permissions:
   contents: read
@@ -26,7 +21,6 @@ jobs:
       THRESHOLD_DAYS: '30'
       OWNER_LOGIN: Yaserbayad
       ALERT_TITLE: '[ALERT] UseSafeWeb TLS certificate expiry or validation failure'
-      TEST_TITLE: '[TEST] UseSafeWeb TLS expiry owner-alert route'
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Validate certificate lifetime and route owner alert
@@ -34,17 +28,15 @@ jobs:
         run: |
           set -Eeuo pipefail
           python3 - <<'PY'
-          import datetime, json, os, socket, ssl, subprocess, time, urllib.parse, urllib.request
+          import datetime, json, os, socket, ssl, time, urllib.request
 
           host = os.environ['HOSTNAME']
           threshold = int(os.environ['THRESHOLD_DAYS'])
           owner = os.environ['OWNER_LOGIN']
           alert_title = os.environ['ALERT_TITLE']
-          test_title = os.environ['TEST_TITLE']
           token = os.environ['GH_TOKEN']
           repo = os.environ['GITHUB_REPOSITORY']
           run_url = f"{os.environ['GITHUB_SERVER_URL']}/{repo}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
-          event = os.environ['GITHUB_EVENT_NAME']
           production_id = 'bc7f566f-7231-41fb-9fdd-49cf190fd5e1'
 
           def api(method, path, payload=None):
@@ -136,19 +128,6 @@ jobs:
                   print(f"OWNER_ALERT_ROUTE=RECOVERED issue={existing['number']}")
               else:
                   print('OWNER_ALERT_ROUTE=HEALTHY_NO_OPEN_ALERT')
-
-          if event == 'push':
-              created = api('POST', f'/repos/{repo}/issues', {
-                  'title': test_title,
-                  'body': f'TSK-0443 installation test: this temporary issue proves the expiry monitor can create a durable alert assigned to the Project Owner. No certificate failure is asserted. Workflow: {run_url}',
-                  'assignees':[owner],
-              })
-              number = created['number']
-              api('POST', f'/repos/{repo}/issues/{number}/comments', {
-                  'body':'Owner-alert route test completed successfully; closing the temporary test issue.'})
-              api('PATCH', f'/repos/{repo}/issues/{number}', {'state':'closed'})
-              print(f'OWNER_ALERT_TEST_ISSUE={number}')
-              print('OWNER_ALERT_TEST=PASS')
 
           if status != 'OK':
               raise SystemExit('TLS validation failed; owner alert route executed')
