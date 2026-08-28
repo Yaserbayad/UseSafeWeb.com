@@ -1,0 +1,156 @@
+name: Apply CR-0002 owner legal sequencing override
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/apply-cr0002-owner-legal-sequencing-override.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-governance-cr0002
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - name: Apply bounded owner sequencing override
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(git hash-object Plans/Master/WBS/master-wbs.csv)" == '2e4560103b71bb350b14673ce3e415afc3dbfe3a' ]]
+          [[ "$(git hash-object Plans/Master/MANIFEST.yaml)" == 'e2f8aab61d85e66cc8b9665a0a1fd3aea71ad750' ]]
+          [[ "$(git hash-object Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md)" == 'f6e5a7c6e7fdbe9fa089c7818a83e8468dfa8097' ]]
+          [[ "$(git hash-object Plans/Master/Registers/DECISIONS_TRIGGERS.md)" == 'b51d6eba587cf83ddc690a1071e510b6a4b31868' ]]
+          [[ "$(git hash-object Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md)" == 'd627a33c484e3a56e23d8f53401f23bdcfd2ffc2' ]]
+          [[ "$(git hash-object Plans/SHA256SUMS.txt)" == 'a45ff206f826038425124c94cd2457dbbd4692b8' ]]
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          decisions=Path('Plans/Master/Registers/DECISIONS_TRIGGERS.md')
+          s=decisions.read_text(encoding='utf-8')
+          assert '| DEC-0049 |' not in s
+          rows=s.splitlines()
+          idx=[i for i,x in enumerate(rows) if x.startswith('| DEC-0048 |')]
+          assert len(idx)==1
+          row='| DEC-0049 |  | Deferred legal-work sequencing override through 2027-08-27 | ACTIVE OWNER OVERRIDE — tasks carrying `OWNER_LEGAL_HOLD_2026-08-27` remain DEFERRED/WAITING and are not PASS, compliance, exemption, waiver, registration, payment, representation, notice approval, or legal-attestation evidence. Through 2027-08-27 they may be treated as conditionally dependency-satisfied solely for internal, synthetic, non-participant, non-public preparatory work whose own acceptance can be met without asserting the deferred legal fact or approval. | Explicit Project Owner instruction 2026-08-28; expires 2027-08-27 or earlier explicit owner reactivation/supersession. | Downstream work must surface each deferred legal condition as an unresolved deviation/limitation; no fabricated representative/contact/registration/payment/approval; real-participant recruitment/processing, child-linked DNS activation, public launch, legal attestation and HUMAN_ONLY gate decisions remain governed by actual applicable requirements and authority. | Project Owner | OWNER_LEGAL_HOLD_2026-08-27; TSK-0167; TSK-0026; TSK-0513; LG-03 | Owner instruction 2026-08-28; CR-0002 |'
+          rows.insert(idx[0]+1,row)
+          decisions.write_text('\n'.join(rows).rstrip()+'\n',encoding='utf-8')
+
+          layer=Path('Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md')
+          s=layer.read_text(encoding='utf-8')
+          assert '### 5.3.1 Owner-approved temporary legal-hold dependency-satisfaction exception' not in s
+          marker='### 5.4 Evidence and PASS rules'
+          assert s.count(marker)==1
+          ins='''### 5.3.1 Owner-approved temporary legal-hold dependency-satisfaction exception (DEC-0049 / CR-0002)\n\n- Through **2027-08-27**, WBS tasks carrying the canonical `OWNER_LEGAL_HOLD_2026-08-27` marker remain `DEFERRED`/`WAITING`; this exception does **not** make them `PASS`, completed, legally satisfied, not applicable, waived, exempt, registered, paid, represented, approved, or otherwise evidenced.\n- Solely for **internal, synthetic, non-participant, non-public preparatory work**, a hard dependency edge to one of those marked tasks may be treated as **conditionally dependency-satisfied** when the downstream task's own acceptance criteria can be fully met without asserting the missing legal fact, contact, registration, payment, approval, representation, or attestation.\n- The downstream artifact/evidence must explicitly carry the affected deferred legal condition as an unresolved deviation/limitation and must not convert that condition into legal/compliance evidence.\n- This exception never authorizes real-participant recruitment or processing, child-linked DNS activation, public launch, legal attestation/signature, contracts, identity/consent acts, payment of a regulated fee, or a `HUMAN_ONLY`/`HUMAN_APPROVAL_REQUIRED` decision whose own current acceptance still requires the underlying legal fact. Actual applicable law, safety, security and platform reality remain higher authority.\n- No WBS dependency edge is deleted or rewritten by CR-0002. This is a bounded execution-eligibility semantic override only, preserving future dependency enforcement.\n- The exception expires on **2027-08-27**, or earlier on explicit Project Owner reactivation/supersession. At expiry/reactivation, recompute eligibility from current authority and re-evaluate any downstream `PASS` whose proof materially relied on the conditional dependency treatment.\n\n'''
+          s=s.replace(marker,ins+marker)
+          layer.write_text(s,encoding='utf-8')
+
+          exc=Path('Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md')
+          s=exc.read_text(encoding='utf-8')
+          assert '| CR-0002 |' not in s
+          rows=s.splitlines()
+          idx=[i for i,x in enumerate(rows) if x.startswith('| CR-0001 |')]
+          assert len(idx)==1
+          row='| CR-0002 | 2026-08-28 | Layer-5 dependency-satisfaction semantics; decision register; manifest/change-control metadata; generated reconstruction/checksums. WBS task definitions, statuses and 849 dependency edges remain unchanged. | Explicit current Project Owner instruction: consider the deferred legal perspectives/tasks done for sequencing until 2027-08-27 and move further after them. Higher-authority actual legal/safety/security reality remains controlling. | Add a bounded temporary exception: `OWNER_LEGAL_HOLD_2026-08-27` tasks stay DEFERRED/WAITING and non-evidentiary, but their hard-dependency edges may be conditionally satisfied only for internal/synthetic/non-participant/non-public preparatory work through 2027-08-27. | Unlocks safe preparatory descendants without fabricating legal completion. Downstream evidence must retain unresolved legal deviations. Real participant/public/legal/HUMAN_ONLY actions remain fenced; affected downstream PASS is re-evaluated at expiry/reactivation if materially reliant on the exception. | Update DEC-0049 and Layer 5 only for execution semantics; leave WBS/relationship dependency structure intact; rebuild `Generated/MASTER_PLAN_FULL.md`; regenerate checksums; validate; publish/read back; then reconcile runtime state and recompute eligible work. | Remove DEC-0049/Layer-5 exception and restore prior manifest/change metadata; rebuild/checksum/validate. No WBS edge rollback is needed because CR-0002 changes no edges. | Full deterministic validator must PASS with 641 tasks, 849 dependency edges, zero cycles/broken links, generated reconstruction complete, and all checksum entries valid; runtime must separately prove each downstream task acceptance. | Pending bounded GitHub publication/read-back at record creation; runtime evidence must record final commit/blobs before relying on the override. |'
+          rows.insert(idx[0]+1,row)
+          exc.write_text('\n'.join(rows).rstrip()+'\n',encoding='utf-8')
+
+          man=Path('Plans/Master/MANIFEST.yaml')
+          s=man.read_text(encoding='utf-8')
+          assert 'OWNER_LEGAL_SEQUENCING_OVERRIDE_ACTIVE_TO_2027-08-27' not in s
+          old=' / deterministic validation PASS / canonical activation established;'
+          assert s.count(old)==1
+          s=s.replace(old,' / OWNER_LEGAL_SEQUENCING_OVERRIDE_ACTIVE_TO_2027-08-27 / deterministic validation PASS / canonical activation established;',1)
+          patt=r'post_freeze_change_control:\n.*?\ngenerated_assembly_contract:'
+          repl='''post_freeze_change_control:\n  latest_change: CR-0002\n  date: '2026-08-28'\n  status: bounded owner-approved legal-hold sequencing override; owner freeze remains in force; legal tasks remain deferred/non-evidentiary; canonical reliance requires deterministic validation plus GitHub publication/read-back\n  authority: explicit current Project Owner instruction 2026-08-28; actual applicable legal/safety/security/platform reality remains higher authority\n  affected_tasks:\n  - OWNER_LEGAL_HOLD_2026-08-27 tasks (dependency-satisfaction semantics only)\n  - TSK-0167\n  - TSK-0026\n  - TSK-0513\n  semantic_delta: through 2027-08-27, marked deferred legal dependencies may be treated as conditionally satisfied solely for internal/synthetic/non-participant/non-public preparatory work; no legal task becomes PASS and no WBS dependency edge is changed\n  change_record: Registers/EXCEPTIONS_CHANGE_CONTROLS.md#post-freeze-material-change-records\n\ngenerated_assembly_contract:'''
+          s,n=re.subn(patt,repl,s,count=1,flags=re.S)
+          assert n==1
+          man.write_text(s,encoding='utf-8')
+          PY
+
+          python3 Plans/Master/Tools/rebuild_master_plan.py
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          sums=Path('Plans/SHA256SUMS.txt')
+          targets={
+              'Master/Generated/MASTER_PLAN_FULL.md',
+              'Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md',
+              'Master/MANIFEST.yaml',
+              'Master/Registers/DECISIONS_TRIGGERS.md',
+              'Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md',
+          }
+          lines=sums.read_text(encoding='utf-8').splitlines()
+          seen=set(); out=[]
+          for line in lines:
+              digest,rel=line.split('  ',1)
+              if rel in targets:
+                  data=(Path('Plans')/rel).read_bytes()
+                  digest=hashlib.sha256(data).hexdigest()
+                  seen.add(rel)
+              out.append(f'{digest}  {rel}')
+          assert seen==targets
+          sums.write_text('\n'.join(out)+'\n',encoding='utf-8')
+          PY
+
+          python3 Plans/Master/Tools/validate_master_plan.py | tee /tmp/cr0002-validation.txt
+          grep -Fq 'VALIDATION PASS' /tmp/cr0002-validation.txt
+          grep -Fq 'Tasks: 641' /tmp/cr0002-validation.txt
+          grep -Fq 'Dependency edges: 849' /tmp/cr0002-validation.txt
+
+          decision_blob="$(git hash-object Plans/Master/Registers/DECISIONS_TRIGGERS.md)"
+          exception_blob="$(git hash-object Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md)"
+          layer_blob="$(git hash-object Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md)"
+          manifest_blob="$(git hash-object Plans/Master/MANIFEST.yaml)"
+          generated_blob="$(git hash-object Plans/Master/Generated/MASTER_PLAN_FULL.md)"
+          sums_blob="$(git hash-object Plans/SHA256SUMS.txt)"
+          cat > CR_0002_OWNER_LEGAL_SEQUENCING_OVERRIDE_EVIDENCE_2026-08-28.md <<EOF
+          # CR-0002 — Owner legal-hold sequencing override evidence
+
+          **Date:** 2026-08-28  
+          **Owner instruction:** Treat the deferred legal perspectives/tasks as done for sequencing until 2027-08-27 and move further after them.
+
+          ## Controlled interpretation
+
+          This is a bounded Project Owner sequencing/governance override, not evidence that any deferred legal/regulatory/compliance act occurred. Tasks carrying \`OWNER_LEGAL_HOLD_2026-08-27\` remain DEFERRED/WAITING and are not PASS, completion, exemption, waiver, legal approval, registration, payment or representation evidence.
+
+          Through 2027-08-27, their dependency edges may be treated as conditionally satisfied only for internal, synthetic, non-participant, non-public preparatory work whose own acceptance does not require asserting the missing legal fact. Real-participant recruitment/processing, child-linked DNS activation, public launch, legal attestation and HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED acts remain fenced by actual applicable authority.
+
+          ## Structural preservation
+
+          - WBS blob remains: \`2e4560103b71bb350b14673ce3e415afc3dbfe3a\`.
+          - WBS task count remains 641.
+          - Dependency edge count remains 849.
+          - No WBS dependency edge was removed or rewritten by CR-0002.
+
+          ## Changed planning blobs
+
+          - DECISIONS_TRIGGERS.md: \`$decision_blob\`
+          - EXCEPTIONS_CHANGE_CONTROLS.md: \`$exception_blob\`
+          - Layer 5: \`$layer_blob\`
+          - MANIFEST.yaml: \`$manifest_blob\`
+          - Generated whole-plan view: \`$generated_blob\`
+          - Plans/SHA256SUMS.txt: \`$sums_blob\`
+
+          ## Verification
+
+          \`Plans/Master/Tools/validate_master_plan.py\` returned **VALIDATION PASS** after the exact amendment, with 641 tasks and 849 dependency edges. Runtime eligibility and downstream task PASS remain separate evidence decisions and must be recomputed after canonical publication/read-back.
+          EOF
+
+          git diff --check
+          git config user.name 'UseSafeWeb Governance Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add Plans/Master/MANIFEST.yaml Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md Plans/Master/Registers/DECISIONS_TRIGGERS.md Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md Plans/Master/Generated/MASTER_PLAN_FULL.md Plans/SHA256SUMS.txt CR_0002_OWNER_LEGAL_SEQUENCING_OVERRIDE_EVIDENCE_2026-08-28.md
+          git commit -m 'governance: apply CR-0002 legal sequencing override'
+          git push origin HEAD:main
