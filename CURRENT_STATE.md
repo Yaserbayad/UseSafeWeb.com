@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T21:53:56Z
+**Updated:** 2026-08-28T21:54:35Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -558,10 +558,14 @@ Preparation independently verifies complete ACC-0318 content coverage while pres
 
 TSK-0318 cannot become PASS until an authorized human explicitly APPROVES, REQUESTS CHANGES to, or REJECTS exact candidate blob `64f0e6382a5ce166c0aad2ad2e86a3796c5df379`. Approval remains provisional internal L4 only and does not authorize implementation, publication, market activation or launch.
 
-## Queue status after TSK-0318 preparation
+## Queue status — TSK-0319 HUMAN_ONLY preparation selected
 
-`TSK-0318` is **WAITING** on its HUMAN_ONLY design disposition. Its AUTO_ALLOWED successors remain blocked pending PASS. Independently eligible HUMAN_ONLY TSK-0319 may still be prepared because its own dependencies TSK-0315 and TSK-0320 are already PASS. Current global fences remain unchanged.
+`TSK-0319 — Design automated verification, issue-specific troubleshooting, safe reset/reinstall/remove, and point-of-need help` is the selected runtime **TODO** item for **preparation only**. Its hard dependencies `TSK-0315` and `TSK-0320` are runtime PASS. The WBS classifies TSK-0319 as L4 / HIGH / A1 / HUMAN_ONLY, so AI may prepare and independently verify a complete candidate but may not perform or fabricate the human design disposition.
+
+Selection basis: TSK-0318 is already stably WAITING on its human disposition; TSK-0319 is independently eligible and blocks downstream TSK-0628. Preparing it now maximizes safe progress without crossing either human boundary.
+
+All current fences remain unchanged: `RSK-0002` OPEN; `REQ-0022` unresolved; LG-03/LG-04/LG-05/LG-06 non-PASS; account/dashboard deferred under EXC-0001; no L5/L6 build, participant processing, legal completion, payment, publication, market activation or launch authority.
 
 ## Exact next authoritative step
 
-Complete the independent bounded preparation of TSK-0319, then obtain the smallest HUMAN_ONLY dispositions required for the exact TSK-0318 and TSK-0319 candidates.
+Prepare the smallest complete TSK-0319 candidate using current protection-state, support, platform-install, source-backed instruction, support/recovery/privacy and verified removal evidence. Publish and independently verify it, then classify TSK-0319 WAITING on the exact HUMAN_ONLY disposition without marking PASS.
