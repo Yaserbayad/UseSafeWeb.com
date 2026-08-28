@@ -1,0 +1,50 @@
+name: Inspect CR-0002 runtime eligibility
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/inspect-cr0002-runtime-eligibility.yml
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: [self-hosted]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Inspect exact WBS rows and runtime state
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(git hash-object Plans/Master/WBS/master-wbs.csv)" == '2e4560103b71bb350b14673ce3e415afc3dbfe3a' ]]
+          [[ "$(git hash-object Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md)" == '5e3137861f546f2b5f7bd6ac152b1b32694a439a' ]]
+          python3 - <<'PY'
+          import csv
+          from pathlib import Path
+          targets={'TSK-0011','TSK-0208','TSK-0167','TSK-0026','TSK-0513'}
+          with open('Plans/Master/WBS/master-wbs.csv',encoding='utf-8-sig',newline='') as f:
+              r=csv.DictReader(f)
+              print('WBS_FIELDS='+'|'.join(r.fieldnames or []))
+              found={}
+              for row in r:
+                  tid=row.get('Task_ID') or row.get('ID') or next((row[k] for k in row if row[k] in targets), '')
+                  if tid in targets:
+                      found[tid]=row
+              assert set(found)==targets, (set(found),targets)
+              for tid in sorted(targets):
+                  row=found[tid]
+                  print('WBS_ROW='+tid)
+                  for k,v in row.items():
+                      if k in {'Task_ID','ID','Title','Task','Plan_Status','Execution_State','Priority','Critical_Path','Dependencies','Dependency_IDs','Hard_Dependencies','Acceptance_Criteria','Verification_Method','Evidence_Required','AI_Capability','Action_Authority','Preconditions','Trigger','Lifecycle_Stage'}:
+                          print(f'  {k}={v}')
+          state=Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          for tid in sorted(targets):
+              hits=[line for line in state.splitlines() if f'`{tid}`' in line]
+              print('STATE='+tid)
+              for line in hits[:8]: print('  '+line)
+          PY
