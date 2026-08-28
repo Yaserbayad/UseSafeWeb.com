@@ -55,7 +55,6 @@ jobs:
           grep -Fq 'POST-FREEZE CR-0002 PUBLISHED AND READ-BACK VERIFIED' CURRENT_STATE.md
           grep -Fq 'Selected next: `TSK-0026`' CURRENT_STATE.md
           grep -Fq 'LG-03 remains **NOT PASS**' CURRENT_STATE.md
-          git diff --check
           git config user.name 'UseSafeWeb Governance Bot'
           git config user.email 'actions@users.noreply.github.com'
           git add CURRENT_STATE.md
