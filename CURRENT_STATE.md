@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T15:34:00Z
+**Updated:** 2026-08-28T15:36:00Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -393,8 +393,16 @@ The register does not resolve its assumptions. RSK-0002 and all real-behavior un
 
 ## Queue status after current reconciliation
 
-`TSK-0138` is runtime PASS. A full L4 dependency-ready queue inspection has been generated as `TSK_0138_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. Selection is intentionally deferred until that report is read back because some dependency-ready tasks may still have HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED or real-user-evidence acceptance boundaries.
+The post-TSK-0138 full L4 inspection found seven dependency-ready candidates. `TSK-0187` is HIGH but not executable under CR-0003 because ACC-0187 explicitly requires representative parents to complete the prototype and demonstrate comprehension/recovery. It remains deferred as real-user-evidence-dependent.
+
+Among genuinely executable candidates, privacy/safety precedence selects:
+
+- **Selected next: `TSK-0229 — Define and approve the accountless journey data model, expiry, deletion, and no-linkage rules`** (L4 / A3 / AUTO_ALLOWED / HIGH).
+- Hard dependency `TSK-0146` is preserved PASS.
+- ACC-0229 can be satisfied internally: define only fields necessary for the active journey, prohibit browsing history/persistent child profile, and make expiry/deletion/diagnostic boundaries testable.
+- `TSK-0408` remains the next HIGH technical candidate after recomputation.
+- `TSK-0140` remains potentially owner-review-bound by its own ACC; `TSK-0330` is HUMAN_ONLY.
 
 ## Exact next authoritative step
 
-Read back the full L4 queue inspection, apply current CR-0003 evidence restrictions and action authority, then select the highest-priority genuinely executable AUTO_ALLOWED L4 task. Do not choose a task merely because its hard dependencies are satisfied.
+Execute `TSK-0229` as an accountless/privacy-minimal L4 data contract. Define necessary fields/state classes, prohibited fields/linkages, expiry/deletion semantics, diagnostic separation, logs/backups boundaries and testable invariants. Do not introduce mandatory identity, browsing/query history or architecture beyond what is necessary to specify the contract. Verify ACC-0229, persist/read back, then recompute.
