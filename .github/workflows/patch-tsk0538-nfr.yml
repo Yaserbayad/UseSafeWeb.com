@@ -1,0 +1,48 @@
+name: Patch TSK-0538 operability boundaries
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patch-tsk0538-nfr.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: [self-hosted, Linux, X64]
+    concurrency:
+      group: usesafeweb-governance-state-prod
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Guard and patch exact NFR text
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(sha256sum /etc/machine-id | awk '{print $1}')" = "e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2"
+          test "$(git hash-object TSK_0538_RELIABILITY_OBSERVABILITY_RECOVERY_SERVICE_LEVEL_NFR_2026-08-28.md)" = "9805cb3f17a8acdaefd5f7c339a61d648c27a950"
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('TSK_0538_RELIABILITY_OBSERVABILITY_RECOVERY_SERVICE_LEVEL_NFR_2026-08-28.md')
+          s=p.read_text()
+          old='''`DVR-0230-01` remains OPEN until the custom DoH critical error-log mode is hardened/read-back verified.\n'''
+          new='''`DVR-0230-01` remains OPEN until the custom DoH critical error-log mode is hardened/read-back verified.\n\nMonitoring/verification that executes on a root-capable self-hosted runner must default to repository `contents: read`, `persist-credentials: false`, minimum sudo and no repository write capability. Evidence publication/owner-alert writes should be separated from privileged target execution where practical. Any temporary exception remains part of `DVR-0484-01`; this contract does not normalize repository-write credentials on a privileged production runner.\n'''
+          assert s.count(old)==1
+          s=s.replace(old,new,1)
+          old2='''**RTO: <=30 minutes** from confirmed qualifying single-node service failure/rebuild decision to verified restoration of:\n'''
+          new2='''**RTO: <=30 minutes end to end** from the earliest confirmed user-impact timestamp (the first failed valid synthetic probe subsequently confirmed as target failure, or the planned rebuild start) through verified restoration of:\n'''
+          assert s.count(old2)==1
+          s=s.replace(old2,new2,1)
+          p.write_text(s)
+          PY
+          git diff --check
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add TSK_0538_RELIABILITY_OBSERVABILITY_RECOVERY_SERVICE_LEVEL_NFR_2026-08-28.md
+          git commit -m "operations: clarify TSK-0538 end-to-end RTO and runner least privilege"
+          git push
