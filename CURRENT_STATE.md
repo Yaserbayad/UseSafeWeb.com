@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T15:31:00Z
+**Updated:** 2026-08-28T15:34:00Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -376,6 +376,12 @@ This PASS does not mean LG-03/LG-04/LG-05 or LG-06 passed, does not supply real-
 
 This PASS does not authorize LG-06, L5/L6 build, participants, legal completion, payment activation or public launch. RSK-0002 remains OPEN.
 
+### TSK-0138 accepted stable state
+
+`TSK-0138 — Register unresolved product assumptions and owner decisions`: **PASS**. Register `TSK_0138_UNRESOLVED_PRODUCT_ASSUMPTIONS_AND_OWNER_DECISIONS_2026-08-28.md`, blob `d782f26d5d48b0902b044d8bbab48569bdee0ea2`; independent evidence `TSK_0138_UNRESOLVED_ASSUMPTIONS_DECISIONS_EVIDENCE_2026-08-28.md`, blob `bde66025ffe274d04fb869427b37fe4a32382be9`. ACC-0138 is satisfied with 20 controlled unresolved items, each carrying owner/authority, evidence, deterministic trigger, safe default, deferral consequence and explicit AI/engineering authority.
+
+The register does not resolve its assumptions. RSK-0002 and all real-behavior unknowns remain open; owner-only decisions are fenced.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -387,13 +393,8 @@ This PASS does not authorize LG-06, L5/L6 build, participants, legal completion,
 
 ## Queue status after current reconciliation
 
-`TSK-0141` is runtime PASS for provisional scope. Its sole direct successor is dependency-ready.
-
-- **Selected next: `TSK-0138 — Register unresolved product assumptions and owner decisions`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
-- Hard dependency: `TSK-0141` — current PASS.
-- ACC-0138 requires every unresolved item to have an owner, evidence needed, decision deadline/gate, safe default, and consequence of deferral, while preventing engineering/AI from silently making critical owner decisions.
-- The register must explicitly carry RSK-0002 and all provisional user-behavior unknowns created by CR-0003.
+`TSK-0138` is runtime PASS. A full L4 dependency-ready queue inspection has been generated as `TSK_0138_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. Selection is intentionally deferred until that report is read back because some dependency-ready tasks may still have HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED or real-user-evidence acceptance boundaries.
 
 ## Exact next authoritative step
 
-Execute bounded `TSK-0138`: create a controlled unresolved-assumptions/owner-decisions register covering the provisional L4 scope, evidence gaps, deferred exceptions, legal/participant boundary and any later decision trigger. Use safe defaults that preserve minimum scope and stop progression where required; do not silently decide owner-only matters. Verify ACC-0138, persist/read back evidence, then recompute.
+Read back the full L4 queue inspection, apply current CR-0003 evidence restrictions and action authority, then select the highest-priority genuinely executable AUTO_ALLOWED L4 task. Do not choose a task merely because its hard dependencies are satisfied.
