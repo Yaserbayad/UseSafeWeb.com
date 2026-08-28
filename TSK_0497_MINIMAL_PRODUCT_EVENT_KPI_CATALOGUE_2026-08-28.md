@@ -88,13 +88,11 @@ All events are **one-shot measurement inputs to aggregates**, not retained user 
 | `safeguarding_route_invoked` | Confirm that safeguarding routing occurs without turning disclosures into analytics | Emit only a non-identifying count when the dedicated safeguarding boundary is invoked, if the applicable legal/privacy gate permits this aggregate | `release_id`, `measurement_window`, `cohort_class` only | disclosure content, identity, age, location, narrative, outcome details | Safeguarding route boundary | Count only; no product-performance interpretation | 0 after aggregate commit | Safeguarding / Privacy / Product Analytics |
 | `stale_guidance_detected` | Identify instructions that must be reviewed because current platform/service behavior no longer matches them | Emit when an owned instruction is classified stale under TSK-0042 | `release_id`, `measurement_window`, `cohort_class`, controlled `guidance_component`, optional `device_family` | user identity, affected domain/history, free text | Support/content review boundary | Numerator over support cases or reviewed instruction incidents | 0 after aggregate commit | Content / Product Analytics |
 
-### Dormant real-human-assistance measurement
+### Deferred human-assistance measurement requirement — not an approved event
 
-The following measurement is **defined but not active** while real-user/staffed-support authorization is absent:
+TSK-0042 requires later evidence about human-assistance incidence and active assistance minutes, but current real-user/staffed-support authorization is absent. Therefore **no `human_assistance_summary` event is approved by this catalogue**.
 
-- `human_assistance_summary`: aggregate count of journeys/issues requiring human intervention and aggregate active assistance minutes by controlled issue class/stage.
-- No transcript, identity or free-text notes are authorized by this event definition.
-- It may activate only when the applicable research/operation gate authorizes real-user support measurement.
+When the applicable research/operation gate authorizes human-support measurement, TSK-0497 must reopen (or an authoritative successor must be approved) and define the full ACC-0497 metadata before collection: purpose, exact trigger, field allowlist, prohibited fields, collection point, denominator, retention and owner. The future design must remain structured/count-duration only unless separately justified; support transcript, identity and free text remain prohibited by default.
 
 ## 6. Explicitly absent events
 
@@ -103,6 +101,7 @@ The following event families are intentionally **not** part of the catalogue:
 - `page_viewed`, `screen_viewed`, `button_clicked`, `time_on_page`, `session_duration`, `daily_active_user`, `streak`, return-frequency or engagement-depth events;
 - `dns_query`, `domain_blocked`, `domain_allowed`, `top_domain`, `category_browsed`, `child_activity` or equivalent;
 - `login`, `logout`, `signup`, `password_reset`, `account_created`, `dashboard_viewed`, `device_added_to_account` while EXC-0001 is inactive;
+- `human_assistance_summary` until its applicable gate is active and a complete governed event contract is approved;
 - persistent `user_id`, analytics cookie, advertising ID, stable journey/session ID or cross-event device fingerprint;
 - support transcript/disclosure/diagnostic-content events.
 
@@ -129,8 +128,8 @@ No KPI below has a current observed value under this L4 task. Each calculation m
 | Privacy/security escalation count/rate | `privacy_security_escalation` | count per window; optional rate = escalations / support cases with denominator explicit | Release/window/cohort + broad incident class | Privacy Engineering / Security | Analytics never stores incident-sensitive facts | Trigger incident/control review; metric cannot close an incident |
 | Safeguarding route count | `safeguarding_route_invoked` | non-identifying count only | Reporting window/release/cohort where collection is authorized | Safeguarding / Privacy | No disclosure/outcome data; not a product-success KPI | Check routing/process readiness only; safeguarding case decisions remain outside analytics |
 | Stale-guidance incidence | `stale_guidance_detected`, support cases | stale-guidance detections / support cases (or count if denominator unavailable) | Release/window/cohort + controlled guidance component | Content / Product Analytics | No free-text user case retained | Revalidate/update or withdraw stale instruction before continuing to present it as current |
-| Human-assistance incidence — dormant | Authorized research/operation human-assistance summary | journeys/issues requiring human help / eligible journeys/issues | Only an explicitly authorized real-user research/operation cohort | Product Research / Support / Product Analytics | Not populated from synthetic work; no transcript/identity | Test EXC-0008/support sustainability assumptions; do not claim current burden while dormant |
-| Active assistance minutes — dormant | Authorized human-assistance summary | total active human-assistance minutes / assisted case, also distribution by controlled class/stage | Only authorized real-user cohort | Product Research / Support | Structured duration only; no transcript | Identify productizable support causes and sustainability risk; no current value inferred |
+| Human-assistance incidence — dormant | Future governed human-support measurement contract, not a currently approved event | journeys/issues requiring human help / eligible journeys/issues | Only an explicitly authorized real-user research/operation cohort | Product Research / Support / Product Analytics | Not populated from synthetic work; no transcript/identity; requires catalogue reopen before collection | Test EXC-0008/support sustainability assumptions; do not claim current burden while dormant |
+| Active assistance minutes — dormant | Future governed human-support measurement contract, not a currently approved event | total active human-assistance minutes / assisted case, plus distribution by controlled class/stage | Only an explicitly authorized real-user cohort | Product Research / Support | Structured duration only by default; no transcript; requires catalogue reopen before collection | Identify productizable support causes and sustainability risk; no current value inferred |
 
 ## 8. KPI reproducibility and denominator rules
 
@@ -188,7 +187,7 @@ Reopen TSK-0497 and TSK-0230 impact review before:
 - introducing J1 persistence or changing its schema/TTL;
 - activating real participants/operation in a new geography/cohort;
 - changing a KPI denominator/decision use materially;
-- collecting a dormant human-assistance metric;
+- collecting either dormant human-assistance KPI;
 - using low-count/high-cardinality aggregates that may become identifying.
 
 ## 12. Testable implementation assertions
@@ -223,7 +222,7 @@ ACC-0497 requires every approved event to have purpose, exact definition, proper
 - §5 supplies every required metadata dimension for each approved event.
 - §7 defines the KPI catalogue and REQ-0060 source/formula/denominator/window/release/cohort/owner/guardrail/decision action dimensions.
 - §§2–3 and §9 define aggregate-by-design storage and zero raw-event retention.
-- §6 makes account/login/dashboard and browsing/activity event absence explicit.
+- §6 makes account/login/dashboard, dormant human-assistance, and browsing/activity event absence explicit.
 - §§8, 10–12 make reproducibility, implementation inspection, retirement and future change testable.
 - `RSK-0002` and all legal/participant/build/release gates remain open/unmodified.
 
