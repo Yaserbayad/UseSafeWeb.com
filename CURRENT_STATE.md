@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T17:20:40Z
+**Updated:** 2026-08-28T18:05:27Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -462,6 +462,12 @@ Current first-party ICO guidance was rechecked on 2026-08-28 for per-purpose law
 
 `DVR-0230-01` remains OPEN: the custom critical DoH Nginx error-log file is currently zero bytes but mode `0644 root:root`, broader than the new least-privilege NFR target (`<=0640`, service/admin only). This is a pre-activation implementation deviation, not hidden or certified compliant by the TSK-0230 PASS. Nginx access logging is currently explicitly off; AdGuard query/file logging and statistics are off; `dns.anonymize_client_ip=true`; Nginx critical logs currently use daily `rotate 14`. `RSK-0002` remains OPEN. This PASS does not authorize LG-03/LG-05/LG-06, implementation/build, participants, legal completion, payment, publication or launch.
 
+### TSK-0484 accepted stable state
+
+`TSK-0484 — Define security and abuse-resistance NFRs`: **PASS for the provisional internal L4 security-NFR-definition acceptance under DEC-0050/CR-0003**. Contract `TSK_0484_SECURITY_ABUSE_RESISTANCE_NFR_2026-08-28.md`, blob `ebd146f88f51cae67b9515fb94133bcd74c8cf28`; independent evidence `TSK_0484_SECURITY_ABUSE_RESISTANCE_NFR_EVIDENCE_2026-08-28.md`, blob `15ad7e97f13210737e014499820690c30232a952`. ACC-0484 is satisfied: assets/trust boundaries and abuse cases are explicit, every NFR maps to identified threats with measurable verification/PASS conditions, and public-resolver abuse/availability is kept distinct from user-data/admin/application/supply-chain security.
+
+Current first-party OWASP ASVS/Input-Validation/XSS/SSRF guidance and AdGuard anti-amplification configuration semantics were rechecked on 2026-08-28. Historical TSK-0483 remains valid evidence of AdGuard engine-level anti-abuse capability/configuration but does not self-certify the later public Nginx DoH/DoT ingress. `GAP-0484-02` therefore remains OPEN pending direct current public-path verification. `DVR-0230-01` remains OPEN for the custom DoH critical error-log mode (`0644 root:root` vs target <=0640/service-admin only). `DVR-0484-01` remains OPEN because the TSK-0230 production-host evidence workflow used repository write credentials on a root-capable runner; no compromise is evidenced, and future host-verification/publishing should be separated where practical. `RSK-0002` remains OPEN. This PASS does not authorize implementation/build, account/auth activation, public release, participants, legal completion, payment or launch.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -473,13 +479,8 @@ Current first-party ICO guidance was rechecked on 2026-08-28 for per-purpose law
 
 ## Queue status after current reconciliation
 
-The TSK-0230 post-PASS queue was reread against current acceptance, CR-0003 and open deviation `DVR-0230-01`. `TSK-0187` remains ineligible because it requires representative-parent evidence. `TSK-0140` remains ineligible for PASS because owner/multi-role review evidence is absent. `TSK-0484` is the highest eligible AUTO_ALLOWED provisional-L4 task and precedes the equal-priority TSK-0497 in WBS order.
-
-- **Selected next: `TSK-0484 — Define security and abuse-resistance NFRs`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
-- Hard dependency: `TSK-0230` — current PASS.
-- ACC-0484: Requirements map to identified threats, include measurable controls and verification, and distinguish public resolver abuse from user-data security.
-- Selection boundary: internal security/abuse-resistance NFR definition only. Threat modeling must distinguish availability/abuse of the public encrypted resolver from confidentiality/integrity/privacy of user-related data; controls must be measurable and tied to verification. `DVR-0230-01` must be treated as an existing access-control deviation where relevant, not normalized away.
+`TSK-0484` is runtime PASS for its bounded provisional-L4 security-NFR-definition acceptance. `DVR-0230-01`, `DVR-0484-01` and `GAP-0484-02` remain explicit open implementation/verification items. A fresh conservative dependency-ready AUTO_ALLOWED L4 queue has been generated at `TSK_0484_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. No next task is selected by this write; the queue must be reread against acceptance, direct predecessor evidence, CR-0003, human/legal/participant holds and the open security/privacy deviations before execution.
 
 ## Exact next authoritative step
 
-Execute bounded `TSK-0484`: load current threat/risk/security authority and direct production security/abuse evidence; enumerate trust boundaries/assets/abuse cases; define measurable controls and verification for network abuse, service integrity, admin/change authority, secrets, software/supply chain, data/log access, web/product input/output and recovery; preserve accountless/privacy/legal/build gates; persist/read back independent ACC-0484 evidence; reconcile runtime; then recompute.
+Read back the TSK-0484 post-PASS L4 queue, reject any candidate requiring unavailable real-user evidence, owner/legal/privacy approval, unresolved trigger/gate or missing predecessor proof, account for the open security/privacy deviations where relevant, and persist the deterministic highest-priority eligible AUTO_ALLOWED selection.
