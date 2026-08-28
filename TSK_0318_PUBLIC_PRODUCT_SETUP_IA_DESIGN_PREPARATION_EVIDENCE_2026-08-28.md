@@ -8,7 +8,7 @@
 
 ## Exact evidence set
 
-- Candidate `TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_CANDIDATE_2026-08-28.md`, publication commit `e963f39684206bc08f5977957b0c9f379c82e716`, read-back blob `e5f7cd082397966893864213d43c634e62c0e701`.
+- Candidate `TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_CANDIDATE_2026-08-28.md`, publication commit `e963f39684206bc08f5977957b0c9f379c82e716`, Git object/read-back blob `64f0e6382a5ce166c0aad2ad2e86a3796c5df379`.
 - Current runtime selected TSK-0318 TODO for preparation only after TSK-0307 PASS.
 - Sole hard dependency TSK-0315 is current runtime PASS.
 - Accepted inputs consumed without redefining them: TSK-0315 accountless service blueprint, TSK-0316 friction contract, TSK-0317 platform setup design, TSK-0307 instruction catalogue, TSK-0320 protection-state contract, TSK-0314 accessibility NFR, TSK-0229 accountless data contract, TSK-0140 approved product brief.
@@ -37,7 +37,7 @@ The dependency is satisfied, but HUMAN_ONLY remains an independent completion bo
 | Accountless-first preserved | **PASS** | Login/account/dashboard/pricing/payment are absent from the active core IA; no persistence reason is introduced. |
 | Friction contract preserved | **PASS** | Public explanatory content is not forced as extra setup screens; setup remains task/state driven. |
 | Legal hold preserved | **PASS** | Legal page is only a controlled IA slot; unresolved REQ-0022/contact/legal completion is not asserted. |
-| Build/publication boundary preserved | **PASS** | Index/noindex statements are design intent only; no implementation, publication or launch is claimed or authorized. |
+| Build/publication boundary preserved | **PASS** | Index/noindex statements are design requirements/intents only; no implementation, publication or launch is claimed or authorized. |
 
 ## Adversarial checks
 
@@ -51,10 +51,14 @@ The dependency is satisfied, but HUMAN_ONLY remains an independent completion bo
 8. **Does this establish representative-parent usability?** No. RSK-0002 remains OPEN.
 9. **Does technical preparation satisfy HUMAN_ONLY authority?** No. Human disposition remains required.
 
+## Evidence-binding correction
+
+The initial preparation-evidence publication referenced an incorrect candidate blob value. The guarded runtime reconciliation detected the mismatch before any state mutation. The production runner then established the candidate's actual Git object hash as `64f0e6382a5ce166c0aad2ad2e86a3796c5df379`. This corrected evidence binds to that exact unchanged candidate. The candidate content itself was not changed.
+
 ## Correct stable outcome
 
 **Preparation:** COMPLETE and independently verified.  
 **ACC-0318 technical/content coverage:** COMPLETE.  
-**TSK-0318 runtime disposition:** **WAITING** for HUMAN_ONLY review/decision on exact candidate blob `e5f7cd082397966893864213d43c634e62c0e701`.
+**TSK-0318 runtime disposition:** **WAITING** for HUMAN_ONLY review/decision on exact candidate blob `64f0e6382a5ce166c0aad2ad2e86a3796c5df379`.
 
 Minimum resume condition: authorized human explicitly `APPROVE`, `REQUEST CHANGES`, or `REJECT` the exact candidate. Approval alone would still be followed by an independent final ACC-0318 re-check before runtime PASS. No approval authorizes implementation/publication/launch.
