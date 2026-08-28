@@ -1,0 +1,234 @@
+name: Verify AdGuard privacy persistence for TSK-0207
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/adguard-privacy-persistence-acceptance.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 6
+    steps:
+      - name: Checkout exact main commit
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Verify no persistent identifiable history or unapproved backup copy
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == 'adguardvm' ]]
+          [[ "$(sha256sum /etc/machine-id | awk '{print $1}')" == 'e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2' ]]
+          [[ "$(git hash-object CURRENT_STATE.md)" == '3987dabdeced6ea70e811bc9b7a59dcd0ed46758' ]]
+          sudo -n true
+          systemctl is-active --quiet AdGuardHome.service
+
+          config='/opt/AdGuardHome/AdGuardHome.yaml'
+          secret='/var/lib/usesafeweb/adguard/admin.env'
+          backup_dir='/var/backups/usesafeweb/adguard'
+          [[ "$(sudo stat -c '%a %U:%G' "$secret")" == '600 root:root' ]]
+
+          sudo python3 - "$config" <<'PY'
+          import sys,yaml
+          d=yaml.safe_load(open(sys.argv[1],encoding='utf-8'))
+          q=d.get('querylog') or {}; stats=d.get('statistics') or {}; dns=d.get('dns') or {}
+          clients=(d.get('clients') or {}).get('persistent') or []
+          assert q.get('enabled') is False, q
+          assert q.get('file_enabled') is False, q
+          assert stats.get('enabled') is False, stats
+          assert dns.get('anonymize_client_ip') is True
+          assert clients == [], clients
+          print('persisted_querylog_enabled=false')
+          print('persisted_querylog_file_enabled=false')
+          print('persisted_statistics_enabled=false')
+          print('persisted_client_ip_anonymization=true')
+          print('persistent_client_count=0')
+          PY
+
+          username="$(sudo awk -F= '$1=="ADGUARD_ADMIN_USER" {sub(/^[^=]*=/,""); print; exit}' "$secret")"
+          password="$(sudo awk -F= '$1=="ADGUARD_ADMIN_PASSWORD" {sub(/^[^=]*=/,""); print; exit}' "$secret")"
+          [[ -n "$username" && -n "$password" ]]
+          base='http://127.0.0.1:3000/control'
+          curl --silent --show-error --fail --max-time 10 --user "$username:$password" "$base/querylog/config" -o /tmp/t0207-qcfg.json
+          curl --silent --show-error --fail --max-time 10 --user "$username:$password" "$base/stats/config" -o /tmp/t0207-scfg.json
+          python3 - <<'PY'
+          import json
+          q=json.load(open('/tmp/t0207-qcfg.json',encoding='utf-8'))
+          s=json.load(open('/tmp/t0207-scfg.json',encoding='utf-8'))
+          assert q.get('enabled') is False, q
+          assert s.get('enabled') is False, s
+          print('api_querylog_enabled=false')
+          print('api_statistics_enabled=false')
+          PY
+
+          test_domain="usesafeweb-t0207-$RANDOM-$RANDOM.invalid"
+          printf '%s' "$test_domain" > /tmp/t0207-domain
+          TEST_DOMAIN="$test_domain" python3 - <<'PY'
+          import os,random,socket,struct
+          name=os.environ['TEST_DOMAIN']
+          q=b''.join(bytes([len(x)])+x.encode() for x in name.split('.'))+b'\x00'
+          pkt=struct.pack('!HHHHHH',random.randrange(0,65536),0x0100,1,0,0,0)+q+struct.pack('!HH',1,1)
+          s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.settimeout(3); s.sendto(pkt,('127.0.0.1',53))
+          try: s.recvfrom(4096)
+          except socket.timeout: pass
+          finally: s.close()
+          PY
+          sleep 1
+
+          curl --silent --show-error --fail --max-time 10 --user "$username:$password" "$base/querylog?limit=100" -o /tmp/t0207-qlog.json
+          curl --silent --show-error --fail --max-time 10 --user "$username:$password" "$base/stats" -o /tmp/t0207-stats.json
+          unset password
+          TEST_DOMAIN="$test_domain" python3 - <<'PY'
+          import json,os
+          q=json.load(open('/tmp/t0207-qlog.json',encoding='utf-8'))
+          s=json.load(open('/tmp/t0207-stats.json',encoding='utf-8'))
+          domain=os.environ['TEST_DOMAIN']
+          items=q.get('data') or []
+          assert not any(domain in json.dumps(x,sort_keys=True) for x in items), 'synthetic domain retained in query log'
+          assert items == [], f'query log unexpectedly contains {len(items)} item(s)'
+          assert (s.get('top_clients') or []) == [], s.get('top_clients')
+          assert int(s.get('num_dns_queries') or 0) == 0, s.get('num_dns_queries')
+          print('synthetic_query_retained=false')
+          print('querylog_items=0')
+          print('top_clients_count=0')
+          print('statistics_query_count=0')
+          PY
+
+          mapfile -t qfiles < <(sudo find /opt/AdGuardHome -type f -name 'querylog.json*' -size +0c -print 2>/dev/null || true)
+          ((${#qfiles[@]} == 0))
+          echo 'nonempty_querylog_file_count=0'
+
+          sudo test -d "$backup_dir"
+          [[ "$(sudo stat -c '%a %U:%G' "$backup_dir")" == '700 root:root' ]]
+          archive_count="$(sudo find "$backup_dir" -maxdepth 1 -type f -name 'usesafeweb-adguard-config-*.tar.age' -print | wc -l)"
+          meta_count="$(sudo find "$backup_dir" -maxdepth 1 -type f -name 'usesafeweb-adguard-config-*.tar.age.meta.json' -print | wc -l)"
+          [[ "$archive_count" =~ ^[0-9]+$ && "$meta_count" =~ ^[0-9]+$ ]]
+          (( archive_count >= 1 && archive_count <= 2 ))
+          (( meta_count == archive_count ))
+          unexpected_count="$(sudo find "$backup_dir" -maxdepth 1 -mindepth 1 \( -type f ! -name 'usesafeweb-adguard-config-*.tar.age' ! -name 'usesafeweb-adguard-config-*.tar.age.meta.json' -o -type d ! -name '.' \) -print | wc -l)"
+          [[ "$unexpected_count" == '0' ]]
+          stage_count="$(sudo find "$backup_dir" -maxdepth 1 -type d -name '.stage.*' -print | wc -l)"
+          [[ "$stage_count" == '0' ]]
+
+          sudo python3 - "$backup_dir" <<'PY'
+          from pathlib import Path
+          import hashlib,json,os,sys
+          root=Path(sys.argv[1])
+          archives=sorted(root.glob('usesafeweb-adguard-config-*.tar.age'))
+          assert 1 <= len(archives) <= 2, len(archives)
+          for a in archives:
+              st=a.stat(); assert (st.st_mode & 0o777)==0o600
+              meta=Path(str(a)+'.meta.json'); assert meta.exists()
+              mst=meta.stat(); assert (mst.st_mode & 0o777)==0o600
+              with a.open('rb') as f: assert f.read(21).startswith(b'age-encryption.org/v1')
+              m=json.load(meta.open(encoding='utf-8'))
+              assert m.get('encrypted_archive')==a.name
+              h=hashlib.sha256()
+              with a.open('rb') as f:
+                  for chunk in iter(lambda:f.read(1024*1024),b''): h.update(chunk)
+              assert m.get('encrypted_archive_sha256')==h.hexdigest()
+              assert 'root-only same-VM encrypted staging/recovery artifact' in str(m.get('location_class',''))
+          print('approved_encrypted_backup_pairs='+str(len(archives)))
+          print('approved_backup_metadata_and_hashes=PASS')
+          PY
+
+          # No raw/stale backup artifacts are permitted in the service/config secret areas.
+          stale_service_copies="$(sudo find /opt/AdGuardHome -maxdepth 3 -type f \( -name 'AdGuardHome.yaml.bak*' -o -name 'AdGuardHome.yaml.*.bak*' -o -name '*.rollback' -o -name '*.backup' \) -print | wc -l)"
+          [[ "$stale_service_copies" == '0' ]]
+          stale_secret_copies="$(sudo find /var/lib/usesafeweb/adguard -maxdepth 2 -type f \( -name '*.bak*' -o -name '*.backup' -o -name '*.tar*' -o -name '*.zip' -o -name '*.age' \) -print | wc -l)"
+          [[ "$stale_secret_copies" == '0' ]]
+          temp_backup_artifacts="$(sudo find /tmp /var/tmp -maxdepth 2 \( -type d -name '.stage.*' -o -type f -name 'usesafeweb-adguard-config-*.tar*' \) -print 2>/dev/null | wc -l)"
+          [[ "$temp_backup_artifacts" == '0' ]]
+          echo 'unapproved_backup_artifact_count=0'
+          echo 'plaintext_backup_stage_count=0'
+
+          /opt/AdGuardHome/AdGuardHome --version | awk '{print "adguard_home_version="$NF}' > /tmp/t0207-safe-summary
+          printf 'approved_encrypted_backup_pairs=%s\n' "$archive_count" >> /tmp/t0207-safe-summary
+          printf 'querylog_items=0\nstatistics_query_count=0\ntop_clients_count=0\nunapproved_backup_artifact_count=0\n' >> /tmp/t0207-safe-summary
+          rm -f /tmp/t0207-qcfg.json /tmp/t0207-scfg.json /tmp/t0207-qlog.json /tmp/t0207-stats.json /tmp/t0207-domain
+          echo 'TSK_0207_ACCEPTANCE=PASS'
+
+      - name: Publish TSK-0207 evidence after successful production assertions
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          workflow_blob="$(git hash-object .github/workflows/adguard-privacy-persistence-acceptance.yml)"
+          state_blob="$(git hash-object CURRENT_STATE.md)"
+          approved_config_blob="$(git hash-object infrastructure/adguard-server/approved-adguard-config-v1.json)"
+          backup_policy_blob="$(git hash-object infrastructure/adguard-server/BACKUP_SCOPE_POLICY.md)"
+          source /tmp/t0207-safe-summary
+          cat > TSK_0207_PRIVACY_PERSISTENCE_EVIDENCE_2026-08-28.md <<EOF
+          # TSK-0207 — Privacy Persistence Verification Evidence
+
+          **Task:** TSK-0207 — Verify no persistent identifiable query history or client statistics  
+          **Acceptance:** ACC-0207  
+          **Verification:** VER-0207  
+          **Evidence:** EVD-0207  
+          **Date:** 2026-08-28  
+          **Target:** production host \`adguardvm\`
+
+          ## Exact environment/artifacts
+
+          - Workflow source commit: \`${GITHUB_SHA}\`
+          - Workflow blob: \`${workflow_blob}\`
+          - Runtime-state blob at checkout: \`${state_blob}\`
+          - Approved-config blob: \`${approved_config_blob}\`
+          - Backup-policy blob: \`${backup_policy_blob}\`
+          - AdGuard Home version: \`${adguard_home_version}\`
+          - Production machine identity was asserted against the accepted \`adguardvm\` machine-id fingerprint before testing.
+
+          ## Fresh controlled production test
+
+          The assertion step generated one randomized reserved \`.invalid\` DNS name locally on the production resolver. It then verified, after the request:
+
+          - persisted query logging is disabled;
+          - persisted file query logging is disabled;
+          - API query logging is disabled;
+          - the synthetic name is absent from query-log output and query-log item count is \`0\`;
+          - no non-empty \`querylog.json*\` file exists;
+          - persisted and API statistics are disabled;
+          - top-client count is \`0\` and stored statistics query count is \`0\`;
+          - persistent client count is \`0\` and client-IP anonymisation remains enabled;
+          - approved encrypted backup pairs retained: \`${approved_encrypted_backup_pairs}\` (within the approved maximum of two);
+          - every retained archive is root-only \`0600\` age ciphertext with matching root-only metadata and verified SHA-256;
+          - the backup directory is root-only and contains no unexpected file/directory class;
+          - plaintext backup staging count is \`0\`;
+          - no stale/raw backup-named copy exists in the AdGuard service/config or UseSafeWeb secret area, and no matching temporary backup artifact exists in \`/tmp\` or \`/var/tmp\`;
+          - unapproved backup artifact count for the controlled project locations is \`0\`.
+
+          The approved encrypted archives contain the configuration package defined by the accepted backup policy; accepted TSK-0430 owner-side decryption already proved the package/member scope and absence of prohibited query history. The retained same-VM encrypted copies are documented residual recovery artifacts, not query/client-history datasets and not proof of node-loss resilience.
+
+          ## Privacy/legal boundary
+
+          REQ-0018 remains respected: no real England participant was activated or processed. The test used a randomized reserved synthetic name only. No participant browsing/domain history, participant identity, device identity, credential, token, private key, or raw query data is stored in this evidence.
+
+          REQ-0019/INT-0007 are supported by direct actual-configuration/runtime/storage evidence rather than assumed policy. CON-0007 and CON-0008 remain satisfied.
+
+          ## Acceptance evaluation
+
+          - Persistent raw query/domain history after controlled test: **none — PASS**.
+          - File query log after controlled test: **none — PASS**.
+          - Identifiable client/statistics history after controlled test: **none — PASS**.
+          - Unapproved backup copy in controlled project locations: **none — PASS**.
+          - Residual operational data: only the documented root-only approved encrypted configuration recovery artifact(s), with no prohibited query/client history — **PASS**.
+
+          **Stable outcome: TSK-0207 = PASS.**
+
+          This PASS verifies the current synthetic production privacy-persistence condition only. It does not resolve the separately deferred UK representative/ICO work, authorize real-participant activation, or satisfy later legal/release gates.
+          EOF
+          git config user.name "UseSafeWeb QA Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add TSK_0207_PRIVACY_PERSISTENCE_EVIDENCE_2026-08-28.md
+          git commit -m "evidence: verify TSK-0207 privacy persistence"
+          git push origin HEAD:main
