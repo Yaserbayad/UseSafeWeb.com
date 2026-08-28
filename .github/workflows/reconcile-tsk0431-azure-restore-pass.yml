@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: usesafeweb-governance-tsk0431-pass-v2
+  group: usesafeweb-governance-tsk0431-pass-v3
   cancel-in-progress: false
 
 jobs:
@@ -66,10 +66,10 @@ jobs:
           s=s[:q]+'\n'.join(lines)
           p.write_text(s,encoding='utf-8')
           PY
-          git diff --check
           grep -Fq 'ACC-0431 and REQ-0052 recovery acceptance are satisfied' CURRENT_STATE.md
           ! grep -Fq '### WAITING — TSK-0431' CURRENT_STATE.md
           grep -Fq '`TSK-0510` — Compile signed pilot technical acceptance report.' CURRENT_STATE.md
+          git diff -- CURRENT_STATE.md
           git config user.name 'UseSafeWeb Governance Bot'
           git config user.email 'actions@users.noreply.github.com'
           git add CURRENT_STATE.md
