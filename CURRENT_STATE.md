@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T16:24:47Z
+**Updated:** 2026-08-28T16:27:32Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -400,6 +400,12 @@ Independent source audit used current Google Android, Android Developers, Apple 
 
 `RSK-0002` remains OPEN: no representative-parent evidence proves completion, comprehension, support burden, persistence, perceived duplication or optimal ordering/copy. This PASS is provisional internal design only and does not authorize LG-05/LG-06, implementation/build, participants, legal completion, payment, public release or launch.
 
+### TSK-0320 accepted stable state
+
+`TSK-0320 — Freeze the protection-state model and copy rules`: **PASS for the provisional internal L4 state/copy contract under DEC-0050/CR-0003**. Contract `TSK_0320_PROTECTION_STATE_MODEL_AND_COPY_RULES_2026-08-28.md`, blob `1146f7622f434590dde1253d11f14fb6a87e19de`; independent evidence `TSK_0320_PROTECTION_STATE_MODEL_AND_COPY_RULES_EVIDENCE_2026-08-28.md`, blob `93e32071ce111fddda7df826c3106f1eca3dfc07`. ACC-0320 is satisfied: protected/verified, configured/parent-confirmed, action-needed, not-covered, uncertain/error, and removed states have exact evidence thresholds, copy rules, precedence, transitions and testable assertions; parent confirmation/profile presence cannot masquerade as system verification.
+
+`RSK-0002` remains OPEN: exact labels/copy are not representative-parent validated and must be reopened if later L3 evidence contradicts comprehension/usability assumptions. This PASS does not authorize LG-05/LG-06, implementation/build, participants, legal completion, payment, public release or launch.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -411,13 +417,13 @@ Independent source audit used current Google Android, Android Developers, Apple 
 
 ## Queue status after current reconciliation
 
-`TSK-0315` is runtime PASS for the provisional internal L4 service blueprint. Its completion unlocks `TSK-0316` and `TSK-0320`; `TSK-0320` is CRITICAL/A3/AUTO_ALLOWED with sole hard dependency `TSK-0315`, while `TSK-0316` and `TSK-0409` are HIGH/A3/AUTO_ALLOWED. `TSK-0187` remains deferred because representative-parent evidence is unavailable under CR-0003. Human-only successors remain fenced.
+`TSK-0320` is runtime PASS for the provisional internal L4 Protection Map state/copy contract. `TSK-0319` is now dependency-ready but remains HUMAN_ONLY and is fenced. The highest-priority executable AUTO_ALLOWED candidates are `TSK-0316` and `TSK-0409`, both HIGH/A3; current project tie-break by WBS order selects `TSK-0316`. `TSK-0187` remains real-user-bound/deferred.
 
-- **Selected next: `TSK-0320 — Freeze the protection-state model and copy rules`** (L4 / A3 / AUTO_ALLOWED / CRITICAL).
+- **Selected next: `TSK-0316 — Define a friction budget and challenge every click, field, choice, confirmation, account, and manual step`** (L4 / A3 / AUTO_ALLOWED / HIGH).
 - Hard dependency: `TSK-0315` — current PASS.
-- ACC-0320: Protected/verified, configured/parent-confirmed, action-needed, not-covered, uncertain/error, and removed states have exact evidence and transition rules; no confirmation masquerades as verification.
-- Selection rationale: newly eligible CRITICAL product-truth state contract outranks HIGH design/technical candidates and can be satisfied without real-participant evidence.
+- ACC-0316: Each retained interaction has a decision/technical/safety reason; removable steps are removed; platform constraints are explicit; unsupported one-click claims are absent.
+- Selection rationale: same HIGH priority/authority as TSK-0409, earlier WBS order; acceptance can be satisfied as provisional internal friction design without representative-user evidence if no unsupported quantitative behavioral claims are invented.
 
 ## Exact next authoritative step
 
-Execute bounded `TSK-0320`: freeze the provisional Protection Map/protection-state evidence and transition rules for protected/verified, configured/parent-confirmed, action-needed, not-covered, uncertain/error and removed states. Ground DNS truth in TSK-0408 and current accepted technical evidence, keep parent confirmation distinct from system verification, preserve TSK-0229 accountless/no-history rules, explicitly carry `RSK-0002`, and do not imply real-user validation or implementation authority. Persist/read back independent ACC-0320 evidence, reconcile runtime, then recompute.
+Execute bounded `TSK-0316`: challenge every interaction in the TSK-0315 blueprint, remove/conditionalize any interaction lacking a current decision/technical/safety/evidence/recovery reason, identify unavoidable platform-specific manual steps from accepted TSK-0408 evidence, explicitly reject unsupported one-click/universal setup claims, and produce a friction budget framed as design constraints rather than fabricated user-performance metrics. Carry `RSK-0002`, persist/read back independent ACC-0316 evidence, reconcile runtime, then recompute.
