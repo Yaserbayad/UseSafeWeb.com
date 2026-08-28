@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T08:04:04Z  
+**Updated:** 2026-08-28T08:29:36Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -54,6 +54,7 @@ GitHub is the active execution bridge for eligible AUTO_ALLOWED host work. Repos
 - `TSK-0227` — exceptional diagnostic-logging procedure independently verified with direct predecessor proof — artifact: `EXCEPTIONAL_DIAGNOSTIC_LOGGING_PROCEDURE.md`, blob `f9e1bb52582a69bc385aa69c93d02febb7b5cffa`; evidence: `TSK_0227_EXCEPTIONAL_DIAGNOSTIC_LOGGING_EVIDENCE_2026-08-28.md`, blob `3455c9077585a4727084ff61a791c31a90b9ad75`; independent audit run `33153403025` / job `98790453195`: PASS.
 - `TSK-0228` — child-safety concern/disclosure escalation boundary independently verified with current official-source revalidation — artifact: `CHILD_SAFETY_ESCALATION_PROCEDURE.md`, blob `18c6ac79c3fa5db21c5e591e81fe5b6611cd7bf1`; evidence: `TSK_0228_CHILD_SAFETY_ESCALATION_EVIDENCE_2026-08-28.md`, blob `6c72844979f417e09c313fc7569f0db588c2c15a`; independent repository audit run `33153607319` / job `98791113929`: PASS.
 - `TSK-0165` — Experiment-1 facilitator guide and intervention taxonomy independently verified against current runtime predecessors, frozen protocol and accepted participant schema — artifact: `EXPERIMENT_01_FACILITATOR_GUIDE.md`, blob `7d80c1338acc1a5a4c1ff30c020ca39021d8dcb3`; evidence: `TSK_0165_FACILITATOR_GUIDE_EVIDENCE_2026-08-28.md`, blob `77992d668649d1f647126f4e1b08aeb1d04bb993`; independent audit run `33153850640` / job `98791885998`: PASS.
+- `TSK-0169` — Experiment-1 support and false-positive intake process independently verified against current runtime predecessors and privacy/diagnostic controls — artifact: `EXPERIMENT_01_SUPPORT_FALSE_POSITIVE_INTAKE.md`, blob `9fab42f97e3e96023de89a8ed266acc21c0f06ab`; evidence: `TSK_0169_SUPPORT_FALSE_POSITIVE_INTAKE_EVIDENCE_2026-08-28.md`, blob `30a4d4380f0aa475a90c1719408663d7a43df384`; independent audit run `33155547694` / job `98797333013`: PASS.
 
 ### TSK-0204 corrected stable state
 
@@ -185,6 +186,16 @@ Independent read-only audit run `33153850640` / job `98791885998`: **PASS**. It 
 
 Evidence: `TSK_0165_FACILITATOR_GUIDE_EVIDENCE_2026-08-28.md`, blob `77992d668649d1f647126f4e1b08aeb1d04bb993`. ACC-0165 is fully satisfied. This is protocol preparation only and does not authorise recruitment, participant processing, live facilitation, or child-linked DNS activation.
 
+### TSK-0169 accepted stable state
+
+The exact WBS row defines TSK-0169 as L2 / A3 / `AUTO_ALLOWED` / MEDIUM with hard predecessors `TSK-0227; TSK-0165`, acceptance `ACC-0169`.
+
+Both hard predecessors were confirmed as current runtime PASS. The existing `EXPERIMENT_01_SUPPORT_FALSE_POSITIVE_INTAKE.md`, blob `9fab42f97e3e96023de89a8ed266acc21c0f06ab`, requires a pseudonymous participant ID, category, severity, intervention time, privacy-safe evidence, action, outcome and closure for every issue; false-positive handling is narrow/reversible/re-tested, and genuinely necessary request-level diagnostics are routed through TSK-0227 rather than broad query-history collection.
+
+Independent read-only audit run `33155547694` / job `98797333013`: **PASS**. It returned `TSK_0227_RUNTIME_PREDECESSOR=PASS`, `TSK_0165_RUNTIME_PREDECESSOR=PASS`, `TSK_0169_ACCEPTANCE_CLASSES=8/8`, `TSK_0169_PRIVACY_BOUNDARY=PASS`, `TSK_0169_DIAGNOSTIC_REFERENCE=PASS`, exact intake artifact blob match and `TSK_0169_INDEPENDENT_AUDIT=PASS`.
+
+Evidence: `TSK_0169_SUPPORT_FALSE_POSITIVE_INTAKE_EVIDENCE_2026-08-28.md`, blob `30a4d4380f0aa475a90c1719408663d7a43df384`. ACC-0169 is fully satisfied. This is support-process preparation only; no participant support case, diagnostic logging or participant processing occurred.
+
 ### WAITING — TSK-0431
 
 `TSK-0431` — test pilot restore or rebuild procedure: **WAITING on an independent clean recovery target and the owner-managed Azure/TLS inputs required by ACC-0431/REQ-0052; not PASS**.
@@ -228,4 +239,4 @@ Deterministic resumption condition: the owner/provider creates that record, or a
 
 ## Exact next authoritative step
 
-Recompute the current L2 queue after confirmed TSK-0165 PASS, with TSK-0431 and TSK-0441 held WAITING. Continue only the highest-priority eligible autonomous work after direct dependency/gate verification; do not bypass participant-activation, legal, Azure control-plane, Cloudflare provider, recovery, or public-service readiness boundaries.
+Recompute the current L2 queue after confirmed TSK-0169 PASS, with TSK-0431 and TSK-0441 held WAITING. Continue only the highest-priority eligible autonomous work after direct dependency/gate verification; do not bypass participant-activation, legal, Azure control-plane, Cloudflare provider, recovery, or public-service readiness boundaries.
