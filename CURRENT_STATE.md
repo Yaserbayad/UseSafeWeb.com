@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T16:51:46Z
+**Updated:** 2026-08-28T16:52:35Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -447,8 +447,13 @@ The standard preserves TSK-0558/CON-0014/CON-0015: approximately USD 20-50/month
 
 ## Queue status after current reconciliation
 
-`TSK-0559` is runtime PASS. A fresh conservative dependency-ready AUTO_ALLOWED L4 queue has been generated at `TSK_0559_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. No next task is selected by this write: the derived queue must first be reread against current acceptance, gate, CR-0003 behavioral-evidence limits and direct predecessor evidence. HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED and real-user-bound work remain fenced.
+The TSK-0559 post-PASS queue was reread and independently screened. `TSK-0187` remains ineligible under CR-0003 because ACC-0187 requires representative-parent completion/comprehension evidence. `TSK-0140` remains ineligible for PASS because ACC-0140 requires owner/product/network/privacy/security/UX/support/finance review evidence not present. `TSK-0041` is the highest-priority remaining dependency-ready AUTO_ALLOWED provisional-L4 task.
+
+- **Selected next: `TSK-0041 — Specify baseline DNS-protection activation requirements`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
+- Hard dependency: `TSK-0143` — current PASS.
+- ACC-0041: Requirements cover endpoint format, DoH setup, filtering verification, fail-safe behavior, uninstall/removal, Private Relay/VPN conflicts, false positives, and no-history constraints.
+- Selection rationale: current predecessor PASS; technical/product requirements can be frozen from accepted UseSafeWeb DNS evidence without real-participant behavior or an owner approval act; its prior “future gate” note is superseded for bounded internal L4 definition by DEC-0050/CR-0003, not by build/launch authority.
 
 ## Exact next authoritative step
 
-Read back the TSK-0559 post-PASS L4 queue, reject any candidate whose own acceptance/preconditions require unavailable real-user evidence, owner review/approval or missing direct predecessor proof, then select the deterministic highest-priority eligible AUTO_ALLOWED task and persist that selection before execution.
+Execute bounded `TSK-0041`: specify the baseline DNS-protection activation requirements using the already accepted `dns.usesafeweb.com` Android DoT / Apple DoH profile contract, current filtering verification/rollback evidence, fail-safe/uncertainty rules, removal/recovery, Private Relay/VPN/browser/app/network conflict semantics, false-positive exception boundary and no-history privacy controls; carry `RSK-0002`; persist/read back independent ACC-0041 evidence; reconcile runtime; then recompute.
