@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T00:40:00Z  
+**Updated:** 2026-08-28T00:45:46Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -47,6 +47,7 @@ GitHub is the active execution bridge for eligible AUTO_ALLOWED host work. Repos
 - `TSK-0202` — secret-safe approved AdGuard settings exported/versioned and proven exactly equal to current live safe settings — artifact: `infrastructure/adguard-server/approved-adguard-config-v1.json`, blob `ea85830b5ef9de7f2772e5467570d52013228b0b`; settings SHA-256 `327c374d46fc40c03a847a57d7078df6035edc71710eb8725ce57c69ac8a93a8`; evidence: `TSK_0202_ADGUARD_CONFIG_EXPORT_EVIDENCE_2026-08-27.md`, blob `d885d3f8e53c052809620958d82eb3114d558b84`.
 - `TSK-0429` — privacy-minimal AdGuard backup scope documented and independently verified against current DPIA/retention/live state — policy: `infrastructure/adguard-server/BACKUP_SCOPE_POLICY.md`, blob `e62b48a3e746b1be90881bbffab3b7680384cc16`; evidence: `TSK_0429_PRIVACY_MINIMAL_BACKUP_SCOPE_EVIDENCE_2026-08-27.md`, blob `b77c6d7a2e17adc5e653151b55137467a8c5b62f`.
 - `TSK-0430` — encrypted configuration backup created, independently audited and directly decrypted by the authorised owner — evidence: `TSK_0430_ENCRYPTED_CONFIG_BACKUP_EVIDENCE_2026-08-27.md`, blob `de1820cb2a9fc5b175c5e5eb1e18b45e6a430a82`; ciphertext SHA-256 `bd5cad421a44efb27a669a0119f6247f456e1e8e97a0f23bb628933e6208ccde`; owner recipient fingerprint `SHA256:682Jbw3baP6jxs57+1c5lchlkrNMELcvDk8bauEl51U`; owner-side decrypted configuration SHA-256 `d8b6eae3b85edbaa1c49e318354389dc616099ecb3d2d90eff3c3dd8c663e1f2`.
+- `TSK-0166` — pseudonymous Experiment-1 participant record/metric schema created and independently audited with direct predecessor proof — artifact: `EXPERIMENT_01_PARTICIPANT_RECORD_SCHEMA.md`, blob `c7706fceced87c797b8cd92179198754e2b08ffe`; evidence: `TSK_0166_PARTICIPANT_RECORD_SCHEMA_EVIDENCE_2026-08-28.md`, blob `d043370a9c1efc99ccf8f65b813733b4c832c3f0`; independent audit run `33130737625` / job `98719395096`: PASS.
 
 ### TSK-0204 corrected stable state
 
@@ -96,6 +97,18 @@ On 2026-08-28 the Project Owner executed the repository-pinned owner-side verifi
 
 No private-key material or passphrase was supplied to GitHub, ChatGPT or project evidence. ACC-0430 is fully satisfied.
 
+### TSK-0166 accepted stable state
+
+The exact WBS row defines TSK-0166 as L2 / A3 / `AUTO_ALLOWED` / MEDIUM with hard predecessors `TSK-0223; TSK-0164`, acceptance `ACC-0166`.
+
+Because the predecessors were historical planning PASS records, their labels were not accepted as sufficient evidence by themselves. Current durable `EXPERIMENT_01_CONCIERGE_VALIDATION.md`, blob `bc801da11d7a7f2a5315d1cdca4f0d134afe7805`, directly reconstructs ACC-0164: qualification, real actions, intervention rules, metrics, thresholds, stop conditions, Wave A/controlled refinement/Wave B and aggregate decision output. Current durable `VALIDATION_READINESS_GATE.md`, blob `b3b0efd0cc0f40faa1ecab190c7469b8dff12ec1`, directly reconstructs ACC-0223's minimum-data/prohibited-field baseline.
+
+The versioned empty template `EXPERIMENT_01_PARTICIPANT_RECORD_SCHEMA.md` contains 37 controlled schema fields, including every ACC-0166 measurement class, no uncontrolled participant free text, explicit prohibited-field controls, no participant records, and no authorisation for recruitment or live processing.
+
+Independent read-only audit run `33130737625` / job `98719395096`: **PASS**. It returned `TSK_0164_DIRECT_PREDECESSOR_PROOF=PASS`, `TSK_0223_DIRECT_PREDECESSOR_PROOF=PASS`, 19/19 required acceptance field classes present, 37 total controlled fields, zero prohibited field tokens, exact schema blob match and `TSK_0166_INDEPENDENT_AUDIT=PASS`.
+
+Evidence: `TSK_0166_PARTICIPANT_RECORD_SCHEMA_EVIDENCE_2026-08-28.md`, blob `d043370a9c1efc99ccf8f65b813733b4c832c3f0`. ACC-0166 is fully satisfied. This does not activate Experiment 1 or override the validation-readiness gate.
+
 ### WAITING — TSK-0431
 
 `TSK-0431` — test pilot restore or rebuild procedure: **WAITING on an independent clean recovery target and the owner-managed Azure/TLS inputs required by ACC-0431/REQ-0052; not PASS**.
@@ -139,4 +152,4 @@ Deterministic resumption condition: the owner/provider creates that record, or a
 
 ## Exact next authoritative step
 
-Recompute the full current L2 queue with TSK-0431 and TSK-0441 held WAITING. Continue any lower-priority eligible autonomous work that does not bypass their acceptance semantics, unavailable Azure control-plane authority, Cloudflare provider authority, legal gates, or public-service readiness controls. Stop only if no safe useful eligible work remains.
+Recompute the current L2 queue after confirmed TSK-0166 PASS, with TSK-0431 and TSK-0441 held WAITING. Continue the highest-priority eligible autonomous preparation work that has direct predecessor evidence and does not bypass legal/participant-activation, Azure control-plane, Cloudflare provider, recovery, or public-service readiness boundaries.
