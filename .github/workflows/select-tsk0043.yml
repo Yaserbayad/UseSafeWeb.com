@@ -1,0 +1,73 @@
+name: Select TSK-0043 governed work
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/select-tsk0043.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  select:
+    runs-on: [self-hosted, Linux, X64]
+    concurrency:
+      group: usesafeweb-governance-state-prod
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Verify exact governed pre-state
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(sha256sum /etc/machine-id | awk '{print $1}')" = "e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2"
+          test "$(git hash-object CURRENT_STATE.md)" = "af8f42b0bcb65d5a5141628da67057be5f078bd1"
+          grep -Fq 'TSK-0145` is runtime **PASS**' CURRENT_STATE.md
+          grep -Fq 'No successor task is selected by this synchronization write.' CURRENT_STATE.md
+
+      - name: Persist bounded TSK-0043 selection
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from datetime import datetime, timezone
+
+          p = Path('CURRENT_STATE.md')
+          text = p.read_text(encoding='utf-8')
+
+          old_updated = '**Updated:** 2026-08-28T20:36:42Z'
+          if text.count(old_updated) != 1:
+              raise SystemExit('unexpected Updated pre-state')
+          updated = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00', 'Z')
+          text = text.replace(old_updated, f'**Updated:** {updated}', 1)
+
+          marker = '## Queue status after TSK-0145 reconciliation\n'
+          i = text.find(marker)
+          if i < 0 or text.find(marker, i + 1) >= 0:
+              raise SystemExit('queue marker mismatch')
+
+          new_tail = '''## Queue status after TSK-0145 reconciliation\n\n`TSK-0043 — Run cross-functional requirements review and resolve conflicts` is the selected runtime **TODO** work item. Its sole hard dependency `TSK-0145` is runtime PASS with accepted 91/91 requirement traceability and 0 current orphan mappings. WBS authority classifies TSK-0043 as L4 / A3 / AUTO_ALLOWED. Current DEC-0050/CR-0003 permits this bounded internal L4 requirements review because ACC-0043 can be evaluated from canonical planning evidence without substituting synthetic evidence for real-participant behavior.\n\nSelection does **not** make LG-03, LG-04, LG-05 or LG-06 PASS; does not authorize L5/L6 build, real-participant processing, legal completion, payment, publication or launch; and does not close `RSK-0002`. Legacy `G-04` wording in ACC-0043 resolves to current `LG-05` semantics. `RSK-0044` remains OPEN-controlled and is mitigated for this dispatch by fresh canonical read-back and source/version checks.\n\n## Exact next authoritative step\n\nExecute TSK-0043 against the current canonical requirement register, TSK-0145 traceability matrix, constraints, interfaces, risks, decisions/exceptions and gate semantics. Identify requirement conflicts or contradictions with frozen privacy, accountless scope and current LG-05/DEC-0050 authority. Resolve only conflicts already resolvable under existing authority; do not invent owner decisions or behavioral evidence. Produce durable source-cited review evidence. TSK-0043 may PASS only if every critical finding is resolved, every remaining noncritical item has an owner plus an approved or gate-relative due condition, and no requirement contradicts frozen privacy, scope or current LG-05 authority. If an owner-only material conflict is found, classify the task BLOCKED instead of changing policy.\n'''
+          text = text[:i] + new_tail
+          p.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Verify diff and commit selection
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          grep -Fq 'TSK-0043 — Run cross-functional requirements review and resolve conflicts` is the selected runtime **TODO** work item.' CURRENT_STATE.md
+          grep -Fq 'Selection does **not** make LG-03, LG-04, LG-05 or LG-06 PASS' CURRENT_STATE.md
+          grep -Fq 'Execute TSK-0043 against the current canonical requirement register' CURRENT_STATE.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: select TSK-0043'
+          git push
