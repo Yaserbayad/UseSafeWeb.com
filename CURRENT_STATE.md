@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T19:38:35Z
+**Updated:** 2026-08-28T19:39:28Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -503,8 +503,13 @@ The production host baseline was captured read-only and proves only current reso
 
 ## Queue status after current reconciliation
 
-`TSK-0046` is runtime PASS for its bounded provisional-L4 performance/capacity-NFR-definition acceptance. No future numeric cohort, QPS capacity, production stress test, scale action, HA or web-app result is inferred. A fresh conservative dependency-ready AUTO_ALLOWED L4 queue has been generated at `TSK_0046_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. No next task is selected by this write; the queue must be reread against acceptance, direct predecessor evidence, CR-0003, human/legal/participant holds and open security/privacy deviations before execution.
+The TSK-0046 post-PASS queue was reread against current acceptance, CR-0003 and open security/privacy deviations. `TSK-0187` remains ineligible because it requires representative-parent evidence. `TSK-0140` remains ineligible for PASS because owner/multi-role review evidence is absent. `TSK-0314` is the only dependency-ready AUTO_ALLOWED L4 candidate with no preflight flag. Canonical WBS owns the TSK-0314 definition/dependency edge; canonical `CURRENT_STATE.md` proves TSK-0046 current PASS.
+
+- **Selected next: `TSK-0314 — Define accessibility, responsive, browser, OS, and device support NFRs`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
+- Hard dependency: `TSK-0046` — current PASS in canonical runtime.
+- ACC-0314: requirements define target WCAG level, keyboard/screen-reader/text-resize behavior, supported browsers/OS versions, device test tiers, and unsupported-state messaging.
+- Selection boundary: internal accessibility/responsive/support NFR definition only. No web-app build, public support promise, platform-market activation, participant testing or release is authorized.
 
 ## Exact next authoritative step
 
-Read back the TSK-0046 post-PASS L4 queue, reject any candidate requiring unavailable real-user evidence, owner/legal/privacy approval, unresolved trigger/gate or missing predecessor proof, account for open security/privacy deviations where relevant, and persist the deterministic highest-priority eligible AUTO_ALLOWED selection.
+Execute bounded TSK-0314: pin the applicable current WCAG target and authoritative browser/platform facts; distinguish web UI/browser support from the separately owned DNS install/mechanism support matrix; define keyboard, focus, screen-reader, text-resize/reflow, motion/contrast, responsive/mobile/RTL behavior, supported-browser/OS policy, device test tiers and truthful unsupported/degraded messaging; preserve accountless/multilingual and gate boundaries; persist/read back independent ACC-0314 evidence; reconcile runtime; then recompute.
