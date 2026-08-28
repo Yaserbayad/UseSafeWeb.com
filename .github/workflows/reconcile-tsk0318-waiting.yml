@@ -25,12 +25,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          echo "machine=$(sha256sum /etc/machine-id | awk '{print $1}')"
+          echo "state=$(git hash-object CURRENT_STATE.md)"
+          echo "candidate=$(git hash-object TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_CANDIDATE_2026-08-28.md)"
+          echo "evidence=$(git hash-object TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_PREPARATION_EVIDENCE_2026-08-28.md)"
+          grep -F 'TSK-0318 HUMAN_ONLY preparation selected' CURRENT_STATE.md >/dev/null
+          grep -F 'selected runtime **TODO** item for **preparation only**' CURRENT_STATE.md >/dev/null
           test "$(sha256sum /etc/machine-id | awk '{print $1}')" = "e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2"
           test "$(git hash-object CURRENT_STATE.md)" = "61cdb05991f01526bf09d7cee3b94f27ae62d542"
           test "$(git hash-object TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_CANDIDATE_2026-08-28.md)" = "e5f7cd082397966893864213d43c634e62c0e701"
           test "$(git hash-object TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_PREPARATION_EVIDENCE_2026-08-28.md)" = "c7cd8fa2b9759ceb33ee68064f7d258608fd77ee"
-          grep -Fq 'TSK-0318 HUMAN_ONLY preparation selected' CURRENT_STATE.md
-          grep -Fq 'selected runtime **TODO** item for **preparation only**' CURRENT_STATE.md
       - name: Apply bounded WAITING reconciliation
         shell: bash
         run: |
