@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T19:30:20Z
+**Updated:** 2026-08-28T19:38:35Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -486,6 +486,12 @@ The internal 99.9% DoH/DoT 30-day target is provisional and intentionally compat
 
 The contract introduces no mandatory customer authentication, account/dashboard, persistent product datastore or customer-linked AdGuard client record. It performs no AdGuard mutation or credential rotation. `DVR-0230-01`, `DVR-0484-01`, `GAP-0484-02` and `RSK-0002` remain OPEN. This PASS does not authorize implementation/build, participants, legal completion, publication or launch.
 
+### TSK-0046 accepted stable state
+
+`TSK-0046 — Define performance and capacity NFRs`: **PASS for the provisional internal L4 performance/capacity-NFR-definition acceptance under DEC-0050/CR-0003**. Contract `TSK_0046_PERFORMANCE_CAPACITY_NFR_2026-08-28.md`, blob `2c48f975d557b1bb4ba6c58c2a8ad3580b2c7b06`; independent evidence `TSK_0046_PERFORMANCE_CAPACITY_NFR_EVIDENCE_2026-08-28.md`, blob `09d111530c5e9c86feb2cafb54f62fb046a44b6f`; read-only host baseline `TSK_0046_HOST_CAPACITY_BASELINE_EVIDENCE_2026-08-28.md`, blob `f43d237b3f6a7135aa498ce4627f8cd7ca59682e`. ACC-0046 is satisfied without fabricating future adoption: current authorized real-participant load is zero while CR-0003 remains active, future numeric cohort/load is explicitly unfrozen and must be derived from approved active-device count plus privacy-safe workload characterization before reactivation, a 2× verified capacity margin is required, DNS DoH/DoT synthetic performance testing and rate-limit handling are explicit, future web/backend/Core-Web-Vitals targets are defined without claiming an unbuilt app, degradation preserves hard controls, and measurable early capacity-review triggers precede incident thresholds.
+
+The production host baseline was captured read-only and proves only current resource state, not QPS capacity. No production stress test, infrastructure resize, HA, participant traffic, future numeric cohort, web implementation or field-performance result is inferred. `DVR-0230-01`, `DVR-0484-01`, `GAP-0484-02` and `RSK-0002` remain OPEN. This PASS does not authorize build, participants, legal completion, publication or launch.
+
 ## Runtime safeguards
 
 - Runtime states only `TODO`, `WAITING`, `BLOCKED`, `PASS`.
@@ -497,13 +503,8 @@ The contract introduces no mandatory customer authentication, account/dashboard,
 
 ## Queue status after current reconciliation
 
-The TSK-0044 post-PASS queue was reread against current acceptance, CR-0003 and open security/privacy deviations. `TSK-0187` remains ineligible because it requires representative-parent evidence. `TSK-0140` remains ineligible for PASS because owner/multi-role review evidence is absent. `TSK-0046` is the only dependency-ready AUTO_ALLOWED L4 candidate with no preflight flag. Canonical WBS owns the TSK-0046 task definition/dependency edge; canonical `CURRENT_STATE.md` separately proves the volatile TSK-0538 PASS required by that edge.
-
-- **Selected next: `TSK-0046 — Define performance and capacity NFRs`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
-- Hard dependency: `TSK-0538` — current PASS in canonical runtime.
-- ACC-0046: state expected pilot load, safety margin, DNS latency/availability test method, web journey performance, degradation behavior, and capacity-review trigger.
-- Selection boundary: internal performance/capacity NFR definition only. No fabricated user forecast, load-test execution against real participants, scaling purchase, infrastructure mutation, application build, participant processing or release is authorized.
+`TSK-0046` is runtime PASS for its bounded provisional-L4 performance/capacity-NFR-definition acceptance. No future numeric cohort, QPS capacity, production stress test, scale action, HA or web-app result is inferred. A fresh conservative dependency-ready AUTO_ALLOWED L4 queue has been generated at `TSK_0046_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. No next task is selected by this write; the queue must be reread against acceptance, direct predecessor evidence, CR-0003, human/legal/participant holds and open security/privacy deviations before execution.
 
 ## Exact next authoritative step
 
-Execute bounded TSK-0046: derive a conservative planning load envelope from the current single-node architecture and pilot/validation constraints without inventing future adoption; define safety margin, privacy-safe DNS latency/availability test method, conditional web-journey performance targets, degradation behavior and measurable capacity-review triggers; preserve the single-node/no-HA baseline until evidence justifies scale; persist/read back independent ACC-0046 evidence; reconcile runtime; then recompute.
+Read back the TSK-0046 post-PASS L4 queue, reject any candidate requiring unavailable real-user evidence, owner/legal/privacy approval, unresolved trigger/gate or missing predecessor proof, account for open security/privacy deviations where relevant, and persist the deterministic highest-priority eligible AUTO_ALLOWED selection.
