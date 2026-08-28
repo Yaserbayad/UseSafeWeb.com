@@ -951,3 +951,91 @@
 ### Registers/REQUIREMENTS.md
 - L30: | REQ-0025 | MUST | PKG-05 | Full brand polish shall follow sufficient proposition evidence rather than precede behavioral validation. | TSK-0297; TSK-0298; TSK-0299; TSK-0300; TSK-0301; TSK-0302; TSK-0303; TSK-0304; TSK-0305 | Lifecycle/dependency audit. | Owner decision 2026-08-27 |
 
+## Exact relationship-index blocks for affected L4 tasks
+
+### TSK-0139
+```yaml
+  TSK-0139:
+    relationships:
+    - target: WP-0134
+      type: parent_work_package
+    - target: PKG-02
+      type: belongs_to_package
+    - target: PHS-0032
+      type: belongs_to_phase
+    - target: DEL-0088
+      type: belongs_to_deliverable
+    - target: L4
+      type: belongs_to_lifecycle
+    - target: TSK-0040
+      type: depends_on
+    - target: ACC-0139
+      type: acceptance
+    - target: VER-0139
+      type: verified_by
+    - target: EVD-0139
+      type: evidence_required
+    - target: RSK-0002
+      type: affected_by_risk
+    - target: INT-0003
+      type: uses_interface
+    - target: INT-0004
+      type: uses_interface
+    - target: REQ-0007
+      type: governed_by
+    - target: REQ-0008
+      type: governed_by
+    - target: CON-0001
+      type: governed_by
+    - target: CON-0002
+      type: governed_by
+    - target: USW-04.01.01.001
+      type: migrated_from
+    source: WBS/master-wbs.csv
+    type: task
+```
+
+### TSK-0326
+```yaml
+  TSK-0326:
+    relationships:
+    - target: WP-0314
+      type: parent_work_package
+    - target: PKG-06
+      type: belongs_to_package
+    - target: PHS-0086
+      type: belongs_to_phase
+    - target: DEL-0183
+      type: belongs_to_deliverable
+    - target: L4
+      type: belongs_to_lifecycle
+    - target: TSK-0034
+      type: depends_on
+    - target: TSK-0043
+      type: depends_on
+    - target: ACC-0326
+      type: acceptance
+    - target: VER-0326
+      type: verified_by
+    - target: EVD-0326
+      type: evidence_required
+    - target: RSK-0002
+      type: affected_by_risk
+    - target: INT-0009
+      type: uses_interface
+    - target: INT-0010
+      type: uses_interface
+    - target: REQ-0028
+      type: governed_by
+    - target: REQ-0029
+      type: governed_by
+    - target: CON-0010
+      type: governed_by
+    - target: CON-0017
+      type: governed_by
+    - target: USW-04.03.01.001
+      type: migrated_from
+    source: WBS/master-wbs.csv
+    type: task
+```
+
