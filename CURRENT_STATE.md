@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T00:26:07Z  
+**Updated:** 2026-08-28T00:35:28Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -96,6 +96,18 @@ On 2026-08-28 the Project Owner executed the repository-pinned owner-side verifi
 
 No private-key material or passphrase was supplied to GitHub, ChatGPT or project evidence. ACC-0430 is fully satisfied.
 
+### WAITING — TSK-0431
+
+`TSK-0431` — test pilot restore or rebuild procedure: **WAITING on an independent clean recovery target and the owner-managed Azure/TLS inputs required by ACC-0431/REQ-0052; not PASS**.
+
+The exact WBS row is L2 / A3 / `AUTO_ALLOWED` / HIGH / critical path with hard predecessors `TSK-0430; TSK-0011`, both satisfied. ACC-0431 requires a functional test target that passes encrypted-DNS and privacy checks with recovery time/issues recorded. REQ-0052 requires a timed clean-server drill covering host baseline, packages, AdGuard, server-managed configuration, firewall/network, endpoint, TLS, filters, privacy, startup, Azure-native backup/restore, verification and health.
+
+CON-0019 and CON-0004 require a fresh owner-provided Ubuntu 24.04 LTS Azure VM and keep Azure VM/control-plane creation/configuration outside project automation. The live `adguardvm` is the current single DNS node and is not an independent clean test target; destructively rebuilding it merely to generate evidence would create avoidable outage/security/privacy risk. In addition, TSK-0441 public DNS and TSK-0442 TLS are not yet PASS, so the encrypted-DNS/TLS portion of the acceptance is not presently available end-to-end.
+
+No Azure control-plane action, new VM creation, or production mutation was performed. Preflight evidence: `TSK_0431_RECOVERY_DRILL_PREFLIGHT_EVIDENCE_2026-08-28.md`, blob `701398159b8b35d5c48ca9b8e3b193acfa038b1e`.
+
+Deterministic resumption condition: an owner-provided reachable fresh Ubuntu 24.04 LTS Azure test target in the approved West Europe boundary is handed off with approved automation access and no participant data; the endpoint/TLS inputs needed for encrypted-DNS verification are available; and an owner-managed Azure-native backup/restore interface or evidence path is available for the REQ-0052 drill. Only then may the timed clean-server restore/rebuild acceptance execute.
+
 ### External/provider and legal boundaries
 
 - `TSK-0441` — public `dns.usesafeweb.com` DNS record: no record is claimed created; no authorized DNS-provider account action is currently available through connected tools.
@@ -113,4 +125,4 @@ No private-key material or passphrase was supplied to GitHub, ChatGPT or project
 
 ## Exact next authoritative step
 
-Recompute the authoritative WBS/relationship queue from current GitHub authority after confirmed TSK-0430 PASS, then execute the highest-priority eligible work that remains within current gates, Action Authority, platform capability and secret boundaries.
+Recompute the authoritative L2 queue with TSK-0431 held WAITING. Do not bypass its clean-target acceptance. Continue the highest-priority eligible task that does not require unavailable Azure control-plane or DNS-provider authority; record any further external boundary truthfully and continue autonomous work where safe.
