@@ -25,13 +25,15 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Read-only TSK-0441 DNS preflight
+      - name: Read-only TSK-0441 DNS authority preflight
         shell: bash
         run: |
           set -Eeuo pipefail
           [[ "$(hostname -s)" == "adguardvm" ]]
           command -v dig >/dev/null
 
+          echo "ZONE_NS=$(dig +short NS usesafeweb.com @1.1.1.1 | sort -u | paste -sd, -)"
+          echo "ZONE_SOA=$(dig +short SOA usesafeweb.com @1.1.1.1 | tr ' ' ',' | paste -sd';' -)"
           for resolver in system 1.1.1.1 8.8.8.8 9.9.9.9; do
             if [[ "$resolver" == system ]]; then
               dns_a="$(dig +short A dns.usesafeweb.com | sort -u | paste -sd, -)"
@@ -46,5 +48,4 @@ jobs:
             fi
             echo "RESOLVER=$resolver DNS_A=${dns_a:-NONE} DNS_AAAA=${dns_aaaa:-NONE} DNS_CNAME=${dns_cname:-NONE} SRV_A=${srv_a:-NONE}"
           done
-
-          echo 'TSK_0441_READ_ONLY_PREFLIGHT=PASS'
+          echo 'TSK_0441_DNS_AUTHORITY_PREFLIGHT=PASS'
