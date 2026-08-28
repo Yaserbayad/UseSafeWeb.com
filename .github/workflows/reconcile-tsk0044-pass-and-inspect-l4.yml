@@ -1,0 +1,117 @@
+name: Reconcile TSK-0044 PASS and inspect L4 queue
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-tsk0044-pass-and-inspect-l4.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted, Linux, X64]
+    concurrency:
+      group: usesafeweb-governance-state-prod
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify runner identity and immutable inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(sha256sum /etc/machine-id | awk '{print $1}')" = "e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2"
+          test "$(git hash-object CURRENT_STATE.md)" = "a0687a64a9c6c7aa27809b436f02dbac47ff1f71"
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "dce5b829c4d447eac180ae1e896e0019292cf971"
+          test "$(git hash-object TSK_0044_ADGUARD_API_COMPATIBILITY_CREDENTIAL_FAILURE_NFR_2026-08-28.md)" = "07ab5539d11ff25d591adeada34e7f30854caa90"
+          test "$(git hash-object TSK_0044_ADGUARD_API_COMPATIBILITY_CREDENTIAL_FAILURE_NFR_EVIDENCE_2026-08-28.md)" = "19355b7b9ea2bac219ccf79ef9cbfd588cc56ba4"
+          test "$(git hash-object infrastructure/adguard-server/approved-adguard-config-v1.json)" = "e9975c4e75c2a68131f049da942468d8d1952d8d"
+      - name: Verify ACC-0044 and reconcile runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv, pathlib, re
+          from datetime import datetime, timezone
+          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',encoding='utf-8-sig',newline='')))
+          by={r['Task_ID']:r for r in rows}
+          t=by['TSK-0044']
+          deps=[x.strip() for x in t['Dependencies'].split(';') if x.strip()]
+          assert deps==['TSK-0484','TSK-0538','TSK-0146']
+          assert by['TSK-0146'].get('Execution_State')=='PASS'
+          assert t['Lifecycle_Stage']=='L4' and t['Priority']=='MEDIUM'
+          assert t['AI_Capability_A0_A4']=='A3' and t['Action_Authority']=='AUTO_ALLOWED'
+          acc=t['Acceptance_Criteria']
+          for phrase in ['private/restricted AdGuard administration path','secret storage/rotation','API/config timeouts/retries','partial-failure reconciliation','opaque setup/configuration identifiers if technically required','explicit privacy booleans','version/contract regression checks','safe behavior when AdGuard or the verification path is unavailable','no mandatory customer-authentication or persistent datastore dependency is introduced']:
+              assert phrase in acc, phrase
+          c=pathlib.Path('TSK_0044_ADGUARD_API_COMPATIBILITY_CREDENTIAL_FAILURE_NFR_2026-08-28.md').read_text()
+          e=pathlib.Path('TSK_0044_ADGUARD_API_COMPATIBILITY_CREDENTIAL_FAILURE_NFR_EVIDENCE_2026-08-28.md').read_text()
+          for phrase in [
+              '## 3. Administrative trust boundary',
+              '## 5. Explicit privacy/configuration invariants',
+              '## 6. Credential storage and isolation',
+              '## 7. Timeout and retry NFRs',
+              '## 8. Mutation/idempotency and partial-failure reconciliation',
+              '### Current decision: no AdGuard-derived setup identifier is required',
+              '## 10. Version and contract regression gate',
+              '## 11. Safe behavior when AdGuard/control API is unavailable',
+              'no mandatory UseSafeWeb customer account',
+              'RSK-0002'
+          ]:
+              assert phrase in c, phrase
+          assert '**VER-0044 independent audit result: PASS for ACC-0044' in e
+          for phrase in ['Exact upstream version/contract verification','No customer-authentication/persistent-datastore dependency audit','Explicit privacy-boolean audit','Safe-unavailable behavior audit']:
+              assert phrase in e, phrase
+
+          p=pathlib.Path('CURRENT_STATE.md')
+          text=p.read_text()
+          assert 'Selected next: `TSK-0044' in text
+          assert '### TSK-0044 accepted stable state' not in text
+          assert '### TSK-0484 accepted stable state' in text
+          assert '### TSK-0538 accepted stable state' in text
+          now=datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
+          text=re.sub(r'\*\*Updated:\*\* [^\n]+',f'**Updated:** {now}',text,count=1)
+          sec='''### TSK-0044 accepted stable state\n\n`TSK-0044 — Define AdGuard API compatibility, credential-isolation and failure NFRs`: **PASS for the provisional internal L4 interface/NFR-definition acceptance under DEC-0050/CR-0003**. Contract `TSK_0044_ADGUARD_API_COMPATIBILITY_CREDENTIAL_FAILURE_NFR_2026-08-28.md`, blob `07ab5539d11ff25d591adeada34e7f30854caa90`; independent evidence `TSK_0044_ADGUARD_API_COMPATIBILITY_CREDENTIAL_FAILURE_NFR_EVIDENCE_2026-08-28.md`, blob `19355b7b9ea2bac219ccf79ef9cbfd588cc56ba4`. ACC-0044 is satisfied using exact AdGuard Home v0.107.79 source/OpenAPI plus current accepted UseSafeWeb runtime/config evidence: `/control` remains private/operator-only, customer components receive no AdGuard admin credentials, privacy booleans and persisted fields fail closed, finite timeout/retry and pre-state/delta/read-back reconciliation are explicit, no AdGuard-derived customer/setup identifier is currently required, version/contract drift blocks affected integration, and unavailable admin/verifier planes cannot create false protection claims or unsafe fallbacks.\n\nThe contract introduces no mandatory customer authentication, account/dashboard, persistent product datastore or customer-linked AdGuard client record. It performs no AdGuard mutation or credential rotation. `DVR-0230-01`, `DVR-0484-01`, `GAP-0484-02` and `RSK-0002` remain OPEN. This PASS does not authorize implementation/build, participants, legal completion, publication or launch.\n\n'''
+          marker='## Runtime safeguards'
+          assert marker in text
+          text=text.replace(marker,sec+marker,1)
+
+          pass_set={r['Task_ID'] for r in rows if r.get('Execution_State')=='PASS'}
+          pass_set.update(re.findall(r'^### (TSK-\d{4}) accepted stable state$', text, re.M))
+          pass_set.add('TSK-0044')
+          pri={'CRITICAL':0,'HIGH':1,'MEDIUM':2,'LOW':3}
+          candidates=[]
+          for idx,row in enumerate(rows):
+              if row.get('Lifecycle_Stage')!='L4': continue
+              if row['Task_ID'] in pass_set: continue
+              if row.get('Plan_Status') in {'DEFERRED','NOT_APPLICABLE'}: continue
+              if row.get('Action_Authority')!='AUTO_ALLOWED': continue
+              deps=[x.strip() for x in (row.get('Dependencies') or '').split(';') if x.strip()]
+              if not all(d in pass_set for d in deps): continue
+              flags=[]
+              hay=' '.join([row.get('Acceptance_Criteria',''),row.get('Preconditions',''),row.get('Notes',''),row.get('Trigger','')]).lower()
+              if any(k in hay for k in ['representative parent','real participant','cohort','usability','comprehension','behavioral','observed parent','user evidence']): flags.append('REAL_OR_BEHAVIOR_EVIDENCE_CHECK')
+              if any(k in hay for k in ['reviewed by owner','owner approval','explicit owner','approved by owner']): flags.append('OWNER_REVIEW_CHECK')
+              if any(k in hay for k in ['legal approval','legal review','privacy approval','dpia approval','lia approval']): flags.append('LEGAL_PRIVACY_APPROVAL_CHECK')
+              candidates.append((pri.get(row.get('Priority','LOW'),9),idx,row,deps,flags))
+          candidates.sort(key=lambda x:(x[0],x[1]))
+          report=['# TSK-0044 post-PASS L4 queue inspection','','**Date:** 2026-08-28','**Purpose:** conservative derived queue after TSK-0044 PASS. This report is not authority and does not change task state.','',f'- Conservative PASS set size: {len(pass_set)}',f'- Dependency-ready non-PASS AUTO_ALLOWED L4 candidates: {len(candidates)}','','## Candidates in deterministic priority/WBS order','']
+          for _,_,row,deps,flags in candidates:
+              report += [f"### {row['Task_ID']} — {row['Title']}",f"- **Priority:** {row['Priority']}",f"- **Dependencies:** {'; '.join(deps) if deps else '(none)'}",f"- **Acceptance:** {row['Acceptance_ID']} — {row['Acceptance_Criteria']}",f"- **AI / authority:** {row['AI_Capability_A0_A4']} / {row['Action_Authority']}",f"- **Requirements:** {row.get('Requirement_Reference','')}",f"- **Interfaces:** {row.get('Interface_Reference','')}",f"- **Notes:** {row.get('Notes','')}",f"- **Preflight flags:** {', '.join(flags) if flags else '(none)'}",'']
+          pathlib.Path('TSK_0044_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md').write_text('\n'.join(report)+'\n')
+
+          q=text.rfind('\n## Queue status after current reconciliation')
+          assert q>=0
+          text=text[:q].rstrip()+'''\n\n## Queue status after current reconciliation\n\n`TSK-0044` is runtime PASS for its bounded provisional-L4 interface/NFR-definition acceptance. No AdGuard mutation, adapter implementation, credential rotation or customer identity/datastore dependency is inferred. A fresh conservative dependency-ready AUTO_ALLOWED L4 queue has been generated at `TSK_0044_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. No next task is selected by this write; the queue must be reread against acceptance, direct predecessor evidence, CR-0003, human/legal/participant holds and open security/privacy deviations before execution.\n\n## Exact next authoritative step\n\nRead back the TSK-0044 post-PASS L4 queue, reject any candidate requiring unavailable real-user evidence, owner/legal/privacy approval, unresolved trigger/gate or missing predecessor proof, account for open security/privacy deviations where relevant, and persist the deterministic highest-priority eligible AUTO_ALLOWED selection.\n'''
+          p.write_text(text)
+          PY
+          git diff --check
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add CURRENT_STATE.md TSK_0044_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md
+          git commit -m "state: accept TSK-0044 and inspect L4 queue"
+          git push
