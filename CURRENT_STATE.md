@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T10:44:37Z  
+**Updated:** 2026-08-28T11:15:07Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -47,6 +47,7 @@ This supersedes the earlier duplicate-runner condition in which `adguartestdvm` 
 - `TSK-0442` — TLS certificate acceptance fully satisfied after owner-observed real-phone encrypted-DNS success and fresh server-side revalidation — evidence: `TSK_0442_TLS_CERTIFICATE_EVIDENCE_2026-08-28.md`, blob `cb11394af1e80f15d85bda5d9b000bbf0efd6d20`; server revalidation run `33160416730` / job `98813254928`: PASS.
 - `TSK-0443` — certificate renewal dry-run, Nginx deploy hook, daily expiry monitoring, owner alert route and recovery runbook fully verified — evidence: `TSK_0443_CERTIFICATE_RENEWAL_ALERT_EVIDENCE_2026-08-28.md`, blob `c2f3b3b35c9d8e2ec33f473d72c508ebde30348d`; production renewal run `33162046237` / job `98818564431`: PASS; external monitor run `33161991492` / job `98818390448`: PASS; final monitor blob `b565df52182e325d1d416a07be31f152078fd373`; runbook blob `881d797ea6f69879d0c8696d61e596733c38c3c5`.
 - `TSK-0514` — external cellular endpoint test and removal/recovery verification — evidence: `TSK_0514_EXTERNAL_ENDPOINT_COMPLETION_EVIDENCE_2026-08-28.md`, blob `c5d004d0e0a8c58d1056b3aaad38034ae4188a68`; owner observation: external cellular UseSafeWeb test PASS, no network-specific failure reported, and normal DNS/internet resolution restored after removing/resetting UseSafeWeb.
+- `TSK-0511` — encrypted DNS resolution verified for both accepted supported phone families: Android/native Private DNS/DoT and iPhone/iOS DoH profile, including iPhone Wi-Fi, cellular and removal/recovery — evidence: `TSK_0511_SUPPORTED_DEVICE_VERIFICATION_COMPLETION_EVIDENCE_2026-08-28.md`, blob `ecd959f93ab7dff62aba6529ce66b45d59c3ed27`, publication commit `72c21844059ad1c9ea63992fac41af7428f40906`.
 - `TSK-0203` — supported AdGuard release installed — evidence blob `382b70ca971739712ff8ad5668d03841d5493d62`.
 - `TSK-0201` — restricted authenticated administration/change path — evidence blob `ae06672e1cebdf87d006b85b80e5a7977f4e69b9`.
 - `TSK-0204` — persistent query logging and file query logging explicitly disabled — corrected evidence: `TSK_0204_QUERYLOG_PRIVACY_EVIDENCE_2026-08-27.md`, blob `aa84d93d33d789fe4ff74ea12bcc2e5ffccd5b06`.
@@ -271,23 +272,25 @@ Evidence: `TSK_0514_EXTERNAL_ENDPOINT_COMPLETION_EVIDENCE_2026-08-28.md`, blob `
 
 Queue impact was independently evaluated by governance workflow run `33164135015` / job `98825388572` at commit `83172a70e98bed04b25da2d51b7aebadaef0cb45`: releasing TSK-0514 yields exactly one L2 `AUTO_ALLOWED` ready task, `TSK-0511`; releasing TSK-0431 alone yields none.
 
-### WAITING — TSK-0511
+### TSK-0511 accepted stable state
 
-`TSK-0511` — verify encrypted DNS resolution from supported devices: **WAITING on minimum direct target-device evidence covering both supported phone families; not PASS**.
+`TSK-0511` — verify encrypted DNS resolution from supported devices: **PASS**.
 
-ACC-0511 requires each supported device to resolve allowed domains over the intended encrypted endpoint and requires failure modes and removal steps to be verified. Accepted TSK-0439 evidence defines exactly two Experiment-1 supported families: iPhone/iOS 14+ using the approved DoH profile, and Android 9+ with a usable native Private DNS provider-hostname control using DoT.
+ACC-0511 requires each supported device to resolve allowed domains over the intended encrypted endpoint and requires failure modes and removal steps to be verified. Accepted TSK-0439 evidence defines exactly two Experiment-1 supported families: iPhone/iOS 14+ using the approved DoH profile and Android 9+ with usable native Private DNS provider-hostname control using DoT.
 
-Current accepted TSK-0442 and TSK-0514 owner observations prove one supported real-phone path works, including one qualifying external cellular test and successful normal-DNS recovery after UseSafeWeb removal. Those durable observations do not identify whether the tested phone was iPhone/iOS or Android/Private DNS, so they cannot truthfully be mapped to either family and cannot prove the required second family.
+On 2026-08-28 the Project Owner identified the previously accepted real-phone path as Android. This binds TSK-0442/TSK-0514 target-device observations to the Android/native Private DNS/DoT family: encrypted-DNS operation passed, the qualifying cellular test passed, and removal/reset restored normal DNS/internet.
 
-Preflight evidence: `TSK_0511_SUPPORTED_DEVICE_VERIFICATION_PREFLIGHT_2026-08-28.md`, blob `91e62a05702daeda083f8535c1f71cefa87d658a`, commit `0d7f64e8c409425dbc93ab11e43295ea1b7a69a4`.
+The governed iPhone test profile `infrastructure/adguard-server/client-profiles/UseSafeWeb-iPhone-DoH.mobileconfig`, blob `0613cf685b03febd605d2b1d5fd22dff5e396a2a`, configures `com.apple.dnsSettings.managed`, `DNSProtocol=HTTPS`, `ServerURL=https://dns.usesafeweb.com/dns-query`. After the governed iPhone test procedure, the Project Owner reported: **iPhone Wi-Fi passed, cellular passed, removal passed.** No installation failure, routing ambiguity, or network-specific failure was reported.
 
-Deterministic resumption condition: identify the already-tested phone family as iPhone/iOS or Android/Private DNS; reuse the already accepted observations for that family without repeating them solely for relabelling; then test one representative phone from the other supported family using its approved encrypted-DNS method, confirm allowed DNS/internet resolution, fail safely if routing/configuration is ineffective or ambiguous, remove/reset UseSafeWeb, and confirm normal DNS/internet resolution returns. Record only the minimum privacy-safe platform/network/pass-fail evidence. If the second family is unavailable, TSK-0511 remains WAITING unless the owner explicitly changes the supported pilot scope through governed change control.
+Completion evidence: `TSK_0511_SUPPORTED_DEVICE_VERIFICATION_COMPLETION_EVIDENCE_2026-08-28.md`, blob `ecd959f93ab7dff62aba6529ce66b45d59c3ed27`, publication commit `72c21844059ad1c9ea63992fac41af7428f40906`. The evidence preserves only privacy-minimal platform/network/pass-fail facts and no browsing/domain history or device/participant identifiers.
+
+The direct supported-device evidence gap is resolved and **ACC-0511 is satisfied. TSK-0511: PASS.** This bounded PASS does not authorize participant activation, launch, legal-gate bypass, or broader unsupported-device claims.
 
 ### External/provider and legal boundaries
 
 - TSK-0441 Cloudflare DNS is satisfied and independently verified. Any further Cloudflare account/zone mutation remains owner/provider-controlled unless an explicitly authorized interface becomes available.
 - Azure control-plane provisioning/configuration remains owner-managed. The corrected recovery VM handoff is independently verified, but TSK-0431 still requires an owner-managed Azure-native backup/restore path/evidence before the full recovery drill can satisfy REQ-0052.
-- TSK-0442 TLS target-device acceptance, TSK-0443 certificate renewal/expiry alerting, and TSK-0514 external-network/removal verification are satisfied. TSK-0511 remains a separate per-supported-device target-evidence boundary and does not authorize participant activation.
+- TSK-0442 TLS target-device acceptance, TSK-0443 certificate renewal/expiry controls, TSK-0514 external-network/removal verification, and TSK-0511 per-supported-device verification are satisfied. None of these technical PASS states by themselves authorize participant activation.
 - Owner-deferred UK representative/ICO fee planning remains unresolved until 2027-08-27 or earlier explicit reactivation; technical work does not imply validation-readiness legal gate PASS or authorize real England participant activation.
 
 ## Runtime safeguards
@@ -296,22 +299,19 @@ Deterministic resumption condition: identify the already-tested phone family as 
 - PASS requires all applicable current acceptance criteria with durable/reconstructable proof.
 - Current contradictory direct evidence reopens stale PASS rather than being ignored.
 - No secrets, credentials, password hashes, private keys, unnecessary personal data, or raw DNS query history may be exported to GitHub.
-- Plain DNS 53 remains non-public. TSK-0442 TLS, TSK-0443 certificate renewal/expiry controls, and TSK-0514 external-network/removal verification are PASS, but broader participant/public readiness remains gated by TSK-0511 per-supported-device verification, validation, privacy/legal and activation evidence.
+- Plain DNS 53 remains non-public. TSK-0442 TLS, TSK-0443 certificate renewal/expiry controls, TSK-0514 external-network/removal verification and TSK-0511 supported-device verification are PASS, but broader participant/public readiness remains gated by validation, privacy/legal and activation evidence.
 - Azure control-plane remains owner-managed; runner autonomy applies to handed-off VM/repository-authorized tasks only after target identity and scope are verified.
 
 ## Queue status after current reconciliation
 
-TSK-0514 is runtime PASS with durable completion evidence. Governance dependency evaluation run `33164135015` / job `98825388572` proved that releasing TSK-0514 yields exactly one L2 `AUTO_ALLOWED` candidate, `TSK-0511`, while releasing TSK-0431 alone yields none.
+TSK-0514 and TSK-0511 are runtime PASS with durable completion evidence. The earlier dependency evaluation run `33164135015` / job `98825388572` established TSK-0511 as the sole candidate released by TSK-0514; that candidate is now complete.
 
-TSK-0511 has now been preflighted against its exact acceptance contract and the accepted TSK-0439 supported-device scope. The durable preflight establishes a direct target-device evidence gap and therefore TSK-0511 is truthfully WAITING, not PASS. Because TSK-0511 was the sole newly eligible L2 candidate and no other dependency or gate condition changed, there is no further ordinary L2 `AUTO_ALLOWED` work to progress until either TSK-0511 or TSK-0431 receives its deterministic missing evidence.
+No downstream task is selected from memory or from the stale pre-TSK-0511 queue result. The governed queue must be recomputed from the canonical WBS/relationship authority against this updated runtime PASS set before any later ordinary work is dispatched.
 
-Current explicit WAITING boundaries:
+Current explicit WAITING boundary:
 
-- `TSK-0511` — identify the already-tested phone family and complete the equivalent supported-device verification/removal evidence on the other phone family.
 - `TSK-0431` — identify/provide the owner-managed Azure-native backup/restore path required by REQ-0052.
 
 ## Exact next authoritative step
 
-Resume `TSK-0511` when the minimum direct phone-family evidence is available: identify whether the already-tested phone was **iPhone/iOS** or **Android/Private DNS**, then perform the approved encrypted-DNS verification and removal/recovery check on one representative phone from the other supported family. Do not repeat already-proven external/removal tests merely to relabel the first phone.
-
-Separately, resume `TSK-0431` when the owner identifies/provides the Azure-native backup/restore path required by REQ-0052. Do not bypass participant-activation, legal, Azure control-plane, provider, recovery, privacy or validation gates.
+Recompute current eligible work deterministically from `Plans/Master/WBS/master-wbs.csv`, `Plans/Master/RELATIONSHIP_INDEX.yaml`, applicable gates/constraints/interfaces and this runtime state now that TSK-0511 is PASS. Continue the highest-priority safe `AUTO_ALLOWED` work if one exists. Separately, TSK-0431 remains WAITING until the owner identifies/provides the Azure-native backup/restore path required by REQ-0052. Do not bypass participant-activation, legal, Azure control-plane, provider, recovery, privacy or validation gates.
