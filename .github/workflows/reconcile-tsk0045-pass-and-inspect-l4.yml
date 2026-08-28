@@ -1,0 +1,99 @@
+name: Reconcile TSK-0045 PASS and inspect L4 queue
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-tsk0045-pass-and-inspect-l4.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted, Linux, X64]
+    concurrency:
+      group: usesafeweb-governance-state-prod
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify runner identity and immutable inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(sha256sum /etc/machine-id | awk '{print $1}')" = "e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2"
+          test "$(git hash-object CURRENT_STATE.md)" = "94396bc060d990dd4e06e566d209a5f175a858e9"
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "dce5b829c4d447eac180ae1e896e0019292cf971"
+          test "$(git hash-object TSK_0045_MAINTAINABILITY_DEPLOYMENT_COST_CONTROL_NFR_2026-08-28.md)" = "cec8ba92151318cc399586ea230ccc399eea6e8b"
+          test "$(git hash-object TSK_0045_MAINTAINABILITY_DEPLOYMENT_COST_CONTROL_NFR_EVIDENCE_2026-08-28.md)" = "e8f79871379288e5595cdeef0deb3a1997b3e223"
+      - name: Verify ACC-0045 and reconcile runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv, pathlib, re
+          from datetime import datetime, timezone
+          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',encoding='utf-8-sig',newline='')))
+          by={r['Task_ID']:r for r in rows}
+          t=by['TSK-0045']
+          assert [x.strip() for x in t['Dependencies'].split(';') if x.strip()]==['TSK-0314']
+          assert t['Lifecycle_Stage']=='L4' and t['Priority']=='MEDIUM'
+          assert t['AI_Capability_A0_A4']=='A3' and t['Action_Authority']=='AUTO_ALLOWED'
+          acc=t['Acceptance_Criteria']
+          for phrase in ['repeatable deployment','versioning','rollback','documentation ownership','dependency update cadence','cost tagging/budgets','monthly cost-report inputs']:
+              assert phrase in acc, phrase
+          c=pathlib.Path('TSK_0045_MAINTAINABILITY_DEPLOYMENT_COST_CONTROL_NFR_2026-08-28.md').read_text()
+          e=pathlib.Path('TSK_0045_MAINTAINABILITY_DEPLOYMENT_COST_CONTROL_NFR_EVIDENCE_2026-08-28.md').read_text()
+          for phrase in ['## 3. Repeatable deployment contract','## 4. Versioning contract','## 5. Rollback contract','## 7. Documentation ownership','## 8. Dependency update cadence','## 9. Cost-attribution tag contract','## 10. Budget and alert contract','## 11. Monthly cost-report inputs','UNFROZEN / OWNER VALUE REQUIRED']:
+              assert phrase in c, phrase
+          assert '**VER-0045 independent audit result: PASS for ACC-0045' in e
+          for phrase in ['Repeatable-deployment audit','Versioning audit','Rollback/drift audit','Documentation-ownership audit','Dependency-update-cadence audit','Cost-tag audit','Budget/alert audit','Monthly-cost-report audit']:
+              assert phrase in e, phrase
+          p=pathlib.Path('CURRENT_STATE.md')
+          text=p.read_text()
+          assert 'Selected next: `TSK-0045' in text
+          assert '### TSK-0045 accepted stable state' not in text
+          assert '### TSK-0314 accepted stable state' in text
+          now=datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
+          text=re.sub(r'\*\*Updated:\*\* [^\n]+',f'**Updated:** {now}',text,count=1)
+          sec='''### TSK-0045 accepted stable state\n\n`TSK-0045 — Define maintainability, deployment, and cost-control NFRs`: **PASS for the provisional internal L4 maintainability/deployment/cost-control-NFR-definition acceptance under DEC-0050/CR-0003**. Contract `TSK_0045_MAINTAINABILITY_DEPLOYMENT_COST_CONTROL_NFR_2026-08-28.md`, blob `cec8ba92151318cc399586ea230ccc399eea6e8b`; independent evidence `TSK_0045_MAINTAINABILITY_DEPLOYMENT_COST_CONTROL_NFR_EVIDENCE_2026-08-28.md`, blob `e8f79871379288e5595cdeef0deb3a1997b3e223`. ACC-0045 is satisfied: deterministic source-controlled deployment/read-back, versioning, preplanned rollback/drift reconciliation, documentation ownership, weekly security/monthly dependency review cadence, privacy-safe Azure cost tagging, owner-authorized budget/alert semantics and monthly cost-report inputs are explicit and testable.\n\nThe infrastructure currency budget remains `UNFROZEN` until explicit owner authority supplies it. This PASS does not implement new Azure tags/budgets/reports, mutate Azure, authorize spend/deployment, build the future web/app, activate participants, publish or launch. `RSK-0002` remains OPEN.\n\n'''
+          marker='## Runtime safeguards'
+          assert marker in text
+          text=text.replace(marker,sec+marker,1)
+          pass_set={r['Task_ID'] for r in rows if r.get('Execution_State')=='PASS'}
+          pass_set.update(re.findall(r'^### (TSK-\d{4}) accepted stable state$', text, re.M))
+          pass_set.add('TSK-0045')
+          pri={'CRITICAL':0,'HIGH':1,'MEDIUM':2,'LOW':3}
+          candidates=[]
+          for idx,row in enumerate(rows):
+              if row.get('Lifecycle_Stage')!='L4': continue
+              if row['Task_ID'] in pass_set: continue
+              if row.get('Plan_Status') in {'DEFERRED','NOT_APPLICABLE'}: continue
+              if row.get('Action_Authority')!='AUTO_ALLOWED': continue
+              deps=[x.strip() for x in (row.get('Dependencies') or '').split(';') if x.strip()]
+              if not all(d in pass_set for d in deps): continue
+              flags=[]
+              hay=' '.join([row.get('Acceptance_Criteria',''),row.get('Preconditions',''),row.get('Notes',''),row.get('Trigger','')]).lower()
+              if any(k in hay for k in ['representative parent','real participant','cohort','usability','comprehension','behavioral','observed parent','user evidence']): flags.append('REAL_OR_BEHAVIOR_EVIDENCE_CHECK')
+              if any(k in hay for k in ['reviewed by owner','owner approval','explicit owner','approved by owner']): flags.append('OWNER_REVIEW_CHECK')
+              if any(k in hay for k in ['legal approval','legal review','privacy approval','dpia approval','lia approval']): flags.append('LEGAL_PRIVACY_APPROVAL_CHECK')
+              candidates.append((pri.get(row.get('Priority','LOW'),9),idx,row,deps,flags))
+          candidates.sort(key=lambda x:(x[0],x[1]))
+          report=['# TSK-0045 post-PASS L4 queue inspection','','**Date:** 2026-08-28','**Purpose:** conservative derived queue after TSK-0045 PASS. This report is not authority and does not change task state.','',f'- Conservative PASS set size: {len(pass_set)}',f'- Dependency-ready non-PASS AUTO_ALLOWED L4 candidates: {len(candidates)}','','## Candidates in deterministic priority/WBS order','']
+          for _,_,row,deps,flags in candidates:
+              report += [f"### {row['Task_ID']} — {row['Title']}",f"- **Priority:** {row['Priority']}",f"- **Dependencies:** {'; '.join(deps) if deps else '(none)'}",f"- **Acceptance:** {row['Acceptance_ID']} — {row['Acceptance_Criteria']}",f"- **AI / authority:** {row['AI_Capability_A0_A4']} / {row['Action_Authority']}",f"- **Requirements:** {row.get('Requirement_Reference','')}",f"- **Interfaces:** {row.get('Interface_Reference','')}",f"- **Notes:** {row.get('Notes','')}",f"- **Preflight flags:** {', '.join(flags) if flags else '(none)'}",'']
+          pathlib.Path('TSK_0045_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md').write_text('\n'.join(report)+'\n')
+          q=text.rfind('\n## Queue status after current reconciliation')
+          assert q>=0
+          text=text[:q].rstrip()+'''\n\n## Queue status after current reconciliation\n\n`TSK-0045` is runtime PASS for its bounded provisional-L4 maintainability/deployment/cost-control-NFR-definition acceptance. No deployment, Azure mutation/spend, numeric infrastructure budget, future app or launch is inferred. A fresh conservative dependency-ready AUTO_ALLOWED L4 queue has been generated at `TSK_0045_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. No next task is selected by this write; the queue must be reread against acceptance, direct predecessor evidence, CR-0003, human/legal/participant holds and open security/privacy deviations before execution.\n\n## Exact next authoritative step\n\nRead back the TSK-0045 post-PASS L4 queue, reject any candidate requiring unavailable real-user evidence, owner/legal/privacy approval, unresolved trigger/gate or missing predecessor proof, account for open security/privacy deviations where relevant, and persist the deterministic highest-priority eligible AUTO_ALLOWED selection.\n'''
+          p.write_text(text)
+          PY
+          git diff --check
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add CURRENT_STATE.md TSK_0045_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md
+          git commit -m "state: accept TSK-0045 and inspect L4 queue"
+          git push
