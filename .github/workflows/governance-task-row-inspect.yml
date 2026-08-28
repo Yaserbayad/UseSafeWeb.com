@@ -37,17 +37,23 @@ jobs:
           runtime_wait=set(re.findall(r'### WAITING — (TSK-\d+)',state))
           planning_pass={r['Task_ID'].strip() for r in rows if (r.get('Execution_State') or '').strip()=='PASS'}
           satisfied=runtime_pass|planning_pass
-          ready=[]
-          for i,r in enumerate(rows):
-              tid=(r.get('Task_ID') or '').strip()
-              if not tid or tid in runtime_pass or tid in runtime_wait: continue
-              if (r.get('Lifecycle_Stage') or '').strip()!='L2': continue
-              if (r.get('Action_Authority') or '').strip()!='AUTO_ALLOWED': continue
-              if (r.get('Plan_Status') or '').strip() not in {'PLANNED','ACTIVE'}: continue
-              deps=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
-              if all(d in satisfied for d in deps): ready.append((i,r,deps))
+
           rank={'CRITICAL':0,'HIGH':1,'MEDIUM':2,'LOW':3}
-          ready.sort(key=lambda x:(rank.get((x[1].get('Priority') or '').strip(),9), x[0], x[1]['Task_ID']))
+
+          def eligible(satisfied_set, wait_set, extra_pass=frozenset()):
+              ready=[]
+              for i,r in enumerate(rows):
+                  tid=(r.get('Task_ID') or '').strip()
+                  if not tid or tid in runtime_pass or tid in extra_pass or tid in wait_set: continue
+                  if (r.get('Lifecycle_Stage') or '').strip()!='L2': continue
+                  if (r.get('Action_Authority') or '').strip()!='AUTO_ALLOWED': continue
+                  if (r.get('Plan_Status') or '').strip() not in {'PLANNED','ACTIVE'}: continue
+                  deps=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
+                  if all(d in satisfied_set for d in deps): ready.append((i,r,deps))
+              ready.sort(key=lambda x:(rank.get((x[1].get('Priority') or '').strip(),9), x[0], x[1]['Task_ID']))
+              return ready
+
+          ready=eligible(satisfied,runtime_wait)
           sha=subprocess.check_output(['git','hash-object','CURRENT_STATE.md'],text=True).strip()
           print('CURRENT_STATE_BLOB='+sha)
           print('RUNTIME_PASS_COUNT='+str(len(runtime_pass)))
@@ -57,4 +63,15 @@ jobs:
               out={k:r.get(k,'') for k in ['Task_ID','Title','Priority','Critical_Path','Plan_Status','Execution_State','Dependencies','Trigger','Preconditions','Action_Authority','Acceptance_ID','Acceptance_Criteria','Verification_ID','Required_Tools_or_Access','Requirement_Reference','Interface_Reference','Risk_Reference','Notes']}
               out['PlanningOnlySatisfiedDeps']=[d for d in deps if d in planning_pass and d not in runtime_pass]
               print('READY='+json.dumps(out,sort_keys=True,ensure_ascii=False))
+
+          for released in sorted(runtime_wait):
+              hypothetical_wait=runtime_wait-{released}
+              hypothetical_satisfied=satisfied|{released}
+              hypothetical=eligible(hypothetical_satisfied,hypothetical_wait,frozenset({released}))
+              print('WAIT_RELEASE='+released+';READY_COUNT='+str(len(hypothetical)))
+              for _,r,deps in hypothetical[:40]:
+                  out={k:r.get(k,'') for k in ['Task_ID','Title','Priority','Critical_Path','Plan_Status','Execution_State','Dependencies','Trigger','Preconditions','Action_Authority','Acceptance_ID','Acceptance_Criteria','Verification_ID','Required_Tools_or_Access','Requirement_Reference','Interface_Reference','Risk_Reference','Notes']}
+                  out['ReleasedWait']=released
+                  out['PlanningOnlySatisfiedDeps']=[d for d in deps if d in planning_pass and d not in runtime_pass and d != released]
+                  print('WAIT_RELEASE_READY='+json.dumps(out,sort_keys=True,ensure_ascii=False))
           PY
