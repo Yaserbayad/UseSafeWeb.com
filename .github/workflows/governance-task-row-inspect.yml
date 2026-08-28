@@ -44,10 +44,11 @@ jobs:
           assert blobs['claims']=='4bfc83421318fe761d06f9a63e052e3bff36070a'
           assert blobs['notice']=='331f263388dfacfa73b6e9e556277d4230864ce8'
           assert blobs['gate']=='b3b0efd0cc0f40faa1ecab190c7469b8dff12ec1'
-          notice=open(files['notice'],encoding='utf-8').read(); gate=open(files['gate'],encoding='utf-8').read(); claims=open(files['claims'],encoding='utf-8').read()
+          notice=open(files['notice'],encoding='utf-8').read(); notice_plain=notice.replace('**','')
+          gate=open(files['gate'],encoding='utf-8').read(); claims=open(files['claims'],encoding='utf-8').read()
           for s in ['## Parent notice','## Child-readable explanation','does not read private messages','does not read your messages','Do not publish a generic “no logs” claim','## Release gate']:
-              assert s in notice,'ACC-0219 gap '+s
-          assert 'does not' in notice and 'promise complete online safety' in notice
+              assert s in notice_plain,'ACC-0219 gap '+s
+          assert 'promise complete online safety' in notice_plain
           for s in ['no later than 30 days after that participant\'s follow-up','no later than 90 days after Experiment 1 closes']:
               assert s in gate,'TSK-0224 proof gap '+s
           required=[
