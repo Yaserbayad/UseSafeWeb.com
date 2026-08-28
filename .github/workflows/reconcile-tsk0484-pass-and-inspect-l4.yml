@@ -11,22 +11,29 @@ permissions:
 
 jobs:
   reconcile:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, rec-v1]
+    concurrency:
+      group: usesafeweb-governance-state
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: true
-      - name: Verify security NFR evidence, reconcile runtime, inspect queue
+      - name: Verify runner identity and immutable inputs
         shell: bash
         run: |
           set -euo pipefail
+          test "$(sha256sum /etc/machine-id | awk '{print $1}')" = "e09868443c476b30eae778d191ceedee57ed6f27a74856eae1d0709c68f1c852"
           test "$(git hash-object CURRENT_STATE.md)" = "b0050ea04590cbdd3d798e358e31908fe70ea496"
           test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "dce5b829c4d447eac180ae1e896e0019292cf971"
           test "$(git hash-object TSK_0484_SECURITY_ABUSE_RESISTANCE_NFR_2026-08-28.md)" = "ebd146f88f51cae67b9515fb94133bcd74c8cf28"
           test "$(git hash-object TSK_0484_SECURITY_ABUSE_RESISTANCE_NFR_EVIDENCE_2026-08-28.md)" = "15ad7e97f13210737e014499820690c30232a952"
           test "$(git hash-object TSK_0230_PRIVACY_DATA_MINIMISATION_RETENTION_DELETION_NFR_2026-08-28.md)" = "011caaa84dd3dec13bb608be30b15ec92a24f19e"
-
+      - name: Verify ACC-0484 and reconcile runtime
+        shell: bash
+        run: |
+          set -euo pipefail
           python3 - <<'PY'
           import csv, pathlib, re
           from datetime import datetime, timezone
