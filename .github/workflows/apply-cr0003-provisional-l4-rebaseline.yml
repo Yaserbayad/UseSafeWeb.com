@@ -1,0 +1,228 @@
+name: Apply CR-0003 provisional L4 rebaseline
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-cr0003-provisional-l4-rebaseline.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Apply bounded owner-authorized rebaseline
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import csv, re, hashlib
+          R=Path('Plans/Master')
+          P=Path('Plans')
+          def read(rel): return (R/rel).read_text(encoding='utf-8')
+          def write(rel,text): (R/rel).write_text(text,encoding='utf-8')
+          def replace_once(text, old, new, label):
+              n=text.count(old)
+              if n!=1: raise SystemExit(f'{label}: expected exactly 1 match, got {n}')
+              return text.replace(old,new,1)
+          def replace_row_start(rel,prefix,newline):
+              text=read(rel); lines=text.splitlines(); hits=[i for i,l in enumerate(lines) if l.startswith(prefix)]
+              if len(hits)!=1: raise SystemExit(f'{rel} {prefix}: expected 1 row, got {len(hits)}')
+              lines[hits[0]]=newline
+              write(rel,'\n'.join(lines)+'\n')
+          # WBS: minimum task-level rebaseline.
+          wbs=R/'WBS/master-wbs.csv'
+          with wbs.open(encoding='utf-8-sig',newline='') as f:
+              rows=list(csv.DictReader(f)); fields=list(rows[0].keys())
+          by={r['Task_ID']:r for r in rows}
+          t=by['TSK-0139']
+          if t['Dependencies'].strip()!='TSK-0040': raise SystemExit('TSK-0139 dependency base mismatch')
+          t['Title']='Translate provisional L4 owner authorization into authorised product outcomes'
+          t['Dependencies']='TSK-0513'
+          t['Preconditions']='Canonical state read; DEC-0050/CR-0003 active; TSK-0513 current PASS; required inputs/access available; no unresolved safety/privacy blocker applicable to bounded internal L4 definition/design; deferred real-participant/legal conditions carried explicitly.'
+          t['Acceptance_Criteria']='Mandate identifies the provisional job assumption, target user, required outcome, current technical/synthetic evidence basis, explicitly missing real-participant behavioral evidence, unresolved risks/constraints/stop conditions, and authorised L4 definition/design scope; it must not state or imply behavioral validation, LG-05 PASS, integrated-build authorization, or public-launch authorization.'
+          t['Source_Reference']=(t.get('Source_Reference') or '')+'; Project Owner instruction 2026-08-28 / DEC-0050 / CR-0003'
+          t['Notes']='CR-0003 rebaselines this task as the provisional L4 entry from current technical/synthetic evidence. Missing real-participant behavioral evidence remains explicit RSK-0002; no LG-05 PASS or build authorization is inferred.'
+          t=by['TSK-0141']
+          t['Acceptance_Criteria']='Every included capability maps to a provisional current need assumption explicitly labelled unvalidated, a mandatory operation/safety requirement, or an explicit owner-approved architectural decision. The first-product scope remains accountless-first and minimum; mandatory authentication, persistent parent dashboard and customer-facing AdGuard control plane remain deferred under EXC-0001, while surveillance/activity history, child accounts and other advanced capabilities remain excluded unless separately reauthorised. No capability may be described as behaviorally validated under DEC-0050.'
+          t['Source_Reference']=(t.get('Source_Reference') or '')+'; Project Owner instruction 2026-08-28 / DEC-0050 / CR-0003'
+          t['Notes']=((t.get('Notes') or '').strip()+' CR-0003: scope may be frozen provisionally, but real-participant value/usability evidence remains unresolved and cannot be fabricated.').strip()
+          t=by['TSK-0326']
+          t['Notes']=((t.get('Notes') or '').strip()+' DEC-0050/CR-0003: remains deferred because ACC-0326 requires actual experiment friction/comprehension/support evidence; synthetic rehearsal cannot satisfy it.').strip()
+          with wbs.open('w',encoding='utf-8-sig',newline='') as f:
+              dw=csv.DictWriter(f,fieldnames=fields,lineterminator='\n'); dw.writeheader(); dw.writerows(rows)
+          # Verification/acceptance register must match rebaselined ACC owner text.
+          vr='Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md'
+          vtext=read(vr); vlines=vtext.splitlines()
+          def replace_acc(task, acc_text):
+              hits=[i for i,l in enumerate(vlines) if l.startswith(f'| {task} |')]
+              if len(hits)!=1: raise SystemExit(f'{task} verification row mismatch')
+              parts=[x.strip() for x in vlines[hits[0]].split('|')[1:-1]]
+              if len(parts)!=8: raise SystemExit(f'{task} verification column mismatch {len(parts)}')
+              parts[6]=acc_text
+              vlines[hits[0]]='| '+' | '.join(parts)+' |'
+          replace_acc('TSK-0139',by['TSK-0139']['Acceptance_Criteria'])
+          replace_acc('TSK-0141',by['TSK-0141']['Acceptance_Criteria'])
+          write(vr,'\n'.join(vlines)+'\n')
+          # Relationship dependency replacement only; edge count remains unchanged.
+          rel='RELATIONSHIP_INDEX.yaml'; rtext=read(rel); rlines=rtext.splitlines()
+          start=None; end=None
+          for i,l in enumerate(rlines):
+              if l=='  TSK-0139:': start=i; break
+          if start is None: raise SystemExit('TSK-0139 relationship block missing')
+          for j in range(start+1,len(rlines)):
+              if re.match(r'^  [A-Za-z0-9_.:-]+:$',rlines[j]): end=j; break
+          if end is None: end=len(rlines)
+          block='\n'.join(rlines[start:end])
+          old='    - target: TSK-0040\n      type: depends_on'
+          new='    - target: TSK-0513\n      type: depends_on'
+          if block.count(old)!=1: raise SystemExit('TSK-0139 relationship dependency mismatch')
+          block=block.replace(old,new,1)
+          rlines[start:end]=block.splitlines()
+          write(rel,'\n'.join(rlines)+'\n')
+          # Constraint: preserve validation-before-build, allow L4 definition/design only.
+          c='Registers/CONSTRAINTS.md'; lines=read(c).splitlines(); hits=[i for i,l in enumerate(lines) if l.startswith('| CON-0025 |')]
+          if len(hits)!=1: raise SystemExit('CON-0025 row mismatch')
+          parts=[x.strip() for x in lines[hits[0]].split('|')[1:-1]]
+          if len(parts)!=4: raise SystemExit('CON-0025 columns mismatch')
+          parts[1]='Real-participant behavioral validation normally precedes expensive integrated product build. DEC-0050/CR-0003 permits only bounded provisional L4 product/brand/experience definition and design through 2027-08-27 while LG-05 remains DEFER; it does not authorize integrated build or turn synthetic evidence into behavioral validation.'
+          parts[2]='Project Owner may reactivate L3 earlier; at expiry/reactivation, run the deferred validation and re-evaluate downstream PASS materially reliant on provisional assumptions before build/launch progression.'
+          lines[hits[0]]='| '+' | '.join(parts)+' |'; write(c,'\n'.join(lines)+'\n')
+          # Risk: make missing behavioral evidence explicit and accepted, never closed.
+          risk='Registers/RISKS.md'; lines=read(risk).splitlines(); hits=[i for i,l in enumerate(lines) if l.startswith('| RSK-0002 |')]
+          if len(hits)!=1: raise SystemExit('RSK-0002 row mismatch')
+          parts=[x.strip() for x in lines[hits[0]].split('|')[1:-1]]
+          if len(parts)!=14: raise SystemExit(f'RSK-0002 columns mismatch {len(parts)}')
+          parts[2]='Real-participant Experiment-1 behavioral evidence is deferred, so provisional L4 decisions may be based on wrong assumptions about completion, incremental value, comprehension, support burden, persistence, or parent-perceived duplication.'
+          parts[7]='DEC-0050/CR-0003 requires every provisional L4 output to label missing behavioral evidence, prohibits synthetic-as-user validation, keeps real-evidence-dependent tasks/gates deferred, and preserves conservative accountless/minimum scope.'
+          parts[8]='At 2027-08-27 or earlier reactivation, run L3 and re-evaluate materially dependent downstream PASS; modify/rework/pivot if real evidence contradicts provisional assumptions.'
+          parts[9]='2027-08-27 or earlier L3 reactivation; any new real-user evidence; or any downstream claim that behavioral validation occurred.'
+          parts[11]=parts[11]+'; TSK-0139; LG-05; LG-06'
+          parts[12]='Open — explicitly accepted provisional validation risk under DEC-0050/CR-0003'
+          lines[hits[0]]='| '+' | '.join(parts)+' |'; write(risk,'\n'.join(lines)+'\n')
+          # Decision record.
+          d='Registers/DECISIONS_TRIGGERS.md'; text=read(d)
+          if 'DEC-0050' in text: raise SystemExit('DEC-0050 already exists')
+          row='| DEC-0050 |  | Real-participant L3 deferral and provisional L4 definition/design authorization through 2027-08-27 | ACTIVE OWNER OVERRIDE — defer the complete real-participant Experiment-1/L3 behavioral-validation branch through 2027-08-27; keep LG-03, LG-04 and LG-05 non-PASS/DEFER; permit bounded internal L4 Product, Brand and Experience definition/design from current technical and synthetic evidence only. Missing behavioral evidence remains explicit RSK-0002 and no downstream artifact may state or imply that behavioral validation occurred. | Explicit Project Owner instruction 2026-08-28; expires 2027-08-27 or earlier explicit owner reactivation/supersession. | TSK-0139 is rebaselined to TSK-0513 and provisional acceptance. TSK-0326 and any task whose own acceptance requires real-participant/user evidence remain deferred. LG-06 is not made PASS; L5/L6 build, real-participant processing, legal completion and public launch retain their own gates. | Project Owner | TSK-0139; TSK-0141; TSK-0326; LG-03; LG-04; LG-05; LG-06; CON-0025; RSK-0002 | Owner instruction 2026-08-28; CR-0003 |'
+          text=text.rstrip()+'\n'+row+'\n'; write(d,text)
+          # Gate semantics: keep LG-05 deferred/non-PASS; allow provisional L4 entry only.
+          g='Registers/GATES.md'; glines=read(g).splitlines()
+          for idx,l in enumerate(glines):
+              if l.startswith('| LG-05 |'):
+                  glines[idx]='| LG-05 | Behavioral Validation Outcome | L3 exit | Decide whether the orchestration proposition merits integrated product definition/build. | Wave A, controlled refinement, Wave B, 14-day evidence complete. | Activation, incremental safeguard, assistance, abandonment, comprehension, persistence, incidents, privacy deletion, contrary evidence. | PASS/PROCEED; REPEAT; MODIFY; PIVOT; DEFER; PAUSE; STOP | Project Owner | G-04 | Normally unlocks L4 product/experience definition only on positive/qualified outcome. DEC-0050/CR-0003 is a temporary owner-authorized exception permitting bounded provisional internal L4 definition/design while LG-05 remains DEFER; the exception is not behavioral evidence and does not unlock integrated build or launch. |'
+              if l.startswith('| LG-06 |'):
+                  glines[idx]='| LG-06 | Product, Brand and Experience Freeze | L4 | Freeze the accountless minimum product, requirements, service journey, brand/design system, prototype, content, accessibility and i18n baseline. | Positive LG-05 normally; while DEC-0050/CR-0003 is active, bounded provisional L4 definition/design may execute even though LG-05 remains DEFER. | Product/non-goals; traceability; validated prototype; usability/comprehension; brand; design system; self-service; content sources; accountless/privacy model. Missing real-user evidence may not be replaced by synthetic evidence; any applicable unmet evidence remains an explicit blocker to LG-06 PASS. | PASS; REWORK; REDUCE; REPEAT VALIDATION; DEFER; STOP | Project Owner | G-05 | Unlocks final architecture/delivery readiness only on an actual LG-06 PASS. DEC-0050 does not itself satisfy this gate. |'
+          write(g,'\n'.join(glines)+'\n')
+          # Lifecycle descriptions.
+          l1='Layers/LAYER_1_PROGRAM_ARCHITECTURE_STRATEGIC_BASELINE.md'; text=read(l1)
+          text=replace_once(text,'| L4 | Product Definition, Requirements & Experience Design | Translate validated behavior into a frozen minimum compelling product, service journey, brand, UX, and content system. | LG-06 |','| L4 | Product Definition, Requirements & Experience Design | Translate validated behavior into a frozen minimum compelling product, service journey, brand, UX, and content system; under DEC-0050/CR-0003, only provisional internal definition/design may proceed from technical/synthetic evidence while missing real-participant evidence remains explicit. | LG-06 |','Layer1 L4 lifecycle')
+          write(l1,text)
+          lo='Registers/LIFECYCLE_OBLIGATIONS.md'; text=read(lo)
+          text=replace_once(text,'| L4 | Product Definition, Requirements & Experience Design | Translate validated behavior into a frozen minimum compelling product, service journey, brand, UX, and content system. | 68 | LG-06 |','| L4 | Product Definition, Requirements & Experience Design | Translate validated behavior into a frozen minimum compelling product, service journey, brand, UX, and content system; under DEC-0050/CR-0003, provisional internal definition/design may proceed without claiming behavioral validation. | 68 | LG-06 |','Lifecycle register L4')
+          write(lo,text)
+          # Integrated critical path reconciled to temporary override.
+          l4='Layers/LAYER_4_INTEGRATED_PROGRAM_CRITICAL_PATH.md'; text=read(l4)
+          text=replace_once(text,'| 4 | L4 - Product Definition, Requirements & Experience Design | Translate validated behavior into a frozen minimum compelling product, service journey, brand, UX, and content system. | LG-06 |','| 4 | L4 - Product Definition, Requirements & Experience Design | Translate validated behavior into a frozen minimum compelling product, service journey, brand, UX, and content system; DEC-0050 temporarily permits provisional internal definition/design from technical/synthetic evidence while L3 remains deferred. | LG-06 |','Layer4 lifecycle row')
+          text=replace_once(text,'- Positive LG-05 evidence unlocks product/brand/service/UX definition. The implementation-ready prototype, product requirements, and truth/self-service models constrain architecture and build.','- Positive LG-05 evidence normally unlocks product/brand/service/UX definition. Through 2027-08-27, DEC-0050/CR-0003 instead permits bounded provisional internal L4 definition/design from current technical/synthetic evidence while LG-05 remains DEFER; missing real-participant evidence is explicit RSK-0002, cannot be fabricated, and any real-evidence-dependent L4 task remains deferred. The override does not authorize LG-06 PASS, L5/L6 progression, integrated build, or launch.','Layer4 LG05 bullet')
+          text=replace_once(text,'Behavioral validation -> accountless minimum product/non-goals -> service blueprint/friction budget/truth state -> full brand system and implementation-ready prototype -> usability/comprehension/accessibility evidence -> architecture -> accountless public/setup build plus real DNS -> integrated acceptance/self-service/recovery -> controlled pilot -> product correction and primary-channel selection -> production readiness -> staged launch -> persistence/support/root-cause improvement -> Year-1 decision.','Behavioral validation (currently DEFER under DEC-0050) -> provisional accountless minimum product/non-goals from technical/synthetic evidence -> service blueprint/friction budget/truth state -> brand/prototype work that does not require real-user evidence -> deferred usability/comprehension evidence where real users are required -> LG-06 decision -> architecture -> accountless public/setup build plus real DNS -> integrated acceptance/self-service/recovery -> controlled pilot -> product correction and primary-channel selection -> production readiness -> staged launch -> persistence/support/root-cause improvement -> Year-1 decision. No arrow after the provisional L4 segment implies that missing behavioral evidence was satisfied.','Layer4 value path')
+          text=replace_once(text,'OWNER LEGAL HOLD (2026-08-27 to 2027-08-27 unless reactivated earlier): UK representative/Article-27, ICO, DPIA/LIA/legal-notice/terms/tax-regulatory work is DEFERRED/WAITING while eligible technical privacy/security/infrastructure readiness continues. Real-participant Experiment 1 authorization still requires LG-03 PASS, so unresolved mandatory legal evidence remains a gate blocker rather than being treated as complete. After reactivation/resolution: Experiment 1 authorization -> post-validation product data model -> architecture privacy/security controls -> integrated privacy/security acceptance -> pilot/production updates -> incident/rights/retention/vendor/legal monitoring -> locale/market-specific LG-16 -> Year-1 reconciliation.','OWNER LEGAL HOLD (2026-08-27 to 2027-08-27 unless reactivated earlier): UK representative/Article-27, ICO, DPIA/LIA/legal-notice/terms/tax-regulatory work is DEFERRED/WAITING while eligible technical privacy/security/infrastructure readiness continues. Real-participant Experiment 1 authorization still requires LG-03 PASS, so unresolved mandatory legal evidence remains a gate blocker rather than being treated as complete. DEC-0050/CR-0003 separately defers the complete real-participant L3 branch to the same date and permits only provisional internal L4 definition/design; it does not satisfy any legal condition or participant gate. After reactivation/resolution: Experiment 1 authorization -> behavioral evidence -> reconciliation of provisional L4 assumptions -> architecture/privacy/security readiness -> integrated acceptance -> later pilot/production gates.','Layer4 legal path')
+          write(l4,text)
+          # Layer 5 execution semantics.
+          l5='Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md'; text=read(l5)
+          marker='### 5.4 Evidence and PASS rules'
+          if text.count(marker)!=1: raise SystemExit('Layer5 marker mismatch')
+          sec='''### 5.3.2 Owner-approved L3 behavioral-validation deferral and provisional L4 entry (DEC-0050 / CR-0003)\n\n- Through **2027-08-27**, or until earlier explicit Project Owner reactivation/supersession, the complete real-participant Experiment-1/L3 branch remains deferred. `LG-03`, `LG-04`, and `LG-05` remain non-PASS/DEFER; no participant, cohort, behavioral metric, comprehension, assistance, persistence, abandonment, or value result may be invented.\n- The owner authorizes **internal, non-public L4 Product, Brand and Experience definition/design only** from the current accepted technical and synthetic evidence as a provisional basis. `TSK-0139` is the explicit entry bridge and depends on current `TSK-0513` PASS rather than the unexecuted `TSK-0040`.\n- A downstream L4 task may execute only when its own current acceptance can be satisfied without real-participant evidence. Any acceptance requiring experiment frequency/severity, affected cohort, observed parent behavior, real usability/comprehension, support burden, persistence, or equivalent real-user evidence remains `WAITING`/deferred; synthetic rehearsal, model judgment, or owner preference cannot substitute.\n- `ACC-0139` and `ACC-0141` are explicitly rebaselined to provisional/unvalidated semantics. Every resulting artifact must state the missing behavioral evidence and active `RSK-0002`; no use of words such as validated, proven, user-tested, or behaviorally confirmed may exceed the evidence actually held.\n- This override does **not** make `LG-06` PASS and does not authorize L5/L6 progression, integrated build, real-participant processing, legal completion, public release/launch, payment, or any HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED act whose own authority is unsatisfied.\n- At expiry/reactivation, execute the deferred L3 branch when authorized and re-evaluate every downstream PASS whose proof materially relied on provisional assumptions. Contradictory real evidence reopens affected tasks/gates; it is not reconciled away.\n\n'''
+          text=text.replace(marker,sec+marker,1); write(l5,text)
+          # Planning snapshot/interface: distinguish provisional L4 definition from build.
+          cs='Governance/CURRENT_STATE_INTERFACE.md'; text=read(cs)
+          text=replace_once(text,'| Integrated product definition/build | WAITING | Requires positive LG-05, then LG-06/LG-07. |','| L4 product/brand/experience definition | PROVISIONAL / OWNER-AUTHORIZED under DEC-0050 | Through 2027-08-27, internal definition/design may proceed from current technical/synthetic evidence with RSK-0002 explicit; LG-05 remains DEFER and no behavioral validation is inferred. |\n| Integrated product build | WAITING | Still requires actual downstream gate authority; DEC-0050 does not itself satisfy LG-06/LG-07 or authorize L6 build. |','Current-state interface product row')
+          insert='''\n### 8.2B Owner L3 behavioral-validation deferral / provisional L4 authorization\n\nEffective 2026-08-28, DEC-0050/CR-0003 defers the complete real-participant Experiment-1/L3 branch through 2027-08-27 unless reactivated earlier. LG-03/LG-04/LG-05 remain DEFER/non-PASS. Bounded internal L4 product/brand/experience definition and design may proceed from accepted technical/synthetic evidence only; missing real-participant behavioral evidence remains explicit RSK-0002, real-evidence-dependent tasks remain deferred, and no integrated build/public launch follows merely from this sequencing exception.\n\n'''
+          if '### 8.2B Owner L3 behavioral-validation deferral' not in text:
+              text=text.replace('### 8.3 Exact post-freeze sequence',insert+'### 8.3 Exact post-freeze sequence',1)
+          write(cs,text)
+          # Change-control row.
+          exc='Registers/EXCEPTIONS_CHANGE_CONTROLS.md'; text=read(exc)
+          if 'CR-0003' in text: raise SystemExit('CR-0003 already exists')
+          cr='| CR-0003 | 2026-08-28 | L3→L4 sequencing; TSK-0139 dependency/title/preconditions/ACC; ACC-0141 provisional semantics; LG-05/LG-06 entry semantics; CON-0025; RSK-0002; Layer-1/4/5 lifecycle/execution text; current-state interface; relationship index; generated reconstruction/checksums. | Explicit current Project Owner instruction to defer the complete real-participant Experiment-1/L3 branch through 2027-08-27, keep LG-03/LG-04/LG-05 non-PASS, and proceed into L4 provisionally without fabricated behavioral evidence. | Authorize bounded internal L4 Product, Brand and Experience definition/design from current accepted technical/synthetic evidence while preserving missing real-participant behavioral evidence as an unresolved risk. | One L4 entry edge changes from TSK-0040 to TSK-0513 with total dependency-edge count preserved. TSK-0326 and all other real-user-evidence-dependent work stay deferred. Existing independent technical/synthetic/accountless owner-decision PASS remains valid; no L3 result or gate PASS is created. | Add DEC-0050 and Layer-5 exception; rebaseline TSK-0139/ACC-0139 and ACC-0141; update LG-05/LG-06/CON-0025/RSK-0002 and lifecycle text; replace the matching relationship edge; rebuild generated plan/checksums; validate; publish/read back; reconcile runtime and derive L4 eligibility. | Remove DEC-0050/CR-0003 semantics, restore TSK-0139 dependency/acceptance and related authority text from the immediately prior canonical tree, rebuild/checksum/validate, and re-evaluate any PASS materially reliant on the provisional path. | Full deterministic validator must PASS with 641 tasks, 849 dependency edges, zero cycles/broken links, generated reconstruction complete and all checksums valid; direct audit must prove LG-03/LG-04/LG-05 remain non-PASS, TSK-0326 remains L3-evidence-dependent, and no behavioral-validation claim is introduced. | Pending bounded GitHub publication/read-back at record creation; runtime evidence must record final commit/blobs before relying on CR-0003. |'
+          text=text.replace('\n\nMaterial change records use', '\n'+cr+'\n\nMaterial change records use',1); write(exc,text)
+          # Manifest change-control pointer/status.
+          man='MANIFEST.yaml'; text=read(man)
+          text=replace_once(text,'OWNER_LEGAL_SEQUENCING_OVERRIDE_ACTIVE_TO_2027-08-27 / deterministic validation PASS','OWNER_LEGAL_SEQUENCING_OVERRIDE_ACTIVE_TO_2027-08-27 / OWNER_L3_BEHAVIORAL_VALIDATION_DEFERRED_TO_2027-08-27 / PROVISIONAL_L4_AUTHORIZED / deterministic validation PASS','Manifest status')
+          a=text.index('post_freeze_change_control:'); b=text.index('\ngenerated_assembly_contract:',a)
+          block='''post_freeze_change_control:\n  latest_change: CR-0003\n  date: '2026-08-28'\n  status: owner-authorized L3 real-participant behavioral-validation deferral and bounded provisional L4 definition/design rebaseline; LG-03/LG-04/LG-05 remain non-PASS; canonical reliance requires deterministic validation plus GitHub publication/read-back\n  authority: explicit current Project Owner instruction 2026-08-28; actual applicable safety/legal/security/platform reality remains higher authority\n  affected_tasks:\n  - TSK-0139\n  - TSK-0141\n  - TSK-0326 (explicitly remains real-evidence-dependent/deferred)\n  affected_gates:\n  - LG-03 (remains DEFER/non-PASS)\n  - LG-04 (remains DEFER/non-PASS)\n  - LG-05 (remains DEFER/non-PASS)\n  - LG-06 (provisional L4 entry only; no automatic PASS)\n  semantic_delta: through 2027-08-27, bounded internal L4 product/brand/experience definition/design may proceed from current technical/synthetic evidence without claiming behavioral validation; real-evidence-dependent work, integrated build and public launch remain gated\n  change_record: Registers/EXCEPTIONS_CHANGE_CONTROLS.md#post-freeze-material-change-records\n'''
+          text=text[:a]+block+text[b:]; write(man,text)
+          # Rebuild derived plan.
+          import subprocess
+          subprocess.run(['python3',str(R/'Tools/rebuild_master_plan.py')],check=True)
+          # Recompute exactly the existing checksum inventory, preserving order.
+          sumfile=P/'SHA256SUMS.txt'; rels=[]
+          for line in sumfile.read_text(encoding='utf-8').splitlines():
+              if line.strip(): rels.append(line.split('  ',1)[1])
+          out=[]
+          for relp in rels:
+              fp=P/relp
+              if not fp.is_file(): raise SystemExit(f'checksum inventory missing {relp}')
+              out.append(hashlib.sha256(fp.read_bytes()).hexdigest()+'  '+relp)
+          sumfile.write_text('\n'.join(out)+'\n',encoding='utf-8')
+          PY
+      - name: Verify exact change and full planning system
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 Plans/Master/Tools/validate_master_plan.py | tee /tmp/cr0003_validate.txt
+          grep -qx 'VALIDATION PASS' /tmp/cr0003_validate.txt
+          grep -qx 'tasks=641' /tmp/cr0003_validate.txt
+          grep -qx 'dependency_edges=849' /tmp/cr0003_validate.txt
+          grep -qx 'broken_links=0' /tmp/cr0003_validate.txt
+          grep -qx 'generated_missing_task_ids=0' /tmp/cr0003_validate.txt
+          python3 - <<'PY'
+          import csv, pathlib
+          R=pathlib.Path('Plans/Master')
+          rows=list(csv.DictReader((R/'WBS/master-wbs.csv').open(encoding='utf-8-sig',newline=''))); by={r['Task_ID']:r for r in rows}
+          assert by['TSK-0139']['Dependencies']=='TSK-0513'
+          assert 'provisional job assumption' in by['TSK-0139']['Acceptance_Criteria']
+          assert 'No capability may be described as behaviorally validated' in by['TSK-0141']['Acceptance_Criteria']
+          assert 'remains deferred because ACC-0326 requires actual experiment' in by['TSK-0326']['Notes']
+          g=(R/'Registers/GATES.md').read_text(); assert '| LG-05 |' in g and 'DEC-0050/CR-0003' in g
+          assert 'LG-05 remains DEFER' in g
+          d=(R/'Registers/DECISIONS_TRIGGERS.md').read_text(); assert 'DEC-0050' in d
+          e=(R/'Registers/EXCEPTIONS_CHANGE_CONTROLS.md').read_text(); assert 'CR-0003' in e
+          l5=(R/'Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md').read_text(); assert '5.3.2 Owner-approved L3 behavioral-validation deferral' in l5
+          rel=(R/'RELATIONSHIP_INDEX.yaml').read_text(); s=rel.index('  TSK-0139:'); z=rel.find('\n  TSK-',s+3); block=rel[s:z if z!=-1 else None]
+          assert 'target: TSK-0513\n      type: depends_on' in block
+          assert 'target: TSK-0040\n      type: depends_on' not in block
+          print('CR0003_SEMANTIC_AUDIT=PASS')
+          PY
+          git diff --check
+          # WBS must be surgical: one-row-per-task CSV change, not wholesale normalization.
+          nums=$(git diff --numstat -- Plans/Master/WBS/master-wbs.csv)
+          echo "WBS_NUMSTAT=$nums"
+          add=$(echo "$nums" | awk '{print $1}'); del=$(echo "$nums" | awk '{print $2}')
+          test "${add:-0}" -le 3
+          test "${del:-0}" -le 3
+      - name: Create CR-0003 evidence and publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess
+          paths=[
+          'Plans/Master/WBS/master-wbs.csv','Plans/Master/RELATIONSHIP_INDEX.yaml','Plans/Master/Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md','Plans/Master/Registers/CONSTRAINTS.md','Plans/Master/Registers/RISKS.md','Plans/Master/Registers/DECISIONS_TRIGGERS.md','Plans/Master/Registers/GATES.md','Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md','Plans/Master/Registers/LIFECYCLE_OBLIGATIONS.md','Plans/Master/Layers/LAYER_1_PROGRAM_ARCHITECTURE_STRATEGIC_BASELINE.md','Plans/Master/Layers/LAYER_4_INTEGRATED_PROGRAM_CRITICAL_PATH.md','Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md','Plans/Master/Governance/CURRENT_STATE_INTERFACE.md','Plans/Master/MANIFEST.yaml','Plans/Master/Generated/MASTER_PLAN_FULL.md','Plans/SHA256SUMS.txt']
+          out=['# CR-0003 — Owner L3 deferral / provisional L4 rebaseline evidence','', '**Date:** 2026-08-28  ', '**Owner authority:** explicit instruction to defer complete real-participant Experiment-1/L3 through 2027-08-27, keep LG-03/LG-04/LG-05 non-PASS, and proceed provisionally into L4 without fabricated behavioral evidence.','', '## Controlled outcome','', '- LG-03, LG-04 and LG-05 remain DEFER/non-PASS.','- TSK-0139 is the bounded provisional L4 entry and now depends on TSK-0513 PASS rather than unexecuted TSK-0040.','- ACC-0139 and ACC-0141 explicitly use provisional/unvalidated semantics.','- TSK-0326 remains deferred because it requires actual experiment friction/comprehension/support evidence.','- CON-0025 still blocks expensive integrated build before real behavioral validation; CR-0003 permits L4 definition/design only.','- RSK-0002 remains OPEN and now explicitly owns the missing-behavioral-evidence risk.','- CR-0003 does not itself make LG-06 PASS, authorize L5/L6, recruit/process participants, complete legal work, or authorize public launch.','', '## Structural verification','', '- Full deterministic validator: PASS.','- Tasks: 641.','- Dependency edges: 849 (one edge replaced, count unchanged).','- Broken links: 0.','- Generated missing task IDs: 0.','- Semantic audit: PASS.','', '## Changed planning blobs','']
+          for p in paths:
+              sha=subprocess.check_output(['git','hash-object',p],text=True).strip(); out.append(f'- `{p}` → `{sha}`')
+          out += ['', '## Re-evaluation rule','', 'On 2027-08-27 or earlier owner reactivation, execute the deferred real-participant branch when otherwise authorized and re-evaluate every downstream PASS materially reliant on provisional assumptions. Contradictory real evidence reopens affected work.','', '## Publication/read-back','', 'This evidence is published with the CR-0003 planning mutation. The exact publication commit and final blob/read-back are recorded in canonical runtime reconciliation before later governed work relies on the change.','']
+          Path('CR_0003_OWNER_L3_DEFERRAL_PROVISIONAL_L4_EVIDENCE_2026-08-28.md').write_text('\n'.join(out),encoding='utf-8')
+          PY
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add Plans CR_0003_OWNER_L3_DEFERRAL_PROVISIONAL_L4_EVIDENCE_2026-08-28.md
+          git commit -m "governance: apply CR-0003 provisional L4 rebaseline"
+          git push
