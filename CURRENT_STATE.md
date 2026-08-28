@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T21:46:42Z
+**Updated:** 2026-08-28T21:49:59Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -550,10 +550,14 @@ ACC-0307 is satisfied for all nine current instruction classes: official/current
 
 This PASS defines internal L4 content semantics only. It does not prove representative-parent comprehension or localization usability; `RSK-0002` remains OPEN. Turkish/Arabic variants are provisional and do not activate markets. `REQ-0022` remains unresolved; LG-03/LG-04/LG-05/LG-06 remain non-PASS; account/dashboard remains deferred; no implementation/build, profile publication, participant processing, market activation, payment, publication or launch is authorized.
 
-## Queue status after TSK-0307 acceptance
+## Queue status — TSK-0318 HUMAN_ONLY preparation selected
 
-`TSK-0307` is runtime **PASS**. No successor is selected by this reconciliation write.
+`TSK-0318 — Design the public website IA and product/setup IA as distinct but connected systems` is the selected runtime **TODO** item for **preparation only**. Its sole hard dependency `TSK-0315` is runtime PASS. The WBS classifies TSK-0318 as L4 / HIGH / A1 / HUMAN_ONLY, so AI may prepare a complete candidate and verification packet but may not perform, fabricate, or self-certify the required human design disposition.
+
+Selection basis: TSK-0307 is PASS; nearby AUTO_ALLOWED branches remain dependency-blocked by HUMAN_ONLY or representative-parent/deferred work. TSK-0318 is a current HIGH HUMAN_ONLY dependency bottleneck for TSK-0311 and TSK-0310. TSK-0319 is independently preparable afterward and remains human-controlled.
+
+All current fences remain unchanged: `RSK-0002` OPEN; `REQ-0022` unresolved; LG-03/LG-04/LG-05/LG-06 non-PASS; account/dashboard deferred under EXC-0001; no L5/L6 build, participant processing, legal completion, payment, publication, market activation or launch authority.
 
 ## Exact next authoritative step
 
-Recompute the deterministic current L4 queue from WBS/runtime/relationship authority. Continue with the highest-priority eligible AUTO_ALLOWED work; if none remains, prepare the highest-impact eligible HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED item only to the permitted boundary and stop for the smallest required human disposition.
+Prepare the smallest complete TSK-0318 IA candidate from the accepted product brief, accountless service blueprint, friction contract, platform setup design, instruction catalogue, protection-state model, accessibility/privacy requirements and current scope boundaries. Publish and independently verify the candidate, then classify TSK-0318 WAITING on the exact HUMAN_ONLY disposition without marking PASS.
