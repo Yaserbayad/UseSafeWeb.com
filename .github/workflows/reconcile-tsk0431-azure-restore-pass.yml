@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: usesafeweb-governance-tsk0431-pass
+  group: usesafeweb-governance-tsk0431-pass-v2
   cancel-in-progress: false
 
 jobs:
@@ -32,45 +32,38 @@ jobs:
           from pathlib import Path
           from datetime import datetime, timezone
           import re
-
           p=Path('CURRENT_STATE.md')
           s=p.read_text(encoding='utf-8')
-
           s,n=re.subn(r'\*\*Updated:\*\* [^\n]+', '**Updated:** '+datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')+'  ', s, count=1)
           assert n==1
-
-          # Add the newly completed task to runtime PASS immediately after TSK-0430.
-          pat=r'(^- `TSK-0430`[^\n]*$)'
-          m=re.search(pat,s,re.M)
+          m=re.search(r'(^- `TSK-0430`[^\n]*$)',s,re.M)
           assert m is not None
-          pass_line=("- `TSK-0431` — pilot restore/rebuild recovery acceptance fully satisfied: project-controlled isolated recovery drill PASS with deterministic `rec-v1` routing, encrypted DoH/DoT, filtering/rollback, privacy, health and 12-second recovery evidence; owner-managed Azure-native restore subsequently reported successful by the Project Owner — project recovery evidence `TSK_0431_PROJECT_CONTROLLED_RECOVERY_DRILL_EVIDENCE_2026-08-28.md`, blob `2df5c05767fe326e38c609d37888f672dcb9dd48`; Azure restore owner evidence `TSK_0431_AZURE_RESTORE_OWNER_EVIDENCE_2026-08-28.md`, blob `e077165e98fa4460fba84466ffe28953ad53dec0`. **ACC-0431 and REQ-0052 recovery acceptance are satisfied.**")
+          pass_line="- `TSK-0431` — pilot restore/rebuild recovery acceptance fully satisfied: project-controlled isolated recovery drill PASS with deterministic `rec-v1` routing, encrypted DoH/DoT, filtering/rollback, privacy, health and 12-second recovery evidence; owner-managed Azure-native restore subsequently reported successful by the Project Owner — project recovery evidence `TSK_0431_PROJECT_CONTROLLED_RECOVERY_DRILL_EVIDENCE_2026-08-28.md`, blob `2df5c05767fe326e38c609d37888f672dcb9dd48`; Azure restore owner evidence `TSK_0431_AZURE_RESTORE_OWNER_EVIDENCE_2026-08-28.md`, blob `e077165e98fa4460fba84466ffe28953ad53dec0`. **ACC-0431 and REQ-0052 recovery acceptance are satisfied.**"
           assert '`TSK-0431` — pilot restore/rebuild recovery acceptance fully satisfied' not in s
-          s=s[:m.end()]+"\n"+pass_line+s[m.end():]
-
-          # Remove the resolved WAITING section without disturbing the next stable section.
+          s=s[:m.end()]+'\n'+pass_line+s[m.end():]
           start=s.index('### WAITING — TSK-0431')
-          end=s.index('### TSK-0514 accepted stable state', start)
+          end=s.index('### TSK-0514 accepted stable state',start)
           s=s[:start]+s[end:]
-
           old='- Azure control-plane provisioning/configuration remains owner-managed. Azure Backup readiness is owner-confirmed Successful and deterministic `rec-v1` recovery-runner routing plus the project-controlled clean rebuild are now proven. TSK-0431 remains WAITING solely on direct owner evidence that the literal Azure-native recovery-point restore was actually exercised successfully, unless changed by governed owner decision.'
           new='- Azure control-plane provisioning/configuration remains owner-managed. Azure Backup readiness is owner-confirmed Successful; deterministic `rec-v1` recovery-runner routing and the project-controlled clean rebuild are proven; the Project Owner subsequently reported the Azure-native restore successful. TSK-0431 recovery acceptance is therefore PASS. This does not expand project authority over Azure control-plane actions.'
           assert s.count(old)==1
           s=s.replace(old,new,1)
-
           q=s.index('## Queue status after current reconciliation')
-          new_tail='''## Queue status after current reconciliation
-
-TSK-0428 and TSK-0431 are runtime PASS with current direct evidence. The dependency change makes **1** ordinary L2 `AUTO_ALLOWED` task newly dependency-ready:
-
-- `TSK-0510` — Compile signed pilot technical acceptance report. Hard predecessors `TSK-0511; TSK-0512; TSK-0207; TSK-0428; TSK-0431; TSK-0011` are now satisfied. WBS classification: L2 / A3 / `AUTO_ALLOWED` / HIGH / critical path.
-
-No participant/public activation, legal approval, launch, Azure control-plane mutation, or other HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED act is authorized by this dependency change.
-
-## Exact next authoritative step
-
-Execute bounded TSK-0510 preparation/verification under its existing AUTO_ALLOWED authority: compile the pilot technical acceptance report from the current mandatory technical evidence, map every mandatory gate requirement to durable evidence, record reviewer/date/deviations/disposition, verify the report against ACC-0510, persist/read back the artifact/evidence, then recompute the queue. Do not treat the technical report as participant-activation, legal, privacy, launch, or owner gate approval.
-'''
-          s=s[:q]+new_tail
+          lines=[
+              '## Queue status after current reconciliation',
+              '',
+              'TSK-0428 and TSK-0431 are runtime PASS with current direct evidence. The dependency change makes **1** ordinary L2 `AUTO_ALLOWED` task newly dependency-ready:',
+              '',
+              '- `TSK-0510` — Compile signed pilot technical acceptance report. Hard predecessors `TSK-0511; TSK-0512; TSK-0207; TSK-0428; TSK-0431; TSK-0011` are now satisfied. WBS classification: L2 / A3 / `AUTO_ALLOWED` / HIGH / critical path.',
+              '',
+              'No participant/public activation, legal approval, launch, Azure control-plane mutation, or other HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED act is authorized by this dependency change.',
+              '',
+              '## Exact next authoritative step',
+              '',
+              'Execute bounded TSK-0510 preparation/verification under its existing AUTO_ALLOWED authority: compile the pilot technical acceptance report from the current mandatory technical evidence, map every mandatory gate requirement to durable evidence, record reviewer/date/deviations/disposition, verify the report against ACC-0510, persist/read back the artifact/evidence, then recompute the queue. Do not treat the technical report as participant-activation, legal, privacy, launch, or owner gate approval.',
+              '',
+          ]
+          s=s[:q]+'\n'.join(lines)
           p.write_text(s,encoding='utf-8')
           PY
           git diff --check
