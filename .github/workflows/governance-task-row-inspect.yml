@@ -10,57 +10,26 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: usesafeweb-adguard-server
-  cancel-in-progress: false
-
 jobs:
-  audit:
+  inspect:
     runs-on: [self-hosted, linux, x64]
-    timeout-minutes: 8
+    timeout-minutes: 3
     steps:
       - name: Checkout exact main commit
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Corrected independent certificate and renewal audit
+      - name: Print TSK-0442 through TSK-0447 authority rows
         shell: bash
         run: |
           set -Eeuo pipefail
-          MID="$(sha256sum /etc/machine-id | awk '{print $1}')"
-          AZ_NAME="$(python3 - <<'PY'
-          import json,urllib.request
-          req=urllib.request.Request('http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01',headers={'Metadata':'true'})
-          with urllib.request.urlopen(req,timeout=3) as r: print(json.load(r).get('name',''))
+          python3 - <<'PY'
+          import csv,json
+          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',newline='',encoding='utf-8-sig')))
+          wanted={f'TSK-{i:04d}' for i in range(442,448)}
+          for r in rows:
+              if (r.get('Task_ID') or '').strip() in wanted:
+                  keys=['Task_ID','Title','Lifecycle_Stage','Priority','Critical_Path','Plan_Status','Execution_State','Dependencies','Trigger','Preconditions','Action_Authority','Acceptance_ID','Acceptance_Criteria','Verification_ID','Required_Tools_or_Access','Requirement_Reference','Constraint_Reference','Interface_Reference','Risk_Reference','Notes']
+                  print(json.dumps({k:r.get(k,'') for k in keys},sort_keys=True,ensure_ascii=False))
           PY
-          )"
-          [[ "$MID" == "e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2" && "$AZ_NAME" == "adguardvm" ]]
-          echo "PRODUCTION_GUARD=PASS"
-          CERT=/etc/letsencrypt/live/dns.usesafeweb.com/cert.pem
-          CHAIN=/etc/letsencrypt/live/dns.usesafeweb.com/chain.pem
-          FULL=/etc/letsencrypt/live/dns.usesafeweb.com/fullchain.pem
-          KEY=/etc/letsencrypt/live/dns.usesafeweb.com/privkey.pem
-          sudo test -s "$CERT"; sudo test -s "$CHAIN"; sudo test -s "$FULL"; sudo test -s "$KEY"
-          sudo openssl x509 -in "$CERT" -noout -checkhost dns.usesafeweb.com
-          sudo openssl verify -CAfile /etc/ssl/certs/ca-certificates.crt -untrusted "$CHAIN" "$CERT"
-          echo "CERT_HOSTNAME_AND_CHAIN=PASS"
-          ISSUER="$(sudo openssl x509 -in "$CERT" -noout -issuer)"
-          printf '%s\n' "$ISSUER" | grep -qi "Let's Encrypt"
-          ! printf '%s\n' "$ISSUER" | grep -qi 'staging'
-          echo "CERT_PRODUCTION_ISSUER=PASS"
-          sudo openssl x509 -in "$CERT" -noout -checkend $((30*24*3600)) >/dev/null
-          echo "CERT_VALID_GT_30D=PASS"
-          KEY_MODE="$(sudo stat -Lc '%a' "$KEY")"; KEY_UID="$(sudo stat -Lc '%u' "$KEY")"; KEY_GID="$(sudo stat -Lc '%g' "$KEY")"
-          echo "PRIVATE_KEY_MODE=$KEY_MODE"; echo "PRIVATE_KEY_UID=$KEY_UID"; echo "PRIVATE_KEY_GID=$KEY_GID"
-          [[ "$KEY_UID" == "0" && ( "$KEY_MODE" == "600" || "$KEY_MODE" == "640" ) ]]
-          echo "PRIVATE_KEY_ACCESS=PASS"
-          sudo ufw status | grep -Eq '^80/tcp[[:space:]]+ALLOW'
-          echo "HTTP01_FIREWALL_PATH=PASS"
-          sudo systemctl is-enabled certbot.timer >/dev/null
-          echo "CERTBOT_TIMER_ENABLED=PASS"
-          sudo certbot renew --cert-name dns.usesafeweb.com --dry-run --no-random-sleep-on-renew
-          echo "ACME_RENEWAL_DRY_RUN=PASS"
-          echo "ADGUARD_SERVICE_USER=$(sudo systemctl show AdGuardHome -p User --value 2>/dev/null || true)"
-          echo "ADGUARD_SERVICE_GROUP=$(sudo systemctl show AdGuardHome -p Group --value 2>/dev/null || true)"
-          echo "TSK_0442_CERTIFICATE_AUDIT=PASS"
