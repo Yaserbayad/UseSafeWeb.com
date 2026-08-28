@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T16:57:53Z
+**Updated:** 2026-08-28T16:58:29Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -459,8 +459,13 @@ Authority remains non-duplicative: TSK-0320 owns exact state/copy semantics; TSK
 
 ## Queue status after current reconciliation
 
-`TSK-0313` is runtime PASS. A fresh conservative dependency-ready AUTO_ALLOWED L4 queue has been generated at `TSK_0313_POST_PASS_L4_QUEUE_INSPECTION_2026-08-28.md`. No next task is selected by this write; the queue must be reread against acceptance, direct predecessor evidence, gate/trigger conditions and CR-0003 before execution. HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED and representative-parent work remain fenced.
+The TSK-0313 post-PASS queue was reread and screened against CR-0003 and current acceptance authority. `TSK-0187` remains ineligible because it requires representative-parent completion/comprehension evidence. `TSK-0140` remains ineligible for PASS because its acceptance requires owner/multi-role review evidence. `TSK-0042` is the highest eligible AUTO_ALLOWED provisional-L4 task.
+
+- **Selected next: `TSK-0042 — Specify user support, exception, recovery, and removal requirements`** (L4 / A3 / AUTO_ALLOWED / MEDIUM).
+- Hard dependencies: `TSK-0041`, `TSK-0146` — current PASS.
+- ACC-0042: Requirements identify accountless setup/journey-state recovery, device-configuration lifecycle, AdGuard/DNS integration, false-positive and unsupported-state incidents; remedies, escalation, data-minimising diagnostics, response expectations, deletion/removal/recovery and support-burden metrics are explicit. Account-access requirements remain excluded unless EXC-0001 is activated.
+- Selection rationale: requirements-only internal L4 work; current predecessors PASS; no account-access scope, real-participant evidence or owner approval act is required to define the bounded support/recovery contract.
 
 ## Exact next authoritative step
 
-Read back the TSK-0313 post-PASS L4 queue, reject any candidate requiring unavailable real-user evidence, owner review/approval, unresolved trigger/gate or missing direct predecessor proof, and persist the deterministic highest-priority eligible AUTO_ALLOWED selection.
+Execute bounded `TSK-0042`: specify accountless setup/journey recovery, device configuration lifecycle, DNS/AdGuard integration incident handling, false-positive/unsupported-state remedies, privacy-minimising diagnostics, response expectations, deletion/removal/recovery and provisional support-burden metric definitions; preserve EXC-0001 account-access exclusion and CR-0003/RSK-0002 limits; persist/read back independent ACC-0042 evidence; reconcile runtime; then recompute.
