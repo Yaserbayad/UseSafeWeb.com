@@ -106,8 +106,8 @@ jobs:
 
           python3 Plans/Master/Tools/validate_master_plan.py | tee /tmp/cr0002-validation.txt
           grep -Fq 'VALIDATION PASS' /tmp/cr0002-validation.txt
-          grep -Fq 'Tasks: 641' /tmp/cr0002-validation.txt
-          grep -Fq 'Dependency edges: 849' /tmp/cr0002-validation.txt
+          grep -Fq 'tasks=641' /tmp/cr0002-validation.txt
+          grep -Fq 'dependency_edges=849' /tmp/cr0002-validation.txt
 
           decision_blob="$(git hash-object Plans/Master/Registers/DECISIONS_TRIGGERS.md)"
           exception_blob="$(git hash-object Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md)"
