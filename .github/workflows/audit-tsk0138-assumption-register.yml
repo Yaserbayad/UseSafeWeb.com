@@ -1,0 +1,62 @@
+name: Audit TSK-0138 assumption and decision register
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-tsk0138-assumption-register.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify ACC-0138 and successors
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object TSK_0138_UNRESOLVED_PRODUCT_ASSUMPTIONS_AND_OWNER_DECISIONS_2026-08-28.md)" = "d782f26d5d48b0902b044d8bbab48569bdee0ea2"
+          python3 - <<'PY'
+          import csv, pathlib, re, subprocess
+          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',encoding='utf-8-sig',newline=''))); by={r['Task_ID']:r for r in rows}
+          t=by['TSK-0138']
+          assert t['Dependencies']=='TSK-0141' and t['Action_Authority']=='AUTO_ALLOWED' and t['Acceptance_ID']=='ACC-0138'
+          m=pathlib.Path('TSK_0138_UNRESOLVED_PRODUCT_ASSUMPTIONS_AND_OWNER_DECISIONS_2026-08-28.md').read_text()
+          for s in ['Accountable owner / authority','Evidence needed to resolve','Deadline / gate / trigger','Safe default while unresolved','Consequence of deferral','AI / engineering authority','AI/engineering may not silently make a Project Owner decision','RSK-0002','2027-08-27','LG-06 remains non-PASS','No integrated build','No public launch']:
+              assert s in m, s
+          rowsm=re.findall(r'^\| UPA-\d+ \|.*$',m,re.M)
+          assert len(rowsm)>=15
+          for line in rowsm:
+              cols=[x.strip() for x in line.split('|')[1:-1]]
+              assert len(cols)==9, (len(cols),line)
+              for idx in [3,4,5,6,7,8]: assert cols[idx], (idx,line)
+          state=pathlib.Path('CURRENT_STATE.md').read_text(); assert 'Selected next: `TSK-0138' in state
+          assert '`TSK-0141 — Freeze minimum product scope and non-goals`: **PASS' in state
+          print('TSK_0138_ACC_AUDIT=PASS')
+          succ=[]
+          for r in rows:
+              if 'TSK-0138' in [x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]: succ.append(r)
+          out=['# TSK-0138 — Assumption and owner-decision register verification evidence','', '**Task:** TSK-0138 — Register unresolved product assumptions and owner decisions  ','**Acceptance:** ACC-0138  ','**Date:** 2026-08-28  ','**Verification:** independent guarded repository audit','', '## Exact evidence','', '- Register: `TSK_0138_UNRESOLVED_PRODUCT_ASSUMPTIONS_AND_OWNER_DECISIONS_2026-08-28.md`','- Register blob: `d782f26d5d48b0902b044d8bbab48569bdee0ea2`',f"- Runtime blob before PASS reconciliation: `{subprocess.check_output(['git','hash-object','CURRENT_STATE.md'],text=True).strip()}`",'', '## Audit result','', f'ACC-0138 is fully satisfied. The register contains {len(rowsm)} controlled UPA items. Each carries accountable owner/authority, evidence needed, deterministic deadline/gate/trigger, safe default, consequence of deferral and explicit AI/engineering authority. Owner-only decisions are fenced; behavioral unknowns remain unknown; CR-0003/L3 expiry is a review trigger rather than evidence.','', '**Stable verification outcome: TSK-0138 = PASS candidate pending runtime reconciliation/read-back.**','', '## Direct WBS successors','']
+          if succ:
+              out += ['| Task | Stage | Title | Plan status | WBS state | Priority | Dependencies | AI capability | Action authority | Acceptance |','| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |']
+              for r in succ:
+                  vals=[r.get('Task_ID',''),r.get('Lifecycle_Stage',''),r.get('Title',''),r.get('Plan_Status',''),r.get('Execution_State',''),r.get('Priority',''),r.get('Dependencies',''),r.get('AI_Capability_A0_A4',''),r.get('Action_Authority',''),r.get('Acceptance_Criteria','')]
+                  vals=[v.replace('|','\\|').replace('\n',' ') for v in vals]; out.append('| '+' | '.join(vals)+' |')
+          else: out.append('None.')
+          pathlib.Path('TSK_0138_UNRESOLVED_ASSUMPTIONS_DECISIONS_EVIDENCE_2026-08-28.md').write_text('\n'.join(out)+'\n')
+          PY
+          git diff --check
+      - name: Publish audit evidence
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add TSK_0138_UNRESOLVED_ASSUMPTIONS_DECISIONS_EVIDENCE_2026-08-28.md
+          git commit -m "evidence: verify TSK-0138 assumption register"
+          git push
