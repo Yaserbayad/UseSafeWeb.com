@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T10:08:00Z  
+**Updated:** 2026-08-28T10:16:00Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -268,7 +268,7 @@ The earlier owner-observed real-phone test remains valid evidence that the suppo
 
 No repeated TLS/server setup test is required. The remaining evidence is only: (1) use the already-supported real phone on one qualifying external network and report pass/fail or any network-specific failure; and (2) remove/reset the UseSafeWeb DNS configuration and confirm normal DNS/internet resolution returns. No browsing history, DNS history, screenshot, device identifier or participant data is required.
 
-Preflight evidence: `TSK_0514_EXTERNAL_ENDPOINT_PREFLIGHT_EVIDENCE_2026-08-28.md` (created after authoritative contract inspection run `33162389253` / job `98819702034`).
+Preflight evidence: `TSK_0514_EXTERNAL_ENDPOINT_PREFLIGHT_EVIDENCE_2026-08-28.md`, blob `fa30c43920e13f72873f49f0cb90b47430913465`; authoritative contract inspection run `33162389253` / job `98819702034`.
 
 Deterministic resumption condition: obtain those two direct target-device observations, evaluate ACC-0514, and then recompute the L2 queue.
 
@@ -288,10 +288,12 @@ Deterministic resumption condition: obtain those two direct target-device observ
 - Plain DNS 53 remains non-public. TSK-0442 TLS and TSK-0443 certificate renewal/expiry controls are PASS, but broader participant/public readiness remains gated by applicable downstream readiness, validation, privacy/legal and activation evidence.
 - Azure control-plane remains owner-managed; runner autonomy applies to handed-off VM/repository-authorized tasks only after target identity and scope are verified.
 
-## Queue status after TSK-0514 preflight
+## Queue status after current reconciliation
 
-The previous L2 queue recomputation selected TSK-0514 as the sole ready item. Its direct target-device observation gap is now explicitly classified as WAITING. The L2 queue has not yet been recomputed with both TSK-0431 and TSK-0514 held WAITING.
+Canonical L2 queue recomputation run `33162655350` / job `98820565674`: **PASS** against runtime blob `5f12219de24faa76a98b06902c29f30e049f0481`. It returned `RUNTIME_PASS_COUNT=28`, `RUNTIME_WAIT=TSK-0431,TSK-0514`, and **`READY_COUNT=0`**. Durable queue evidence: `L2_QUEUE_RECOMPUTATION_EVIDENCE_2026-08-28T101528Z.md`, blob `209f34ed1c23a4f5ad839308ecff99cff354ebbd`.
+
+There is currently no dependency-ready L2 `AUTO_ALLOWED` work outside the two explicit WAITING boundaries.
 
 ## Exact next authoritative step
 
-Recompute the current L2 queue with TSK-0431 and TSK-0514 held WAITING. Continue any other highest-priority eligible `AUTO_ALLOWED` L2 work if present. If no other L2 work is ready, resume when either (1) the owner supplies the two TSK-0514 phone observations, or (2) the owner identifies/provides the Azure-native backup/restore path required for TSK-0431. Do not bypass participant-activation, legal, Azure control-plane, provider, recovery, or target-device verification boundaries.
+Hold ordinary L2 progression at the two verified WAITING boundaries. The fastest resumption path is TSK-0514: on the already-supported real phone, verify UseSafeWeb on one qualifying external network (outside Azure and outside the operator's normal network), report pass/fail or any network-specific failure, then remove/reset the UseSafeWeb DNS configuration and confirm normal DNS/internet resolution returns. Resume TSK-0431 separately when the owner identifies/provides the Azure-native backup/restore path required by REQ-0052. Recompute eligibility after either condition changes; do not bypass participant-activation, legal, Azure control-plane, provider, recovery, or target-device verification boundaries.
