@@ -25,34 +25,73 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Validate TSK-0166 predecessor evidence
+      - name: Independent TSK-0166 schema audit
         shell: bash
         run: |
           set -Eeuo pipefail
           [[ "$(hostname -s)" == "adguardvm" ]]
           python3 - <<'PY'
-          import csv,json,os,re
-          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',newline='',encoding='utf-8-sig')))
-          by={r['Task_ID'].strip():r for r in rows if (r.get('Task_ID') or '').strip()}
-          for tid in ['TSK-0164','TSK-0223','TSK-0166']:
-              print(tid.replace('-','_')+'_ROW='+json.dumps(by.get(tid),sort_keys=True,ensure_ascii=False))
-          ids=set()
-          for tid in ['TSK-0164','TSK-0223','TSK-0166']:
-              r=by[tid]
-              for field in ['Acceptance_ID','Verification_ID','Evidence_ID','Requirement_Reference','Interface_Reference','Risk_Reference']:
-                  ids.update(re.findall(r'(?:ACC|VER|EVD|REQ|INT|RSK|CON)-\d+',r.get(field,'') or ''))
-              ids.update(re.findall(r'CON-\d+',r.get('Preconditions','') or ''))
-          print('REFERENCE_IDS='+','.join(sorted(ids)))
-          for root,dirs,files in os.walk('.'):
-              if root.startswith('./.git'): continue
-              for fn in files:
-                  p=os.path.join(root,fn)
-                  try:
-                      if os.path.getsize(p)>300000: continue
-                      text=open(p,encoding='utf-8',errors='ignore').read()
-                  except Exception: continue
-                  hits=[x for x in ids if x in text]
-                  taskhits=[x for x in ['TSK-0164','TSK-0223','TSK-0166'] if x in text]
-                  if hits or taskhits:
-                      print('MATCH='+p+' IDS='+','.join(sorted(set(hits+taskhits))))
+          import re,sys,hashlib
+          p='EXPERIMENT_01_PARTICIPANT_RECORD_SCHEMA.md'
+          text=open(p,encoding='utf-8').read()
+          expected_sha='c7706fceced87c797b8cd92179198754e2b08ffe'
+          import subprocess
+          blob=subprocess.check_output(['git','hash-object',p],text=True).strip()
+          assert blob==expected_sha,(blob,expected_sha)
+
+          # Extract only field names from schema table rows, not allowed values or prose.
+          fields=[]
+          for line in text.splitlines():
+              m=re.match(r'^\| `([a-z0-9_]+)` \|',line)
+              if m: fields.append(m.group(1))
+          required={
+            'participant_id','qualification_result','device_family','phone_state',
+            'native_safeguard_state','baseline_dns_protection_state','service_safeguard_state',
+            'full_activation','time_to_full_activation_minutes','active_assistance_minutes',
+            'assistance_category','facilitator_completed_parent_action','abandoned',
+            'abandonment_stage','abandonment_reason_category','two_gap_comprehension_pass',
+            'immediate_false_positive_or_compatibility_issue','followup_14d_completed',
+            'baseline_protection_14d_state'
+          }
+          missing=sorted(required-set(fields))
+          assert not missing,'missing required fields: '+','.join(missing)
+
+          forbidden_field_tokens={
+            'child_name','child_dob','date_of_birth','school','child_email','child_phone','location',
+            'contacts','messages','photos','social_username','social_usernames','browsing_history',
+            'domain_history','dns_query_history','visited_domains','urls','top_domains','payment_card',
+            'free_text_notes'
+          }
+          bad=sorted(set(fields)&forbidden_field_tokens)
+          assert not bad,'forbidden schema fields: '+','.join(bad)
+
+          required_phrases=[
+            'PRE-EXPERIMENT TEMPLATE — contains no participant records',
+            'must not be stored in this metric record or GitHub',
+            'facilitator_completed_parent_action',
+            'must be `no`',
+            'Real participant records are not committed to GitHub',
+            'VALIDATION_READINESS_GATE.md` must reach PASS before recruitment/activation',
+            'browsing history, DNS query history, visited-domain history, URLs, top-domain lists or per-domain activity',
+            'Wave A/B field and frozen protocol/threshold reference',
+            'No collection starts merely because this template exists.'
+          ]
+          for phrase in required_phrases:
+              assert phrase in text,'missing phrase: '+phrase
+
+          # Predecessor direct artifact checks.
+          protocol=open('EXPERIMENT_01_CONCIERGE_VALIDATION.md',encoding='utf-8').read()
+          for phrase in ['20–30 qualified parents/caregivers in England','willing to make real appropriate safety-setting changes','Human help is allowed only when the parent becomes blocked','Mandatory measurements','Existing promising criteria','Strong failure/kill evidence','Wave A — first 10 qualified participants','Wave B — remaining 10–20 qualified participants','Decision output']:
+              assert phrase in protocol,'TSK-0164 predecessor gap: '+phrase
+          privacy=open('VALIDATION_READINESS_GATE.md',encoding='utf-8').read()
+          for phrase in ['child name/exact DOB','school','child email/phone','contacts/location/messages/photos','social usernames','browsing-history/domain-history reports']:
+              assert phrase in privacy,'TSK-0223 predecessor gap: '+phrase
+
+          print('TSK_0164_DIRECT_PREDECESSOR_PROOF=PASS')
+          print('TSK_0223_DIRECT_PREDECESSOR_PROOF=PASS')
+          print('TSK_0166_REQUIRED_FIELD_COUNT='+str(len(required)))
+          print('TSK_0166_SCHEMA_FIELD_COUNT='+str(len(fields)))
+          print('TSK_0166_FORBIDDEN_FIELD_COUNT='+str(len(bad)))
+          print('TSK_0166_SCHEMA_BLOB='+blob)
+          print('TSK_0166_INDEPENDENT_AUDIT=PASS')
           PY
