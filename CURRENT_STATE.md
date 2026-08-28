@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T13:11:10Z  
+**Updated:** 2026-08-28T13:30:38Z  
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -64,6 +64,7 @@ This supersedes the earlier duplicate-runner condition in which `adguartestdvm` 
 - `TSK-0428` — Azure region, recipients, and active DNS data path verified on production: Azure `westeurope`, Quad9 dns10 recursive/bootstrap path, loopback-only DoH/DoT backends, and no US DNS node/CDN/analytics/payment/email/application processor in the child-linked DNS query path — evidence: `TSK_0428_AZURE_REGION_DATA_PATH_EVIDENCE_2026-08-28.md`, blob `bbcd27772f8a9cad8248c48e9290b52baf71056f`.
 - `TSK-0429` — privacy-minimal AdGuard backup scope documented and independently verified against current DPIA/retention/live state — policy: `infrastructure/adguard-server/BACKUP_SCOPE_POLICY.md`, blob `e62b48a3e746b1be90881bbffab3b7680384cc16`; evidence: `TSK_0429_PRIVACY_MINIMAL_BACKUP_SCOPE_EVIDENCE_2026-08-27.md`, blob `b77c6d7a2e17adc5e653151b55137467a8c5b62f`.
 - `TSK-0430` — encrypted configuration backup created, independently audited and directly decrypted by the authorised owner — evidence: `TSK_0430_ENCRYPTED_CONFIG_BACKUP_EVIDENCE_2026-08-27.md`, blob `de1820cb2a9fc5b175c5e5eb1e18b45e6a430a82`; ciphertext SHA-256 `bd5cad421a44efb27a669a0119f6247f456e1e8e97a0f23bb628933e6208ccde`; owner recipient fingerprint `SHA256:682Jbw3baP6jxs57+1c5lchlkrNMELcvDk8bauEl51U`; owner-side decrypted configuration SHA-256 `d8b6eae3b85edbaa1c49e318354389dc616099ecb3d2d90eff3c3dd8c663e1f2`.
+- `TSK-0431` — pilot restore/rebuild recovery acceptance fully satisfied: project-controlled isolated recovery drill PASS with deterministic `rec-v1` routing, encrypted DoH/DoT, filtering/rollback, privacy, health and 12-second recovery evidence; owner-managed Azure-native restore subsequently reported successful by the Project Owner — project recovery evidence `TSK_0431_PROJECT_CONTROLLED_RECOVERY_DRILL_EVIDENCE_2026-08-28.md`, blob `2df5c05767fe326e38c609d37888f672dcb9dd48`; Azure restore owner evidence `TSK_0431_AZURE_RESTORE_OWNER_EVIDENCE_2026-08-28.md`, blob `e077165e98fa4460fba84466ffe28953ad53dec0`. **ACC-0431 and REQ-0052 recovery acceptance are satisfied.**
 - `TSK-0166` — pseudonymous Experiment-1 participant record/metric schema created and independently audited with direct predecessor proof — artifact: `EXPERIMENT_01_PARTICIPANT_RECORD_SCHEMA.md`, blob `c7706fceced87c797b8cd92179198754e2b08ffe`; evidence: `TSK_0166_PARTICIPANT_RECORD_SCHEMA_EVIDENCE_2026-08-28.md`, blob `d043370a9c1efc99ccf8f65b813733b4c832c3f0`; independent audit run `33130737625` / job `98719395096`: PASS.
 - `TSK-0168` — Experiment-1 qualification screener created and independently audited — artifact: `EXPERIMENT_01_QUALIFICATION_SCREENER.md`, blob `d35d3e0abfc3882d648df3c0c7458e216853b592`; evidence: `TSK_0168_QUALIFICATION_SCREENER_EVIDENCE_2026-08-28.md`, blob `760f881100e6221640c8afa86108665dc4ba1792`; independent audit run `33130918142` / job `98719985132`: PASS.
 - `TSK-0214` — Experiment-1 retention/deletion execution checklist independently verified with direct predecessor proof — artifact: `RETENTION_DELETION_EXECUTION_CHECKLIST.md`, blob `5c2d6edbfbabe9ed0fb9c309e7afca8c96fa9c9f`; evidence: `TSK_0214_RETENTION_DELETION_CHECKLIST_EVIDENCE_2026-08-28.md`, blob `0740743793e53c655f3ca447fddd51fd70b8d6e5`; independent audit run `33152847430` / job `98788653014`: PASS.
@@ -253,28 +254,6 @@ Recovery documentation is `infrastructure/adguard-server/TLS_CERTIFICATE_RENEWAL
 
 Evidence: `TSK_0443_CERTIFICATE_RENEWAL_ALERT_EVIDENCE_2026-08-28.md`, blob `c2f3b3b35c9d8e2ec33f473d72c508ebde30348d`. ACC-0443 is fully satisfied.
 
-### WAITING — TSK-0431
-
-`TSK-0431` — test pilot restore or rebuild procedure: **WAITING only on direct owner evidence for the literal Azure-native recovery-point restore element of REQ-0052; project-controlled rebuild/functional/privacy/timing acceptance is PASS; overall task is not PASS**.
-
-The exact WBS row remains L2 / A3 / `AUTO_ALLOWED` / HIGH / critical path with hard predecessors `TSK-0430; TSK-0011`, both satisfied. ACC-0431 requires a functional test target that passes encrypted-DNS and privacy checks with recovery time/issues recorded. REQ-0052 additionally requires the Azure-native backup/restore element.
-
-Azure Backup readiness remains owner-confirmed **Successful** through `TSK_0431_AZURE_BACKUP_OWNER_EVIDENCE_2026-08-28.md`, blob `fb846d5ab9a3ed3f4b52976273c92653d73db925`. Backup readiness is not converted into restore evidence.
-
-The Project Owner supplied the custom GitHub Actions label `rec-v1` for existing runner `adguartestdvm_correct` and reported it online. That routing boundary is now directly proven. Recovery run `33173972042` / job `98857724228` executed on runner `adguartestdvm_correct`, machine `adguartestdvm`, after the exact accepted recovery fingerprint and Azure VM identity gates. The drill rebuilt the project-controlled application state and emitted `TSK_0431_PROJECT_CONTROLLED_DRILL=PASS` after all acceptance checks.
-
-Read-only capture run `33174075020` / job `98858073703` then re-proved the same recovery fingerprint and captured only the allow-listed privacy-safe summary: approved configuration reconstruction PASS; loopback Nginx TLS listeners PASS; local DoH PASS; local DoT PASS; block/exception/exact rollback PASS; privacy persistence PASS; admin/firewall fail-safe PASS; recovery target health PASS; project-controlled rebuild PASS; elapsed time **12 seconds**; post-run health recheck PASS. Evidence: `TSK_0431_PROJECT_CONTROLLED_RECOVERY_DRILL_EVIDENCE_2026-08-28.md`, blob `2df5c05767fe326e38c609d37888f672dcb9dd48`, publication commit `c356384aeafe70f5c74c8eb3966a810c4947673b`.
-
-The recovery job's GitHub conclusion was failure only because a root-owned temporary DoH output file could not be removed by the non-root final cleanup command **after** `TSK_0431_PROJECT_CONTROLLED_DRILL=PASS` had already been emitted. The separate post-run health/summary capture proved this post-acceptance cleanup deviation did not invalidate the recovery criteria. No production service or Azure control-plane resource was mutated by the recovery drill.
-
-Current unresolved literal requirement: `azure_native_restore_exercised=false`. TSK-0431 therefore remains WAITING, not PASS, until the Project Owner provides direct evidence that an Azure-native recovery-point restore was actually exercised successfully, or explicitly changes REQ-0052 through governed change control.
-
-Deterministic resumption condition:
-
-1. Project Owner exercises the approved Azure-native recovery-point restore path under the owner-managed Azure control-plane boundary without overwriting production;
-2. provide direct, privacy-safe evidence of successful restore execution (for example target, recovery point timestamp/status and successful restore outcome, without unnecessary subscription/account identifiers);
-3. reconcile that evidence against REQ-0052 and ACC-0431 before any overall TSK-0431 PASS decision.
-
 ### TSK-0514 accepted stable state
 
 The exact WBS row defines TSK-0514 as L2 / A3 / `AUTO_ALLOWED` / HIGH with hard predecessors `TSK-0442; TSK-0443`, both current PASS, acceptance `ACC-0514`.
@@ -340,7 +319,7 @@ The first verifier run `33167781526` was rejected as a test false negative becau
 ### External/provider and legal boundaries
 
 - TSK-0441 Cloudflare DNS is satisfied and independently verified. Any further Cloudflare account/zone mutation remains owner/provider-controlled unless an explicitly authorized interface becomes available.
-- Azure control-plane provisioning/configuration remains owner-managed. Azure Backup readiness is owner-confirmed Successful and deterministic `rec-v1` recovery-runner routing plus the project-controlled clean rebuild are now proven. TSK-0431 remains WAITING solely on direct owner evidence that the literal Azure-native recovery-point restore was actually exercised successfully, unless changed by governed owner decision.
+- Azure control-plane provisioning/configuration remains owner-managed. Azure Backup readiness is owner-confirmed Successful; deterministic `rec-v1` recovery-runner routing and the project-controlled clean rebuild are proven; the Project Owner subsequently reported the Azure-native restore successful. TSK-0431 recovery acceptance is therefore PASS. This does not expand project authority over Azure control-plane actions.
 - TSK-0442 TLS target-device acceptance, TSK-0443 certificate renewal/expiry controls, TSK-0514 external-network/removal verification, TSK-0511 per-supported-device verification, TSK-0512 filtering/exception/rollback verification, and TSK-0207 privacy-persistence verification are satisfied. None of these PASS states by themselves authorize participant activation.
 - Owner-deferred UK representative/ICO fee planning remains unresolved until 2027-08-27 or earlier explicit reactivation; technical work does not imply validation-readiness legal gate PASS or authorize real England participant activation.
 
@@ -355,14 +334,12 @@ The first verifier run `33167781526` was rejected as a test false negative becau
 
 ## Queue status after current reconciliation
 
-TSK-0428 is runtime PASS with fresh target evidence. The deterministic WBS dependency-readiness recomputation found **0** L2 `AUTO_ALLOWED` candidate(s).
+TSK-0428 and TSK-0431 are runtime PASS with current direct evidence. The dependency change makes **1** ordinary L2 `AUTO_ALLOWED` task newly dependency-ready:
 
-No ordinary L2 `AUTO_ALLOWED` candidate is dependency-ready.
+- `TSK-0510` — Compile signed pilot technical acceptance report. Hard predecessors `TSK-0511; TSK-0512; TSK-0207; TSK-0428; TSK-0431; TSK-0011` are now satisfied. WBS classification: L2 / A3 / `AUTO_ALLOWED` / HIGH / critical path.
 
-Current explicit WAITING boundary:
-
-- `TSK-0431` — project-controlled recovery drill is PASS with deterministic `rec-v1` routing and 12-second recovery evidence; overall task remains WAITING only on direct owner evidence of a successful Azure-native recovery-point restore.
+No participant/public activation, legal approval, launch, Azure control-plane mutation, or other HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED act is authorized by this dependency change.
 
 ## Exact next authoritative step
 
-No ordinary L2 work may progress until a dependency/gate condition changes. The runner-routing and project-controlled rebuild portions of TSK-0431 are satisfied. The exact next authoritative step is owner-managed Azure-native recovery-point restore execution and direct successful-restore evidence; do not restore/overwrite production, do not infer restore success from backup readiness, and do not bypass participant-activation, legal, Azure control-plane, provider, recovery, privacy or validation gates.
+Execute bounded TSK-0510 preparation/verification under its existing AUTO_ALLOWED authority: compile the pilot technical acceptance report from the current mandatory technical evidence, map every mandatory gate requirement to durable evidence, record reviewer/date/deviations/disposition, verify the report against ACC-0510, persist/read back the artifact/evidence, then recompute the queue. Do not treat the technical report as participant-activation, legal, privacy, launch, or owner gate approval.
