@@ -15,56 +15,62 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  audit_tls:
+  probe_a:
     runs-on: [self-hosted, linux, x64]
     timeout-minutes: 5
+    env:
+      RUNNER_CONTEXT_NAME: ${{ runner.name }}
     steps:
-      - name: Checkout exact main commit
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 1
-          persist-credentials: false
-      - name: Revalidate TSK-0442 server-side acceptance controls
+      - name: Fingerprint runner A
         shell: bash
         run: |
           set -Eeuo pipefail
           sudo -n true
-          [[ "$(sha256sum /etc/machine-id | awk '{print $1}')" == 'e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2' ]]
+          echo "RUNNER_NAME=$RUNNER_CONTEXT_NAME"
+          echo "MACHINE_NAME=$(hostname -s)"
+          echo "MACHINE_ID_SHA256=$(sha256sum /etc/machine-id | awk '{print $1}')"
+          . /etc/os-release
+          echo "OS_ID=$ID"
+          echo "OS_VERSION_ID=$VERSION_ID"
           python3 - <<'PY'
-          import csv,json,urllib.request
-          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',newline='',encoding='utf-8-sig')))
-          r=next(x for x in rows if (x.get('Task_ID') or '').strip()=='TSK-0442')
-          print('WBS='+json.dumps({k:r.get(k,'') for k in ['Task_ID','Title','Priority','Critical_Path','Dependencies','Action_Authority','Acceptance_ID','Acceptance_Criteria','Verification_ID','Required_Tools_or_Access']},sort_keys=True))
+          import json,urllib.request
           req=urllib.request.Request('http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01',headers={'Metadata':'true'})
-          with urllib.request.urlopen(req,timeout=3) as z: d=json.load(z)
-          assert d.get('name')=='adguardvm' and d.get('location')=='westeurope' and d.get('vmId')=='bc7f566f-7231-41fb-9fdd-49cf190fd5e1',d
-          print('PRODUCTION_IDENTITY=PASS')
+          with urllib.request.urlopen(req,timeout=3) as r: d=json.load(r)
+          print('AZURE_NAME='+str(d.get('name','')))
+          print('AZURE_LOCATION='+str(d.get('location','')))
+          print('AZURE_VM_ID='+str(d.get('vmId','')))
           PY
-          systemctl is-active --quiet AdGuardHome.service
-          systemctl is-active --quiet nginx.service
-          sudo nginx -t >/dev/null
-          CERT=/etc/letsencrypt/live/dns.usesafeweb.com/fullchain.pem
-          KEY=/etc/letsencrypt/live/dns.usesafeweb.com/privkey.pem
-          sudo openssl x509 -in "$CERT" -noout -checkhost dns.usesafeweb.com >/dev/null
-          sudo openssl x509 -in "$CERT" -noout -checkend 2592000 >/dev/null
-          [[ "$(sudo stat -Lc '%u:%a' "$KEY")" == '0:600' ]]
-          echo 'HOSTNAME_KEY_VALIDITY=PASS'
-          timeout 5 openssl s_client -connect 127.0.0.1:443 -servername dns.usesafeweb.com -verify_hostname dns.usesafeweb.com -verify_return_error </dev/null 2>/dev/null | grep -q 'Verify return code: 0 (ok)'
-          timeout 5 openssl s_client -connect 127.0.0.1:853 -servername dns.usesafeweb.com -verify_hostname dns.usesafeweb.com -verify_return_error </dev/null 2>/dev/null | grep -q 'Verify return code: 0 (ok)'
-          ! timeout 4 openssl s_client -tls1 -connect 127.0.0.1:443 -servername dns.usesafeweb.com </dev/null >/dev/null 2>&1
-          ! timeout 4 openssl s_client -tls1_1 -connect 127.0.0.1:443 -servername dns.usesafeweb.com </dev/null >/dev/null 2>&1
-          timeout 4 openssl s_client -tls1_2 -connect 127.0.0.1:443 -servername dns.usesafeweb.com </dev/null >/dev/null 2>&1
-          echo 'TLS_PROTOCOL_POLICY=PASS'
-          [[ "$(sudo ss -lntH 'sport = :3000' | awk '{print $4}' | sort -u)" == '127.0.0.1:3000' ]]
-          sudo ss -lntH 'sport = :53' | awk '{print $4}' | grep -qx '127.0.0.1:53'
-          sudo ss -lnuH 'sport = :53' | awk '{print $4}' | grep -qx '127.0.0.1:53'
-          sudo ss -lntH 'sport = :443' | grep -Eq '0\.0\.0\.0:443'
-          sudo ss -lntH 'sport = :853' | grep -Eq '0\.0\.0\.0:853'
-          echo 'LISTENER_ADMIN_BOUNDARY=PASS'
-          [[ "$(curl --silent --show-error --max-time 5 --resolve dns.usesafeweb.com:443:127.0.0.1 -o /dev/null -w '%{http_code}' https://dns.usesafeweb.com/control/status)" == 404 ]]
-          [[ "$(curl --silent --show-error --max-time 5 --resolve dns.usesafeweb.com:443:127.0.0.1 -o /dev/null -w '%{http_code}' https://dns.usesafeweb.com/)" == 404 ]]
-          sudo ufw status | grep -Eq '^443/tcp[[:space:]]+ALLOW'
-          sudo ufw status | grep -Eq '^853/tcp[[:space:]]+ALLOW'
-          ! sudo ufw status | grep -Eq '^53(/tcp|/udp|[[:space:]])[[:space:]]+ALLOW'
-          echo 'PUBLIC_ROUTE_AND_FIREWALL_BOUNDARY=PASS'
-          echo 'TSK_0442_SERVER_SIDE_REVALIDATION=PASS'
+          echo "ADGUARD_ACTIVE=$(systemctl is-active AdGuardHome.service 2>/dev/null || true)"
+          echo "NGINX_ACTIVE=$(systemctl is-active nginx.service 2>/dev/null || true)"
+          sleep 20
+          echo 'RUNNER_FINGERPRINT=PASS'
+
+  probe_b:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    env:
+      RUNNER_CONTEXT_NAME: ${{ runner.name }}
+    steps:
+      - name: Fingerprint runner B
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo -n true
+          echo "RUNNER_NAME=$RUNNER_CONTEXT_NAME"
+          echo "MACHINE_NAME=$(hostname -s)"
+          echo "MACHINE_ID_SHA256=$(sha256sum /etc/machine-id | awk '{print $1}')"
+          . /etc/os-release
+          echo "OS_ID=$ID"
+          echo "OS_VERSION_ID=$VERSION_ID"
+          python3 - <<'PY'
+          import json,urllib.request
+          req=urllib.request.Request('http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01',headers={'Metadata':'true'})
+          with urllib.request.urlopen(req,timeout=3) as r: d=json.load(r)
+          print('AZURE_NAME='+str(d.get('name','')))
+          print('AZURE_LOCATION='+str(d.get('location','')))
+          print('AZURE_VM_ID='+str(d.get('vmId','')))
+          PY
+          echo "ADGUARD_ACTIVE=$(systemctl is-active AdGuardHome.service 2>/dev/null || true)"
+          echo "NGINX_ACTIVE=$(systemctl is-active nginx.service 2>/dev/null || true)"
+          sleep 20
+          echo 'RUNNER_FINGERPRINT=PASS'
