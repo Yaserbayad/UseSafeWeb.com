@@ -1,0 +1,56 @@
+name: Audit TSK-0510 technical acceptance report
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/audit-tsk0510-technical-acceptance.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-audit-tsk0510
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: [self-hosted]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Audit report traceability and gate boundary
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          report='TSK_0510_PILOT_TECHNICAL_ACCEPTANCE_REPORT_2026-08-28.md'
+          [[ "$(git hash-object "$report")" == 'fbc41f65ec56e7e9ea8873e9a995b66ae9e8f2c9' ]]
+          [[ "$(git hash-object CURRENT_STATE.md)" == 'f4a95ca7df5b527717f91c63044a1323abd1e33a' ]]
+          [[ "$(git hash-object Plans/Master/WBS/master-wbs.csv)" == '2e4560103b71bb350b14673ce3e415afc3dbfe3a' ]]
+          [[ "$(git hash-object Plans/Master/Registers/REQUIREMENTS.md)" == '12c3bf6a227ad6ae61e167546a2b8a35d01321d1' ]]
+          [[ "$(git hash-object Plans/Master/Registers/GATES.md)" == '692a51b920f3af9c8c937e712d19a0841c57eabf' ]]
+          [[ "$(git hash-object TSK_0428_AZURE_REGION_DATA_PATH_EVIDENCE_2026-08-28.md)" == 'bbcd27772f8a9cad8248c48e9290b52baf71056f' ]]
+          [[ "$(git hash-object TSK_0511_SUPPORTED_DEVICE_VERIFICATION_COMPLETION_EVIDENCE_2026-08-28.md)" == 'ecd959f93ab7dff62aba6529ce66b45d59c3ed27' ]]
+          [[ "$(git hash-object TSK_0512_FILTER_REGRESSION_EVIDENCE_2026-08-28.md)" == 'cc21f4574a2ca7e721a7da961baef727350af1d3' ]]
+          [[ "$(git hash-object TSK_0207_PRIVACY_PERSISTENCE_EVIDENCE_2026-08-28.md)" == '1c16db063e2e84d300b547075721d33c2e020e32' ]]
+          [[ "$(git hash-object TSK_0431_PROJECT_CONTROLLED_RECOVERY_DRILL_EVIDENCE_2026-08-28.md)" == '2df5c05767fe326e38c609d37888f672dcb9dd48' ]]
+          [[ "$(git hash-object TSK_0431_AZURE_RESTORE_OWNER_EVIDENCE_2026-08-28.md)" == 'e077165e98fa4460fba84466ffe28953ad53dec0' ]]
+          grep -Fq 'TSK-0510,WP-0494,PKG-12' Plans/Master/WBS/master-wbs.csv
+          grep -Fq 'ACC-0510,"Report maps every mandatory gate requirement to evidence and records reviewer, date, unresolved deviation, owner, and disposition."' Plans/Master/WBS/master-wbs.csv
+          grep -Fq '| REQ-0065 | MUST | PKG-12 | Every critical requirement shall map to verification, evidence, acceptance, and a gate or operational decision where applicable.' Plans/Master/Registers/REQUIREMENTS.md
+          grep -Fq '| REQ-0066 | MUST | PKG-12 | Integrated verification shall cover functional, device/network, UX/comprehension, accessibility, security, privacy, performance, failure, recovery, and rollback paths.' Plans/Master/Registers/REQUIREMENTS.md
+          grep -Fq '| LG-03 | Validation Readiness | L2 |' Plans/Master/Registers/GATES.md
+          for id in TSK-0511 TSK-0512 TSK-0207 TSK-0428 TSK-0431; do
+            grep -Fq -- "- \`$id\`" CURRENT_STATE.md
+          done
+          grep -Fq '**ACC-0431 and REQ-0052 recovery acceptance are satisfied.**' CURRENT_STATE.md
+          grep -Fq 'REQ-0065 disposition for TSK-0510: PASS.' "$report"
+          grep -Fq 'LG-03 Validation Readiness overall: NOT PASS' "$report"
+          grep -Fq 'not a fabricated human or legal signature' "$report"
+          grep -Fq 'WAITING — outside technical acceptance' "$report"
+          ! grep -Fq 'LG-03 Validation Readiness overall: PASS' "$report"
+          ! grep -Fqi 'authorizes recruitment' "$report"
+          echo 'TSK_0510_REPORT_AUDIT=PASS'
