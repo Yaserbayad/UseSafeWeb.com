@@ -1,0 +1,43 @@
+:root {
+  --sw-brand-green: #173F35;
+  --sw-brand-green-deep: #0F2D23;
+  --sw-brand-maroon: #7A2E36;
+  --sw-brand-offwhite: #F6F4EF;
+  --sw-brand-sage: #A7BEAD;
+
+  --sw-color-page: var(--sw-brand-offwhite);
+  --sw-color-surface: var(--sw-brand-offwhite);
+  --sw-color-text: var(--sw-brand-green-deep);
+  --sw-color-heading: var(--sw-brand-green);
+  --sw-color-accent: var(--sw-brand-maroon);
+  --sw-color-border: var(--sw-brand-sage);
+  --sw-color-inverse: var(--sw-brand-offwhite);
+  --sw-color-focus: var(--sw-brand-maroon);
+
+  --sw-font-sans: "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --sw-font-size-sm: 0.875rem;
+  --sw-font-size-base: 1rem;
+  --sw-font-size-lg: 1.25rem;
+  --sw-font-size-xl: clamp(1.75rem, 4vw, 3rem);
+  --sw-line-height: 1.55;
+  --sw-line-height-tight: 1.15;
+
+  --sw-space-1: 0.25rem;
+  --sw-space-2: 0.5rem;
+  --sw-space-3: 0.75rem;
+  --sw-space-4: 1rem;
+  --sw-space-5: 1.5rem;
+  --sw-space-6: 2rem;
+  --sw-space-7: 3rem;
+  --sw-space-8: 4rem;
+
+  --sw-radius-sm: 0.5rem;
+  --sw-radius-md: 0.875rem;
+  --sw-radius-lg: 1.25rem;
+  --sw-border-width: 1px;
+  --sw-focus-width: 3px;
+  --sw-page-max: 72rem;
+  --sw-copy-max: 44rem;
+  --sw-logo-height: 2.25rem;
+  --sw-logo-height-compact: 2rem;
+}
