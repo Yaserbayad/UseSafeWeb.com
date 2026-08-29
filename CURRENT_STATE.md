@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-29T07:45:13Z
+**Updated:** 2026-08-29T07:45:57Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -558,18 +558,18 @@ ACC-0318 is satisfied: public website and operational setup/product remain disti
 
 This PASS remains provisional internal L4 design evidence only. It does not establish representative-parent usability; `RSK-0002` remains OPEN; `REQ-0022` remains unresolved; LG-03/LG-04/LG-05/LG-06 remain non-PASS; account/dashboard remains deferred under EXC-0001; no implementation/build, public publication, market activation, participant processing, payment or launch is authorized.
 
-### TSK-0319 preparation stable state
+### TSK-0319 accepted stable state
 
-`TSK-0319 — Design automated verification, issue-specific troubleshooting, safe reset/reinstall/remove, and point-of-need help`: runtime **WAITING**, not PASS. Bounded AI preparation is complete. Candidate `TSK_0319_AUTOMATED_VERIFICATION_TROUBLESHOOTING_RECOVERY_HELP_DESIGN_CANDIDATE_2026-08-28.md`, exact Git blob `86de353dd8446f02ed48c80638391a3caa852e59`, publication commit `674c83b716039cd2165c41f0b223ebc1dc551560`; preparation evidence `TSK_0319_AUTOMATED_VERIFICATION_TROUBLESHOOTING_RECOVERY_HELP_DESIGN_PREPARATION_EVIDENCE_2026-08-28.md`, blob `d4d8a4bbf3e8f9ad3e04f45fdf8f342df188a854`, publication commit `4fe2c2a80d49d86cb2dbefeaeb5120e12b769c6f`. Preparation independently verifies complete ACC-0319 design coverage while preserving A1/HUMAN_ONLY authority.
+`TSK-0319 — Design automated verification, issue-specific troubleshooting, safe reset/reinstall/remove, and point-of-need help`: **PASS for the provisional internal L4 troubleshooting/recovery/help design acceptance under DEC-0050/CR-0003**. Approved candidate `TSK_0319_AUTOMATED_VERIFICATION_TROUBLESHOOTING_RECOVERY_HELP_DESIGN_CANDIDATE_2026-08-28.md`, blob `86de353dd8446f02ed48c80638391a3caa852e59`; preparation evidence `TSK_0319_AUTOMATED_VERIFICATION_TROUBLESHOOTING_RECOVERY_HELP_DESIGN_PREPARATION_EVIDENCE_2026-08-28.md`, blob `d4d8a4bbf3e8f9ad3e04f45fdf8f342df188a854`; Project Owner HUMAN_ONLY approval `TSK_0319_OWNER_APPROVAL_2026-08-29.md`, blob `48f7212869f712190bae76d797e45a5d15e4999c`, commit `9dd55507dc46932cdb296c35149808e508ec3ff3`; final acceptance evidence `TSK_0319_AUTOMATED_VERIFICATION_TROUBLESHOOTING_RECOVERY_HELP_DESIGN_ACCEPTANCE_EVIDENCE_2026-08-29.md`, blob `2dc4ab8ba336b28652a85e6deec0e79291e56477`, commit `5cb5da073536dc1b104ba96475979434b5f4eeeb`.
 
-The candidate provides fourteen issue-specific decision trees, seven privacy-safe automatic-check classes, point-of-need help placement, changed-condition retry/circuit-breaker rules, separate web-reset/device-removal semantics, Android/iPhone recovery confirmation, no-history diagnostics and narrow privacy/security/safeguarding/operator escalation boundaries.
+ACC-0319 is satisfied: top expected failures have bounded issue-specific decision trees; privacy-safe automatic checks are used where appropriate; retries require changed evidence; verification truth is preserved; reset/reinstall/remove and Android/iPhone recovery are explicit; point-of-need help, privacy limits and exceptional escalation are bounded; no routine staffed-support SLA or account identity is invented; and the exact unchanged candidate received the required HUMAN_ONLY Project Owner approval.
 
-TSK-0319 cannot become PASS until an authorized human explicitly APPROVES, REQUESTS CHANGES to, or REJECTS exact candidate blob `86de353dd8446f02ed48c80638391a3caa852e59`. Approval remains provisional internal L4 only and does not authorize implementation, diagnostic collection, staffed support, participant/public use or launch.
+This PASS remains provisional internal L4 design evidence only. It does not establish representative-parent self-service success; `RSK-0002` remains OPEN; `REQ-0022` remains unresolved; LG-03/LG-04/LG-05/LG-06 remain non-PASS; account/dashboard remains deferred under EXC-0001; no implementation of automatic checks, diagnostic collection, staffed-support activation, participant/public use, publication, payment or launch is authorized.
 
-## Queue status after TSK-0319 preparation
+## Queue status after TSK-0318 and TSK-0319 PASS
 
-`TSK-0318` and `TSK-0319` are both **WAITING** on independent HUMAN_ONLY design dispositions. TSK-0318 blocks TSK-0311 and contributes to the TSK-0310 prototype chain; TSK-0319 blocks TSK-0628. Nearby AUTO_ALLOWED work remains dependency-blocked by these human decisions or by representative-parent/deferred scope. Current global fences remain unchanged.
+Both prior HUMAN_ONLY design bottlenecks are now PASS. Recompute eligible L4 work from the current WBS/relationship authority before selecting the next task; do not infer downstream PASS or build/publication authority from these design approvals. Current global fences remain unchanged.
 
 ## Exact next authoritative step
 
-Obtain the smallest human dispositions on exact TSK-0318 candidate blob `64f0e6382a5ce166c0aad2ad2e86a3796c5df379` and exact TSK-0319 candidate blob `86de353dd8446f02ed48c80638391a3caa852e59`. If either is approved unchanged, independently re-check its ACC against that exact blob, reconcile PASS, then recompute and continue the L4 queue; if changes are requested, revise only the specified elements and re-verify.
+Recompute the authoritative L4 queue using current WBS rows, dependency graph, gates, action authority and current PASS evidence, then execute the highest-priority eligible AUTO_ALLOWED task or prepare the next HUMAN_ONLY task without crossing current project fences.
