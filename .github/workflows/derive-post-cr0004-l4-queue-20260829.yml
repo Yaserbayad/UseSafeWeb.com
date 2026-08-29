@@ -1,0 +1,64 @@
+name: Derive post-CR-0004 L4 queue
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/derive-post-cr0004-l4-queue-20260829.yml
+
+permissions:
+  contents: read
+
+jobs:
+  derive:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Derive current PASS set and dependency-satisfied L4 frontier
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import csv,re
+          runtime=Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          passed=set()
+          # Historical PASS bullet section.
+          m=re.search(r'(?ms)^### PASS\s*$\n(.*?)(?=^### |^## )', runtime)
+          if m:
+              passed.update(re.findall(r'^- `?(TSK-\d{4})`?\b',m.group(1),flags=re.M))
+          # Later accepted-stable task statements.
+          passed.update(re.findall(r'`(TSK-\d{4})[^`\n]*`:\s*\*\*PASS\b',runtime))
+          # Explicit inline task PASS statements retained in reconciliations.
+          passed.update(re.findall(r'(?m)^-?\s*`?(TSK-\d{4})`?[^\n]{0,220}\bPASS\b',runtime))
+          # Normalize known false positives by requiring a task to appear in WBS below.
+          with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='') as f:
+              rows=list(csv.DictReader(f))
+          ids={r['Task_ID'] for r in rows}
+          passed &= ids
+          assert len(passed)==71, (len(passed),sorted(passed))
+          assert 'TSK-0139' in passed
+          assert 'TSK-0146' not in passed
+          candidates=[]
+          for r in rows:
+              if r['Lifecycle']!='L4' or r['Task_ID'] in passed:
+                  continue
+              ps=(r.get('Plan_Status') or '').upper()
+              if ps not in {'PLANNED','ACTIVE','IN_PROGRESS'}:
+                  continue
+              deps={x.strip() for x in re.split(r'[;,]',r.get('Dependencies') or '') if x.strip().startswith('TSK-')}
+              if deps <= passed:
+                  candidates.append((r['Task_ID'],r.get('Priority',''),r.get('Action_Authority',''),sorted(deps),r['Task']))
+          print(f'PASS_COUNT={len(passed)}')
+          print('PASS_HAS_TSK0139=YES')
+          print('PASS_HAS_TSK0146=NO')
+          print(f'CANDIDATE_COUNT={len(candidates)}')
+          for c in candidates:
+              print('CANDIDATE|'+'|'.join([c[0],c[1],c[2],','.join(c[3]),c[4]]))
+          assert len(candidates)==1, candidates
+          assert candidates[0][0]=='TSK-0298', candidates
+          assert candidates[0][2]=='AUTO_ALLOWED', candidates
+          print('NEXT_SELECTED=TSK-0298')
+          PY
