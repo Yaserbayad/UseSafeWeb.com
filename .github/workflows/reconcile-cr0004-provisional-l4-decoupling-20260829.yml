@@ -1,0 +1,247 @@
+name: Reconcile CR-0004 provisional L4 decoupling
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-cr0004-provisional-l4-decoupling-20260829.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Assert exact prestate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "ff842b851971a8ceb4dda5ca05c8a1a546d1863d"
+          test "$(git hash-object CURRENT_STATE.md)" = "46185aaff2bf30a8fc33a1aabbabb3845258226e"
+          test "$(git hash-object Plans/Master/MANIFEST.yaml)" = "00feca027babfd99dcd1992e3e0abd6ef2d3380b"
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "dce5b829c4d447eac180ae1e896e0019292cf971"
+          test "$(git hash-object Plans/Master/RELATIONSHIP_INDEX.yaml)" = "42f08784321d216fe77b1baa0ad54aa6f96aa4f7"
+
+      - name: Apply bounded owner-authorized CR-0004 planning delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import csv, io
+
+          root = Path('.')
+          wbs = root/'Plans/Master/WBS/master-wbs.csv'
+          ver = root/'Plans/Master/Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md'
+          dec = root/'Plans/Master/Registers/DECISIONS_TRIGGERS.md'
+          cr = root/'Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md'
+          layer5 = root/'Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md'
+          manifest = root/'Plans/Master/MANIFEST.yaml'
+          rel = root/'Plans/Master/RELATIONSHIP_INDEX.yaml'
+
+          acc298_old = 'Brief is traceable to validated customer/product evidence and non-surveillance/claims constraints; it is approved before identity finalization.'
+          acc298_new = 'Brief is traceable to current accepted customer/product evidence and non-surveillance/claims constraints; missing representative-parent behavioral validation is explicit under RSK-0002; it is approved before identity finalization and does not imply behavioral validation.'
+          acc299_old = 'Verbal system is clear to normal parents, child-aware, non-alarmist, non-technical, legally/claims reviewed, and reusable across surfaces/locales.'
+          acc299_new = 'Verbal system follows plain-language, child-aware, non-alarmist, non-technical design rules for parent-facing use, conforms to current approved claims/non-surveillance constraints, and is reusable across surfaces/locales; representative-parent comprehension and legal completion remain unproven and are not implied.'
+
+          # Patch only TSK-0298 and TSK-0299 physical CSV rows; preserve all other bytes/rows.
+          lines = wbs.read_text(encoding='utf-8-sig').splitlines()
+          header = next(csv.reader([lines[0]]))
+          idx = {name:i for i,name in enumerate(header)}
+          changed = set()
+          for n,line in enumerate(lines):
+              if not (line.startswith('TSK-0298,') or line.startswith('TSK-0299,')):
+                  continue
+              row = next(csv.reader([line]))
+              tid = row[idx['Task_ID']]
+              if tid == 'TSK-0298':
+                  assert row[idx['Dependencies']] == 'TSK-0187', row[idx['Dependencies']]
+                  assert row[idx['Acceptance_Criteria']] == acc298_old
+                  row[idx['Dependencies']] = 'TSK-0139'
+                  row[idx['Acceptance_Criteria']] = acc298_new
+                  note = row[idx['Notes']]
+                  row[idx['Notes']] = (note + ' CR-0004/DEC-0051: provisional internal Brand/UX/prototype work now enters through TSK-0139; representative-parent validation remains mandatory at TSK-0187/TSK-0309 and no behavioral validation is implied.').strip()
+              elif tid == 'TSK-0299':
+                  assert row[idx['Acceptance_Criteria']] == acc299_old
+                  row[idx['Acceptance_Criteria']] = acc299_new
+                  note = row[idx['Notes']]
+                  row[idx['Notes']] = (note + ' CR-0004/DEC-0051: this is provisional internal verbal-system design conformance only; representative-parent comprehension and deferred legal completion are not claimed.').strip()
+              out = io.StringIO(newline='')
+              csv.writer(out, lineterminator='').writerow(row)
+              lines[n] = out.getvalue()
+              changed.add(tid)
+          assert changed == {'TSK-0298','TSK-0299'}, changed
+          wbs.write_text('\n'.join(lines)+'\n', encoding='utf-8')
+
+          # Keep synchronized acceptance register aligned with authoritative WBS criteria.
+          text = ver.read_text(encoding='utf-8')
+          assert text.count(acc298_old) == 1
+          assert text.count(acc299_old) == 1
+          text = text.replace(acc298_old, acc298_new).replace(acc299_old, acc299_new)
+          ver.write_text(text, encoding='utf-8')
+
+          # Relationship locator: replace only TSK-0298's behavioral dependency with provisional L4 entry bridge.
+          text = rel.read_text(encoding='utf-8')
+          start = text.index('  TSK-0298:\n')
+          end = text.index('  TSK-0299:\n', start)
+          block = text[start:end]
+          old = '    - target: TSK-0187\n      type: depends_on\n'
+          new = '    - target: TSK-0139\n      type: depends_on\n'
+          assert block.count(old) == 1
+          block = block.replace(old, new, 1)
+          text = text[:start] + block + text[end:]
+          rel.write_text(text, encoding='utf-8')
+
+          # Owner decision DEC-0051.
+          text = dec.read_text(encoding='utf-8')
+          assert '| DEC-0051 |' not in text
+          dec_row = '| DEC-0051 |  | Provisional L4 Brand/UX/prototype dependency decoupling | ACTIVE OWNER OVERRIDE — remaining internal non-public L4 Brand/UX/prototype definition/design may proceed from the explicit provisional L4 entry bridge without treating representative-parent validation as a predecessor. TSK-0298 depends on TSK-0139 instead of TSK-0187. TSK-0187 remains required behavioral validation and TSK-0309 retains TSK-0187 before usability/comprehension correction or implementation-ready experience freeze. | Explicit Project Owner instruction 2026-08-29; active with DEC-0050 until behavioral reactivation/expiry or later supersession. | Internal artifacts must use current accepted evidence, explicitly carry RSK-0002, and never claim representative-parent comprehension, behavioral validation, deferred legal completion, LG-05/LG-06 PASS, integrated-build authority, publication/payment/launch authority, or other fenced outcome. | Project Owner | TSK-0139; TSK-0187; TSK-0298; TSK-0299; TSK-0300; TSK-0301; TSK-0302; TSK-0309; TSK-0310; LG-05; LG-06; RSK-0002 | Owner instruction 2026-08-29; CR-0004 |\n'
+          marker = '| DEC-0050 |'
+          pos = text.index(marker)
+          line_end = text.index('\n', pos) + 1
+          text = text[:line_end] + dec_row + text[line_end:]
+          dec.write_text(text, encoding='utf-8')
+
+          # Material change record CR-0004.
+          text = cr.read_text(encoding='utf-8')
+          assert '| CR-0004 |' not in text
+          cr_row = '| CR-0004 | 2026-08-29 | WBS dependency/acceptance semantics for provisional internal L4 Brand/UX/prototype work; relationship index; decision register; Layer-5 execution semantics; manifest/change metadata; generated reconstruction/checksums. TSK-0187, TSK-0309, RSK-0002 and all legal/privacy/participant/build/publication/payment/launch gate semantics remain controlling. | Explicit Project Owner approval 2026-08-29 to decouple remaining provisional internal L4 Brand/UX/prototype design from deferred representative-parent behavioral validation while preserving future behavioral validation and all downstream fences. | Replace only the TSK-0298 hard dependency TSK-0187 with the existing provisional L4 entry bridge TSK-0139; rephrase ACC-0298 and ACC-0299 so provisional internal acceptance cannot be mistaken for representative-parent validation or legal completion; keep TSK-0309 -> TSK-0187 unchanged. | Preserves 641 tasks and 849 dependency edges with no cycle. No existing PASS is invalidated because prior evidence semantics are not weakened. The Brand chain may progress provisionally through TSK-0298, TSK-0299 and TSK-0302, then stops at the existing TSK-0301 HUMAN_ONLY identity approval unless separately approved. Prototype creation may later reach TSK-0310, but TSK-0309 and LG-06 remain blocked on real behavioral/usability/comprehension evidence as applicable. | Update the two WBS acceptance rows, one WBS dependency cell, matching acceptance register entries, one relationship edge, DEC-0051, Layer-5 rule and manifest status; rebuild Generated/MASTER_PLAN_FULL.md; regenerate Plans/SHA256SUMS.txt; run full deterministic validation and direct fence assertions; publish/read back; reconcile CURRENT_STATE before relying on new eligibility. | Restore TSK-0298 -> TSK-0187 and prior ACC-0298/ACC-0299 wording; remove DEC-0051/CR-0004/Layer-5/manifest delta; rebuild/checksum/validate; re-evaluate any downstream PASS created solely under CR-0004. | Validator must PASS with 641 tasks, 849 dependency edges, zero cycles/broken links, generated reconstruction complete and checksums valid. Direct audit must prove TSK-0187 unchanged, TSK-0309 still depends on TSK-0187, RSK-0002 remains OPEN, and LG-03/LG-04/LG-05/LG-06 plus L5/L6/participant/legal/publication/payment/launch fences are not satisfied by this change. | Pending bounded GitHub publication/read-back at record creation; runtime evidence must record final commit/blobs before newly eligible work relies on CR-0004. |\n'
+          marker = '| CR-0003 |'
+          pos = text.index(marker)
+          line_end = text.index('\n', pos) + 1
+          text = text[:line_end] + cr_row + text[line_end:]
+          cr.write_text(text, encoding='utf-8')
+
+          # Layer-5 execution contract: explicit narrow semantics and stop boundary.
+          text = layer5.read_text(encoding='utf-8')
+          assert '### 5.3.3 Owner-approved provisional L4 Brand/UX/prototype decoupling' not in text
+          insertion = '''### 5.3.3 Owner-approved provisional L4 Brand/UX/prototype decoupling (DEC-0051 / CR-0004)\n\n- Under the same expiry/reactivation boundary as DEC-0050, internal non-public L4 Brand/UX/prototype definition/design whose own acceptance can be satisfied without representative-parent evidence may enter through the explicit provisional L4 bridge `TSK-0139`; `TSK-0298` therefore depends on `TSK-0139` rather than `TSK-0187`.\n- `ACC-0298` and `ACC-0299` use provisional design-conformance semantics only. Plain-language or parent-facing design intent is not observed representative-parent comprehension, and current claims constraints are not deferred legal completion. Every artifact must carry active `RSK-0002` and the missing real-participant evidence limitation.\n- `TSK-0187` remains the mandatory representative-parent behavioral-validation work. `TSK-0309` intentionally retains `TSK-0187` as a hard dependency before correcting from real usability/comprehension evidence or freezing an implementation-ready experience baseline. No synthetic, AI, owner-preference or internal-review evidence may satisfy that behavioral edge.\n- Existing HUMAN_ONLY boundaries remain unchanged. In particular, `TSK-0301` still requires explicit Project Owner approval of one visual identity system when its dependencies are satisfied.\n- This change does not satisfy or bypass `LG-03`, `LG-04`, `LG-05`, `LG-06`, legal/privacy/participant conditions, L5/L6 build gates, public release/publication, payment, market activation or launch authority. It creates no participant-processing authority and no legal/compliance evidence.\n- At behavioral-validation reactivation/expiry, execute current required validation when otherwise authorized and re-evaluate every downstream PASS materially based on provisional assumptions; contradictory real evidence reopens affected work.\n\n'''
+          marker = '### 5.4 Evidence and PASS rules\n'
+          assert text.count(marker) == 1
+          text = text.replace(marker, insertion + marker, 1)
+          layer5.write_text(text, encoding='utf-8')
+
+          # Manifest advertises the new owner-controlled planning baseline without lifting existing hold/fence markers.
+          text = manifest.read_text(encoding='utf-8')
+          old = 'PROVISIONAL_L4_AUTHORIZED / deterministic validation PASS'
+          new = 'PROVISIONAL_L4_AUTHORIZED / OWNER_PROVISIONAL_L4_BRAND_UX_DECOUPLING_2026-08-29 / deterministic validation PASS'
+          assert text.count(old) == 1
+          manifest.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+
+      - name: Rebuild derived plan and checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 Plans/Master/Tools/rebuild_master_plan.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          sums=Path('Plans/SHA256SUMS.txt')
+          out=[]
+          for line in sums.read_text(encoding='utf-8').splitlines():
+              if not line.strip():
+                  continue
+              _, rel = line.split('  ',1)
+              p=Path('Plans')/rel
+              out.append(f'{hashlib.sha256(p.read_bytes()).hexdigest()}  {rel}')
+          sums.write_text('\n'.join(out)+'\n', encoding='utf-8')
+          PY
+
+      - name: Full deterministic and semantic validation
+        id: validate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 Plans/Master/Tools/validate_master_plan.py | tee /tmp/cr0004-validation.txt
+          grep -Fx 'VALIDATION PASS' /tmp/cr0004-validation.txt
+          grep -Fx 'tasks=641' /tmp/cr0004-validation.txt
+          grep -Fx 'dependency_edges=849' /tmp/cr0004-validation.txt
+          grep -Fx 'broken_links=0' /tmp/cr0004-validation.txt
+          grep -Fx 'generated_missing_task_ids=0' /tmp/cr0004-validation.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          import csv, re
+          with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='') as f:
+              rows={r['Task_ID']:r for r in csv.DictReader(f)}
+          assert rows['TSK-0298']['Dependencies'] == 'TSK-0139'
+          assert rows['TSK-0187']['Dependencies'] == 'TSK-0146'
+          assert 'Representative parents can complete the prototype' in rows['TSK-0187']['Acceptance_Criteria']
+          deps={x.strip() for x in re.split(r'[;,]', rows['TSK-0309']['Dependencies']) if x.strip()}
+          assert deps == {'TSK-0310','TSK-0187'}, deps
+          assert rows['TSK-0301']['Action_Authority'] == 'HUMAN_ONLY'
+          assert rows['TSK-0301']['AI_Capability_A0_A4'] == 'A1'
+          risk=Path('Plans/Master/Registers/RISKS.md').read_text(encoding='utf-8')
+          assert '| RSK-0002 |' in risk and 'Open — explicitly accepted provisional validation risk' in risk
+          gates=Path('Plans/Master/Registers/GATES.md').read_text(encoding='utf-8')
+          assert 'LG-05' in gates and 'LG-06' in gates
+          assert 'DEC-0050 does not itself satisfy this gate' in gates
+          l5=Path('Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md').read_text(encoding='utf-8')
+          for phrase in ['does not satisfy or bypass `LG-03`, `LG-04`, `LG-05`, `LG-06`', '`TSK-0309` intentionally retains `TSK-0187`', '`TSK-0301` still requires explicit Project Owner approval']:
+              assert phrase in l5
+          # Runtime is intentionally not mutated in this planning-publication commit.
+          assert Path('CURRENT_STATE.md').read_bytes()
+          PY
+
+      - name: Write CR-0004 durable planning evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > CR_0004_PROVISIONAL_L4_BRAND_UX_DECOUPLING_EVIDENCE_2026-08-29.md <<EOF
+          # CR-0004 — Provisional L4 Brand/UX/prototype dependency decoupling evidence
+
+          **Date:** 2026-08-29  
+          **Owner authority:** explicit approval to decouple remaining provisional internal L4 Brand/UX/prototype design from deferred representative-parent behavioral validation while preserving TSK-0187/RSK-0002 and all legal, privacy, participant, build, publication, payment and launch fences.
+
+          ## Impact-analysis outcome
+
+          - `TSK-0298 -> TSK-0187` was the inappropriate early behavioral coupling for provisional internal Brand work.
+          - It is replaced by `TSK-0298 -> TSK-0139`, the existing explicit provisional L4 owner-authorization bridge.
+          - `TSK-0309 -> TSK-0187` is intentionally unchanged because TSK-0309 requires real usability/comprehension evidence before implementation-ready experience freeze.
+          - `ACC-0298` and `ACC-0299` now state provisional design-conformance semantics and cannot be read as representative-parent validation or deferred legal completion.
+          - `TSK-0187` itself is unchanged and remains representative-parent behavioral validation.
+          - `RSK-0002` remains OPEN/critical and unchanged.
+          - `TSK-0301` remains A1/HUMAN_ONLY and still requires explicit owner approval of the identity system.
+          - LG-03/LG-04/LG-05/LG-06 and all L5/L6, participant, legal, publication, payment, market and launch fences remain unsatisfied/unmodified by CR-0004.
+          - No existing PASS is invalidated by this amendment; no prior acceptance proof is weakened or replaced.
+
+          ## Structural verification
+
+          $(cat /tmp/cr0004-validation.txt)
+
+          ## Post-change planning blob identities before commit
+
+          - WBS: `$(git hash-object Plans/Master/WBS/master-wbs.csv)`
+          - relationship index: `$(git hash-object Plans/Master/RELATIONSHIP_INDEX.yaml)`
+          - acceptance register: `$(git hash-object Plans/Master/Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md)`
+          - decision register: `$(git hash-object Plans/Master/Registers/DECISIONS_TRIGGERS.md)`
+          - change-control register: `$(git hash-object Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md)`
+          - Layer 5: `$(git hash-object Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md)`
+          - manifest: `$(git hash-object Plans/Master/MANIFEST.yaml)`
+          - generated reconstruction: `$(git hash-object Plans/Master/Generated/MASTER_PLAN_FULL.md)`
+          - checksums: `$(git hash-object Plans/SHA256SUMS.txt)`
+
+          ## Publication/read-back rule
+
+          Planning evidence is not adopted for execution until this mutation is committed to `main`, exact changed paths/blobs are fetched back, and `CURRENT_STATE.md` is reconciled in a separate confirmed mutation.
+          EOF
+
+      - name: Commit and push planning amendment
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'UseSafeWeb Governance Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git status --short
+          git diff --check
+          # CURRENT_STATE must remain untouched until publication/read-back is verified.
+          test -z "$(git status --short CURRENT_STATE.md)"
+          git add Plans CR_0004_PROVISIONAL_L4_BRAND_UX_DECOUPLING_EVIDENCE_2026-08-29.md
+          git diff --cached --check
+          git commit -m 'governance: apply CR-0004 provisional L4 decoupling'
+          git push origin HEAD:main
