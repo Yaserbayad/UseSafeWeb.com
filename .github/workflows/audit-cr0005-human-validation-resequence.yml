@@ -1,4 +1,4 @@
-name: Audit CR-0005 human-validation resequencing
+name: Audit CR-0005 canonical readback
 
 on:
   push:
@@ -22,30 +22,55 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Audit authoritative planning impact
+      - name: Verify canonical amendment readback
         shell: bash
         run: |
           set -Eeuo pipefail
           [[ "$(hostname -s)" == "adguardvm" ]]
+          echo "READBACK_HEAD=$(git rev-parse HEAD)"
           python3 - <<'PY'
           import csv, pathlib, re
           root=pathlib.Path('Plans/Master')
           with (root/'WBS/master-wbs.csv').open(encoding='utf-8', newline='') as f:
               rows=list(csv.DictReader(f))
-          targets={'TSK-0024','TSK-0052','TSK-0053','TSK-0055','TSK-0056','TSK-0139','TSK-0141','TSK-0187','TSK-0298','TSK-0309','TSK-0326','TSK-0327','TSK-0336','TSK-0399'}
-          print('GATE_AND_TARGET_ROWS_BEGIN')
-          for r in rows:
-              if r['Task_ID'] in targets:
-                  print('|'.join(f'{k}={r[k]}' for k in ['Task_ID','Lifecycle_Stage','Title','Plan_Status','Execution_State','Dependencies','Trigger','Acceptance_Criteria','Verification_Method','Notes']))
-          print('GATE_AND_TARGET_ROWS_END')
-          pats=('representative parent','representative-parent','real-user','real user','behavioral validation','behavioural validation','usability/comprehension','human usability','user evidence','participant')
-          print('L4_L7_HUMAN_EVIDENCE_ROWS_BEGIN')
-          for r in rows:
-              if r['Lifecycle_Stage'] not in {'L4','L5','L6','L7'}: continue
-              text=' '.join([r['Title'],r['Purpose'],r['Trigger'],r['Preconditions'],r['Acceptance_Criteria'],r['Verification_Method'],r['Notes']]).lower()
-              hits=sorted({p for p in pats if p in text})
-              if hits:
-                  print(f"{r['Task_ID']}|{r['Lifecycle_Stage']}|{r['Title']}|hits={';'.join(hits)}|deps={r['Dependencies']}|acc={r['Acceptance_Criteria']}|notes={r['Notes']}")
-          print('L4_L7_HUMAN_EVIDENCE_ROWS_END')
-          print('CR0005_GATE_AUDIT=PASS')
+          by={r['Task_ID']:r for r in rows}
+          l3=[r for r in rows if r['Lifecycle_Stage']=='L3']
+          excluded={r['Task_ID'] for r in l3}|{'TSK-0187','TSK-0326','TSK-0336'}
+          assert len(rows)==641
+          assert len(l3)==31
+          assert len(excluded)==34
+          for tid in excluded:
+              r=by[tid]
+              assert r['Plan_Status']=='NOT_APPLICABLE' and r['Execution_State']=='PASS', (tid,r['Plan_Status'],r['Execution_State'])
+          for tid in ('TSK-0309','TSK-0327','TSK-0399'):
+              assert by[tid]['Plan_Status']!='NOT_APPLICABLE'
+          assert 'TSK-0187' in by['TSK-0309']['Dependencies']
+          assert 'no real-user comprehension claim is required or inferred before l8.' in by['TSK-0309']['Acceptance_Criteria'].lower()
+          assert 'real parent' not in by['TSK-0399']['Title'].lower()
+          edges=sum(len([x for x in re.split(r'[;,]',r['Dependencies']) if x.strip()]) for r in rows)
+          assert edges==849, edges
+          print('READBACK_TASKS=641')
+          print('READBACK_DEPENDENCY_EDGES=849')
+          print('READBACK_L3_EXCLUSIONS=31')
+          print('READBACK_TOTAL_PREPRODUCT_HUMAN_EXCLUSIONS=34')
+          for tid in ('TSK-0187','TSK-0326','TSK-0336','TSK-0309','TSK-0327','TSK-0399'):
+              r=by[tid]
+              print(f"READBACK_ROW={tid}|plan={r['Plan_Status']}|runtime={r['Execution_State']}|deps={r['Dependencies']}|title={r['Title']}")
+          checks={
+            'manifest':('MANIFEST.yaml','latest_change: CR-0005'),
+            'decisions':('Registers/DECISIONS_TRIGGERS.md','| DEC-0052 |'),
+            'change':('Registers/EXCEPTIONS_CHANGE_CONTROLS.md','| CR-0005 |'),
+            'gates':('Registers/GATES.md','first active parent/user/participant validation stage'),
+            'layer5':('Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md','DEC-0052 / CR-0005'),
+            'interface':('Governance/CURRENT_STATE_INTERFACE.md','L8 is the first real-user validation stage'),
+          }
+          for label,(rel,needle) in checks.items():
+              text=(root/rel).read_text(encoding='utf-8')
+              assert needle in text, (label,needle)
+              print(f'READBACK_{label.upper()}=PASS')
+          print('CR0005_CANONICAL_READBACK=PASS')
           PY
+          (cd Plans && sha256sum -c SHA256SUMS.txt)
+          python3 Plans/Master/Tools/validate_master_plan.py
+          echo 'CR0005_CHECKSUM_READBACK=PASS'
+          echo 'CR0005_VALIDATOR_READBACK=PASS'
