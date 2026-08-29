@@ -1,0 +1,43 @@
+name: Inspect TSK-0299 preflight
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/inspect-tsk0299-preflight-20260829.yml
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Print exact task rows and current evidence state
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import csv,json,re,subprocess
+          from pathlib import Path
+          rows=list(csv.DictReader(open('Plans/Master/WBS/master-wbs.csv',newline='',encoding='utf-8-sig')))
+          by={r['Task_ID']:r for r in rows}
+          keys=['Task_ID','Title','Lifecycle_Stage','Priority','Critical_Path','Plan_Status','Execution_State','Dependencies','Trigger','Preconditions','Action_Authority','Acceptance_ID','Acceptance_Criteria','Verification_ID','Evidence_ID','Required_Tools_or_Access','Requirement_Reference','Interface_Reference','Risk_Reference','Source_Reference','Notes']
+          for tid in ['TSK-0298','TSK-0299','TSK-0302','TSK-0301','TSK-0300','TSK-0309']:
+              r=by[tid]
+              print('ROW='+json.dumps({k:r.get(k,'') for k in keys},ensure_ascii=False,sort_keys=True))
+          state=Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          passed=set()
+          m=re.search(r'(?ms)^### PASS\s*$\n(.*?)(?=^### |^## )',state)
+          if m: passed.update(re.findall(r'^- `?(TSK-\d{4})`?\b',m.group(1),flags=re.M))
+          passed.update(re.findall(r'(?m)^### (TSK-\d{4}) accepted stable state\s*$',state))
+          passed.update(re.findall(r'(?m)^`(TSK-\d{4})[^`\n]*`:\s*\*\*PASS\b',state))
+          print('CURRENT_STATE_BLOB='+subprocess.check_output(['git','hash-object','CURRENT_STATE.md'],text=True).strip())
+          print('PASS_COUNT='+str(len(passed)))
+          for tid in ['TSK-0298','TSK-0299','TSK-0302','TSK-0301','TSK-0187']:
+              print(tid+'_PASS='+('YES' if tid in passed else 'NO'))
+          PY
