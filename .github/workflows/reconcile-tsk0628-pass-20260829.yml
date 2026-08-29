@@ -1,0 +1,77 @@
+name: Reconcile TSK-0628 support model PASS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-tsk0628-pass-20260829.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted, Linux, X64]
+    concurrency:
+      group: usesafeweb-governance-state-prod
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify exact TSK-0628 pre-state
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(sha256sum /etc/machine-id | awk '{print $1}')" = "e4988ed374ffd1836ca5c154f8ee8d727a2795bfcceb4ef9f682aecf95e177c2"
+          test "$(git hash-object CURRENT_STATE.md)" = "b89bae8c0b28b176a03fc7076413562adf74bbc6"
+          test "$(git hash-object TSK_0628_NO_ROUTINE_HUMAN_SUPPORT_OPERATING_MODEL_2026-08-29.md)" = "bb81ec47fd4badd06ded70d146365281c2874390"
+          test "$(git hash-object TSK_0628_NO_ROUTINE_HUMAN_SUPPORT_OPERATING_MODEL_EVIDENCE_2026-08-29.md)" = "888cc395dac4026c5a5486c55d36d232a465bb72"
+          grep -Fq '### TSK-0319 accepted stable state' CURRENT_STATE.md
+          grep -Fq '### TSK-0311 accepted stable state' CURRENT_STATE.md
+      - name: Append bounded TSK-0628 PASS state
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from datetime import datetime, timezone
+          p = Path('CURRENT_STATE.md')
+          text = p.read_text(encoding='utf-8')
+          updated = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
+          lines = text.splitlines()
+          for i, line in enumerate(lines):
+              if line.startswith('**Updated:** '):
+                  lines[i] = f'**Updated:** {updated}'
+                  break
+          text = '\n'.join(lines) + '\n'
+          marker = '## Queue status after TSK-0311 PASS\n'
+          pos = text.index(marker)
+          section = (
+              '### TSK-0628 accepted stable state\n\n'
+              '`TSK-0628 — Define the no-routine-human-support operating model across setup, verification, troubleshooting, recovery, removal, and lifecycle events`: **PASS for the provisional internal L4 operating-model definition**. Artifact `TSK_0628_NO_ROUTINE_HUMAN_SUPPORT_OPERATING_MODEL_2026-08-29.md`, blob `bb81ec47fd4badd06ded70d146365281c2874390`, publication commit `25ec7bfa2968ea424badf6c890943397872eedc0`; independent evidence `TSK_0628_NO_ROUTINE_HUMAN_SUPPORT_OPERATING_MODEL_EVIDENCE_2026-08-29.md`, blob `888cc395dac4026c5a5486c55d36d232a465bb72`, publication commit `3feab2b6e427b5e43302ffcff8317e77dd2791e5`.\n\n'
+              'ACC-0628 is satisfied: all current ordinary support issue classes map to prevention, privacy-safe automatic checks, issue-specific in-product help, bounded AI assistance, recovery/removal or a truthful unsupported endpoint; hidden human completion is excluded from self-service success; human routes are named, exceptional and criterion-driven; accountless/privacy/verification/circuit-breaker/lifecycle boundaries remain explicit.\n\n'
+              'This PASS is operating-model design evidence only. It does not prove representative-parent self-service performance, implement support automation/AI, activate telemetry or staffed support, authorize diagnostic collection, process participants, complete legal work, publish the service, activate payment or authorize launch. `RSK-0002` remains OPEN and `REQ-0022` remains unresolved.\n\n'
+          )
+          tail = (
+              '## Queue status after TSK-0628 PASS\n\n'
+              'TSK-0628 is PASS. TSK-0310 remains blocked on TSK-0300, whose predecessor TSK-0301 has not yet been established as PASS in current runtime. Recompute direct successors of TSK-0628 and inspect the TSK-0301/TSK-0300 Brand chain before selecting further L4 work.\n\n'
+              '## Exact next authoritative step\n\n'
+              'Inspect direct TSK-0628 successors and the exact TSK-0301 WBS/runtime state, then execute the highest-priority eligible L4 task without inferring predecessor PASS.\n'
+          )
+          p.write_text(text[:pos] + section + tail, encoding='utf-8')
+          PY
+      - name: Verify and commit TSK-0628 PASS
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          grep -Fq '### TSK-0628 accepted stable state' CURRENT_STATE.md
+          grep -Fq 'ACC-0628 is satisfied' CURRENT_STATE.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: mark TSK-0628 PASS'
+          git push
