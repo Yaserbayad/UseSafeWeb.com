@@ -1,0 +1,60 @@
+name: Audit TSK-0309 execution context
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/tsk0309-context-audit.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-governance-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Read exact TSK-0309 authority
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          echo "AUDIT_HEAD=$(git rev-parse HEAD)"
+          python3 - <<'PY'
+          import csv, pathlib, hashlib
+          root=pathlib.Path('.')
+          with (root/'Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8',newline='') as f:
+              rows=list(csv.DictReader(f))
+          by={r['Task_ID']:r for r in rows}
+          for tid in ('TSK-0309','TSK-0310','TSK-0187','TSK-0300','TSK-0320','TSK-0299'):
+              r=by[tid]
+              print('WBS_ROW_BEGIN='+tid)
+              for k,v in r.items(): print(f'{k}={v}')
+              print('WBS_ROW_END='+tid)
+          ids=('REQ-0028','REQ-0029','REQ-0031','CON-0010','CON-0017','CON-0023','INT-0009','INT-0010','RSK-0002','DEC-0052','CR-0005')
+          print('AUTHORITY_REFERENCES_BEGIN')
+          for p in sorted((root/'Plans/Master').rglob('*')):
+              if not p.is_file() or p.suffix.lower() not in {'.md','.yaml','.yml','.csv'}: continue
+              try: lines=p.read_text(encoding='utf-8').splitlines()
+              except Exception: continue
+              for i,line in enumerate(lines,1):
+                  if any(x in line for x in ids):
+                      print(f'{p}:{i}:{line}')
+          print('AUTHORITY_REFERENCES_END')
+          print('PROTOTYPE_HASHES_BEGIN')
+          for p in sorted((root/'prototype/TSK-0310').glob('*')):
+              if p.is_file(): print(f'{p}|sha256={hashlib.sha256(p.read_bytes()).hexdigest()}|bytes={p.stat().st_size}')
+          print('PROTOTYPE_HASHES_END')
+          for ev in ('TSK_0310_RENDERED_BROWSER_ACCEPTANCE_EVIDENCE_2026-08-29.md','TSK_0310_PROTOTYPE_PARTIAL_EVIDENCE_2026-08-29.md','TSK_0320_PROTECTION_STATE_MODEL_AND_COPY_RULES_2026-08-28.md','TSK_0299_PROVISIONAL_VERBAL_SYSTEM_2026-08-29.md'):
+              p=root/ev
+              print(f'EVIDENCE_PRESENT={ev}|{p.is_file()}|sha256={hashlib.sha256(p.read_bytes()).hexdigest() if p.is_file() else "NA"}')
+          print('TSK0309_CONTEXT_AUDIT=PASS')
+          PY
