@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en" data-context="status">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>SafeWeb — Protection-state reference</title>
+  <link rel="stylesheet" href="../tokens.css">
+  <link rel="stylesheet" href="../components.css">
+</head>
+<body>
+  <main class="sw-shell sw-stack">
+    <header class="sw-header">
+      <img class="sw-logo sw-brand-token" src="../../../identity/TSK-0301/safeweb-wordmark-primary.svg" alt="SafeWeb">
+    </header>
+
+    <section class="sw-copy sw-stack">
+      <p class="sw-kicker">Protection Map reference</p>
+      <h1 class="sw-title">Evidence states, not a safety score</h1>
+      <p>Each state below is identified by text plus its evidence or limitation. Brand color is not a state signal.</p>
+    </section>
+
+    <section class="sw-status sw-copy" data-state="verified">
+      <div class="sw-status__label">Verified</div>
+      <p class="sw-status__evidence">SafeWeb verified this protection step is active on your current setup.</p>
+    </section>
+    <section class="sw-status sw-copy" data-state="parent-confirmed">
+      <div class="sw-status__label">You confirmed this is set up</div>
+      <p class="sw-status__evidence">SafeWeb has not independently verified this setting.</p>
+    </section>
+    <section class="sw-status sw-copy" data-state="action-needed">
+      <div class="sw-status__label">Action needed</div>
+      <p class="sw-status__evidence">Finish this step before relying on this protection layer.</p>
+    </section>
+    <section class="sw-status sw-copy" data-state="not-covered">
+      <div class="sw-status__label">Not covered</div>
+      <p class="sw-status__evidence">SafeWeb does not cover this on your current setup.</p>
+    </section>
+    <section class="sw-status sw-copy" data-state="uncertain">
+      <div class="sw-status__label">Status uncertain</div>
+      <p class="sw-status__evidence">We can’t verify this protection right now. Check it before relying on this layer.</p>
+    </section>
+    <section class="sw-status sw-copy" data-state="removed">
+      <div class="sw-status__label">Removed</div>
+      <p class="sw-status__evidence">This protection step is no longer active.</p>
+    </section>
+
+    <p class="sw-template-note">Non-color-only reference: these labels remain present in grayscale, high-contrast, screen-reader and color-vision-deficiency contexts.</p>
+  </main>
+</body>
+</html>
