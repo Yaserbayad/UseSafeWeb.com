@@ -1,0 +1,98 @@
+name: Audit current TSK-0229 authority
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/tsk0229-current-audit.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Inspect current authority and existing evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          python3 - <<'PY'
+          import csv, pathlib, re, subprocess
+
+          def out(label, value):
+              print(f'{label}={value}')
+
+          wbs_path=pathlib.Path('Plans/Master/WBS/master-wbs.csv')
+          with wbs_path.open(encoding='utf-8', newline='') as f:
+              rows=list(csv.DictReader(f))
+          by={r['Task_ID']:r for r in rows}
+          r=by['TSK-0229']
+          for key in ['Title','Lifecycle_Stage','Plan_Status','Execution_State','Priority','Dependencies','Trigger','Preconditions','Inputs','Output/Artifact','Acceptance_ID','Acceptance_Criteria','Verification_ID','Verification_Method','Evidence_ID','Evidence_Required','Requirement_Reference','Interface_Reference','Risk_Reference','Action_Authority','AI_Capability_A0_A4','Execution_Instructions','Required_Tools_or_Access','Escalation_Condition']:
+              out('WBS_'+key.upper().replace('/','_').replace(' ','_'), r.get(key,''))
+
+          state=pathlib.Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          hits=[m.start() for m in re.finditer('TSK-0229',state)]
+          out('RUNTIME_TSK0229_HIT_COUNT',len(hits))
+          for i,p in enumerate(hits[-8:],1):
+              s=max(0,p-450); e=min(len(state),p+1400)
+              print(f'RUNTIME_HIT_{i}_BEGIN')
+              print(state[s:e].replace('\n','\\n'))
+              print(f'RUNTIME_HIT_{i}_END')
+
+          files={
+            'REQ':'Plans/Master/Registers/REQUIREMENTS.md',
+            'CON':'Plans/Master/Registers/CONSTRAINTS.md',
+            'INT':'Plans/Master/Registers/INTERFACES.md',
+            'RSK':'Plans/Master/Registers/RISKS.md',
+          }
+          wanted={'REQ':['REQ-0018','REQ-0019'],'CON':['CON-0007','CON-0008'],'INT':['INT-0006','INT-0007'],'RSK':['RSK-0001']}
+          for group,path in files.items():
+              text=pathlib.Path(path).read_text(encoding='utf-8')
+              out(group+'_BLOB',subprocess.check_output(['git','hash-object',path],text=True).strip())
+              for ident in wanted[group]:
+                  lines=[ln.strip() for ln in text.splitlines() if ident in ln]
+                  out(ident+'_HIT_COUNT',len(lines))
+                  for j,ln in enumerate(lines[:8],1): print(f'{ident}_LINE_{j}={ln}')
+
+          art='TSK_0229_ACCOUNTLESS_JOURNEY_DATA_MODEL_EXPIRY_DELETION_NO_LINKAGE_2026-08-28.md'
+          evd='TSK_0229_ACCOUNTLESS_JOURNEY_DATA_MODEL_EVIDENCE_2026-08-28.md'
+          for label,path in [('ARTIFACT',art),('EVIDENCE',evd)]:
+              text=pathlib.Path(path).read_text(encoding='utf-8')
+              out(label+'_BLOB',subprocess.check_output(['git','hash-object',path],text=True).strip())
+              out(label+'_CR0003_COUNT',text.count('CR-0003'))
+              out(label+'_DEC0050_COUNT',text.count('DEC-0050'))
+              out(label+'_CR0005_COUNT',text.count('CR-0005'))
+              out(label+'_DEC0052_COUNT',text.count('DEC-0052'))
+              out(label+'_ACC0229', 'ACC-0229' in text)
+              out(label+'_NO_BROWSING_HISTORY', 'browsing' in text.lower() and 'history' in text.lower())
+              out(label+'_TTL24', '24 hour' in text.lower() or '24-hour' in text.lower())
+              out(label+'_DELETE15', '15 minute' in text.lower() or '15-minute' in text.lower())
+              out(label+'_NO_LINKAGE', 'no-linkage' in text.lower() or 'no linkage' in text.lower())
+              out(label+'_DIAGNOSTIC_SEPARATION', 'diagnostic' in text.lower())
+
+          stale=pathlib.Path('.github/workflows/reconcile-tsk0229-pass.yml').read_text(encoding='utf-8')
+          out('OLD_RECONCILE_BLOB',subprocess.check_output(['git','hash-object','.github/workflows/reconcile-tsk0229-pass.yml'],text=True).strip())
+          out('OLD_RECONCILE_CR0003',stale.count('CR-0003'))
+          out('OLD_RECONCILE_DEC0050',stale.count('DEC-0050'))
+          out('OLD_RECONCILE_CR0005',stale.count('CR-0005'))
+          out('OLD_RECONCILE_TSK0187_BLOCKER', 'TSK-0187' in stale and 'deferred' in stale)
+
+          # Current amendment must be present and supersede old sequencing.
+          out('CURRENT_CR0005_PRESENT', 'CR-0005' in state)
+          out('CURRENT_DEC0052_PRESENT', 'DEC-0052' in state)
+          out('CURRENT_PREPRODUCT_HUMAN_EXCLUSION', 'NOT_APPLICABLE + PASS' in state and 'TSK-0187' in state)
+          print('TSK0229_CURRENT_AUTHORITY_AUDIT=PASS')
+          PY
+      - name: Verify clean checkout
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'REPOSITORY_CLEAN=PASS'
