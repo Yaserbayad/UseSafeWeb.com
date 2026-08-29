@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-28T21:56:44Z
+**Updated:** 2026-08-29T07:45:13Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -550,13 +550,13 @@ ACC-0307 is satisfied for all nine current instruction classes: official/current
 
 This PASS defines internal L4 content semantics only. It does not prove representative-parent comprehension or localization usability; `RSK-0002` remains OPEN. Turkish/Arabic variants are provisional and do not activate markets. `REQ-0022` remains unresolved; LG-03/LG-04/LG-05/LG-06 remain non-PASS; account/dashboard remains deferred; no implementation/build, profile publication, participant processing, market activation, payment, publication or launch is authorized.
 
-### TSK-0318 preparation stable state
+### TSK-0318 accepted stable state
 
-`TSK-0318 — Design the public website IA and product/setup IA as distinct but connected systems`: runtime **WAITING**, not PASS. Bounded AI preparation is complete. Candidate `TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_CANDIDATE_2026-08-28.md`, exact Git blob `64f0e6382a5ce166c0aad2ad2e86a3796c5df379`, publication commit `e963f39684206bc08f5977957b0c9f379c82e716`; corrected preparation evidence `TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_PREPARATION_EVIDENCE_2026-08-28.md`, blob `4a4d766a2fb58e390c9ee80c93dfecf75d50b2eb`, correction commit `8dc7015fb6fa8826a8cc46f6899633a7b0053f3b`. The first evidence binding used a wrong candidate blob; the runtime guard prevented mutation, production-runner Git hashing established the exact blob above, and the evidence was corrected/read back before this reconciliation.
+`TSK-0318 — Design the public website IA and product/setup IA as distinct but connected systems`: **PASS for the provisional internal L4 IA design acceptance under DEC-0050/CR-0003**. Approved candidate `TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_CANDIDATE_2026-08-28.md`, blob `64f0e6382a5ce166c0aad2ad2e86a3796c5df379`; preparation evidence `TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_PREPARATION_EVIDENCE_2026-08-28.md`, blob `4a4d766a2fb58e390c9ee80c93dfecf75d50b2eb`; Project Owner HUMAN_ONLY approval `TSK_0318_OWNER_APPROVAL_2026-08-29.md`, blob `623ced7b80fdf7e17dba96c77d9000977869bd60`, commit `ebee8139db691b3bd59bbf7eb0afec86da3f83b6`; final acceptance evidence `TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_ACCEPTANCE_EVIDENCE_2026-08-29.md`, blob `7fc66ebf2dcf77330fee639167fdfd2f0452b72a`, commit `df28aeb8b4ad1cfaadb61461b05c22f37492a543`.
 
-Preparation independently verifies complete ACC-0318 content coverage while preserving A1/HUMAN_ONLY authority. The candidate separates public information architecture from the task/state-driven setup product; gives every current page/screen one purpose, entry, exit, content owner, SEO/index intent, privacy requirement and accessibility requirement; maps every critical TSK-0315 service stage without duplicating mutable technical/support authority; preserves accountless/friction/protection-state/legal boundaries.
+ACC-0318 is satisfied: public website and operational setup/product remain distinct but connected; every current page/screen has one purpose, entry/exit, content owner, SEO/index intent, privacy and accessibility requirement; all critical TSK-0315 service stages are mapped without duplicating mutable support/instruction/state authority; accountless, friction, legal and build/publication boundaries are preserved; and the exact unchanged candidate received the required HUMAN_ONLY Project Owner approval.
 
-TSK-0318 cannot become PASS until an authorized human explicitly APPROVES, REQUESTS CHANGES to, or REJECTS exact candidate blob `64f0e6382a5ce166c0aad2ad2e86a3796c5df379`. Approval remains provisional internal L4 only and does not authorize implementation, publication, market activation or launch.
+This PASS remains provisional internal L4 design evidence only. It does not establish representative-parent usability; `RSK-0002` remains OPEN; `REQ-0022` remains unresolved; LG-03/LG-04/LG-05/LG-06 remain non-PASS; account/dashboard remains deferred under EXC-0001; no implementation/build, public publication, market activation, participant processing, payment or launch is authorized.
 
 ### TSK-0319 preparation stable state
 
