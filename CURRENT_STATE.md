@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-29T07:45:57Z
+**Updated:** 2026-08-29T07:48:18Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -566,10 +566,18 @@ ACC-0319 is satisfied: top expected failures have bounded issue-specific decisio
 
 This PASS remains provisional internal L4 design evidence only. It does not establish representative-parent self-service success; `RSK-0002` remains OPEN; `REQ-0022` remains unresolved; LG-03/LG-04/LG-05/LG-06 remain non-PASS; account/dashboard remains deferred under EXC-0001; no implementation of automatic checks, diagnostic collection, staffed-support activation, participant/public use, publication, payment or launch is authorized.
 
-## Queue status after TSK-0318 and TSK-0319 PASS
+### TSK-0311 accepted stable state
 
-Both prior HUMAN_ONLY design bottlenecks are now PASS. Recompute eligible L4 work from the current WBS/relationship authority before selecting the next task; do not infer downstream PASS or build/publication authority from these design approvals. Current global fences remain unchanged.
+`TSK-0311 — Define translation keys/files, locale metadata, plural/date rules, content ownership, localized instruction variants, and fallback behavior`: **PASS for the provisional internal L4 localization/content architecture**. Artifact `TSK_0311_LOCALIZATION_CONTENT_ARCHITECTURE_2026-08-29.md`, blob `ef746d64c7878eb7d0f1b8fdf2356721728041c4`, publication commit `7eb43368af724887405cf3be9cf9363465834b02`; independent evidence `TSK_0311_LOCALIZATION_CONTENT_ARCHITECTURE_EVIDENCE_2026-08-29.md`, blob `b9e7770faa0fa94a35d98d8141dec367583233f7`, publication commit `185063cc1a897b57b17231b3d838365d939b7b7f`.
+
+ACC-0311 is satisfied: the English baseline is externalized by contract; stable semantic keys and locale files prevent hard-coded UI copy from blocking Turkish/Arabic; locale metadata, RTL behavior, plural/number/date rules, deterministic en-GB fallback, instruction-source binding, content ownership, schema/content versioning and implementation-test assertions are explicit.
+
+This PASS is design evidence only. It does not prove production locale-file implementation, native-speaker or representative-parent validation, market activation, legal readiness, publication or launch. `RSK-0002` remains OPEN; `REQ-0022` remains unresolved; current global fences remain unchanged.
+
+## Queue status after TSK-0311 PASS
+
+TSK-0311 is PASS. Recompute the remaining L4 queue before selecting the next task; specifically verify whether TSK-0310 is still blocked by TSK-0300, otherwise compare it with independently released TSK-0628 under current priority/order rules.
 
 ## Exact next authoritative step
 
-Recompute the authoritative L4 queue using current WBS rows, dependency graph, gates, action authority and current PASS evidence, then execute the highest-priority eligible AUTO_ALLOWED task or prepare the next HUMAN_ONLY task without crossing current project fences.
+Inspect current TSK-0300/TSK-0310 authority and dependencies, then execute the highest-priority eligible AUTO_ALLOWED L4 task.
