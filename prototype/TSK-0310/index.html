@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>SafeWeb — Internal mobile-first prototype</title>
+  <link rel="stylesheet" href="../../brand/system/TSK-0300/tokens.css">
+  <link rel="stylesheet" href="../../brand/system/TSK-0300/components.css">
+  <link rel="stylesheet" href="prototype.css">
+</head>
+<body>
+  <div class="prototype-frame">
+    <header class="prototype-topbar">
+      <img class="sw-logo sw-brand-token" src="../../brand/identity/TSK-0301/safeweb-wordmark-primary.svg" alt="SafeWeb">
+      <span class="prototype-badge">Internal prototype</span>
+    </header>
+
+    <main id="app" class="prototype-app" aria-live="polite" aria-busy="false"></main>
+
+    <footer class="prototype-footer">
+      <button class="sw-button sw-button--quiet" type="button" data-global-action="OPEN_HELP">Help</button>
+      <button class="sw-button sw-button--quiet" type="button" data-global-action="SHOW_LIMITATIONS">Limits</button>
+      <button class="sw-button sw-button--quiet" type="button" data-global-action="RESET">Start over</button>
+    </footer>
+  </div>
+
+  <noscript>This internal prototype requires JavaScript to demonstrate the provisional journey state machine.</noscript>
+  <script type="module" src="app.mjs"></script>
+</body>
+</html>
