@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">SafeWeb Sw monogram</title>
+  <desc id="desc">Editable compact SafeWeb monogram: off-white S and maroon w on a dark forest-green rounded field.</desc>
+  <rect x="8" y="8" width="240" height="240" rx="48" fill="#173F35"/>
+  <text x="128" y="169" text-anchor="middle" font-family="Avenir Next, Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="126" font-weight="300" letter-spacing="-8"><tspan fill="#F6F4EF">S</tspan><tspan fill="#7A2E36">w</tspan></text>
+</svg>
