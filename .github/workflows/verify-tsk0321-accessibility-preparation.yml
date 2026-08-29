@@ -1,0 +1,113 @@
+name: Verify TSK-0321 accessibility preparation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-tsk0321-accessibility-preparation.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  review:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Provision Node 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Verify TSK-0321 authority and source identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(hostname -s)" = "adguardvm"
+          python3 - <<'PY'
+          import csv, pathlib, subprocess
+          def blob(p): return subprocess.check_output(['git','rev-parse',f'HEAD:{p}'],text=True).strip()
+          expected={
+            'Plans/Master/WBS/master-wbs.csv':'f23b4f017d1baf73258fa30ecd71549bbfe1b815',
+            'content/TSK-0323/DEVICE_SERVICE_INSTRUCTION_CATALOGUE.md':'bbe9ed90b205f2ca852ebdaefedf054446dd7f91',
+            'prototype/TSK-0324/UI_COMPONENT_RULES.md':'0b7012a12070f7eccf45a1bbb2f453fde8507ff6',
+            'prototype/TSK-0310/index.html':'5d80dfdefb52042bc34468723354fefd325285e4',
+            'prototype/TSK-0310/model.mjs':'01343273fd09c3c12d26f0c0eb1ae9a2fce10c91',
+            'prototype/TSK-0310/app.mjs':'a4a0aff8848f8541e2581e333efbf48767c9f0ff',
+            'prototype/TSK-0310/prototype.css':'439ef05dd04da7fccf01cb4b85e317a828389edf',
+            'prototype/TSK-0310/browser-acceptance.mjs':'f791a797f6a64be8b74eb13cbd2e628d5b083007',
+            'prototype/TSK-0308/SHARED_RESPONSIVE_DESIGN_SYSTEM_CANDIDATE.md':'cd5c217ca7882589617dc94701fe5b6ac0eaf8d4',
+            'prototype/TSK-0308/candidate.css':'de5571379ff240f36b5aecd50f555a07176dbd32',
+            'TSK_0308_SHARED_RESPONSIVE_DESIGN_SYSTEM_ACCEPTANCE_EVIDENCE_2026-08-29.md':'343961f30bc46a20762ad2b0108a4afe9593e5a3'
+          }
+          for p,s in expected.items(): assert blob(p)==s,(p,s,blob(p))
+          with pathlib.Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8',newline='') as f: rows=list(csv.DictReader(f))
+          r={x['Task_ID']:x for x in rows}['TSK-0321']
+          assert r['Lifecycle_Stage']=='L4'
+          assert r['Dependencies']=='TSK-0323; TSK-0324'
+          assert r['Acceptance_ID']=='ACC-0321' and r['Verification_ID']=='VER-0321' and r['Evidence_ID']=='EVD-0321'
+          assert r['AI_Capability_A0_A4']=='A1' and r['Action_Authority']=='HUMAN_ONLY'
+          assert 'every critical screen/state' in r['Acceptance_Criteria']
+          assert 'no unresolved critical accessibility barrier' in r['Acceptance_Criteria']
+          state=pathlib.Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          for dep in ['TSK-0323','TSK-0324','TSK-0308','TSK-0310']:
+            assert f'{dep} accepted stable state' in state or (dep in state and '**PASS**' in state[state.rfind('\n## ',0,state.find(dep)):state.find('\n## ',state.find(dep)) if state.find('\n## ',state.find(dep))!=-1 else None])
+          print('TSK0321_WBS_HUMAN_ONLY=PASS')
+          print('TSK0321_SOURCE_BLOBS=PASS')
+          print('TSK0321_DEPENDENCY_CONTEXT=PASS')
+          PY
+
+      - name: Snapshot production health
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo systemctl is-active --quiet AdGuardHome
+          sudo systemctl is-active --quiet nginx
+          if ss -ltn | grep -Eq '127\.0\.0\.1:4176|\[::1\]:4176'; then echo 'Port 4176 already in use' >&2; exit 1; fi
+          echo 'PRE_TEST_HEALTH=PASS'
+
+      - name: Run accessibility review harness
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          tmp="$(mktemp -d)"; server_pid=""
+          cleanup() {
+            if [ -n "$server_pid" ]; then kill "$server_pid" 2>/dev/null || true; fi
+            rm -rf "$tmp"
+          }
+          trap cleanup EXIT
+          (
+            cd "$tmp"
+            npm init -y >/dev/null 2>&1
+            npm install --no-save --no-audit --no-fund playwright@1.62.0 >/dev/null 2>&1
+            cp "$GITHUB_WORKSPACE/prototype/TSK-0321/accessibility-review.mjs" ./accessibility-review.mjs
+          )
+          export PLAYWRIGHT_BROWSERS_PATH="$HOME/.cache/ms-playwright"
+          "$tmp/node_modules/.bin/playwright" install chromium >/dev/null
+          python3 -m http.server 4176 --bind 127.0.0.1 >/tmp/tsk0321-http.log 2>&1 & server_pid=$!
+          for _ in $(seq 1 40); do curl -fsS http://127.0.0.1:4176/prototype/TSK-0310/ >/dev/null && break; sleep 0.25; done
+          curl -fsS http://127.0.0.1:4176/prototype/TSK-0310/ >/dev/null
+          (cd "$tmp" && node accessibility-review.mjs)
+          echo 'TSK0321_BROWSER_REVIEW_EXECUTED=PASS'
+
+      - name: Verify production invariants and repository cleanliness
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo systemctl is-active --quiet AdGuardHome
+          sudo systemctl is-active --quiet nginx
+          if ss -ltn | grep -Eq '127\.0\.0\.1:4176|\[::1\]:4176'; then echo 'Persistent test listener remains' >&2; exit 1; fi
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'POST_TEST_HEALTH=PASS'
+          echo 'NO_TEST_LISTENER=PASS'
+          echo 'REPOSITORY_CLEAN=PASS'
