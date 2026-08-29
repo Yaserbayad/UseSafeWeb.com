@@ -41,7 +41,7 @@ async function start(page, platform, nativeAction = 'NATIVE_CONFIRMED', label = 
 }
 
 async function configureAndVerify(page, result, label) {
-  await page.locator('[data-action="DNS_CONFIGURED"]').click();
+  await page.locator('#app [data-action="DNS_CONFIGURED"]').click();
   await screen(page, 'verify', `${label}:verify`);
   await page.locator(`[data-action="VERIFY_RESULT"][data-result="${result}"]`).click();
 }
@@ -106,6 +106,8 @@ try {
   await page.locator('#illegal-transition-test').click();
   ok((await page.locator('[role="alert"]').innerText()).includes('Action not allowed from discovery'), 'negative:illegal-transition-blocked');
   ok(await page.locator('[data-screen="discovery"]').count() === 1, 'negative:illegal-transition-preserves-screen');
+  await page.locator('#illegal-transition-test').evaluate(el => el.remove());
+  ok(await page.locator('#illegal-transition-test').count() === 0, 'negative:fixture-cleaned');
   await reset(page, 'negative-reset');
 
   await start(page, 'android', 'NATIVE_CONFIRMED', 'android-success');
