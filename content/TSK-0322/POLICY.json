@@ -1,0 +1,102 @@
+{
+  "schema": "usesafeweb.product-language-policy.v1",
+  "task_id": "TSK-0322",
+  "version": "1.0.0",
+  "status": "internal_l4",
+  "owner": "Content",
+  "visible_brand": "SafeWeb",
+  "domain_identifier": "UseSafeWeb.com",
+  "parent_facing_dns_term": "SafeWeb DNS",
+  "technical_endpoints": {
+    "android_private_dns_hostname": "dns.usesafeweb.com",
+    "iphone_doh_url": "https://dns.usesafeweb.com/dns-query"
+  },
+  "voice": [
+    "calm",
+    "clear",
+    "respectful",
+    "protective_not_controlling",
+    "truthful",
+    "practical",
+    "quietly_trustworthy"
+  ],
+  "reading_goal": {
+    "plain_general_audience_language": true,
+    "one_material_idea_per_sentence_where_practical": true,
+    "technical_jargon_only_when_needed": true,
+    "fixed_numeric_grade_level_authorized": false,
+    "truth_over_readability_score": true
+  },
+  "child_readable": {
+    "neutral_non_blame": true,
+    "no_fear_or_shame": true,
+    "no_surveillance_framing": true,
+    "no_child_account_implied": true,
+    "preserve_evidence_strength": true
+  },
+  "states": [
+    {"id": "S1", "label": "Verified", "evidence": "current_qualifying_technical_evidence"},
+    {"id": "S2", "label": "You confirmed this is set up", "evidence": "parent_confirmation_not_system_verification"},
+    {"id": "S3", "label": "Action needed", "evidence": "applicable_incomplete_or_known_repair"},
+    {"id": "S4", "label": "Not covered", "evidence": "unsupported_out_of_scope_or_no_approved_safeguard"},
+    {"id": "S5", "label": "Status uncertain", "evidence": "conflicting_inconclusive_stale_or_unavailable_evidence"},
+    {"id": "S6", "label": "Removed", "evidence": "configuration_or_safeguard_no_longer_active"}
+  ],
+  "truth_invariants": [
+    "parent_confirmation_never_equals_verified",
+    "configuration_presence_alone_never_equals_verified",
+    "material_contradiction_invalidates_stale_positive_state",
+    "removal_withdraws_active_protection_claim",
+    "journey_completion_does_not_imply_overall_protection",
+    "critical_state_meaning_is_not_color_only",
+    "protection_map_is_not_a_safety_score"
+  ],
+  "approved_claims": [
+    "SafeWeb helps you set up sensible first-phone safeguards.",
+    "SafeWeb brings the phone, internet baseline, and one relevant service safeguard into one clear setup path.",
+    "SafeWeb shows what it verified, what you confirmed, what needs attention, and what is not covered.",
+    "You do not need a SafeWeb account for the current setup journey.",
+    "SafeWeb is designed to minimize identity and journey data.",
+    "SafeWeb is not a child browsing or activity monitoring product.",
+    "You can remove the supported SafeWeb DNS configuration and follow recovery guidance.",
+    "Starting over resets the web setup journey; it does not remove SafeWeb DNS from the phone.",
+    "DNS filtering works at the domain-resolution layer. It does not inspect content inside an allowed app or site."
+  ],
+  "prohibited_claim_classes": [
+    "complete_or_guaranteed_safety",
+    "overall_child_safe_or_protected_outcome",
+    "surveillance_or_full_parental_control",
+    "verified_from_parent_confirmation_or_presence_only",
+    "impossible_to_bypass_or_always_protected",
+    "absolute_zero_data_or_anonymity_without_proof",
+    "legal_certification_or_full_compliance_without_authority",
+    "fabricated_parent_validation_or_comprehension",
+    "unsupported_superiority_or_uniqueness",
+    "fear_shame_or_parental_negligence",
+    "universal_device_network_market_or_launch_support",
+    "fabricated_staffed_support",
+    "pay_for_better_safety"
+  ],
+  "completion_copy": "Setup complete. Review what SafeWeb verified, what you confirmed, and what is not covered.",
+  "localization": {
+    "source_semantics": "en",
+    "required_first_public_languages": ["en", "tr", "ar"],
+    "arabic_rtl": true,
+    "safeweb_brand_invariant_ltr": true,
+    "translation_must_not_strengthen_claim": true,
+    "language_does_not_imply_market_authority": true
+  },
+  "review_ownership": {
+    "ordinary_product_voice_and_cta": "Content",
+    "protection_state_semantics": "TSK-0320",
+    "visible_brand_identity": "TSK-0297/TSK-0301",
+    "shared_visual_tokens_components": "TSK-0300/downstream_design_system",
+    "platform_instruction_support_claim": "owning_instruction_support_matrix",
+    "data_privacy_claim": "Privacy/Data",
+    "legal_market_claim": "applicable_legal_market_authority",
+    "new_product_account_dashboard_claim": "Product_scope_exception_owner",
+    "public_release_claim": "applicable_release_gate"
+  },
+  "human_validation_claim": false,
+  "publication_authority": false
+}
