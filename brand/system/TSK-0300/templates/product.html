@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en" data-context="product">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>SafeWeb — Setup reference</title>
+  <link rel="stylesheet" href="../tokens.css">
+  <link rel="stylesheet" href="../components.css">
+</head>
+<body>
+  <main class="sw-shell sw-stack">
+    <header class="sw-header">
+      <img class="sw-logo sw-brand-token" src="../../TSK-0301/safeweb-wordmark-primary.svg" alt="SafeWeb">
+      <div class="sw-row">
+        <a href="#help">Help</a>
+        <a href="#exit">Exit</a>
+      </div>
+    </header>
+
+    <section class="sw-copy sw-stack">
+      <p class="sw-kicker">Setup</p>
+      <h1 class="sw-title">Set up the internet protection layer</h1>
+      <p>Follow the supported instructions for this device. Completing a step does not by itself mean SafeWeb has verified the protection.</p>
+    </section>
+
+    <section class="sw-panel sw-copy">
+      <h2>Current step</h2>
+      <p>Configure the supported encrypted-DNS mechanism, then run the available verification check.</p>
+      <div class="sw-row">
+        <button class="sw-button" type="button">Check protection</button>
+        <button class="sw-button sw-button--secondary" type="button">Start over</button>
+      </div>
+    </section>
+
+    <section class="sw-status sw-copy" data-state="action-needed" aria-label="Protection state">
+      <div class="sw-status__label">Action needed</div>
+      <p class="sw-status__evidence">Finish this step before relying on this protection layer.</p>
+      <p class="sw-status__note">State is expressed in text and is not encoded by brand color.</p>
+    </section>
+
+    <section id="help" class="sw-callout sw-copy">
+      <strong>Need help?</strong>
+      <p>Use the issue-specific self-service path, then recheck only after the relevant condition changes.</p>
+    </section>
+
+    <p id="exit" class="sw-template-note">Accountless-first internal reference. No login, dashboard, persistent parent profile or marketing upsell is introduced by this template.</p>
+  </main>
+</body>
+</html>
