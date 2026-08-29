@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">UseSafeWeb visual direction C — Connected Layers</title>
+  <desc id="desc">Three offset open rounded frames overlap lightly, representing Phone, Internet, and Service as distinct but connected safeguard layers.</desc>
+  <g fill="none" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M52 82V58H142V128H118" stroke="#12372A"/>
+    <path d="M80 116V86H170V156H144" stroke="#4338CA"/>
+    <path d="M108 150V114H198V184H108Z" stroke="#12372A"/>
+  </g>
+  <circle cx="52" cy="110" r="10" fill="#B45309"/>
+</svg>
