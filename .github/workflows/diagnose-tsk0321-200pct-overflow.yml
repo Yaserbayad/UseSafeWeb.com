@@ -1,0 +1,116 @@
+name: Diagnose TSK-0321 200 percent overflow
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/diagnose-tsk0321-200pct-overflow.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Diagnose exact 200 percent overflow elements
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(hostname -s)" = "adguardvm"
+          tmp="$(mktemp -d)"; server_pid=""; original="$tmp/index.html.original"
+          cp prototype/TSK-0310/index.html "$original"
+          cleanup() {
+            if [ -n "$server_pid" ]; then kill "$server_pid" 2>/dev/null || true; fi
+            cp "$original" prototype/TSK-0310/index.html
+            rm -rf "$tmp"
+          }
+          trap cleanup EXIT
+
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('prototype/TSK-0310/index.html')
+          text=p.read_text(encoding='utf-8')
+          needle='  <link rel="stylesheet" href="prototype.css">\n'
+          assert needle in text
+          p.write_text(text.replace(needle,needle+'  <link rel="stylesheet" href="../TSK-0321/REMEDIATION_CANDIDATE.css">\n',1),encoding='utf-8')
+          PY
+
+          (
+            cd "$tmp"
+            npm init -y >/dev/null 2>&1
+            npm install --no-save --no-audit --no-fund playwright@1.62.0 >/dev/null 2>&1
+          )
+          export NODE_PATH="$tmp/node_modules"
+          export PLAYWRIGHT_BROWSERS_PATH="$HOME/.cache/ms-playwright"
+          "$tmp/node_modules/.bin/playwright" install chromium >/dev/null
+          python3 -m http.server 4176 --bind 127.0.0.1 >/tmp/tsk0321-diag-http.log 2>&1 & server_pid=$!
+          for _ in $(seq 1 40); do curl -fsS http://127.0.0.1:4176/prototype/TSK-0310/ >/dev/null && break; sleep 0.25; done
+          curl -fsS http://127.0.0.1:4176/prototype/TSK-0310/ >/dev/null
+
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          const base='http://127.0.0.1:4176/prototype/TSK-0310/';
+          const browser=await chromium.launch({headless:true});
+          const page=await browser.newPage({viewport:{width:320,height:900}});
+          await page.goto(base,{waitUntil:'networkidle'});
+
+          async function press(selector){
+            const el=page.locator(selector); await el.focus(); await page.keyboard.press('Enter');
+          }
+          async function reset(){await press('[data-global-action="RESET"]')}
+          async function dump(label){
+            await page.evaluate(()=>document.documentElement.style.fontSize='200%');
+            const out=await page.evaluate(()=>{
+              const vw=window.innerWidth;
+              const all=[...document.querySelectorAll('*')];
+              const offenders=all.map(el=>{
+                const r=el.getBoundingClientRect(); const s=getComputedStyle(el);
+                const overRight=r.right-vw, overLeft=-r.left;
+                const ownScroll=el.scrollWidth-el.clientWidth;
+                return {
+                  tag:el.tagName.toLowerCase(),
+                  id:el.id||'',
+                  cls:(typeof el.className==='string'?el.className:'').slice(0,120),
+                  text:(el.textContent||'').replace(/\s+/g,' ').trim().slice(0,90),
+                  left:+r.left.toFixed(1),right:+r.right.toFixed(1),width:+r.width.toFixed(1),
+                  overRight:+overRight.toFixed(1),overLeft:+overLeft.toFixed(1),
+                  scrollWidth:el.scrollWidth,clientWidth:el.clientWidth,ownScroll,
+                  display:s.display,minWidth:s.minWidth,widthCss:s.width,maxWidth:s.maxWidth,
+                  paddingInline:`${s.paddingInlineStart}/${s.paddingInlineEnd}`,
+                  marginInline:`${s.marginInlineStart}/${s.marginInlineEnd}`,
+                  gap:s.gap,fontSize:s.fontSize,whiteSpace:s.whiteSpace,overflowWrap:s.overflowWrap,
+                  position:s.position,boxSizing:s.boxSizing,flexWrap:s.flexWrap,flexShrink:s.flexShrink
+                };
+              }).filter(x=>x.overRight>0.5||x.overLeft>0.5||x.ownScroll>0.5)
+                .sort((a,b)=>Math.max(b.overRight,b.overLeft,b.ownScroll)-Math.max(a.overRight,a.overLeft,a.ownScroll));
+              return {rootOverflow:document.documentElement.scrollWidth-vw,scrollWidth:document.documentElement.scrollWidth,vw,offenders:offenders.slice(0,18)};
+            });
+            console.log(`DIAG_${label}_ROOT_OVERFLOW=${out.rootOverflow}`);
+            console.log(`DIAG_${label}_JSON=${JSON.stringify(out)}`);
+            await page.evaluate(()=>document.documentElement.style.fontSize='');
+          }
+
+          await dump('DISCOVERY');
+          await press('[data-action="START"]'); await dump('ROUTER');
+          await press('[data-platform="android"]'); await press('[data-action="NATIVE_CONFIRMED"]'); await dump('ANDROID_DNS');
+          await press('[data-action="DNS_CONFIGURED"]'); await press('[data-result="verified"]'); await press('[data-action="SERVICE_NONE"]'); await dump('MAP');
+          await reset(); await press('[data-action="START"]'); await press('[data-platform="android"]'); await press('[data-action="NATIVE_ACTION_NEEDED"]'); await press('[data-action="DNS_CONFIGURED"]'); await press('[data-result="not-covered"]'); await dump('LIMITATIONS');
+
+          await browser.close();
+          console.log('TSK0321_OVERFLOW_DIAGNOSTIC=COMPLETE');
+          NODE
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'REPOSITORY_CLEAN=PASS'
