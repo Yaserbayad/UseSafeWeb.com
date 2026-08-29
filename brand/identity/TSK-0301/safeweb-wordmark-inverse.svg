@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 180" role="img" aria-labelledby="title desc">
+  <title id="title">SafeWeb inverse display wordmark</title>
+  <desc id="desc">Editable SafeWeb inverse display master: Safe in off-white and Web in warm maroon for large dark-brand surfaces; use the monochrome master for small or accessibility-critical dark contexts.</desc>
+  <rect width="900" height="180" rx="24" fill="#173F35"/>
+  <text x="450" y="130" text-anchor="middle" font-family="Avenir Next, Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="142" font-weight="300" letter-spacing="-5"><tspan fill="#F6F4EF">Safe</tspan><tspan fill="#7A2E36">Web</tspan></text>
+</svg>
