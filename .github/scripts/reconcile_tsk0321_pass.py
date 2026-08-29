@@ -23,7 +23,7 @@ replacement = '''## TSK-0321 accepted accessibility-review state — 2026-08-29
 - `CR-0005 / DEC-0052` sequencing remains unchanged. No real-participant validation, legal/privacy completion, public publication, payment, market activation or launch authority is inferred.
 
 '''
-s2 = s[:start] + replacement + s[end:]
+s2 = (s[:start] + replacement + s[end:]).rstrip('\n') + '\n'
 if 'TSK-0321 — Review design and content against accessibility requirements`: **WAITING / non-PASS**' in s2:
     raise SystemExit('Stale TSK-0321 WAITING text remains')
 if s2.count('## TSK-0321 accepted accessibility-review state — 2026-08-29') != 1:
