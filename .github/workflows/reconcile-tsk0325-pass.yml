@@ -45,3 +45,5 @@ jobs:
           echo "RUNTIME_COMMIT=$(git rev-parse HEAD)"
           echo "RUNTIME_STATE_BLOB=$(git rev-parse HEAD:CURRENT_STATE.md)"
           sha256sum CURRENT_STATE.md | sed 's/^/RUNTIME_STATE_SHA256=/'
+
+# retry-after-eof-normalization: 1
