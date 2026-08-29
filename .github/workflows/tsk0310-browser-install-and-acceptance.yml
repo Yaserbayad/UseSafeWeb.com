@@ -27,7 +27,7 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Pre-install production health snapshot
+      - name: Pre-test production health snapshot
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -43,24 +43,28 @@ jobs:
           ss -H -lntu | awk '{print $1, $5}' | sort -u > /tmp/tsk0310-listeners-before
           systemctl --failed --no-legend --plain | awk '{print $1}' | sort -u > /tmp/tsk0310-failed-before
           dpkg-query -W -f='${Package}\t${Version}\n' | sort > /tmp/tsk0310-packages-before
-          echo 'PRE_INSTALL_HEALTH=PASS'
+          echo 'PRE_TEST_HEALTH=PASS'
 
       - name: Provision Node 22
         uses: actions/setup-node@v6
         with:
           node-version: '22'
 
-      - name: Install pinned Playwright Chromium capability
+      - name: Verify pinned Playwright Chromium capability
         shell: bash
         working-directory: prototype/TSK-0310
         run: |
           set -Eeuo pipefail
           npm install --ignore-scripts --no-fund
           npm audit --audit-level=high
-          npx playwright install --with-deps --no-shell chromium
+          CHROME="$PLAYWRIGHT_BROWSERS_PATH/chromium-1234/chrome-linux64/chrome"
+          if [[ ! -x "$CHROME" ]]; then
+            npx playwright install --with-deps --no-shell chromium
+          fi
           npx playwright --version
-          find "$PLAYWRIGHT_BROWSERS_PATH" -maxdepth 3 -type f -name chrome -o -name chromium | head -n 5
-          echo 'CHROMIUM_INSTALL=PASS'
+          [[ -x "$CHROME" ]]
+          "$CHROME" --version
+          echo 'CHROMIUM_CAPABILITY=PASS'
 
       - name: Run rendered browser acceptance suite
         shell: bash
@@ -87,6 +91,7 @@ jobs:
           echo 'RENDERED_ACCEPTANCE=PASS'
 
       - name: Post-test production health and change-boundary verification
+        if: ${{ always() }}
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -99,6 +104,10 @@ jobs:
           cmp /tmp/tsk0310-nginx-config-before /tmp/tsk0310-nginx-config-after
           ss -H -lntu | awk '{print $1, $5}' | sort -u > /tmp/tsk0310-listeners-after
           cmp /tmp/tsk0310-listeners-before /tmp/tsk0310-listeners-after
+          if ss -H -lnt | awk '{print $4}' | grep -Eq '(^|:)4173$'; then
+            echo 'Unexpected lingering browser-test listener on 4173' >&2
+            exit 1
+          fi
           systemctl --failed --no-legend --plain | awk '{print $1}' | sort -u > /tmp/tsk0310-failed-after
           cmp /tmp/tsk0310-failed-before /tmp/tsk0310-failed-after
           dpkg-query -W -f='${Package}\t${Version}\n' | sort > /tmp/tsk0310-packages-after
@@ -108,6 +117,7 @@ jobs:
           echo 'ADGUARD_CONFIG_UNCHANGED=PASS'
           echo 'NGINX_CONFIG_UNCHANGED=PASS'
           echo 'LISTENERS_UNCHANGED=PASS'
+          echo 'NO_TEST_LISTENER=PASS'
           echo 'FAILED_UNITS_UNCHANGED=PASS'
           echo 'POST_TEST_HEALTH=PASS'
-          echo 'TSK0310_BROWSER_ENVIRONMENT_AND_ACCEPTANCE=PASS'
+          echo 'TSK0310_PRODUCTION_INVARIANTS=PASS'
