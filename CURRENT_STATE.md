@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-29T16:10:17Z
+**Updated:** 2026-08-29T16:14:06Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -741,3 +741,17 @@ The WBS direct successor newly dependency-satisfied by TSK-0297 is `TSK-0303 —
 ### Exact next authoritative step
 
 Current executable L4 work is exhausted. Resolve the TSK-0310 deterministic WAITING condition by providing or approving an isolated browser-capable verification environment; do not install a browser on the operational AdGuard runner or incur hosted-runner cost without owner authority. Once that environment exists, rerun VER-0310 rendered functional/negative/configuration/security-privacy/removal-reset checks and independently evaluate PASS.
+
+## TSK-0310 executor availability update — 2026-08-29
+
+Project Owner reports the prior test/recovery VM `adguartestdvm` has been deleted. Its previously accepted recovery-drill evidence remains valid historical evidence only; it is no longer a current available executor and must not be treated as an online recovery/browser runner.
+
+The Project Owner approved use of operational runner `adguardvm` if safe for the pending work. A read-only capability probe then ran on `adguardvm` via GitHub Actions run `33262314091`, job `99126249865`. Durable evidence: `TSK_0310_ADGUARDVM_BROWSER_CAPABILITY_EVIDENCE_2026-08-29.md`, blob `bedc345b83a7ef160fcf99553f58846edf5348eb`.
+
+Probe result: no Chromium/Chrome/Firefox; no Docker/Podman; no Bubblewrap/Firejail; `unshare` exists but unprivileged user namespaces are unavailable. No software or configuration was installed or changed. Therefore `adguardvm` is suitable for repository/runtime reconciliation but cannot satisfy the required isolated rendered-browser verification for `TSK-0310` under the current operational-server fence.
+
+`TSK-0310` remains **WAITING / non-PASS**. Do not install browser/container capability on operational `adguardvm` merely to close this evidence gap. `TSK-0297` remains PASS. `RSK-0002` remains OPEN and all CR-0004 validation/build/publication/launch fences remain unchanged.
+
+### Exact next authoritative step
+
+Provide or explicitly approve a separate isolated browser-capable verification environment for `TSK-0310`. Acceptable resolution paths are: (1) a temporary isolated VM/self-hosted runner with a supported headless browser, or (2) explicit owner approval to use a GitHub-hosted browser-capable runner, including any applicable hosted-runner cost. Then rerun current VER-0310 rendered functional/negative/configuration/security-privacy/removal-reset checks and independently evaluate PASS.
