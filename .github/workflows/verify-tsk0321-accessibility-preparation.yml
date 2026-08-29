@@ -48,7 +48,7 @@ jobs:
             'prototype/TSK-0308/candidate.css':'de5571379ff240f36b5aecd50f555a07176dbd32',
             'TSK_0308_SHARED_RESPONSIVE_DESIGN_SYSTEM_ACCEPTANCE_EVIDENCE_2026-08-29.md':'343961f30bc46a20762ad2b0108a4afe9593e5a3',
             'prototype/TSK-0321/accessibility-review.mjs':'0cfca762a0d83be7716194e13e940876e71534b4',
-            'prototype/TSK-0321/REMEDIATION_CANDIDATE.css':'50710ff5bd4045d7d801ffd07d5b7abd813cbd53'
+            'prototype/TSK-0321/REMEDIATION_CANDIDATE.css':'9e983484fcb354cb725b0ae8ed2266e0c03429e5'
           }
           for p,s in expected.items(): assert blob(p)==s,(p,s,blob(p))
           with pathlib.Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8',newline='') as f: rows=list(csv.DictReader(f))
