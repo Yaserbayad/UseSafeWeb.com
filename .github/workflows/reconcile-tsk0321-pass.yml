@@ -1,0 +1,40 @@
+name: Reconcile TSK-0321 PASS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/reconcile-tsk0321-pass.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-state-write
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - name: Reconcile runtime PASS
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          python3 .github/scripts/reconcile_tsk0321_pass.py
+          git diff --check
+          changed="$(git diff --name-only)"
+          [[ "$changed" == "CURRENT_STATE.md" ]]
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          [[ "$(git diff --cached --name-only)" == "CURRENT_STATE.md" ]]
+          git commit -m 'state: accept TSK-0321 accessibility review'
+          git push origin HEAD:main
+          echo "RUNTIME_COMMIT=$(git rev-parse HEAD)"
+          echo "RUNTIME_STATE_BLOB=$(git rev-parse HEAD:CURRENT_STATE.md)"
+          sha256sum CURRENT_STATE.md | sed 's/^/RUNTIME_STATE_SHA256=/'
