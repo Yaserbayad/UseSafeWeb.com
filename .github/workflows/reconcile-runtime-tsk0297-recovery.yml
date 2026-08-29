@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   reconcile:
-    runs-on: [self-hosted, linux, x64, rec-v1]
+    runs-on: [self-hosted, linux, x64]
     timeout-minutes: 5
     steps:
       - name: Checkout exact main commit
@@ -28,7 +28,7 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          [[ "$(hostname -s)" == "adguartestdvm" ]]
+          [[ "$(hostname -s)" == "adguardvm" ]]
           [[ "$(id -un)" == "azureusr" ]]
           python3 .github/scripts/reconcile_runtime_tsk0297.py
           git diff --check
