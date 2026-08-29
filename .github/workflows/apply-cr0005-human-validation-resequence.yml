@@ -36,9 +36,11 @@ jobs:
           bad1="    r['Next_Action'] = 'No execution. Preserve as excluded historical pre-product validation work; use the L8 controlled integrated-product pilot for actual human/user validation.'\n"
           old2="assert 'real-user comprehension claim is required' not in fb['TSK-0309']['Acceptance_Criteria'].lower()"
           new2="assert 'no real-user comprehension claim is required or inferred before l8.' in fb['TSK-0309']['Acceptance_Criteria'].lower()"
-          if s.count(bad1) != 1 or s.count(old2) != 1:
+          old3="assert 'first real-user validation' in read(gates).lower()"
+          new3="assert 'first active parent/user/participant validation stage' in read(gates).lower()"
+          if any(s.count(x) != 1 for x in (bad1,old2,old3)):
               raise SystemExit('CR0005_HELPER_PATCH_PRECONDITION=FAIL')
-          s=s.replace(bad1,'',1).replace(old2,new2,1)
+          s=s.replace(bad1,'',1).replace(old2,new2,1).replace(old3,new3,1)
           p.write_text(s,encoding='utf-8')
           print('CR0005_HELPER_PATCH=PASS')
           PY
