@@ -1,0 +1,110 @@
+name: Audit post-TSK-0323 eligible queue
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/queue-audit-after-tsk0323.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Derive L4 AUTO_ALLOWED candidates
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          python3 - <<'PY'
+          import csv, pathlib, re
+          state = pathlib.Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          with pathlib.Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8', newline='') as f:
+              rows = list(csv.DictReader(f))
+          by = {r['Task_ID']: r for r in rows}
+          print('WBS_HEADERS=' + '|'.join(rows[0].keys()))
+
+          # Strong runtime PASS evidence only: current PASS list plus task-specific accepted sections.
+          pass_ids = set()
+          m = re.search(r'## Current technical task state\s+### PASS\s+(.*?)(?=\n### |\n## )', state, re.S)
+          if m:
+              pass_ids.update(re.findall(r'TSK-\d{4}', m.group(1)))
+          for sec in re.split(r'(?=\n## TSK-)', state):
+              ids = set(re.findall(r'TSK-\d{4}', sec[:500]))
+              if ids and ('**PASS**' in sec[:1200] or re.search(r'(?m)^.*?: \*\*PASS\*\*', sec[:1200])):
+                  pass_ids.update(ids)
+          # Explicit current CR-0005 exclusion-PASS set is authoritative runtime text.
+          exclusion_match = re.search(r'all 31 L3 tasks plus `TSK-0187`, `TSK-0326`, and `TSK-0336` are `NOT_APPLICABLE \+ PASS`', state)
+          if exclusion_match:
+              pass_ids.update({'TSK-0187','TSK-0326','TSK-0336'})
+              for r in rows:
+                  if r.get('Lifecycle_Stage') == 'L3' and r.get('Plan_Status') == 'NOT_APPLICABLE':
+                      pass_ids.add(r['Task_ID'])
+          # Latest accepted task is direct read-back evidence.
+          if '## TSK-0323 accepted stable state — 2026-08-29' in state and '`TSK-0323' in state:
+              pass_ids.add('TSK-0323')
+
+          print('STRONG_PASS_COUNT=' + str(len(pass_ids)))
+          for tid in sorted(pass_ids):
+              if tid in {'TSK-0322','TSK-0323','TSK-0327','TSK-0309','TSK-0310','TSK-0187','TSK-0326','TSK-0336'}:
+                  print('PASS_PROBE=' + tid)
+
+          priority_rank = {'HIGH':0,'MEDIUM':1,'LOW':2}
+          candidates=[]
+          for idx,r in enumerate(rows):
+              if r.get('Lifecycle_Stage') != 'L4':
+                  continue
+              if r.get('Action_Authority') != 'AUTO_ALLOWED':
+                  continue
+              if r['Task_ID'] in pass_ids:
+                  continue
+              if r.get('Plan_Status') == 'NOT_APPLICABLE':
+                  continue
+              deps=[d.strip() for d in re.split(r'[;,]', r.get('Dependencies','')) if d.strip()]
+              dep_status=[]
+              ready=True
+              for d in deps:
+                  dr=by.get(d,{})
+                  if d in pass_ids:
+                      s='PASS'
+                  elif dr.get('Plan_Status') == 'NOT_APPLICABLE' and dr.get('Execution_State') == 'PASS':
+                      s='EXCLUSION_PASS'
+                  else:
+                      s='UNSAT'
+                      ready=False
+                  dep_status.append(d+':'+s)
+              candidates.append((not ready, priority_rank.get(r.get('Priority'),9), idx, r, dep_status))
+          candidates.sort(key=lambda x:(x[0],x[1],x[2]))
+          print('L4_AUTO_CANDIDATES_BEGIN')
+          for notready,_,idx,r,ds in candidates:
+              print('|'.join([
+                  'READY' if not notready else 'NOT_READY',
+                  str(idx),r['Task_ID'],r.get('Priority',''),r.get('Task_Title',''),
+                  r.get('Plan_Status',''),r.get('Execution_State',''),
+                  r.get('Action_Authority',''),r.get('AI_Capability_A0_A4',''),
+                  r.get('Dependencies',''),';'.join(ds),r.get('Acceptance_ID','')
+              ]))
+          print('L4_AUTO_CANDIDATES_END')
+          ready=[x for x in candidates if not x[0]]
+          if ready:
+              r=ready[0][3]
+              print('SELECTED=' + r['Task_ID'])
+              print('SELECTED_TITLE=' + r.get('Task_Title',''))
+              print('SELECTED_PRIORITY=' + r.get('Priority',''))
+              print('SELECTED_DEPENDENCIES=' + r.get('Dependencies',''))
+              print('SELECTED_ACC=' + r.get('Acceptance_Criteria',''))
+              print('SELECTED_VER=' + r.get('Verification_Method',''))
+              print('SELECTED_EVD=' + r.get('Evidence_Required',''))
+              print('SELECTED_REQ=' + r.get('Requirements_Constraints',''))
+              print('SELECTED_INTERFACES=' + r.get('Interface_References',''))
+              print('SELECTED_RISKS=' + r.get('Risk_References',''))
+          else:
+              print('SELECTED=NONE')
+          print('POST_TSK0323_QUEUE_AUDIT=PASS')
+          PY
