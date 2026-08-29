@@ -17,7 +17,7 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Derive dependency-ready candidates
+      - name: Derive active L4 candidates
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -26,52 +26,46 @@ jobs:
           import csv, pathlib, re
 
           state_text=pathlib.Path('CURRENT_STATE.md').read_text(encoding='utf-8')
-          current={}
-          section=None
+          current={}; section=None
           for line in state_text.splitlines():
               msec=re.match(r'^###\s+(PASS|WAITING|BLOCKED|TODO)\s*$',line.strip(),re.I)
-              if msec:
-                  section=msec.group(1).upper(); continue
-              if line.startswith('### ') or line.startswith('## '):
-                  section=None
+              if msec: section=msec.group(1).upper(); continue
+              if line.startswith('### ') or line.startswith('## '): section=None
               ids=re.findall(r'TSK-\d{4}',line)
               if not ids: continue
-              explicit=None
-              u=line.upper()
-              if '**PASS**' in u or re.search(r'\bPASS\b',u) and ('=' in line or ':' in line or '—' in line or '-' in line): explicit='PASS'
-              if '**WAITING' in u or re.search(r'\bWAITING\b',u) and ('=' in line or ':' in line or '—' in line or '/' in line): explicit='WAITING'
-              if '**BLOCKED' in u or re.search(r'\bBLOCKED\b',u) and ('=' in line or ':' in line or '—' in line or '/' in line): explicit='BLOCKED'
-              if '**TODO' in u or re.search(r'\bTODO\b',u) and ('=' in line or ':' in line or '—' in line or '/' in line): explicit='TODO'
+              u=line.upper(); explicit=None
+              if '**PASS**' in u: explicit='PASS'
+              elif '**WAITING' in u or 'WAITING /' in u: explicit='WAITING'
+              elif '**BLOCKED' in u or 'BLOCKED /' in u: explicit='BLOCKED'
+              elif '**TODO' in u or 'TODO /' in u: explicit='TODO'
               chosen=explicit or section
               if chosen:
                   for tid in ids: current[tid]=chosen
 
           with pathlib.Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8',newline='') as f:
               rows=list(csv.DictReader(f))
-          print('WBS_HEADERS='+'|'.join(rows[0].keys()))
-          print('RUNTIME_COUNTS='+'|'.join(f'{s}:{sum(1 for v in current.values() if v==s)}' for s in ['PASS','WAITING','BLOCKED','TODO']))
-          print('TSK0308_RUNTIME='+str(current.get('TSK-0308')))
-
           priority={'CRITICAL':0,'HIGH':1,'MEDIUM':2,'LOW':3}
-          candidates=[]
+          out=[]
           for idx,r in enumerate(rows):
-              tid=r.get('Task_ID','').strip()
-              if not tid.startswith('TSK-'): continue
+              tid=r['Task_ID'].strip()
+              if not tid.startswith('TSK-') or r['Lifecycle_Stage'].strip()!='L4': continue
+              plan=r['Plan_Status'].strip().upper()
+              if plan not in {'PLANNED','ACTIVE'}: continue
               if current.get(tid) in {'PASS','WAITING','BLOCKED'}: continue
-              plan=r.get('Plan_Status','').strip().upper()
-              if plan and plan not in {'PLANNED','ACTIVE'}: continue
               deps=[x.strip() for x in re.split(r'[;,]',r.get('Dependencies','') or '') if x.strip()]
-              if any(current.get(d)!='PASS' for d in deps): continue
-              candidates.append((priority.get(r.get('Priority','').strip().upper(),9),idx,r,deps))
-          candidates.sort(key=lambda x:(x[0],x[1],x[2].get('Task_ID','')))
-          print('DEPENDENCY_READY_COUNT='+str(len(candidates)))
-          fields=['Task_ID','Title','Lifecycle_Stage','Plan_Status','Execution_State','Priority','Dependencies','Action_Authority','AI_Capability_A0_A4','Gate_ID','Gate','Required_Gates','Acceptance_ID','Verification_ID','Evidence_ID','Requirement_IDs','Constraint_IDs','Interface_IDs','Decision_IDs','Risk_IDs','Notes']
-          for rank,(_,idx,r,deps) in enumerate(candidates[:40],1):
-              vals=[]
-              for k in fields:
-                  if k in r and r.get(k): vals.append(f'{k}={r.get(k)}')
-              print(f'CANDIDATE_{rank:02d}|ROW={idx+2}|'+'|'.join(vals))
-          print('ELIGIBILITY_AUDIT=PASS')
+              dep_states=[(d,current.get(d)) for d in deps]
+              if any(s!='PASS' for _,s in dep_states): continue
+              out.append((priority.get(r['Priority'].strip().upper(),9),idx,r,dep_states))
+          out.sort(key=lambda x:(x[0],x[1],x[2]['Task_ID']))
+          print('ACTIVE_L4_DEP_READY_COUNT='+str(len(out)))
+          fields=['Task_ID','Title','Purpose','Plan_Status','Execution_State','Priority','Critical_Path','Dependencies','Dependency_Type','Trigger','Preconditions','Inputs','Output/Artifact','Acceptance_ID','Acceptance_Criteria','Verification_ID','Verification_Method','Evidence_ID','Evidence_Required','Primary_Owner','AI_Capability_A0_A4','Action_Authority','Execution_Instructions','Required_Tools_or_Access','Idempotency','Reversibility','Retry_Recovery','Escalation_Condition','Risk_Reference','Interface_Reference','Requirement_Reference','Notes']
+          for rank,(_,idx,r,dep_states) in enumerate(out,1):
+              print(f'L4_CANDIDATE_{rank:02d}_BEGIN')
+              print(f'ROW={idx+2}')
+              for k in fields: print(f'{k}={r.get(k,"")}')
+              print('RUNTIME_DEP_STATES='+';'.join(f'{d}:{s}' for d,s in dep_states))
+              print(f'L4_CANDIDATE_{rank:02d}_END')
+          print('ACTIVE_L4_AUDIT=PASS')
           PY
       - name: Repository cleanliness
         shell: bash
