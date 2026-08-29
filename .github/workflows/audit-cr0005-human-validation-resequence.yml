@@ -1,0 +1,96 @@
+name: Audit CR-0005 human-validation resequencing
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/audit-cr0005-human-validation-resequence.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-governance-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Audit authoritative planning impact
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          python3 - <<'PY'
+          import csv, pathlib, re
+          root = pathlib.Path('Plans/Master')
+          wbs = root/'WBS/master-wbs.csv'
+          with wbs.open(encoding='utf-8', newline='') as f:
+              rows = list(csv.DictReader(f))
+          fields = list(rows[0]) if rows else []
+          print('WBS_FIELDS=' + '|'.join(fields))
+          def val(r, pred):
+              for k,v in r.items():
+                  if pred(k.lower()): return v or ''
+              return ''
+          def tid(r):
+              for v in r.values():
+                  if re.fullmatch(r'TSK-\d{4}', (v or '').strip()): return v.strip()
+              return ''
+          def lifecycle(r):
+              for v in r.values():
+                  if re.fullmatch(r'L(?:[0-9]|1[0-3])', (v or '').strip()): return v.strip()
+              return ''
+          def title(r):
+              t = val(r, lambda k: 'title' in k)
+              if t: return t
+              vals=list(r.values())
+              return vals[7] if len(vals)>7 else ''
+          def deps(r):
+              d = val(r, lambda k: 'depend' in k and 'type' not in k)
+              if d: return d
+              return ''
+          l3ids={tid(r) for r in rows if lifecycle(r)=='L3' and tid(r)}
+          print(f'L3_TASK_COUNT={len(l3ids)}')
+          print('L3_TASKS_BEGIN')
+          for r in rows:
+              if lifecycle(r)=='L3': print(f"{tid(r)}|{title(r)}|deps={deps(r)}")
+          print('L3_TASKS_END')
+          print('CROSS_L3_DEPENDENTS_BEGIN')
+          for r in rows:
+              if lifecycle(r) in {'L4','L5','L6','L7'}:
+                  found=sorted(i for i in l3ids if i and i in ' '.join(r.values()))
+                  if found: print(f"{tid(r)}|{lifecycle(r)}|{title(r)}|l3deps={';'.join(found)}|deps={deps(r)}")
+          print('CROSS_L3_DEPENDENTS_END')
+          keys=('representative','participant','parent','user test','usability','comprehension','recruit','interview','behavioral validation','behavioural validation','cohort')
+          print('HUMAN_VALIDATION_CANDIDATES_L2_L7_BEGIN')
+          for r in rows:
+              lc=lifecycle(r)
+              if lc in {'L2','L3','L4','L5','L6','L7'}:
+                  text=' '.join(r.values()).lower()
+                  hits=sorted({k for k in keys if k in text})
+                  if hits: print(f"{tid(r)}|{lc}|{title(r)}|hits={';'.join(hits)}|deps={deps(r)}")
+          print('HUMAN_VALIDATION_CANDIDATES_L2_L7_END')
+          print('TSK0187_DIRECT_DEPENDENTS_BEGIN')
+          for r in rows:
+              if tid(r)!='TSK-0187' and 'TSK-0187' in ' '.join(r.values()):
+                  print(f"{tid(r)}|{lifecycle(r)}|{title(r)}|deps={deps(r)}")
+          print('TSK0187_DIRECT_DEPENDENTS_END')
+          patterns=('CR-0004','DEC-0051','TSK-0187','LG-03','LG-04','LG-05','representative-parent','representative parent','behavioral validation','behavioural validation')
+          print('AUTHORITATIVE_REFERENCE_COUNTS_BEGIN')
+          for p in sorted(root.rglob('*')):
+              if not p.is_file() or p.suffix.lower() not in {'.md','.yaml','.yml','.csv','.txt'}: continue
+              if '/Generated/' in p.as_posix(): continue
+              try: text=p.read_text(encoding='utf-8')
+              except Exception: continue
+              hits={pat:text.lower().count(pat.lower()) for pat in patterns if pat.lower() in text.lower()}
+              if hits: print(f"{p.as_posix()}|" + ';'.join(f'{k}={v}' for k,v in hits.items()))
+          print('AUTHORITATIVE_REFERENCE_COUNTS_END')
+          print('CR0005_AUDIT=PASS')
+          PY
