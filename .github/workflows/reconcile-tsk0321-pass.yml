@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - .github/workflows/reconcile-tsk0321-pass.yml
+      - .github/scripts/reconcile_tsk0321_pass.py
 
 permissions:
   contents: write
