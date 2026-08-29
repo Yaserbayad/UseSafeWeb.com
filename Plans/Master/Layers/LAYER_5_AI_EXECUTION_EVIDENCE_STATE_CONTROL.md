@@ -49,6 +49,15 @@ No hidden chain-of-thought is evidence. Useful evidence is a source-cited analys
 - This override does **not** make `LG-06` PASS and does not authorize L5/L6 progression, integrated build, real-participant processing, legal completion, public release/launch, payment, or any HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED act whose own authority is unsatisfied.
 - At expiry/reactivation, execute the deferred L3 branch when authorized and re-evaluate every downstream PASS whose proof materially relied on provisional assumptions. Contradictory real evidence reopens affected tasks/gates; it is not reconciled away.
 
+### 5.3.3 Owner-approved provisional L4 Brand/UX/prototype decoupling (DEC-0051 / CR-0004)
+
+- Under the same expiry/reactivation boundary as DEC-0050, internal non-public L4 Brand/UX/prototype definition/design whose own acceptance can be satisfied without representative-parent evidence may enter through the explicit provisional L4 bridge `TSK-0139`; `TSK-0298` therefore depends on `TSK-0139` rather than `TSK-0187`.
+- `ACC-0298` and `ACC-0299` use provisional design-conformance semantics only. Plain-language or parent-facing design intent is not observed representative-parent comprehension, and current claims constraints are not deferred legal completion. Every artifact must carry active `RSK-0002` and the missing real-participant evidence limitation.
+- `TSK-0187` remains the mandatory representative-parent behavioral-validation work. `TSK-0309` intentionally retains `TSK-0187` as a hard dependency before correcting from real usability/comprehension evidence or freezing an implementation-ready experience baseline. No synthetic, AI, owner-preference or internal-review evidence may satisfy that behavioral edge.
+- Existing HUMAN_ONLY boundaries remain unchanged. In particular, `TSK-0301` still requires explicit Project Owner approval of one visual identity system when its dependencies are satisfied.
+- This change does not satisfy or bypass `LG-03`, `LG-04`, `LG-05`, `LG-06`, legal/privacy/participant conditions, L5/L6 build gates, public release/publication, payment, market activation or launch authority. It creates no participant-processing authority and no legal/compliance evidence.
+- At behavioral-validation reactivation/expiry, execute current required validation when otherwise authorized and re-evaluate every downstream PASS materially based on provisional assumptions; contradictory real evidence reopens affected work.
+
 ### 5.4 Evidence and PASS rules
 
 - Each task has VER-xxxx, EVD-xxxx and ACC-xxxx identifiers.
