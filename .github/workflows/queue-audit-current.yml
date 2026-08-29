@@ -1,0 +1,79 @@
+name: Derive current L4 queue
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/queue-audit-current.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Derive eligible AUTO_ALLOWED work
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(hostname -s)" = "adguardvm"
+          python3 - <<'PY'
+          import csv, pathlib, re
+          state=pathlib.Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          with pathlib.Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8',newline='') as f:
+              rows=list(csv.DictReader(f))
+          by={r['Task_ID']:r for r in rows}
+
+          passed=set()
+          m=re.search(r'## Current technical task state\s+### PASS\s+(.*?)(?=\n### |\n## )',state,re.S)
+          if m: passed.update(re.findall(r'TSK-\d{4}',m.group(1)))
+          passed.update(re.findall(r'(?m)^#{2,3} (TSK-\d{4}) accepted stable state(?:\b|\s|—)',state))
+          if 'all 31 L3 tasks plus `TSK-0187`, `TSK-0326`, and `TSK-0336` are `NOT_APPLICABLE + PASS`' in state:
+              passed.update({'TSK-0187','TSK-0326','TSK-0336'})
+              passed.update(r['Task_ID'] for r in rows if r.get('Lifecycle_Stage')=='L3' and r.get('Plan_Status')=='NOT_APPLICABLE')
+
+          completed={r['Task_ID'] for r in rows if r.get('Plan_Status')=='COMPLETED_CANDIDATE' and r.get('Execution_State')=='PASS'}
+          completed_evd={r['Task_ID'] for r in rows if r['Task_ID'] in completed and (r.get('Evidence_Reference') or '').strip()}
+          rank={'CRITICAL':0,'HIGH':1,'MEDIUM':2,'LOW':3}
+          def dep_state(tid):
+              r=by.get(tid)
+              if not r: return 'MISSING'
+              if tid in passed: return 'PASS'
+              if r.get('Plan_Status')=='NOT_APPLICABLE' and r.get('Execution_State')=='PASS': return 'EXCLUSION_PASS'
+              if tid in completed_evd: return 'EVIDENCED_COMPLETED_PASS'
+              return 'UNSAT'
+
+          candidates=[]
+          for idx,r in enumerate(rows):
+              tid=r['Task_ID']
+              if r.get('Lifecycle_Stage')!='L4' or r.get('Action_Authority')!='AUTO_ALLOWED': continue
+              if r.get('Plan_Status')!='PLANNED' or tid in passed or tid in completed: continue
+              deps=[d.strip() for d in re.split(r'[;,]',r.get('Dependencies','')) if d.strip()]
+              states=[(d,dep_state(d)) for d in deps]
+              ready=all(s in {'PASS','EXCLUSION_PASS','EVIDENCED_COMPLETED_PASS'} for _,s in states)
+              candidates.append((not ready,rank.get(r.get('Priority'),9),idx,r,states))
+          candidates.sort(key=lambda x:(x[0],x[1],x[2]))
+
+          print('CURRENT_PASS_COUNT='+str(len(passed)))
+          for tid in ['TSK-0229','TSK-0230','TSK-0309','TSK-0310','TSK-0313','TSK-0322','TSK-0323','TSK-0327']:
+              if tid in by: print('PROBE='+tid+'|'+dep_state(tid)+'|'+by[tid].get('Plan_Status','')+'|'+by[tid].get('Execution_State',''))
+          print('READY_BEGIN')
+          for nr,_,idx,r,states in candidates:
+              if not nr:
+                  print('|'.join([str(idx),r['Task_ID'],r.get('Priority',''),r.get('Title',''),r.get('Dependencies',''),';'.join(d+':'+s for d,s in states)]))
+          print('READY_END')
+          ready=[x for x in candidates if not x[0]]
+          if not ready:
+              print('SELECTED=NONE')
+          else:
+              r=ready[0][3]
+              print('SELECTED='+r['Task_ID'])
+              for key in ['Title','Priority','Dependencies','Trigger','Preconditions','Inputs','Output/Artifact','Acceptance_ID','Acceptance_Criteria','Verification_ID','Verification_Method','Evidence_ID','Evidence_Required','Requirement_Reference','Interface_Reference','Risk_Reference','Action_Authority','AI_Capability_A0_A4','Execution_Instructions','Required_Tools_or_Access','Escalation_Condition']:
+                  print('SELECTED_'+key.upper().replace('/','_').replace(' ','_')+'='+r.get(key,''))
+          print('CURRENT_QUEUE_AUDIT=PASS')
+          PY
