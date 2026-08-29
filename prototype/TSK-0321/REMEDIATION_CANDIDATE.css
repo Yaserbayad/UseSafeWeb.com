@@ -1,6 +1,12 @@
 /* TSK-0321 accessibility remediation candidate.
    NOT applied to the accepted TSK-0310 prototype until HUMAN_ONLY review/approval. */
 
+.prototype-topbar,
+.prototype-app,
+.prototype-footer {
+  min-width: 0;
+}
+
 .prototype-topbar {
   flex-wrap: wrap;
 }
