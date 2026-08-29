@@ -1,0 +1,116 @@
+{
+  "schema": "usesafeweb.tsk0308.design-system-candidate.v1",
+  "task_id": "TSK-0308",
+  "version": "1.0.0-candidate",
+  "status": "CANDIDATE_HUMAN_DECISION_REQUIRED_NOT_PASS",
+  "action_authority": "HUMAN_ONLY",
+  "sequencing": "DEC-0052/CR-0005",
+  "human_validation_claimed": false,
+  "token_authority": "brand/system/TSK-0300/tokens.css",
+  "primitive_authority": "brand/system/TSK-0300/components.css",
+  "candidate_composition_layer": "prototype/TSK-0308/candidate.css",
+  "reference_surface": "prototype/TSK-0308/reference.html",
+  "source_blobs": {
+    "brand_system_readme": "4baa67f565c14c3034fca47bb5fad0b9ff71b091",
+    "tokens": "cd7d9a7cd5109e1ff0baa76532495dfd7a27a70f",
+    "primitives": "831e92a74b6dda04252d93242cb33bd491a02381",
+    "experience_baseline": "76bb848ebdf6a2aee4dd84bc18e8af5ba8a99dbc",
+    "ui_rules": "0b7012a12070f7eccf45a1bbb2f453fde8507ff6",
+    "ia_navigation": "4efb624005061e242e427994953d0fc00fcd745f",
+    "product_voice": "d12c1e707f0390915002b27bf3a5073d0135d466",
+    "identity": "b8ffd2ed234465a238558a7b94e56274de49696a",
+    "wbs": "f23b4f017d1baf73258fa30ecd71549bbfe1b815"
+  },
+  "requirements": [
+    "REQ-0028",
+    "REQ-0029",
+    "REQ-0030",
+    "CON-0010",
+    "CON-0017",
+    "CON-0022",
+    "INT-0009",
+    "INT-0010"
+  ],
+  "surfaces": {
+    "public": {
+      "purpose": "explain_and_route",
+      "shares_tokens_components": true,
+      "may_manufacture_protection_state": false
+    },
+    "setup": {
+      "purpose": "perform_current_task_and_render_evidence_state",
+      "shares_tokens_components": true,
+      "dashboard_navigation": false,
+      "mandatory_account": false
+    }
+  },
+  "components": [
+    {"id":"DS-01","name":"ResponsiveShell","class":"content","testable":true},
+    {"id":"DS-02","name":"BrandHeader","class":"content","testable":true},
+    {"id":"DS-03","name":"ScreenHeader","class":"content","testable":true},
+    {"id":"DS-04","name":"ContentPanel","class":"content","testable":true},
+    {"id":"DS-05","name":"ActionGroup","class":"controls","testable":true},
+    {"id":"DS-06","name":"LoadingFeedback","class":"loading","testable":true},
+    {"id":"DS-07","name":"VerificationResult","class":"verification","testable":true},
+    {"id":"DS-08","name":"ActionNeeded/ErrorFeedback","class":"error","testable":true},
+    {"id":"DS-09","name":"UncertainOrNotCovered","class":"uncertain","testable":true},
+    {"id":"DS-10","name":"ProtectionMap","class":"verification","testable":true},
+    {"id":"DS-11","name":"RecoveryPanel","class":"recovery","testable":true},
+    {"id":"DS-12","name":"HelpAndLimitations","class":"support","testable":true},
+    {"id":"DS-13","name":"TechnicalValue","class":"content","testable":true}
+  ],
+  "required_state_classes": {
+    "content": ["DS-01","DS-03","DS-04"],
+    "error": ["DS-08"],
+    "loading": ["DS-06"],
+    "verification": ["DS-07","DS-10"],
+    "uncertain": ["DS-09"],
+    "recovery": ["DS-11"]
+  },
+  "protection_states": [
+    {"id":"S1","label":"Verified","evidence":"system"},
+    {"id":"S2","label":"You confirmed this is set up","evidence":"parent_confirmation"},
+    {"id":"S3","label":"Action needed","evidence":"known_issue_or_incomplete"},
+    {"id":"S4","label":"Not covered","evidence":"unsupported_or_out_of_scope"},
+    {"id":"S5","label":"Status uncertain","evidence":"insufficient_or_conflicting"},
+    {"id":"S6","label":"Removed","evidence":"configuration_removed"}
+  ],
+  "responsive_viewports": [320,768,1024,1440],
+  "locales": [
+    {"tag":"en","direction":"ltr","market_activation_claim":false},
+    {"tag":"tr","direction":"ltr","market_activation_claim":false},
+    {"tag":"ar","direction":"rtl","market_activation_claim":false}
+  ],
+  "accessibility": {
+    "target": "WCAG_2_2_AA",
+    "semantic_controls": true,
+    "visible_focus": true,
+    "color_only_state": false,
+    "text_resize_200_percent": true,
+    "mobile_no_page_overflow_320": true,
+    "loading_text_and_aria_busy": true,
+    "screen_change_focus_h1": true,
+    "reduced_motion": true,
+    "rtl_logical_order": true
+  },
+  "forbidden": [
+    "mandatory_account",
+    "login_navigation",
+    "dashboard_navigation",
+    "child_profile_field",
+    "payment_gate_before_value",
+    "browsing_history_surface",
+    "dns_query_history_surface",
+    "routine_human_support_dependency",
+    "overall_safety_score",
+    "fully_protected_claim",
+    "parent_confirmation_as_system_verification",
+    "local_brand_palette_fork",
+    "local_logo_geometry_fork"
+  ],
+  "owner_decision": {
+    "required": true,
+    "approved": false,
+    "pass_allowed_before_approval": false
+  }
+}
