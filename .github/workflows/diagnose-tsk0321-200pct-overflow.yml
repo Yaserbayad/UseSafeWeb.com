@@ -61,55 +61,56 @@ jobs:
 
           node <<'NODE'
           const { chromium } = require('playwright');
-          const base='http://127.0.0.1:4176/prototype/TSK-0310/';
-          const browser=await chromium.launch({headless:true});
-          const page=await browser.newPage({viewport:{width:320,height:900}});
-          await page.goto(base,{waitUntil:'networkidle'});
+          (async()=>{
+            const base='http://127.0.0.1:4176/prototype/TSK-0310/';
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage({viewport:{width:320,height:900}});
+            await page.goto(base,{waitUntil:'networkidle'});
 
-          async function press(selector){
-            const el=page.locator(selector); await el.focus(); await page.keyboard.press('Enter');
-          }
-          async function reset(){await press('[data-global-action="RESET"]')}
-          async function dump(label){
-            await page.evaluate(()=>document.documentElement.style.fontSize='200%');
-            const out=await page.evaluate(()=>{
-              const vw=window.innerWidth;
-              const all=[...document.querySelectorAll('*')];
-              const offenders=all.map(el=>{
-                const r=el.getBoundingClientRect(); const s=getComputedStyle(el);
-                const overRight=r.right-vw, overLeft=-r.left;
-                const ownScroll=el.scrollWidth-el.clientWidth;
-                return {
-                  tag:el.tagName.toLowerCase(),
-                  id:el.id||'',
-                  cls:(typeof el.className==='string'?el.className:'').slice(0,120),
-                  text:(el.textContent||'').replace(/\s+/g,' ').trim().slice(0,90),
-                  left:+r.left.toFixed(1),right:+r.right.toFixed(1),width:+r.width.toFixed(1),
-                  overRight:+overRight.toFixed(1),overLeft:+overLeft.toFixed(1),
-                  scrollWidth:el.scrollWidth,clientWidth:el.clientWidth,ownScroll,
-                  display:s.display,minWidth:s.minWidth,widthCss:s.width,maxWidth:s.maxWidth,
-                  paddingInline:`${s.paddingInlineStart}/${s.paddingInlineEnd}`,
-                  marginInline:`${s.marginInlineStart}/${s.marginInlineEnd}`,
-                  gap:s.gap,fontSize:s.fontSize,whiteSpace:s.whiteSpace,overflowWrap:s.overflowWrap,
-                  position:s.position,boxSizing:s.boxSizing,flexWrap:s.flexWrap,flexShrink:s.flexShrink
-                };
-              }).filter(x=>x.overRight>0.5||x.overLeft>0.5||x.ownScroll>0.5)
-                .sort((a,b)=>Math.max(b.overRight,b.overLeft,b.ownScroll)-Math.max(a.overRight,a.overLeft,a.ownScroll));
-              return {rootOverflow:document.documentElement.scrollWidth-vw,scrollWidth:document.documentElement.scrollWidth,vw,offenders:offenders.slice(0,18)};
-            });
-            console.log(`DIAG_${label}_ROOT_OVERFLOW=${out.rootOverflow}`);
-            console.log(`DIAG_${label}_JSON=${JSON.stringify(out)}`);
-            await page.evaluate(()=>document.documentElement.style.fontSize='');
-          }
+            async function press(selector){
+              const el=page.locator(selector); await el.focus(); await page.keyboard.press('Enter');
+            }
+            async function reset(){await press('[data-global-action="RESET"]')}
+            async function dump(label){
+              await page.evaluate(()=>document.documentElement.style.fontSize='200%');
+              const out=await page.evaluate(()=>{
+                const vw=window.innerWidth;
+                const all=[...document.querySelectorAll('*')];
+                const offenders=all.map(el=>{
+                  const r=el.getBoundingClientRect(); const s=getComputedStyle(el);
+                  const overRight=r.right-vw, overLeft=-r.left;
+                  const ownScroll=el.scrollWidth-el.clientWidth;
+                  return {
+                    tag:el.tagName.toLowerCase(), id:el.id||'',
+                    cls:(typeof el.className==='string'?el.className:'').slice(0,120),
+                    text:(el.textContent||'').replace(/\s+/g,' ').trim().slice(0,90),
+                    left:+r.left.toFixed(1),right:+r.right.toFixed(1),width:+r.width.toFixed(1),
+                    overRight:+overRight.toFixed(1),overLeft:+overLeft.toFixed(1),
+                    scrollWidth:el.scrollWidth,clientWidth:el.clientWidth,ownScroll,
+                    display:s.display,minWidth:s.minWidth,widthCss:s.width,maxWidth:s.maxWidth,
+                    paddingInline:`${s.paddingInlineStart}/${s.paddingInlineEnd}`,
+                    marginInline:`${s.marginInlineStart}/${s.marginInlineEnd}`,
+                    gap:s.gap,fontSize:s.fontSize,whiteSpace:s.whiteSpace,overflowWrap:s.overflowWrap,
+                    position:s.position,boxSizing:s.boxSizing,flexWrap:s.flexWrap,flexShrink:s.flexShrink
+                  };
+                }).filter(x=>x.overRight>0.5||x.overLeft>0.5||x.ownScroll>0.5)
+                  .sort((a,b)=>Math.max(b.overRight,b.overLeft,b.ownScroll)-Math.max(a.overRight,a.overLeft,a.ownScroll));
+                return {rootOverflow:document.documentElement.scrollWidth-vw,scrollWidth:document.documentElement.scrollWidth,vw,offenders:offenders.slice(0,18)};
+              });
+              console.log(`DIAG_${label}_ROOT_OVERFLOW=${out.rootOverflow}`);
+              console.log(`DIAG_${label}_JSON=${JSON.stringify(out)}`);
+              await page.evaluate(()=>document.documentElement.style.fontSize='');
+            }
 
-          await dump('DISCOVERY');
-          await press('[data-action="START"]'); await dump('ROUTER');
-          await press('[data-platform="android"]'); await press('[data-action="NATIVE_CONFIRMED"]'); await dump('ANDROID_DNS');
-          await press('[data-action="DNS_CONFIGURED"]'); await press('[data-result="verified"]'); await press('[data-action="SERVICE_NONE"]'); await dump('MAP');
-          await reset(); await press('[data-action="START"]'); await press('[data-platform="android"]'); await press('[data-action="NATIVE_ACTION_NEEDED"]'); await press('[data-action="DNS_CONFIGURED"]'); await press('[data-result="not-covered"]'); await dump('LIMITATIONS');
+            await dump('DISCOVERY');
+            await press('[data-action="START"]'); await dump('ROUTER');
+            await press('[data-platform="android"]'); await press('[data-action="NATIVE_CONFIRMED"]'); await dump('ANDROID_DNS');
+            await press('[data-action="DNS_CONFIGURED"]'); await press('[data-result="verified"]'); await press('[data-action="SERVICE_NONE"]'); await dump('MAP');
+            await reset(); await press('[data-action="START"]'); await press('[data-platform="android"]'); await press('[data-action="NATIVE_ACTION_NEEDED"]'); await press('[data-action="DNS_CONFIGURED"]'); await press('[data-result="not-covered"]'); await dump('LIMITATIONS');
 
-          await browser.close();
-          console.log('TSK0321_OVERFLOW_DIAGNOSTIC=COMPLETE');
+            await browser.close();
+            console.log('TSK0321_OVERFLOW_DIAGNOSTIC=COMPLETE');
+          })().catch(e=>{console.error(e);process.exit(1)});
           NODE
           git diff --check
           test -z "$(git status --porcelain)"
