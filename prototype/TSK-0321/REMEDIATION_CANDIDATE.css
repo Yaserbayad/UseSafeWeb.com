@@ -11,7 +11,10 @@
   flex-wrap: wrap;
 }
 
-.prototype-topbar > * {
+.prototype-topbar > *,
+.prototype-screen > *,
+.prototype-actions,
+.prototype-actions > * {
   min-width: 0;
 }
 
