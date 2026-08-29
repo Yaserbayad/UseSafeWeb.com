@@ -18,7 +18,7 @@ This approval applies to the exact previously prepared and verified candidate; n
 - Preparation evidence blob: `a595b4cafaac10ae6262e296c6b5d482945d4e45`
 - Current WBS blob used for acceptance: `f23b4f017d1baf73258fa30ecd71549bbfe1b815`
 
-## Acceptance proof already established before approval
+## Acceptance proof established before approval
 
 Preparation verification run/job `33279766680` / `99172831252` completed successfully on runner `adguardvm` and proved:
 
@@ -31,6 +31,25 @@ Preparation verification run/job `33279766680` / `99172831252` completed success
 - `TSK0330_CANDIDATE_VERIFICATION=PASS`
 
 The verified candidate covers every current TSK-0330 acceptance element: prerequisites, step-by-step actions, verification/confirmation, already-configured/skip conditions, unsupported/conflict states, troubleshooting/removal/recovery, and no misleading completion state.
+
+## Final acceptance verification after owner approval
+
+Final acceptance workflow `Verify TSK-0330 acceptance` ran against the unchanged approved candidate after owner approval:
+
+- workflow head: `971b57c8755a5a6fdd0c18cdb3a70e1bc5e88030`;
+- run: `33280241901` — SUCCESS;
+- job: `99174073706` — SUCCESS;
+- runner/machine: `adguardvm`.
+
+The verifier pinned the WBS, candidate and preparation-evidence blobs and bound the exact owner approval text/time to the exact candidate blob. Terminal markers:
+
+- `TSK0330_OWNER_APPROVAL_BINDING=PASS`
+- `TSK0330_APPROVED_BLOB_IDENTITY=PASS`
+- `TSK0330_ACCEPTANCE_CONTRACT=PASS`
+- `TSK0330_FINAL_ACCEPTANCE=PASS`
+- `REPOSITORY_CLEAN=PASS`
+
+No product/design source changed during final acceptance verification.
 
 ## Product/scope invariants preserved
 
@@ -50,4 +69,4 @@ The accepted design remains:
 
 TSK-0330 was `HUMAN_ONLY`. The exact owner approval above closes that human decision condition for the verified candidate blob. This evidence does not itself authorize LG-06, L5/L6, real-user validation, publication, payment, market activation or launch.
 
-Canonical PASS becomes authoritative only after final acceptance verification succeeds, `CURRENT_STATE.md` is reconciled from the prepared WAITING boundary to PASS, that state write is read back, and subsequent eligibility is recomputed.
+Canonical PASS becomes authoritative only after `CURRENT_STATE.md` is reconciled from the prepared WAITING boundary to PASS, that state write is read back, and subsequent eligibility is recomputed.
