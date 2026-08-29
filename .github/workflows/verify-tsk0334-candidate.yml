@@ -40,22 +40,23 @@ jobs:
           for needle in ['accessible path','minimal diagnostic request','clear protection consequence','escalation option','success state']:
               assert needle in ac, (needle,ac)
           t=Path('design/TSK-0334/SUPPORT_FALSE_POSITIVE_REMOVAL_RECONFIGURATION_FLOWS_CANDIDATE.md').read_text(encoding='utf-8')
-          # Every major category must independently carry all five acceptance fields.
           for code in ['SUP-01','SUP-02','SUP-03','SUP-04','SUP-05']:
               m=re.search(rf'^## \d+\. {code}.*?(?=^## \d+\.|\Z)',t,re.M|re.S)
               assert m, code
               b=m.group(0)
               for label in ['Accessible path','Minimal diagnostic','Protection consequence','Escalation option','Success state']:
                   assert label in b, (code,label)
-          required=[
+          low=t.lower()
+          for x in [
             'Global Help','Report a problem','DEV-COMMON-CONFLICT','DEV-AND-DNS-REMOVE','DEV-IOS-DNS-REMOVE',
             'Verified','You confirmed this is set up','Action needed','Not covered','Status uncertain','Removed',
-            'no browsing history','raw DNS','retry only after a changed condition','Acknowledgement does not alter protection state',
+            'browsing history','raw DNS','retry only after a changed condition','acknowledgement does not alter protection state',
             'APPROVE TSK-0334 SUPPORT FALSE-POSITIVE REMOVAL RECONFIGURATION FLOWS'
-          ]
-          low=t.lower()
-          for x in required:
+          ]:
               assert x.lower() in low, x
+          # Semantic privacy guards: the candidate must prohibit history/log/identity collection rather than merely mention it.
+          assert re.search(r'do not request[^\n]*(?:browsing history|raw dns)',low) or ('do not ask for browsing history' in low and 'raw dns' in low)
+          assert 'persistent device/customer identifier' in low
           for n in range(1,13): assert f'TC-0334-{n:02d}' in t
           assert 'not accepted / not PASS' in t
           assert 'does not mark TSK-0334 PASS' in t
