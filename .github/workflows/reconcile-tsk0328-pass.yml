@@ -1,0 +1,47 @@
+name: Reconcile TSK-0328 PASS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-tsk0328-pass.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-governance-state
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - name: Reconcile runtime state
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(hostname -s)" = "adguardvm"
+          python3 .github/scripts/reconcile_tsk0328_pass.py
+          git diff --check
+          changed="$(git diff --name-only)"
+          if [ -n "$changed" ] && [ "$changed" != "CURRENT_STATE.md" ]; then
+            echo "Unexpected changed paths: $changed" >&2
+            exit 1
+          fi
+          if git diff --quiet -- CURRENT_STATE.md; then
+            echo 'RUNTIME_TSK0328_NOOP=PASS'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          test "$(git diff --cached --name-only)" = "CURRENT_STATE.md"
+          git commit -m 'state: accept TSK-0328 information architecture'
+          git push origin HEAD:main
+          echo "RUNTIME_COMMIT=$(git rev-parse HEAD)"
+          echo "RUNTIME_STATE_BLOB=$(git rev-parse HEAD:CURRENT_STATE.md)"
+          sha256sum CURRENT_STATE.md | sed 's/^/RUNTIME_STATE_SHA256=/'
