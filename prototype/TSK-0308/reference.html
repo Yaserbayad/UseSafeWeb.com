@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>TSK-0308 internal design-system candidate</title>
+  <link rel="stylesheet" href="../../brand/system/TSK-0300/tokens.css">
+  <link rel="stylesheet" href="../../brand/system/TSK-0300/components.css">
+  <link rel="stylesheet" href="candidate.css">
+</head>
+<body>
+  <main class="sw-shell sw-stack" id="main-content">
+    <header class="sw-ds-screen__header">
+      <p class="sw-kicker">Internal candidate — not a deployed surface</p>
+      <h1 class="sw-title">Shared responsive design-system reference</h1>
+      <p class="sw-copy">This page exercises public, setup, loading, verification, error, uncertainty and recovery composition using the existing SafeWeb token and primitive sources.</p>
+    </header>
+
+    <section class="sw-ds-public-layout" aria-labelledby="public-heading" data-reference="public">
+      <div class="sw-stack">
+        <h2 id="public-heading">Public composition</h2>
+        <p class="sw-copy">SafeWeb helps parents set up a first phone with clear protection layers, limits and a guided accountless setup.</p>
+        <div class="sw-ds-actions">
+          <a class="sw-button" href="#setup-reference">Start setup</a>
+          <a class="sw-button sw-button--secondary" href="#limits-reference">See limits</a>
+        </div>
+      </div>
+      <aside class="sw-panel" aria-labelledby="public-limit-heading">
+        <h2 id="public-limit-heading">What this does not mean</h2>
+        <p>SafeWeb does not promise complete safety and does not turn parent confirmation into technical verification.</p>
+      </aside>
+    </section>
+
+    <hr class="sw-rule">
+
+    <section class="sw-ds-screen" id="setup-reference" aria-labelledby="setup-heading" data-reference="setup">
+      <header class="sw-ds-screen__header">
+        <p class="sw-kicker">Internet setup</p>
+        <h2 id="setup-heading">Check the SafeWeb DNS connection</h2>
+        <p class="sw-copy">Use the current source-backed platform instruction, then check again only after the device or network condition has changed.</p>
+      </header>
+
+      <code class="sw-ds-tech" dir="ltr">dns.usesafeweb.com</code>
+
+      <div class="sw-ds-actions">
+        <button class="sw-button" type="button">Check again</button>
+        <button class="sw-button sw-button--secondary" type="button">See setup instructions</button>
+        <a class="sw-button sw-button--quiet" href="#help-reference">Help</a>
+      </div>
+
+      <section class="sw-ds-feedback" aria-busy="true" aria-labelledby="loading-heading" data-state-class="loading">
+        <h3 id="loading-heading" class="sw-ds-feedback__label">Checking…</h3>
+        <p class="sw-ds-feedback__body"><span class="sw-ds-busy"><span class="sw-ds-busy__indicator" aria-hidden="true"></span>Checking the current DNS path</span></p>
+      </section>
+
+      <section class="sw-ds-state-grid" data-layout="three" aria-label="Protection Map examples">
+        <article class="sw-ds-state-item" data-state="S1" data-state-class="verification">
+          <h3>Internet</h3>
+          <p class="sw-ds-state-item__label">Verified</p>
+          <p class="sw-ds-state-item__evidence">Current qualifying SafeWeb DNS evidence is present for this layer.</p>
+          <p class="sw-ds-state-item__note">This does not verify every other protection layer.</p>
+        </article>
+
+        <article class="sw-ds-state-item" data-state="S2" data-state-class="confirmation">
+          <h3>Phone</h3>
+          <p class="sw-ds-state-item__label">You confirmed this is set up</p>
+          <p class="sw-ds-state-item__evidence">SafeWeb has not independently verified this setting.</p>
+        </article>
+
+        <article class="sw-ds-state-item" data-state="S5" data-state-class="uncertain">
+          <h3>Service</h3>
+          <p class="sw-ds-state-item__label">Status uncertain</p>
+          <p class="sw-ds-state-item__evidence">Current evidence is not sufficient to determine this layer safely.</p>
+          <a href="#help-reference">Review the limitation</a>
+        </article>
+      </section>
+
+      <section class="sw-ds-feedback" aria-labelledby="error-heading" data-state="S3" data-state-class="error">
+        <h3 id="error-heading" class="sw-ds-feedback__label">Action needed</h3>
+        <p class="sw-ds-feedback__body">The current check did not establish the intended SafeWeb DNS path.</p>
+        <div class="sw-ds-actions">
+          <button class="sw-button" type="button">Review the next action</button>
+          <a class="sw-button sw-button--quiet" href="#help-reference">Help</a>
+        </div>
+      </section>
+
+      <section class="sw-ds-feedback" aria-labelledby="not-covered-heading" data-state="S4" data-state-class="uncertain">
+        <h3 id="not-covered-heading" class="sw-ds-feedback__label">Not covered</h3>
+        <p class="sw-ds-feedback__body">This combination is outside the current supported setup. SafeWeb does not invent an untested workaround.</p>
+      </section>
+
+      <section class="sw-ds-recovery" aria-labelledby="recovery-heading" data-state-class="recovery">
+        <h3 id="recovery-heading">Recovery</h3>
+        <p>Start over clears the web journey state only. It does not remove device DNS configuration.</p>
+        <div class="sw-ds-actions">
+          <button class="sw-button sw-button--secondary" type="button">Start over</button>
+          <button class="sw-button sw-button--quiet" type="button">Remove SafeWeb DNS</button>
+        </div>
+        <article class="sw-ds-state-item" data-state="S6">
+          <h3>Internet</h3>
+          <p class="sw-ds-state-item__label">Removed</p>
+          <p class="sw-ds-state-item__evidence">The active SafeWeb DNS claim has ended after removal.</p>
+        </article>
+      </section>
+    </section>
+
+    <section class="sw-panel" id="help-reference" aria-labelledby="help-heading" data-reference="help">
+      <h2 id="help-heading">Self-service help</h2>
+      <p>Help is a state-neutral utility. Ordinary setup, troubleshooting and recovery do not require routine human support.</p>
+    </section>
+
+    <section class="sw-panel" id="limits-reference" aria-labelledby="limits-heading" data-reference="limits">
+      <h2 id="limits-heading">Limitations</h2>
+      <p>Protection states describe evidence for specific layers. They are not an overall child-safety score or certification.</p>
+    </section>
+
+    <section class="sw-panel" dir="rtl" lang="ar" aria-labelledby="rtl-heading" data-reference="rtl-structure">
+      <h2 id="rtl-heading">RTL structure test</h2>
+      <p>This internal structural test uses directionality only; it is not an Arabic translation or native-speaker validation claim.</p>
+      <p><span class="sw-brand-token" dir="ltr">SafeWeb</span></p>
+      <code class="sw-ds-tech" dir="ltr">https://dns.usesafeweb.com/dns-query</code>
+    </section>
+  </main>
+</body>
+</html>
