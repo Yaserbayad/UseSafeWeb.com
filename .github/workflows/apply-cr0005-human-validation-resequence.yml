@@ -29,6 +29,16 @@ jobs:
           set -Eeuo pipefail
           [[ "$(hostname -s)" == "adguardvm" ]]
           [[ "$(id -un)" == "azureusr" ]]
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('.github/scripts/apply_cr0005.py')
+          s=p.read_text(encoding='utf-8')
+          bad="    r['Next_Action'] = 'No execution. Preserve as excluded historical pre-product validation work; use the L8 controlled integrated-product pilot for actual human/user validation.'\n"
+          if s.count(bad) != 1:
+              raise SystemExit('CR0005_HELPER_PATCH_PRECONDITION=FAIL')
+          p.write_text(s.replace(bad,'',1),encoding='utf-8')
+          print('CR0005_HELPER_PATCH=PASS')
+          PY
           python3 .github/scripts/apply_cr0005.py | tee /tmp/cr0005-validation.log
           grep -qx 'CR0005_AMENDMENT_VALIDATION=PASS' /tmp/cr0005-validation.log
           git diff --check
@@ -38,7 +48,7 @@ jobs:
           for f in "${changed[@]}"; do
             [[ "$f" =~ $allowed ]] || { echo "Unexpected changed path: $f" >&2; exit 1; }
           done
-          [[ ${#changed[@]} -eq 13 ]]
+          [[ ${#changed[@]} -eq 15 ]]
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add Plans
