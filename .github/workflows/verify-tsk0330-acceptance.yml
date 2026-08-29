@@ -1,0 +1,54 @@
+name: Verify TSK-0330 acceptance
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/verify-tsk0330-acceptance.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify approved candidate and acceptance evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          test "$(git rev-parse HEAD:Plans/Master/WBS/master-wbs.csv)" = "f23b4f017d1baf73258fa30ecd71549bbfe1b815"
+          test "$(git rev-parse HEAD:design/TSK-0330/PHONE_INTERNET_SERVICES_SETUP_FLOWS_CANDIDATE.md)" = "07fa10b3fa9b91ddd02f19f5d1c68b15184677a7"
+          test "$(git rev-parse HEAD:TSK_0330_PHONE_INTERNET_SERVICES_FLOW_PREPARATION_EVIDENCE_2026-08-29.md)" = "a595b4cafaac10ae6262e296c6b5d482945d4e45"
+          test "$(git rev-parse HEAD:TSK_0330_PHONE_INTERNET_SERVICES_FLOW_ACCEPTANCE_EVIDENCE_2026-08-29.md)" = "9089c56f30f788b7498e53a3a66e21f1d3f804b9"
+          python3 - <<'PY'
+          import csv
+          from pathlib import Path
+          rows=list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='')))
+          r=next(x for x in rows if x['Task_ID'].strip()=='TSK-0330')
+          assert r['Action_Authority'].strip()=='HUMAN_ONLY'
+          assert r['Dependencies'].strip()=='TSK-0146'
+          ac=r['Acceptance_Criteria']
+          for needle in ['prerequisites','step-by-step actions','verification/confirmation','skip conditions','unsupported/conflict states','troubleshooting','no misleading completion state']:
+              assert needle in ac
+          cand=Path('design/TSK-0330/PHONE_INTERNET_SERVICES_SETUP_FLOWS_CANDIDATE.md').read_text(encoding='utf-8')
+          ev=Path('TSK_0330_PHONE_INTERNET_SERVICES_FLOW_ACCEPTANCE_EVIDENCE_2026-08-29.md').read_text(encoding='utf-8')
+          assert 'APPROVE TSK-0330 PHONE INTERNET SERVICES FLOWS' in ev
+          assert '2026-08-29T23:06:35Z' in ev
+          assert '07fa10b3fa9b91ddd02f19f5d1c68b15184677a7' in ev
+          for x in ['Layer 1 — Phone','Layer 2 — Internet','Layer 3 — Services','Protection Map completion','dns.usesafeweb.com','https://dns.usesafeweb.com/dns-query']:
+              assert x in cand
+          for n in range(1,13): assert f'TC-0330-{n:02d}' in cand
+          print('TSK0330_OWNER_APPROVAL_BINDING=PASS')
+          print('TSK0330_APPROVED_BLOB_IDENTITY=PASS')
+          print('TSK0330_ACCEPTANCE_CONTRACT=PASS')
+          print('TSK0330_FINAL_ACCEPTANCE=PASS')
+          PY
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'REPOSITORY_CLEAN=PASS'
