@@ -1,0 +1,99 @@
+{
+  "schema": "usesafeweb.experience-baseline.v1",
+  "task_id": "TSK-0309",
+  "version": "1.0.0",
+  "status": "frozen_internal_l4",
+  "owner": "UX",
+  "authority": "A3/AUTO_ALLOWED",
+  "decision_basis": ["DEC-0052", "CR-0005"],
+  "representative_source": "prototype/TSK-0310",
+  "artifacts": {
+    "index": {"path": "prototype/TSK-0310/index.html", "git_blob": "5d80dfdefb52042bc34468723354fefd325285e4"},
+    "model": {"path": "prototype/TSK-0310/model.mjs", "git_blob": "01343273fd09c3c12d26f0c0eb1ae9a2fce10c91"},
+    "app": {"path": "prototype/TSK-0310/app.mjs", "git_blob": "a4a0aff8848f8541e2581e333efbf48767c9f0ff"},
+    "styles": {"path": "prototype/TSK-0310/prototype.css", "git_blob": "439ef05dd04da7fccf01cb4b85e317a828389edf"},
+    "browser_acceptance": {"path": "prototype/TSK-0310/browser-acceptance.mjs", "git_blob": "f791a797f6a64be8b74eb13cbd2e628d5b083007"},
+    "package": {"path": "prototype/TSK-0310/package.json", "git_blob": "9cbf9f5102592a0147c531748db49b68e4ee1648"}
+  },
+  "governing_sources": [
+    {"path": "TSK_0310_RENDERED_BROWSER_ACCEPTANCE_EVIDENCE_2026-08-29.md", "git_blob": "02b34756862a62091908e60d32b490059a84a67c"},
+    {"path": "TSK_0320_PROTECTION_STATE_MODEL_AND_COPY_RULES_2026-08-28.md", "git_blob": "1146f7622f434590dde1253d11f14fb6a87e19de"},
+    {"path": "TSK_0299_PROVISIONAL_VERBAL_SYSTEM_2026-08-29.md", "git_blob": "a4ff2314ff02c407249e8b5d4d6b9600b89403b3"},
+    {"path": "brand/system/TSK-0300/README.md", "git_blob": "4baa67f565c14c3034fca47bb5fad0b9ff71b091", "sequencing_note": "Older CR-0004 governance wording is superseded by DEC-0052/CR-0005; valid brand/content rules remain applicable."},
+    {"path": "Plans/Master/WBS/master-wbs.csv", "git_blob": "f23b4f017d1baf73258fa30ecd71549bbfe1b815"},
+    {"path": "Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md", "git_blob": "93b143776a2c49000b2d092c5b812a70bc0963ac"}
+  ],
+  "requirements": ["REQ-0028", "REQ-0029", "REQ-0031"],
+  "interfaces": ["INT-0009", "INT-0010"],
+  "constraints": ["CON-0010", "CON-0017", "CON-0023", "CON-0025"],
+  "risk": "RSK-0002",
+  "screens": ["discovery", "router", "native", "dns", "verify", "service", "map", "troubleshooting", "removal", "recovery", "limitations"],
+  "evidence_states": ["verified", "parent-confirmed", "action-needed", "not-covered", "uncertain", "removed"],
+  "platform_configuration": {
+    "android_private_dns_hostname": "dns.usesafeweb.com",
+    "iphone_doh_url": "https://dns.usesafeweb.com/dns-query",
+    "unsupported_behavior": "limitations_no_speculative_workaround"
+  },
+  "critical_journey": ["start", "configure", "verify", "understand", "troubleshoot", "recover", "remove", "reset_reconfigure"],
+  "truth_invariants": [
+    "parent_confirmation_is_not_system_verification",
+    "verified_requires_current_qualifying_evidence",
+    "uncertain_and_not_covered_never_imply_success",
+    "removed_never_silently_returns_to_verified",
+    "protection_state_is_not_color_only",
+    "no_overall_safety_score_or_complete_safety_claim"
+  ],
+  "interaction_invariants": [
+    "every_retained_action_has_documented_necessity",
+    "no_personal_data_entry_required_for_representative_journey",
+    "retry_requires_changed_condition",
+    "invalid_state_transition_is_rejected",
+    "unsupported_route_fails_safely"
+  ],
+  "privacy_invariants": [
+    "no_mandatory_account",
+    "no_local_storage",
+    "no_session_storage",
+    "no_cookie",
+    "no_service_worker",
+    "no_remote_tracker_dependency",
+    "no_raw_dns_query_data",
+    "no_browsing_history",
+    "no_persistent_parent_or_child_identity"
+  ],
+  "scope_exclusions": [
+    "mandatory_account",
+    "customer_account_dashboard",
+    "customer_facing_adguard_admin",
+    "child_account",
+    "browsing_activity_history",
+    "broad_dns_admin_console",
+    "native_app",
+    "school_portal",
+    "public_api_integration_platform",
+    "card_trial_payment_before_core_value"
+  ],
+  "accessibility_responsive": {
+    "mobile_first": true,
+    "representative_mobile_width_px": 320,
+    "desktop_reference_width_px": 1280,
+    "target": "WCAG_2.2_AA",
+    "state_text_required": true,
+    "screen_heading_focus": true,
+    "horizontal_overflow_allowed": false
+  },
+  "localization": {
+    "first_public_release_languages": ["en", "tr", "ar"],
+    "arabic_rtl": true,
+    "brand_token": "SafeWeb",
+    "brand_token_direction": "ltr_invariant"
+  },
+  "defect_disposition": {
+    "critical_high_open": 0,
+    "prototype_code_change_required": false,
+    "reason": "Accepted rendered target-environment evidence establishes no current critical/high pre-product defect; least-change freeze is appropriate."
+  },
+  "human_validation_claim": false,
+  "first_human_validation_stage": "L8_after_LG-09",
+  "release_authority": false
+}
