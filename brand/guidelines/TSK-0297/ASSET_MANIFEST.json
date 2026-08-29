@@ -1,0 +1,159 @@
+{
+  "schema": "usesafeweb.brand-assets.v1",
+  "guideline_version": "1.0.0",
+  "status": "provisional_internal_l4",
+  "owner": "Brand",
+  "generated_date": "2026-08-29",
+  "authority_sources": [
+    {
+      "role": "brand_strategy",
+      "path": "TSK_0298_EVIDENCE_GROUNDED_BRAND_STRATEGY_2026-08-29.md",
+      "blob": "73d8587ef9bb37d92b44f102d5a33545b416c44b"
+    },
+    {
+      "role": "identity_rules",
+      "path": "brand/identity/TSK-0301/README.md",
+      "blob": "b8ffd2ed234465a238558a7b94e56274de49696a"
+    },
+    {
+      "role": "shared_brand_system",
+      "path": "brand/system/TSK-0300/README.md",
+      "blob": "4baa67f565c14c3034fca47bb5fad0b9ff71b091"
+    },
+    {
+      "role": "verbal_claims",
+      "path": "TSK_0299_PROVISIONAL_VERBAL_SYSTEM_2026-08-29.md",
+      "blob": "a4ff2314ff02c407249e8b5d4d6b9600b89403b3"
+    },
+    {
+      "role": "protection_state_semantics",
+      "path": "TSK_0320_PROTECTION_STATE_MODEL_AND_COPY_RULES_2026-08-28.md",
+      "blob": "1146f7622f434590dde1253d11f14fb6a87e19de"
+    }
+  ],
+  "identity_assets": [
+    {
+      "id": "safeweb.wordmark.primary",
+      "path": "brand/identity/TSK-0301/safeweb-wordmark-primary.svg",
+      "blob": "f93958e3e4a16f9056693072c1b9b8b31fcda852",
+      "status": "ACTIVE",
+      "allowed": ["default light surface", "public", "product", "help", "partner", "social where contrast is compliant"],
+      "prohibited": ["dark surface without confirmed contrast", "alternate casing", "redraw", "unapproved recolor", "tagline lockup"],
+      "replacement": null,
+      "deprecated_at": null
+    },
+    {
+      "id": "safeweb.wordmark.inverse",
+      "path": "brand/identity/TSK-0301/safeweb-wordmark-inverse.svg",
+      "blob": "c38709e4239a2d36b340b4d9d630df85a17bb494",
+      "status": "ACTIVE",
+      "allowed": ["large confirmed dark surface"],
+      "prohibited": ["small critical dark content", "contexts where split colors fail contrast", "redraw", "unapproved recolor"],
+      "replacement": null,
+      "deprecated_at": null
+    },
+    {
+      "id": "safeweb.wordmark.monochrome",
+      "path": "brand/identity/TSK-0301/safeweb-wordmark-monochrome.svg",
+      "blob": "ef9b6e0d52926f24c7e81bccb4489569067b852f",
+      "status": "ACTIVE",
+      "allowed": ["single-color output", "small context", "accessibility-critical dark context", "status context"],
+      "prohibited": ["unapproved geometry change", "replacement of primary wordmark where split primary is valid without reason"],
+      "replacement": null,
+      "deprecated_at": null
+    },
+    {
+      "id": "safeweb.monogram.sw",
+      "path": "brand/identity/TSK-0301/safeweb-monogram.svg",
+      "blob": "49f20bae1d92bb04f125e988cb4cc3ea8a822b9e",
+      "status": "ACTIVE",
+      "allowed": ["compact icon-only context", "space-constrained approved context"],
+      "prohibited": ["replacement for full wordmark when space permits", "translation", "mirroring for RTL", "alternate letters"],
+      "replacement": null,
+      "deprecated_at": null
+    }
+  ],
+  "implementation_sources": [
+    {
+      "id": "brand.tokens",
+      "path": "brand/system/TSK-0300/tokens.css",
+      "blob": "cd7d9a7cd5109e1ff0baa76532495dfd7a27a70f",
+      "status": "ACTIVE",
+      "authority": "sole mutable implementation-token source"
+    },
+    {
+      "id": "brand.components",
+      "path": "brand/system/TSK-0300/components.css",
+      "blob": "831e92a74b6dda04252d93242cb33bd491a02381",
+      "status": "ACTIVE",
+      "authority": "shared component source consuming tokens"
+    }
+  ],
+  "surface_templates": [
+    {
+      "id": "surface.help",
+      "path": "brand/system/TSK-0300/templates/help.html",
+      "blob": "3193c0d1e11367204d6c46fd862fec5a91245b64",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "surface.partner",
+      "path": "brand/system/TSK-0300/templates/partner.html",
+      "blob": "03bb1fd67b9a9824bc856d1f312977d7767619a8",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "surface.product",
+      "path": "brand/system/TSK-0300/templates/product.html",
+      "blob": "169acf5c8fc2c1f841111b99b8da1cfb6e9c5836",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "surface.public",
+      "path": "brand/system/TSK-0300/templates/public.html",
+      "blob": "0146960a0f5b2abfe2458f0210ed750f0147d3b9",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "surface.social",
+      "path": "brand/system/TSK-0300/templates/social.html",
+      "blob": "cabdd12851fce1dbd5a3c6326ec6dec63f843958",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "surface.status",
+      "path": "brand/system/TSK-0300/templates/status.html",
+      "blob": "f4f3b32957c978fe9ea00704bd285a20e3c56aef",
+      "status": "ACTIVE"
+    }
+  ],
+  "font_policy": {
+    "stack": "Avenir Next, Segoe UI, Helvetica Neue, Arial, sans-serif",
+    "deliver_font_binaries": false,
+    "forbidden_extensions": [".ttf", ".otf", ".woff", ".woff2", ".eot"]
+  },
+  "derivative_policy": {
+    "source_authority": false,
+    "create_only_for_consuming_need": true,
+    "required_provenance": ["guideline_version", "source_path", "source_blob", "output_format"],
+    "silent_overwrite": false
+  },
+  "deprecation_policy": {
+    "statuses": ["ACTIVE", "DEPRECATED"],
+    "retain_deprecated_records": true,
+    "required_when_deprecated": ["replacement", "reason", "deprecated_at", "authorizing_commit_or_evidence"],
+    "allow_new_use_of_deprecated": false,
+    "silent_delete": false
+  },
+  "non_inference": [
+    "real-parent validation",
+    "native-speaker validation",
+    "legal/privacy completion",
+    "build readiness",
+    "public-release readiness",
+    "payment activation",
+    "market activation",
+    "launch readiness",
+    "RSK-0002 closure"
+  ]
+}
