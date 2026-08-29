@@ -1,0 +1,120 @@
+name: Verify TSK-0300 shared brand system
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/verify-tsk0300-brand-system-20260829.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify single source and six contexts
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from html.parser import HTMLParser
+          import re, subprocess
+
+          root=Path('brand/system/TSK-0300')
+          tokens=root/'tokens.css'; components=root/'components.css'; readme=root/'README.md'; templates=root/'templates'
+          assert tokens.is_file() and components.is_file() and readme.is_file() and templates.is_dir()
+
+          expected_names={'public.html','product.html','help.html','status.html','partner.html','social.html'}
+          htmls=sorted(templates.glob('*.html'))
+          assert {p.name for p in htmls}==expected_names,{p.name for p in htmls}
+
+          token_text=tokens.read_text(encoding='utf-8')
+          component_text=components.read_text(encoding='utf-8')
+          readme_text=readme.read_text(encoding='utf-8')
+          expected_hex={'#173F35','#0F2D23','#7A2E36','#F6F4EF','#A7BEAD'}
+          found_hex=set(re.findall(r'#[0-9A-Fa-f]{6}',token_text))
+          assert found_hex==expected_hex,(found_hex,expected_hex)
+          assert token_text.count('--sw-brand-')>=5
+          assert not re.search(r'#[0-9A-Fa-f]{3,8}',component_text), 'hex literal outside tokens.css'
+          assert 'var(--sw-' in component_text
+          assert 'unicode-bidi: isolate' in component_text and 'direction: ltr' in component_text
+          assert 'sole mutable implementation token source' in readme_text
+          assert 'asset authority' in readme_text
+          assert 'large decorative/display treatment only' in readme_text
+          assert 'Brand color never communicates protection state' in readme_text
+          assert 'RSK-0002' in readme_text and 'TSK-0187' in readme_text
+          for phrase in ['behavioral validation','legal/privacy completion','integrated product build completion','public publication authority','payment activation','launch approval']:
+              assert phrase in readme_text,phrase
+
+          class Parser(HTMLParser):
+              def __init__(self):
+                  super().__init__(); self.links=[]; self.scripts=0; self.attrs=[]
+              def handle_starttag(self,tag,attrs):
+                  d=dict(attrs); self.attrs.append((tag,d))
+                  if tag=='link': self.links.append(d.get('href'))
+                  if tag=='script': self.scripts+=1
+
+          contexts=set()
+          for p in htmls:
+              raw=p.read_text(encoding='utf-8')
+              assert not re.search(r'#[0-9A-Fa-f]{3,8}',raw),f'hex literal in {p}'
+              assert '<script' not in raw.lower(),p
+              assert 'http://' not in raw.lower() and 'https://' not in raw.lower(),p
+              assert 'data:' not in raw.lower(),p
+              assert '../tokens.css' in raw and '../components.css' in raw,p
+              m=re.search(r'<html[^>]*data-context="([^"]+)"',raw)
+              assert m,p; contexts.add(m.group(1))
+              parser=Parser(); parser.feed(raw); assert parser.scripts==0
+              srcs=[d.get('src') for tag,d in parser.attrs if tag=='img' and d.get('src')]
+              assert srcs,p
+              for src in srcs:
+                  target=(p.parent/src).resolve()
+                  repo=Path('.').resolve()
+                  assert str(target).startswith(str(repo)),(p,src,target)
+                  assert target.is_file(),(p,src,target)
+                  assert 'brand/identity/TSK-0301' in str(target).replace('\\','/'),(p,src,target)
+          assert contexts=={'public','product','help','status','partner','social'},contexts
+
+          status=(templates/'status.html').read_text(encoding='utf-8')
+          for label in ['Verified','You confirmed this is set up','Action needed','Not covered','Status uncertain','Removed']:
+              assert label in status,label
+          assert 'not encoded by brand color' in status.lower() or 'Non-color-only' in status
+          assert 'safe / unsafe' not in status.lower()
+
+          public=(templates/'public.html').read_text(encoding='utf-8')
+          product=(templates/'product.html').read_text(encoding='utf-8')
+          help_text=(templates/'help.html').read_text(encoding='utf-8')
+          social=(templates/'social.html').read_text(encoding='utf-8')
+          partner=(templates/'partner.html').read_text(encoding='utf-8')
+          assert 'Start setup' in public and 'accountless-first' in public
+          assert '>Login<' not in public and '>Dashboard<' not in public and '>Account<' not in public
+          assert 'Accountless-first internal reference' in product
+          assert 'does not by itself mean SafeWeb has verified' in product
+          assert 'does not promise routine staffed live support' in help_text
+          assert 'complete-safety' in social and 'not approved for publication' in social
+          assert 'No current partner endorsement, certification, approval or commercial relationship is implied' in partner
+
+          # Only tokens.css is allowed to hold the five brand hex implementation values within TSK-0300.
+          offenders=[]
+          for p in [components,readme,*htmls]:
+              if re.search(r'#[0-9A-Fa-f]{6}',p.read_text(encoding='utf-8')): offenders.append(str(p))
+          assert not offenders,offenders
+
+          print('TOKEN_SOURCE_COUNT=1')
+          print('TEMPLATE_COUNT=6')
+          print('CONTEXT_SET='+','.join(sorted(contexts)))
+          print('NO_DUPLICATE_BRAND_HEX=PASS')
+          print('ALL_TEMPLATES_LOAD_SHARED_TOKENS=PASS')
+          print('ALL_TEMPLATES_REFERENCE_TSK0301_MASTERS=PASS')
+          print('NO_REMOTE_OR_SCRIPT_DEPENDENCY=PASS')
+          print('STATUS_TEXT_NON_COLOR_ONLY=PASS')
+          print('ACCOUNTLESS_SUPPORT_CLAIMS_FENCES=PASS')
+          print('TSK0300_AUTOMATED_VERIFICATION=PASS')
+          print('CURRENT_STATE_BLOB='+subprocess.check_output(['git','hash-object','CURRENT_STATE.md'],text=True).strip())
+          PY
