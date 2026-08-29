@@ -46,7 +46,9 @@ jobs:
             'prototype/TSK-0310/browser-acceptance.mjs':'f791a797f6a64be8b74eb13cbd2e628d5b083007',
             'prototype/TSK-0308/SHARED_RESPONSIVE_DESIGN_SYSTEM_CANDIDATE.md':'cd5c217ca7882589617dc94701fe5b6ac0eaf8d4',
             'prototype/TSK-0308/candidate.css':'de5571379ff240f36b5aecd50f555a07176dbd32',
-            'TSK_0308_SHARED_RESPONSIVE_DESIGN_SYSTEM_ACCEPTANCE_EVIDENCE_2026-08-29.md':'343961f30bc46a20762ad2b0108a4afe9593e5a3'
+            'TSK_0308_SHARED_RESPONSIVE_DESIGN_SYSTEM_ACCEPTANCE_EVIDENCE_2026-08-29.md':'343961f30bc46a20762ad2b0108a4afe9593e5a3',
+            'prototype/TSK-0321/accessibility-review.mjs':'0cfca762a0d83be7716194e13e940876e71534b4',
+            'prototype/TSK-0321/REMEDIATION_CANDIDATE.css':'50710ff5bd4045d7d801ffd07d5b7abd813cbd53'
           }
           for p,s in expected.items(): assert blob(p)==s,(p,s,blob(p))
           with pathlib.Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8',newline='') as f: rows=list(csv.DictReader(f))
@@ -73,6 +75,7 @@ jobs:
           print('TSK0321_WBS_HUMAN_ONLY=PASS')
           print('TSK0321_SOURCE_BLOBS=PASS')
           print('TSK0321_DEPENDENCY_CONTEXT=PASS')
+          print('TSK0321_REMEDIATION_CANDIDATE_PINNED=PASS')
           PY
 
       - name: Snapshot production health
@@ -84,16 +87,30 @@ jobs:
           if ss -ltn | grep -Eq '127\.0\.0\.1:4176|\[::1\]:4176'; then echo 'Port 4176 already in use' >&2; exit 1; fi
           echo 'PRE_TEST_HEALTH=PASS'
 
-      - name: Run accessibility review harness
+      - name: Run full accessibility review with remediation candidate overlay
         shell: bash
         run: |
           set -Eeuo pipefail
-          tmp="$(mktemp -d)"; server_pid=""
+          tmp="$(mktemp -d)"; server_pid=""; original="$tmp/index.html.original"
+          cp prototype/TSK-0310/index.html "$original"
           cleanup() {
             if [ -n "$server_pid" ]; then kill "$server_pid" 2>/dev/null || true; fi
+            if [ -f "$original" ]; then cp "$original" prototype/TSK-0310/index.html; fi
             rm -rf "$tmp"
           }
           trap cleanup EXIT
+
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('prototype/TSK-0310/index.html')
+          text=p.read_text(encoding='utf-8')
+          needle='  <link rel="stylesheet" href="prototype.css">\n'
+          insert=needle+'  <link rel="stylesheet" href="../TSK-0321/REMEDIATION_CANDIDATE.css">\n'
+          assert needle in text and 'REMEDIATION_CANDIDATE.css' not in text
+          p.write_text(text.replace(needle,insert,1),encoding='utf-8')
+          print('TSK0321_REMEDIATION_OVERLAY=PREPARED')
+          PY
+
           (
             cd "$tmp"
             npm init -y >/dev/null 2>&1
@@ -106,7 +123,7 @@ jobs:
           for _ in $(seq 1 40); do curl -fsS http://127.0.0.1:4176/prototype/TSK-0310/ >/dev/null && break; sleep 0.25; done
           curl -fsS http://127.0.0.1:4176/prototype/TSK-0310/ >/dev/null
           (cd "$tmp" && node accessibility-review.mjs)
-          echo 'TSK0321_BROWSER_REVIEW_EXECUTED=PASS'
+          echo 'TSK0321_REMEDIATION_CANDIDATE_BROWSER_REVIEW=PASS'
 
       - name: Verify production invariants and repository cleanliness
         if: ${{ always() }}
