@@ -24,7 +24,7 @@ jobs:
           set -Eeuo pipefail
           [[ "$(hostname -s)" == "adguardvm" ]]
           python3 - <<'PY'
-          import csv, json, pathlib, subprocess, sys
+          import csv, json, pathlib, subprocess
 
           root = pathlib.Path('.')
           md_path = root/'content/TSK-0323/DEVICE_SERVICE_INSTRUCTION_CATALOGUE.md'
@@ -65,7 +65,6 @@ jobs:
               req(r['test_case'] in md, 'TEST_BINDING_' + r['id'])
           req(len({r['test_case'] for r in records}) == 12, 'UNIQUE_TEST_CASES')
 
-          # Pin every project-owned source used by this catalogue to the exact current Git blob.
           for sid, src in data['canonical_sources'].items():
               p = root/src['path']
               req(p.is_file(), 'SOURCE_EXISTS_' + sid)
@@ -75,7 +74,6 @@ jobs:
           req(subprocess.check_output(['git','hash-object',str(js_path)], text=True).strip() == '842e18c5666a82d53e2d348715dd6b9198daa44c', 'CATALOGUE_JSON_BLOB')
           print('SOURCE_BLOB_PINS=PASS')
 
-          # Current WBS authority and predecessor runtime state.
           with wbs_path.open(encoding='utf-8', newline='') as f:
               by = {r['Task_ID']: r for r in csv.DictReader(f)}
           row = by['TSK-0323']
@@ -87,7 +85,6 @@ jobs:
           req('TSK-0322' in state and 'PASS' in state[state.find('TSK-0322'):state.find('TSK-0322')+2500], 'PREDECESSOR_RUNTIME_PASS')
           print('WBS_AUTHORITY=PASS')
 
-          # Scenario and truth-state acceptance checks.
           byid = {r['id']: r for r in records}
           req('dns.usesafeweb.com' in byid['DEV-AND-DNS-SETUP']['expected_result'] and 'https://' not in byid['DEV-AND-DNS-SETUP']['expected_result'], 'SCENARIO_ANDROID_SETUP')
           req('S1 only' in byid['DEV-AND-DNS-VERIFY']['expected_result'], 'SCENARIO_ANDROID_VERIFY')
@@ -103,21 +100,19 @@ jobs:
           req('Zero services is valid' in byid['SVC-ONE-RELEVANT']['expected_result'] and 'No named external service' in byid['SVC-ONE-RELEVANT']['unsupported_state'], 'SCENARIO_SERVICE')
           print('SCENARIO_TESTS=12/12 PASS')
 
-          # Explicit unsupported coverage and negative claim/privacy rules.
           unsupported = '\n'.join(data['unsupported_global']).lower()
           for token in ['android below 9','android tablet','iphone below ios 14','ipad','managed','captive-portal','ipv6-only','vpn/private relay','named external service','review trigger']:
               req(token in unsupported, 'UNSUPPORTED_' + token.upper().replace(' ','_').replace('/','_').replace('-','_'))
           prohibited_named_services = ['tiktok','youtube','roblox','instagram','snapchat','whatsapp']
           payload = json.dumps(data, ensure_ascii=False).lower()
           req(not any(x in payload for x in prohibited_named_services), 'NO_HARDCODED_NAMED_SERVICE')
-          req('mandatory safewEb account'.lower() not in md.lower(), 'NO_MANDATORY_ACCOUNT_CLAIM')
+          req('no instruction adds a mandatory safeweb account' in md.lower(), 'NO_MANDATORY_ACCOUNT_CLAIM')
           req('browsing-history collection' in md.lower() and 'no instruction adds' in md.lower(), 'PRIVACY_FENCE')
           req('turkish/arabic/rtl' in md.lower() and 'technical endpoints remain ltr/untranslated' in md.lower(), 'I18N_RTL_FENCE')
           for bad in ['100% safe', 'your child is safe', 'fully protected', 'blocks everything harmful']:
               req(bad not in md.lower(), 'NO_PROHIBITED_CLAIM_' + bad.upper().replace(' ','_').replace('%','PCT'))
           print('CLAIMS_PRIVACY_I18N=PASS')
 
-          # External source records must all be current-review stamped and nonempty.
           req(len(data['external_sources']) == 8, 'EXTERNAL_SOURCE_COUNT')
           for sid, src in data['external_sources'].items():
               req(src.get('url','').startswith('https://') and src.get('checked') == '2026-08-29', 'EXTERNAL_SOURCE_' + sid)
