@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-29T18:42:01Z
+**Updated:** 2026-08-29T18:51:00Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -386,12 +386,15 @@ This PASS does not authorize LG-06, L5/L6 build, participants, legal completion,
 
 The register does not resolve its assumptions. RSK-0002 and all real-behavior unknowns remain open; owner-only decisions are fenced.
 
-### TSK-0229 accepted stable state
+### TSK-0229 accepted stable state — current under DEC-0052 / CR-0005
 
-`TSK-0229 — Define and approve the accountless journey data model, expiry, deletion, and no-linkage rules`: **PASS for the provisional internal L4 data contract under DEC-0050/CR-0003**. Contract `TSK_0229_ACCOUNTLESS_JOURNEY_DATA_MODEL_EXPIRY_DELETION_NO_LINKAGE_2026-08-28.md`, blob `3fa48b11b6c7704ecc3748bcd865f77aa54f5605`; independent evidence `TSK_0229_ACCOUNTLESS_JOURNEY_DATA_MODEL_EVIDENCE_2026-08-28.md`, blob `a087c63a0556db549ead4f40805e435725709251`. ACC-0229 is satisfied: the active journey is accountless-first; persistent identity, browsing/query history and persistent child/family profile are prohibited; J1 is optional/transient with fixed expiry/deletion/no-linkage rules; diagnostics/logging/backups are separated; fourteen implementation-testable invariants are defined.
+`TSK-0229 — Define and approve the accountless journey data model, expiry, deletion, and no-linkage rules`: **PASS** under current `ACC-0229 / VER-0229 / EVD-0229` and `DEC-0052 / CR-0005` sequencing.
 
-The first artifact revision omitted the mandatory CR-0003/RSK-0002 behavioral-evidence limitation; it was corrected before PASS. `RSK-0002` remains OPEN. This PASS is provisional design evidence only and does not authorize LG-05/LG-06, L5/L6 build, participants, legal completion, payment activation, public release or launch.
+The accepted `accountless-journey-data-v1` contract remains `TSK_0229_ACCOUNTLESS_JOURNEY_DATA_MODEL_EXPIRY_DELETION_NO_LINKAGE_2026-08-28.md`, blob `3fa48b11b6c7704ecc3748bcd865f77aa54f5605`. Current revalidation evidence is `TSK_0229_CURRENT_REVALIDATION_EVIDENCE_2026-08-29.md`, blob `7c6bd3b888196f2a487c7b7fe14d11e72bec424b`; successful verifier run `33269282897`, job `99144732470`, self-hosted `adguardvm`.
 
+ACC-0229 remains satisfied: J0 session-only state is preferred; optional J1 is minimal/transient; persistent parent/child/device identity, browsing/DNS history, cross-session linkage and raw diagnostics are prohibited; the J1 hard TTL is non-sliding and no more than 24 hours; early deletion is synchronous where possible or no more than 15 minutes; diagnostic/logging/backup boundaries and fourteen implementation-testable invariants remain explicit. The 24-hour/15-minute values are conservative internal product defaults, not legal thresholds.
+
+Current GDPR Article 5/25 and EDPB data-protection-by-design/default review found no contradiction with the minimisation/default-deletion direction. No final legal-compliance conclusion is inferred. `RSK-0002` remains nonblocking for this L4 PASS. Pre-product parent/user/participant validation is non-applicable under CR-0005 and is neither required nor claimed here.
 ### TSK-0408 accepted stable state
 
 `TSK-0408 — Define one coherent UseSafeWeb DNS identity and approved platform-specific endpoint/profile mechanisms`: **PASS for the provisional internal L4 technical design under DEC-0050/CR-0003**. Contract `TSK_0408_USESAFEWEB_DNS_IDENTITY_PLATFORM_ENDPOINT_PROFILE_CONTRACT_2026-08-28.md`, blob `52860ce167fc8a31962cd412772e428d280c8184`; independent evidence `TSK_0408_USESAFEWEB_DNS_IDENTITY_PLATFORM_ENDPOINT_PROFILE_EVIDENCE_2026-08-28.md`, blob `b530b0608fd3cfa6abd39548def8e10ba133353b`. ACC-0408 is satisfied: one UseSafeWeb DNS service identity is preserved while Android native Private DNS uses DoT hostname input and Apple DoH uses an HTTPS Server URL/profile; certificate, verification truth, removal/recovery, fallback/failure, and pilot/test/staging/future-production separation are explicit; a false universal FQDN workflow is prohibited.
