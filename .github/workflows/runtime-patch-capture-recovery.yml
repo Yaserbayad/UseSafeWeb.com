@@ -1,0 +1,39 @@
+name: Capture patched runtime state recovery
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/runtime-patch-capture-recovery.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-runtime-patch-capture-recovery
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    runs-on: [self-hosted, linux, x64, rec-v1]
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact main commit
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Generate exact patched runtime payload
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguartestdvm" ]]
+          [[ "$(id -un)" == "azureusr" ]]
+          python3 .github/scripts/reconcile_runtime_tsk0310.py
+          git diff --check
+          printf 'PATCHED_STATE_SHA256='; sha256sum CURRENT_STATE.md | awk '{print $1}'
+          printf 'PATCHED_STATE_BYTES='; wc -c < CURRENT_STATE.md | tr -d ' '
+          printf 'PATCHED_STATE_B64_BEGIN\n'
+          base64 -w0 CURRENT_STATE.md | fold -w 3000
+          printf 'PATCHED_STATE_B64_END\n'
