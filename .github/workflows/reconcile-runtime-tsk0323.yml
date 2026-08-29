@@ -1,5 +1,6 @@
 name: Reconcile TSK-0323 PASS runtime state
 
+# Trigger revision: runtime EOF normalization applied.
 on:
   push:
     branches: [main]
