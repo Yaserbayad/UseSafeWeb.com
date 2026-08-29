@@ -1,0 +1,102 @@
+name: Verify TSK-0328 information architecture v2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-tsk0328-v2.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify TSK-0328 acceptance
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(hostname -s)" = "adguardvm"
+          python3 - <<'PY'
+          import csv, json, pathlib, re, subprocess
+          def blob(path): return subprocess.check_output(['git','rev-parse',f'HEAD:{path}'],text=True).strip()
+          expected={
+            'prototype/TSK-0328/INFORMATION_ARCHITECTURE_NAVIGATION.md':'4efb624005061e242e427994953d0fc00fcd745f',
+            'prototype/TSK-0328/IA_MAP.json':'2f77c1a844f16cf080817bf4ea31c80bb7067a06',
+            'prototype/TSK-0325/SERVICE_BLUEPRINT.md':'1701f5f7b13ac8f7fa3092e39005b3da7627c89f',
+            'TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_CANDIDATE_2026-08-28.md':'64f0e6382a5ce166c0aad2ad2e86a3796c5df379',
+            'prototype/TSK-0309/BASELINE.md':'76bb848ebdf6a2aee4dd84bc18e8af5ba8a99dbc',
+            'prototype/TSK-0324/UI_COMPONENT_RULES.md':'0b7012a12070f7eccf45a1bbb2f453fde8507ff6',
+            'content/TSK-0322/PRODUCT_VOICE_CLAIMS_TERMINOLOGY.md':'d12c1e707f0390915002b27bf3a5073d0135d466',
+            'Plans/Master/WBS/master-wbs.csv':'f23b4f017d1baf73258fa30ecd71549bbfe1b815'}
+          for path,sha in expected.items(): assert blob(path)==sha,(path,sha,blob(path))
+          with pathlib.Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8',newline='') as f: rows=list(csv.DictReader(f))
+          by={r['Task_ID']:r for r in rows}; row=by['TSK-0328']
+          assert row['Lifecycle_Stage']=='L4' and row['Plan_Status']=='PLANNED' and row['Priority']=='MEDIUM'
+          assert row['Dependencies']=='TSK-0325' and row['Acceptance_ID']=='ACC-0328' and row['Verification_ID']=='VER-0328' and row['Evidence_ID']=='EVD-0328'
+          assert row['AI_Capability_A0_A4']=='A3' and row['Action_Authority']=='AUTO_ALLOWED'
+          for phrase in ['normal and exception paths','avoids unnecessary sections/accounts','maps each screen to a user goal and requirement']: assert phrase in row['Acceptance_Criteria'],phrase
+          state=pathlib.Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          assert re.search(r'## TSK-0325 accepted stable state',state) and re.search(r'`TSK-0325[^\n]*\*\*PASS\*\*',state)
+          assert 'DEC-0052 / CR-0005' in state
+          doc=pathlib.Path('prototype/TSK-0328/INFORMATION_ARCHITECTURE_NAVIGATION.md').read_text(encoding='utf-8')
+          ia=json.loads(pathlib.Path('prototype/TSK-0328/IA_MAP.json').read_text(encoding='utf-8'))
+          assert ia['task_id']=='TSK-0328' and ia['version']=='1.0.0' and ia['sequencing']=='DEC-0052/CR-0005' and ia['human_validation_claimed'] is False
+          assert ia['authority']=='non_authoritative_test_projection_of_INFORMATION_ARCHITECTURE_NAVIGATION.md'
+          assert len(ia['systems'])==2 and [x['id'] for x in ia['systems']]==['public','setup'] and all(x['user_specific_state_in_url'] is False for x in ia['systems'])
+          nav=ia['public_primary_navigation']; assert nav==['Home','How it works','Compatibility & limits','Privacy','Help','Start setup']
+          assert not ({'Login','Sign up','Account','Dashboard','Profile','Pricing'} & set(nav))
+          assert len(ia['public_routes'])==6 and [r['id'] for r in ia['public_routes']]==['PUB-HOME','PUB-HOW','PUB-COMPAT','PUB-PRIVACY','PUB-HELP','PUB-NOTICES']
+          for r in ia['public_routes']: assert r['goal'] and 'REQ-0028' in r['requirements'] and 'CON-0017' in r['requirements']
+          setup=ia['setup_route']; assert setup['path']=='/setup' and setup['noindex'] is True and setup['state_model']=='transient_in_memory'
+          for k in ['user_specific_state_in_url','persistent_account_required','local_storage_required','session_storage_required','cookie_required']: assert setup[k] is False,k
+          screens=ia['screens']; ids=[s['id'] for s in screens]
+          expected_ids=['SCR-START','SCR-NATIVE','SCR-DNS-SETUP','SCR-VERIFY','SCR-SERVICE','SCR-MAP','SCR-TROUBLESHOOT','SCR-NOT-COVERED','SCR-UNCERTAIN','SCR-FALSE-POSITIVE','SCR-HELP','SCR-LIMITS','SCR-REMOVE','SCR-RECOVERY','SCR-RESET-LOST']
+          assert len(screens)==15 and ids==expected_ids
+          for s in screens:
+              assert s['goal'] and s['touchpoints'] and 'REQ-0028' in s['requirements']
+              assert {'CON-0010','CON-0017','INT-0009','INT-0010'} <= set(s['requirements']) and s['id'] in doc
+          for sid in ['SCR-START','SCR-DNS-SETUP','SCR-VERIFY','SCR-TROUBLESHOOT','SCR-NOT-COVERED','SCR-UNCERTAIN','SCR-FALSE-POSITIVE','SCR-HELP','SCR-LIMITS','SCR-REMOVE','SCR-RECOVERY']:
+              assert 'REQ-0029' in next(x for x in screens if x['id']==sid)['requirements'],sid
+          required_paths={'normal','already_configured','unsupported','failed_activation','false_positive','resume','removal','support'}
+          assert set(ia['required_paths'])==required_paths
+          all_nodes=set(ids)|{r['id'] for r in ia['public_routes']}
+          for name,nodes in ia['required_paths'].items(): assert nodes and all(n in all_nodes for n in nodes),(name,nodes)
+          utility={x['label']:x for x in ia['setup_utilities']}
+          assert utility['Help']['state_mutating'] is False and utility['Limitations']['state_mutating'] is False and utility['Exit']['state_mutating'] is False
+          assert 'does not remove device DNS' in utility['Start over']['effect'] and 'only when' in utility['Remove SafeWeb DNS']['applicability']
+          forb='|'.join(ia['forbidden_sections'])
+          for term in ['Login','Account','Dashboard','Pricing gate','AdGuard admin console','browsing history','DNS query history']: assert term in forb,term
+          inv='\n'.join(ia['navigation_invariants'])
+          for phrase in ['public content never manufactures protection state','Help and Limitations are state-neutral','browser Back is not an evidence-state machine','lost transient state restarts','no account payment or identity step','no standalone completion acknowledgement']: assert phrase in inv,phrase
+          source_map={'service_blueprint':'prototype/TSK-0325/SERVICE_BLUEPRINT.md','prior_owner_approved_ia_candidate':'TSK_0318_PUBLIC_PRODUCT_SETUP_IA_DESIGN_CANDIDATE_2026-08-28.md','experience_baseline':'prototype/TSK-0309/BASELINE.md','ui_component_rules':'prototype/TSK-0324/UI_COMPONENT_RULES.md','product_voice':'content/TSK-0322/PRODUCT_VOICE_CLAIMS_TERMINOLOGY.md','wbs':'Plans/Master/WBS/master-wbs.csv'}
+          for key,path in source_map.items(): assert ia['source_blobs'][key]==blob(path),(key,path)
+          assert 'exactly **two connected experience systems**' in doc
+          assert 'The current IA has **no**:' in doc and 'mandatory onboarding tour' in doc
+          for phrase in ['one generic route family','No standalone “Completion” screen is mandatory','all TSK-0325 required paths','Visible product identity is `SafeWeb`','Help/Limitations are utility detours','Start over clears web journey state only','language availability never implies non-UK market/legal/support activation','does not self-certify HUMAN_ONLY `TSK-0308` or `TSK-0321`']: assert phrase in doc,phrase
+          files=sorted(str(p) for p in pathlib.Path('prototype/TSK-0328').iterdir() if p.is_file())
+          assert files==['prototype/TSK-0328/IA_MAP.json','prototype/TSK-0328/INFORMATION_ARCHITECTURE_NAVIGATION.md'],files
+          print('TSK0328_WBS_AUTHORITY=PASS')
+          print('TSK0328_DEPENDENCY_TSK0325=PASS')
+          print('TSK0328_SOURCE_BLOBS=PASS')
+          print('TSK0328_SYSTEMS=2/2_PASS')
+          print('TSK0328_PUBLIC_ROUTES=6/6_PASS')
+          print('TSK0328_SETUP_SCREENS=15/15_GOAL_TRACE_PASS')
+          print('TSK0328_REQUIRED_PATHS=8/8_PASS')
+          print('TSK0328_ACCOUNTLESS_NO_UNNECESSARY_SECTIONS=PASS')
+          print('TSK0328_NAV_STATE_PRIVACY=PASS')
+          print('TSK0328_ACCESSIBILITY_RTL=PASS')
+          print('TSK0328_ACC_VER_EVD=PASS')
+          PY
+      - name: Repository cleanliness
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'REPOSITORY_CLEAN=PASS'
