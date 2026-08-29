@@ -1,0 +1,62 @@
+name: TSK-0310 post-failure production health check
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/tsk0310-post-failure-health-check.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  health:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - name: Verify production invariants after browser-test failure
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          [[ "$(id -un)" == "azureusr" ]]
+          for f in \
+            /tmp/tsk0310-agh-config-path \
+            /tmp/tsk0310-agh-config-before \
+            /tmp/tsk0310-nginx-config-before \
+            /tmp/tsk0310-listeners-before \
+            /tmp/tsk0310-failed-before; do
+            [[ -s "$f" || "$f" == /tmp/tsk0310-failed-before ]]
+          done
+          systemctl is-active --quiet AdGuardHome.service
+          systemctl is-active --quiet nginx.service
+          AGH_CONFIG="$(cat /tmp/tsk0310-agh-config-path)"
+          sudo sha256sum "$AGH_CONFIG" | awk '{print $1}' > /tmp/tsk0310-agh-config-recovery
+          sudo sh -c 'find /etc/nginx -xdev -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk "{print \$1}"' > /tmp/tsk0310-nginx-config-recovery
+          cmp /tmp/tsk0310-agh-config-before /tmp/tsk0310-agh-config-recovery
+          cmp /tmp/tsk0310-nginx-config-before /tmp/tsk0310-nginx-config-recovery
+          ss -H -lntu | awk '{print $1, $5}' | sort -u > /tmp/tsk0310-listeners-recovery
+          cmp /tmp/tsk0310-listeners-before /tmp/tsk0310-listeners-recovery
+          if ss -H -lnt | awk '{print $4}' | grep -Eq '(^|:)4173$'; then
+            echo 'Unexpected lingering browser-test listener on 4173' >&2
+            exit 1
+          fi
+          systemctl --failed --no-legend --plain | awk '{print $1}' | sort -u > /tmp/tsk0310-failed-recovery
+          cmp /tmp/tsk0310-failed-before /tmp/tsk0310-failed-recovery
+          CHROME=/home/azureusr/.cache/usesafeweb-playwright/chromium-1234/chrome-linux64/chrome
+          [[ -x "$CHROME" ]]
+          "$CHROME" --version
+          echo 'ADGUARD_HEALTH=PASS'
+          echo 'NGINX_HEALTH=PASS'
+          echo 'ADGUARD_CONFIG_UNCHANGED=PASS'
+          echo 'NGINX_CONFIG_UNCHANGED=PASS'
+          echo 'LISTENERS_UNCHANGED=PASS'
+          echo 'NO_TEST_LISTENER=PASS'
+          echo 'FAILED_UNITS_UNCHANGED=PASS'
+          echo 'CHROMIUM_PRESENT=PASS'
+          echo 'TSK0310_POST_FAILURE_HEALTH=PASS'
