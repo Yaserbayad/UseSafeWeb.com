@@ -1,0 +1,99 @@
+{
+  "schema": "usesafeweb.tsk0324.component-contract.v1",
+  "task_id": "TSK-0324",
+  "version": "1.0.0",
+  "authority": "non_authoritative_test_projection_of_UI_COMPONENT_RULES.md",
+  "sequencing": "DEC-0052/CR-0005",
+  "human_validation_claimed": false,
+  "shared_sources": {
+    "tokens": {"path":"brand/system/TSK-0300/tokens.css","blob":"cd7d9a7cd5109e1ff0baa76532495dfd7a27a70f","sole_mutable_token_source":true},
+    "components": {"path":"brand/system/TSK-0300/components.css","blob":"831e92a74b6dda04252d93242cb33bd491a02381"},
+    "brand_guidelines": {"path":"brand/guidelines/TSK-0297/README.md","blob":"89e915678e85f7f301e8fa4b05c335cd803dd9d4"},
+    "state_model": {"path":"TSK_0320_PROTECTION_STATE_MODEL_AND_COPY_RULES_2026-08-28.md","blob":"1146f7622f434590dde1253d11f14fb6a87e19de"},
+    "language_policy": {"path":"content/TSK-0322/PRODUCT_VOICE_CLAIMS_TERMINOLOGY.md","blob":"d12c1e707f0390915002b27bf3a5073d0135d466"},
+    "experience_baseline": {"path":"prototype/TSK-0309/BASELINE.md","blob":"76bb848ebdf6a2aee4dd84bc18e8af5ba8a99dbc"},
+    "wbs": {"path":"Plans/Master/WBS/master-wbs.csv","blob":"f23b4f017d1baf73258fa30ecd71549bbfe1b815"}
+  },
+  "typography_tokens": ["--sw-font-sans","--sw-font-size-sm","--sw-font-size-base","--sw-font-size-lg","--sw-font-size-xl","--sw-line-height","--sw-line-height-tight"],
+  "spacing_tokens": ["--sw-space-1","--sw-space-2","--sw-space-3","--sw-space-4","--sw-space-5","--sw-space-6","--sw-space-7","--sw-space-8"],
+  "contrast": {
+    "normal_text_min_ratio": 4.5,
+    "large_text_min_ratio": 3.0,
+    "accepted_pairs": [
+      {"foreground":"#173F35","background":"#F6F4EF","minimum":4.5},
+      {"foreground":"#7A2E36","background":"#F6F4EF","minimum":4.5},
+      {"foreground":"#F6F4EF","background":"#0F2D23","minimum":4.5}
+    ],
+    "prohibited_critical_pair": {"foreground":"#7A2E36","background":"#0F2D23","reason":"insufficient contrast for small/normal/critical content or authored focus/state meaning"}
+  },
+  "focus": {
+    "visible_required": true,
+    "unobscured_required": true,
+    "current_light_surface_width_token": "--sw-focus-width",
+    "current_light_surface_color_token": "--sw-color-focus",
+    "dark_brand_field_default_interactive_container": false,
+    "dark_surface_resolution": "keep controls on a contrast-safe surface, retain a visible unmodified UA indicator, or route an alternate shared focus token to the shared-system owner"
+  },
+  "controls": {
+    "primary": ".sw-button",
+    "secondary": ".sw-button--secondary",
+    "quiet": ".sw-button--quiet",
+    "exact_action_labels_preferred": true,
+    "pointer_target_wcag22_aa_min_css_px": 24,
+    "removal_confirmation_modal_required_by_default": false
+  },
+  "protection_map": {
+    "historical_acc_minimum_states": 4,
+    "current_state_count": 6,
+    "historical_minimum_satisfied": true,
+    "states": [
+      {"id":"S1","label":"Verified","system_evidence_required":true},
+      {"id":"S2","label":"You confirmed this is set up","system_evidence_required":false},
+      {"id":"S3","label":"Action needed","positive_state":false},
+      {"id":"S4","label":"Not covered","positive_state":false},
+      {"id":"S5","label":"Status uncertain","positive_state":false},
+      {"id":"S6","label":"Removed","positive_state":false}
+    ],
+    "overall_safety_score_allowed": false,
+    "color_only_state_meaning_allowed": false
+  },
+  "responsive_test_widths_css_px": [320,768,1024,1440],
+  "rtl": {
+    "safeweb_brand_ltr_invariant": true,
+    "technical_values_ltr_invariant": true,
+    "surrounding_arabic_may_rtl": true,
+    "language_availability_implies_market_activation": false
+  },
+  "identity": {
+    "visible_brand": "SafeWeb",
+    "domain_identifier": "UseSafeWeb.com",
+    "primary_logo_light": "brand/identity/TSK-0301/safeweb-wordmark-primary.svg",
+    "monochrome_logo_constrained": "brand/identity/TSK-0301/safeweb-wordmark-monochrome.svg",
+    "inverse_logo_large_dark": "brand/identity/TSK-0301/safeweb-wordmark-inverse.svg",
+    "compact_logo": "brand/identity/TSK-0301/safeweb-monogram.svg"
+  },
+  "components": [
+    {"name":"PageShell","semantic":"main","keyboard":"n/a","requirements":["responsive","rtl"]},
+    {"name":"BrandHeader","semantic":"header/nav","keyboard":"native links","requirements":["approved identity","no account/dashboard navigation"]},
+    {"name":"ScreenTitle","semantic":"h1","keyboard":"programmatic focus target","requirements":["one per screen"]},
+    {"name":"ActionGroup","semantic":"grouped native controls","keyboard":"reading order","requirements":["one primary action","wrap/stack"]},
+    {"name":"PrimaryButton","semantic":"button/action link","keyboard":"native","requirements":["visible focus","target size","exact label"]},
+    {"name":"SecondaryButton","semantic":"button/link","keyboard":"native","requirements":["visible focus","target size"]},
+    {"name":"QuietAction","semantic":"link/button","keyboard":"native","requirements":["discoverable help/navigation"]},
+    {"name":"PanelCard","semantic":"section/article","keyboard":"n/a","requirements":["coherent concept","border not sole critical affordance"]},
+    {"name":"ProtectionMapItem","semantic":"section/listitem","keyboard":"actions native","requirements":["layer","exact S1-S6 label","evidence/limit","optional next action"]},
+    {"name":"FeedbackCallout","semantic":"status/alert by urgency","keyboard":"n/a","requirements":["truthful busy/result/error semantics"]},
+    {"name":"HelpLink","semantic":"link","keyboard":"native","requirements":["state-neutral","self-service"]},
+    {"name":"LimitationsLink","semantic":"link","keyboard":"native","requirements":["state-neutral","scope boundary"]},
+    {"name":"TechnicalValue","semantic":"code/text","keyboard":"selectable text","requirements":["LTR exact value","no page overflow"]}
+  ],
+  "feedback_states": ["checking","verified","parent_confirmed","action_needed","not_covered","status_uncertain","removed"],
+  "forbidden_scope": ["parallel token palette","local logo geometry fork","mandatory SafeWeb account","child profile field","payment field","browsing history UI","state renaming","overall safety score","complete-safety claim"],
+  "wcag_source_review": {
+    "reviewed_date":"2026-08-29",
+    "wcag22":"https://www.w3.org/TR/WCAG22/",
+    "target_size_minimum":"https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum",
+    "focus_appearance_stronger_reference":"https://www.w3.org/WAI/WCAG22/Understanding/focus-appearance.html",
+    "focus_appearance_level":"AAA"
+  }
+}
