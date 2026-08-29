@@ -1,0 +1,113 @@
+name: TSK-0310 Chromium install and browser acceptance
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/tsk0310-browser-install-and-acceptance.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 20
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: /home/azureusr/.cache/usesafeweb-playwright
+    steps:
+      - name: Checkout exact main commit
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Pre-install production health snapshot
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          [[ "$(id -un)" == "azureusr" ]]
+          systemctl is-active --quiet AdGuardHome.service
+          systemctl is-active --quiet nginx.service
+          AGH_CONFIG="$(sudo find /opt/AdGuardHome -maxdepth 2 -type f -name AdGuardHome.yaml -print -quit)"
+          [[ -n "$AGH_CONFIG" ]]
+          printf '%s\n' "$AGH_CONFIG" > /tmp/tsk0310-agh-config-path
+          sudo sha256sum "$AGH_CONFIG" | awk '{print $1}' > /tmp/tsk0310-agh-config-before
+          sudo sh -c 'find /etc/nginx -xdev -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk "{print \$1}"' > /tmp/tsk0310-nginx-config-before
+          ss -H -lntu | awk '{print $1, $5}' | sort -u > /tmp/tsk0310-listeners-before
+          systemctl --failed --no-legend --plain | awk '{print $1}' | sort -u > /tmp/tsk0310-failed-before
+          dpkg-query -W -f='${Package}\t${Version}\n' | sort > /tmp/tsk0310-packages-before
+          echo 'PRE_INSTALL_HEALTH=PASS'
+
+      - name: Provision Node 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Install pinned Playwright Chromium capability
+        shell: bash
+        working-directory: prototype/TSK-0310
+        run: |
+          set -Eeuo pipefail
+          npm install --ignore-scripts --no-fund
+          npm audit --audit-level=high
+          npx playwright install --with-deps --no-shell chromium
+          npx playwright --version
+          find "$PLAYWRIGHT_BROWSERS_PATH" -maxdepth 3 -type f -name chrome -o -name chromium | head -n 5
+          echo 'CHROMIUM_INSTALL=PASS'
+
+      - name: Run rendered browser acceptance suite
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 -m http.server 4173 --bind 127.0.0.1 --directory "$GITHUB_WORKSPACE" >/tmp/tsk0310-http.log 2>&1 &
+          server_pid=$!
+          cleanup() { kill "$server_pid" >/dev/null 2>&1 || true; wait "$server_pid" 2>/dev/null || true; }
+          trap cleanup EXIT
+          ready=0
+          for _ in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:4173/prototype/TSK-0310/ >/dev/null; then ready=1; break; fi
+            sleep 0.25
+          done
+          [[ "$ready" == 1 ]]
+          node prototype/TSK-0310/browser-acceptance.mjs | tee /tmp/tsk0310-browser-acceptance.log
+          grep -qx 'BROWSER_ACCEPTANCE=PASS' /tmp/tsk0310-browser-acceptance.log
+          cleanup
+          trap - EXIT
+          if ss -H -lnt | awk '{print $4}' | grep -Eq '(^|:)4173$'; then
+            echo 'Temporary browser-test HTTP listener remained after cleanup' >&2
+            exit 1
+          fi
+          echo 'RENDERED_ACCEPTANCE=PASS'
+
+      - name: Post-test production health and change-boundary verification
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          systemctl is-active --quiet AdGuardHome.service
+          systemctl is-active --quiet nginx.service
+          AGH_CONFIG="$(cat /tmp/tsk0310-agh-config-path)"
+          sudo sha256sum "$AGH_CONFIG" | awk '{print $1}' > /tmp/tsk0310-agh-config-after
+          sudo sh -c 'find /etc/nginx -xdev -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk "{print \$1}"' > /tmp/tsk0310-nginx-config-after
+          cmp /tmp/tsk0310-agh-config-before /tmp/tsk0310-agh-config-after
+          cmp /tmp/tsk0310-nginx-config-before /tmp/tsk0310-nginx-config-after
+          ss -H -lntu | awk '{print $1, $5}' | sort -u > /tmp/tsk0310-listeners-after
+          cmp /tmp/tsk0310-listeners-before /tmp/tsk0310-listeners-after
+          systemctl --failed --no-legend --plain | awk '{print $1}' | sort -u > /tmp/tsk0310-failed-after
+          cmp /tmp/tsk0310-failed-before /tmp/tsk0310-failed-after
+          dpkg-query -W -f='${Package}\t${Version}\n' | sort > /tmp/tsk0310-packages-after
+          echo 'PACKAGE_DELTA_BEGIN'
+          diff -u /tmp/tsk0310-packages-before /tmp/tsk0310-packages-after || true
+          echo 'PACKAGE_DELTA_END'
+          echo 'ADGUARD_CONFIG_UNCHANGED=PASS'
+          echo 'NGINX_CONFIG_UNCHANGED=PASS'
+          echo 'LISTENERS_UNCHANGED=PASS'
+          echo 'FAILED_UNITS_UNCHANGED=PASS'
+          echo 'POST_TEST_HEALTH=PASS'
+          echo 'TSK0310_BROWSER_ENVIRONMENT_AND_ACCEPTANCE=PASS'
