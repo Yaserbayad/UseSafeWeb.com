@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-29T07:48:18Z
+**Updated:** 2026-08-29T07:51:38Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -574,10 +574,18 @@ ACC-0311 is satisfied: the English baseline is externalized by contract; stable 
 
 This PASS is design evidence only. It does not prove production locale-file implementation, native-speaker or representative-parent validation, market activation, legal readiness, publication or launch. `RSK-0002` remains OPEN; `REQ-0022` remains unresolved; current global fences remain unchanged.
 
-## Queue status after TSK-0311 PASS
+### TSK-0628 accepted stable state
 
-TSK-0311 is PASS. Recompute the remaining L4 queue before selecting the next task; specifically verify whether TSK-0310 is still blocked by TSK-0300, otherwise compare it with independently released TSK-0628 under current priority/order rules.
+`TSK-0628 — Define the no-routine-human-support operating model across setup, verification, troubleshooting, recovery, removal, and lifecycle events`: **PASS for the provisional internal L4 operating-model definition**. Artifact `TSK_0628_NO_ROUTINE_HUMAN_SUPPORT_OPERATING_MODEL_2026-08-29.md`, blob `bb81ec47fd4badd06ded70d146365281c2874390`, publication commit `25ec7bfa2968ea424badf6c890943397872eedc0`; independent evidence `TSK_0628_NO_ROUTINE_HUMAN_SUPPORT_OPERATING_MODEL_EVIDENCE_2026-08-29.md`, blob `888cc395dac4026c5a5486c55d36d232a465bb72`, publication commit `3feab2b6e427b5e43302ffcff8317e77dd2791e5`.
+
+ACC-0628 is satisfied: all current ordinary support issue classes map to prevention, privacy-safe automatic checks, issue-specific in-product help, bounded AI assistance, recovery/removal or a truthful unsupported endpoint; hidden human completion is excluded from self-service success; human routes are named, exceptional and criterion-driven; accountless/privacy/verification/circuit-breaker/lifecycle boundaries remain explicit.
+
+This PASS is operating-model design evidence only. It does not prove representative-parent self-service performance, implement support automation/AI, activate telemetry or staffed support, authorize diagnostic collection, process participants, complete legal work, publish the service, activate payment or authorize launch. `RSK-0002` remains OPEN and `REQ-0022` remains unresolved.
+
+## Queue status after TSK-0628 PASS
+
+TSK-0628 is PASS. TSK-0310 remains blocked on TSK-0300, whose predecessor TSK-0301 has not yet been established as PASS in current runtime. Recompute direct successors of TSK-0628 and inspect the TSK-0301/TSK-0300 Brand chain before selecting further L4 work.
 
 ## Exact next authoritative step
 
-Inspect current TSK-0300/TSK-0310 authority and dependencies, then execute the highest-priority eligible AUTO_ALLOWED L4 task.
+Inspect direct TSK-0628 successors and the exact TSK-0301 WBS/runtime state, then execute the highest-priority eligible L4 task without inferring predecessor PASS.
