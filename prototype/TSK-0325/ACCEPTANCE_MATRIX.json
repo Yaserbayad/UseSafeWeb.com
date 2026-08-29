@@ -1,0 +1,53 @@
+{
+  "schema": "usesafeweb.tsk0325.acceptance-projection.v1",
+  "task_id": "TSK-0325",
+  "version": "1.0.0",
+  "authority": "non_authoritative_test_projection_of_SERVICE_BLUEPRINT.md",
+  "sequencing": "DEC-0052/CR-0005",
+  "human_validation_claimed": false,
+  "required_paths": [
+    {"id":"normal","heading":"Path A — Normal supported setup","terminal":"truthful Protection Map; S1 only from qualifying technical evidence"},
+    {"id":"already_configured","heading":"Path B — Already configured","terminal":"duplicate work skipped without bypassing verification or upgrading parent confirmation"},
+    {"id":"unsupported","heading":"Path C — Unsupported / not covered","terminal":"S4/S5 with explicit limitation and no speculative setup/removal"},
+    {"id":"failed_activation","heading":"Path D — Failed activation / verification failure","terminal":"evidence-backed S3/S5/S4, bounded correction, truthful recovery"},
+    {"id":"false_positive","heading":"Path E — False positive / legitimate content blocked","terminal":"filtering issue represented without complete-safety claim or invented bypass"},
+    {"id":"resume","heading":"Path F — Resume after interruption","terminal":"in-memory resume only; lost state cleanly restarts without hidden persistence"},
+    {"id":"removal","heading":"Path G — Removal and recovery","terminal":"S6 Removed, active protection claim withdrawn, neutral connectivity checked"},
+    {"id":"support","heading":"Path H — Support / help","terminal":"state-neutral, source-current, self-service, privacy-minimal help"}
+  ],
+  "touchpoints": [
+    {"id":"TP-01","name":"Discovery","requirements":["REQ-0028","REQ-0031"],"constraints":["CON-0010","CON-0017"],"interfaces":["INT-0009","INT-0010"]},
+    {"id":"TP-02","name":"Platform router","requirements":["REQ-0028","REQ-0029","REQ-0031"],"constraints":["CON-0010","CON-0017"],"interfaces":["INT-0009","INT-0010"]},
+    {"id":"TP-03","name":"Native safeguard status","requirements":["REQ-0028","REQ-0030","REQ-0031"],"constraints":["CON-0010","CON-0017"],"interfaces":["INT-0009","INT-0010"]},
+    {"id":"TP-04","name":"DNS setup","requirements":["REQ-0028","REQ-0029","REQ-0031"],"constraints":["CON-0010","CON-0017"],"interfaces":["INT-0009","INT-0010"]},
+    {"id":"TP-05","name":"DNS verify","requirements":["REQ-0028","REQ-0029","REQ-0030","REQ-0031"],"constraints":["CON-0010","CON-0017"],"interfaces":["INT-0009","INT-0010"]},
+    {"id":"TP-06","name":"Optional external service","requirements":["REQ-0028","REQ-0030","REQ-0031"],"constraints":["CON-0010","CON-0017"],"interfaces":["INT-0009","INT-0010"]},
+    {"id":"TP-07","name":"Protection Map","requirements":["REQ-0028","REQ-0030","REQ-0031"],"constraints":["CON-0010","CON-0017"],"interfaces":["INT-0009","INT-0010"]},
+    {"id":"TP-08","name":"Troubleshooting","requirements":["REQ-0028","REQ-0029","REQ-0031"],"constraints":["CON-0010","CON-0017"],"interfaces":["INT-0009","INT-0010"]},
+    {"id":"TP-09","name":"Removal","requirements":["REQ-0028","REQ-0029","REQ-0031"],"constraints":["CON-0010","CON-0017"],"interfaces":["INT-0009","INT-0010"]},
+    {"id":"TP-10","name":"Recovery check","requirements":["REQ-0028","REQ-0029","REQ-0031"],"constraints":["CON-0010","CON-0017"],"interfaces":["INT-0009","INT-0010"]},
+    {"id":"TP-11","name":"Reset/reconfigure","requirements":["REQ-0028","REQ-0031"],"constraints":["CON-0010","CON-0017"],"interfaces":["INT-0009","INT-0010"]},
+    {"id":"TP-12","name":"Global Help","requirements":["REQ-0028","REQ-0031"],"constraints":["CON-0010","CON-0017"],"interfaces":["INT-0009","INT-0010"]},
+    {"id":"TP-13","name":"Limitations","requirements":["REQ-0028","REQ-0029","REQ-0031"],"constraints":["CON-0010","CON-0017"],"interfaces":["INT-0009","INT-0010"]}
+  ],
+  "required_instruction_ids": [
+    "DEV-AND-DNS-SETUP","DEV-AND-DNS-VERIFY","DEV-AND-DNS-REMOVE",
+    "DEV-IOS-DNS-SETUP","DEV-IOS-DNS-VERIFY","DEV-IOS-DNS-REMOVE",
+    "DEV-COMMON-CONFLICT","DEV-COMMON-NOT-COVERED","DEV-COMMON-RECOVERY",
+    "DEV-IOS-NATIVE","DEV-AND-NATIVE","SVC-ONE-RELEVANT"
+  ],
+  "state_labels": ["Verified","You confirmed this is set up","Action needed","Status uncertain","Not covered","Removed"],
+  "mandatory_invariants": [
+    "parent confirmation never becomes system verification",
+    "configuration presence never directly establishes Verified",
+    "unsupported paths do not improvise setup",
+    "retries require a changed condition",
+    "Help and Limitations are state-neutral",
+    "lost journey state restarts without hidden persistence",
+    "removal withdraws active SafeWeb DNS protection claim",
+    "no named external service is invented",
+    "no mandatory SafeWeb account or persistent identity is introduced",
+    "EN/TR/AR RTL capability does not imply non-UK market activation",
+    "no pre-L8 human validation claim is made"
+  ]
+}
