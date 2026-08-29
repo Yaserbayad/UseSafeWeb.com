@@ -10,11 +10,11 @@
 | --- | --- | --- |
 | Business/product evaluation | PASS / phases 1-42 complete | Authoritative project record; MODIFY - proceed to validation, not launch. |
 | Final planning architecture | OWNER-FROZEN | Owner freeze recorded 2026-08-27 under TSK-0017 against the exact reviewed tree/digest in MANIFEST.yaml. Canonical runtime activation requires TSK-0009 publication + TSK-0011 exact read-back, followed by CURRENT_STATE rebaseline. |
-| Validation readiness LG-03 | IN PROGRESS / publication handoff | Legal/regulatory/compliance work is OWNER-DEFERRED until 2027-08-27 or earlier explicit reactivation; technical Azure/AdGuard/endpoint/privacy/security readiness may continue after canonical publication/read-back. The legal hold is not PASS and does not by itself authorize real participants. |
-| Experiment 1 protocol | Designed | Execution/recruitment unauthorized until LG-03 and LG-04 PASS. |
-| L4 product/brand/experience definition | PROVISIONAL / OWNER-AUTHORIZED under DEC-0050 | Through 2027-08-27, internal definition/design may proceed from current technical/synthetic evidence with RSK-0002 explicit; LG-05 remains DEFER and no behavioral validation is inferred. |
-| Integrated product build | WAITING | Still requires actual downstream gate authority; DEC-0050 does not itself satisfy LG-06/LG-07 or authorize L6 build. |
-| Integrated pilot | WAITING | Requires LG-09. |
+| Validation readiness LG-03 | NOT_APPLICABLE TO ACTIVE PRE-PRODUCT PATH | DEC-0052/CR-0005 retires LG-03/LG-04/LG-05 and the pre-product participant experiment from active progression. Applicable technical/privacy/security controls remain independently required; first participant activation is after LG-09 in L8. |
+| Experiment 1 protocol | HISTORICAL / NOT ACTIVE PRE-PRODUCT | Retained for traceability only; pre-product recruitment/testing is excluded under DEC-0052. |
+| L4 product/brand/experience definition | ACTIVE / OWNER-AUTHORIZED under DEC-0052 | Product definition/design may proceed from current owner/product/technical/synthetic/internal evidence; no pre-product human validation is required or inferred. |
+| Integrated product build | GATED BY LG-06 / LG-07 | Pre-product human validation is not a prerequisite under DEC-0052. L6 begins only after the product/experience and architecture/security/privacy/delivery gates PASS. |
+| Integrated pilot / first real-user validation | WAITING | Requires LG-09; this is the first active parent/user/participant testing stage under DEC-0052. |
 | Production launch | WAITING | Requires LG-11/LG-12/LG-13. |
 | ClickUp/Monday | STALE/DERIVED | Do not use for governed execution until post-freeze regeneration/read-back. |
 
@@ -28,9 +28,9 @@
 Effective 2026-08-27, the owner explicitly placed identified legal/regulatory/compliance planning tasks on hold through 2027-08-27 unless explicitly reactivated earlier. In the WBS these tasks use `Plan_Status=DEFERRED` and `Execution_State=WAITING` and carry the tag `OWNER_LEGAL_HOLD_2026-08-27`. Historical `PASS` evidence is not rewritten. Technical privacy, security, safeguarding, reliability, and infrastructure controls remain active. The hold is a planning/timing instruction only; it is not completion, exemption evidence, a waiver, or legal-clearance proof. Any gate that actually requires unresolved legal evidence remains unable to PASS for the corresponding real-participant/public action until the evidence is resolved or current verified evidence establishes non-applicability.
 
 
-### 8.2B Owner L3 behavioral-validation deferral / provisional L4 authorization
+### 8.2B Owner integrated-product-first human-validation sequencing
 
-Effective 2026-08-28, DEC-0050/CR-0003 defers the complete real-participant Experiment-1/L3 branch through 2027-08-27 unless reactivated earlier. LG-03/LG-04/LG-05 remain DEFER/non-PASS. Bounded internal L4 product/brand/experience definition and design may proceed from accepted technical/synthetic evidence only; missing real-participant behavioral evidence remains explicit RSK-0002, real-evidence-dependent tasks remain deferred, and no integrated build/public launch follows merely from this sequencing exception.
+Effective 2026-08-29, DEC-0052/CR-0005 supersedes the earlier pre-product behavioral-validation sequencing. No parent/user/participant study, recruitment, usability/comprehension test or other real-human validation is required or permitted as a blocker before the integrated product is built and has passed L7/LG-09 acceptance. The 31 L3 tasks plus TSK-0187/TSK-0326/TSK-0336 are `NOT_APPLICABLE + PASS` exclusion records only; none is treated as executed or as behavioral evidence. Product, architecture, build and integrated verification continue through LG-06/LG-07/LG-08/LG-09 with full applicable automated/device/network/accessibility/security/privacy/recovery/operational proof. L8 is the first real-user validation stage.
 
 ### 8.3 Exact post-freeze sequence
 
@@ -38,7 +38,7 @@ Effective 2026-08-28, DEC-0050/CR-0003 defers the complete real-participant Expe
 2. `TSK-0009` - After explicit publication authority, publish the complete approved `Plans/` tree to GitHub `main` without altering unrelated state.
 3. `TSK-0011` - Fetch/read back the published `Plans/` tree, compare the complete file set and every checksum in `Plans/SHA256SUMS.txt`, and capture commit/tree evidence. Any mismatch blocks ordinary execution.
 4. `TSK-0010` - Update canonical `CURRENT_STATE.md` to reference `Plans/Master/MASTER_PLAN.md`, `Plans/Master/MANIFEST.yaml`, the publication commit/checksum set, the accountless/recovery decisions, and the actual LG-03 (legacy G-02) execution state.
-5. Recompute eligibility from the verified canonical modular system and current checkpoint; resume eligible non-legal LG-03 technical/privacy/security/operational readiness work while OWNER_LEGAL_HOLD_2026-08-27 tasks remain DEFERRED/WAITING until 2027-08-27 or earlier explicit owner reactivation. The hold itself does not satisfy LG-03 real-participant legal evidence.
+5. Recompute eligibility under DEC-0052/CR-0005: continue eligible L4 product/brand/UX definition, then LG-06 -> L5/LG-07 -> L6/LG-08 -> L7/LG-09. Do not require or schedule real-human validation before LG-09; applicable legal/privacy/security controls remain independently governed and L8 participant activation requires current pilot authority.
 6. `TSK-0012` / `TSK-0013` - Regenerate/reconcile ClickUp and optional Monday only after canonical publication/read-back; they remain derived.
 
 `Generated/MASTER_PLAN_FULL.md` is never the publication authority by itself and must not be used as a substitute for the modular source set.

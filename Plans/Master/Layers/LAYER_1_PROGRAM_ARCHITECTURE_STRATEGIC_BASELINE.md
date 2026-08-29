@@ -32,7 +32,7 @@
 
 The governing rule is: **product correctness, security/privacy, reliability/trust, and quality are non-negotiable gates; inside those gates maximize AI autonomy/automation, then simplicity/operability, execution efficiency, cost efficiency, and only then scale/complexity**. The objective is the best working product for the correct effort without overkill; autonomy never lowers a gate or changes human-only authority.
 
-- Validate the riskiest behavior before expensive build; L3 concierge validation and L8 integrated-product pilot remain separate.
+- Under DEC-0052/CR-0005, build and verify the integrated product before any real parent/user/participant testing. Pre-product risk is reduced with owner/product evidence plus automated, browser/device, accessibility, security/privacy, recovery and operational verification; the first real-user validation occurs only in L8 after LG-09 PASS.
 - Use the minimum process necessary to produce high-quality, safe, verifiable work. Remove ceremony, reports, committees, duplicated documentation, or tooling that does not improve a real outcome/control.
 - Direct customer-value packages dominate effort. Mandatory enabling/control functions remain lean. Administrative work remains minimal.
 - Rolling-wave detail is allowed: near-term tasks are highly executable; medium-term tasks expose interfaces/quality/dependencies; distant Year-1 tasks preserve complete responsibility without false micromanagement.
@@ -48,7 +48,7 @@ The governing rule is: **product correctness, security/privacy, reliability/trus
 | Installation | Use automatic/profile/configuration installation where supported/reliable; otherwise use the simplest technically correct platform-specific fallback. |
 | Self-service | Ordinary issues are prevented or solved by UX, automated verification/troubleshooting, concise knowledge, AI assistance, recovery/removal. Repeated human help is a defect signal. |
 | Truth | Parent confirmation is never technical verification; DNS/native/external-service limitations are disclosed at the relevant moment. |
-| Experience before code | Customer evidence -> product definition -> service/journey design -> prototype -> usability/comprehension -> brand/design system -> validated UI -> implementation. |
+| Experience before code | Owner/product evidence -> product definition -> service/journey design -> prototype -> internal/automated accessibility and truth-state acceptance -> brand/design system -> implementation -> integrated L7 verification -> real-user validation in L8. |
 | Brand | A full accessible visual/verbal system, not merely logo/colors; final polish follows sufficient behavioral evidence. |
 | Two surfaces | Public website: discover/understand/trust/decide/start. Product/setup: start/configure/verify/understand/recover/manage. One shared design system, separate jobs. |
 
@@ -56,7 +56,7 @@ The governing rule is: **product correctness, security/privacy, reliability/trus
 
 | Concept | Baseline |
 | --- | --- |
-| Initial behavioral validation | England |
+| First controlled human validation | L8 after LG-09 PASS; England remains the initial planned location unless a later owner decision changes it. |
 | Initial actively targeted market | United Kingdom |
 | Technically available geography | May include Turkey, Arabic-speaking regions, and other permissible locations without implying official localized support. |
 | Official localized/supported market | Requires LG-16 for a named market/locale. |
@@ -153,13 +153,13 @@ Parent roll-up rules: a parent cannot PASS while mandatory children are TODO/WAI
 | --- | --- | --- | --- |
 | L0 | Original Inception & Technical Feasibility | Establish the problem, trust boundary, project identity, and technical feasibility without committing to full build. | LG-01 |
 | L1 | Business & Product Evaluation | Complete evidence-based opportunity, product, market, operating, risk, and business-model evaluation. | LG-02 |
-| L2 | Validation Readiness & Mandatory Controls | Make the bounded behavioral experiment legally, technically, operationally, and evidentially safe to run. | LG-03 |
-| L3 | Concierge Behavioral Validation | Test whether qualified parents complete real safeguards and value the orchestration before expensive software build. | LG-05 |
-| L4 | Product Definition, Requirements & Experience Design | Translate validated behavior into a frozen minimum compelling product, service journey, brand, UX, and content system; under DEC-0050/CR-0003, only provisional internal definition/design may proceed from technical/synthetic evidence while missing real-participant evidence remains explicit. | LG-06 |
+| L2 | Validation Readiness & Mandatory Controls | Maintain independently required technical/privacy/security/readiness controls; the retired pre-product participant experiment is not an active progression prerequisite under DEC-0052. | LG-03 (inactive active-path gate) |
+| L3 | Concierge Behavioral Validation | Historical pre-product human-validation stage retained for traceability but NOT_APPLICABLE to the active product-first path under DEC-0052/CR-0005. | LG-05 (inactive active-path gate) |
+| L4 | Product Definition, Requirements & Experience Design | Define and freeze the owner-approved minimum compelling product, service journey, brand, UX and content system from current owner/product/technical/synthetic/internal evidence; human validation is intentionally deferred until L8 under DEC-0052. | LG-06 |
 | L5 | Architecture, Security, Privacy & Delivery Readiness | Approve production-capable architecture, controls, delivery plan, cost envelope, and implementation evidence model. | LG-07 |
-| L6 | Build & Integration | Implement the smallest validated integrated product, website, DNS service, automation, and supporting systems. | LG-08 |
+| L6 | Build & Integration | Implement the smallest approved integrated product, website, DNS service, automation and supporting systems after LG-06/LG-07; pre-product human validation is not a prerequisite under DEC-0052. | LG-08 |
 | L7 | Integrated Verification & Release Readiness | Prove the integrated release meets functional, UX, accessibility, security, privacy, reliability, recovery, and operational acceptance. | LG-09 |
-| L8 | Controlled Integrated-Product Pilot | Operate the real integrated product with a bounded cohort and collect minimum evidence on value, persistence, reliability, supportability, and funding. | LG-10 |
+| L8 | Controlled Integrated-Product Pilot | First active real-user validation stage: operate the fully integrated LG-09-approved product with a bounded cohort and collect value, comprehension, persistence, reliability, supportability and funding evidence. | LG-10 |
 | L9 | Pilot Evaluation & Production Decision | Synthesize pilot evidence and decide proceed, repeat, reduce, pivot, pause, or stop. | LG-11 |
 | L10 | Production Launch Readiness | Prepare the approved UK production baseline, policies, operations, website, acquisition engine, budget, and staged rollout. | LG-12 |
 | L11 | Production Launch & Stabilization | Launch in controlled stages, verify guardrails, correct high-value defects, and establish a stable operating baseline. | LG-14 |

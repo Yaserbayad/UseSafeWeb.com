@@ -5,13 +5,13 @@
 | --- | --- | --- | --- | --- |
 | L0 | Original Inception & Technical Feasibility | Establish the problem, trust boundary, project identity, and technical feasibility without committing to full build. | 13 | LG-01 |
 | L1 | Business & Product Evaluation | Complete evidence-based opportunity, product, market, operating, risk, and business-model evaluation. | 43 | LG-02 |
-| L2 | Validation Readiness & Mandatory Controls | Make the bounded behavioral experiment legally, technically, operationally, and evidentially safe to run. | 84 | LG-03 |
-| L3 | Concierge Behavioral Validation | Test whether qualified parents complete real safeguards and value the orchestration before expensive software build. | 31 | LG-05 |
-| L4 | Product Definition, Requirements & Experience Design | Translate validated behavior into a frozen minimum compelling product, service journey, brand, UX, and content system; under DEC-0050/CR-0003, provisional internal definition/design may proceed without claiming behavioral validation. | 68 | LG-06 |
+| L2 | Validation Readiness & Mandatory Controls | Maintain mandatory technical/privacy/security/readiness controls that are independently required; the retired pre-product participant experiment is not an active progression prerequisite under DEC-0052. | 84 | LG-03 |
+| L3 | Concierge Behavioral Validation | Historical pre-product concierge behavioral-validation stage retained for traceability but NOT_APPLICABLE to the active path under DEC-0052/CR-0005; its 31 tasks are exclusion-PASS, not executed. | 31 | LG-05 |
+| L4 | Product Definition, Requirements & Experience Design | Define and freeze the owner-approved minimum compelling product, service journey, brand, UX and content system from current owner/product/technical/synthetic/internal evidence; human validation is intentionally deferred until L8. | 68 | LG-06 |
 | L5 | Architecture, Security, Privacy & Delivery Readiness | Approve production-capable architecture, controls, delivery plan, cost envelope, and implementation evidence model. | 36 | LG-07 |
-| L6 | Build & Integration | Implement the smallest validated integrated product, website, DNS service, automation, and supporting systems. | 76 | LG-08 |
+| L6 | Build & Integration | Implement the smallest approved integrated product, website, DNS service, automation and supporting systems after LG-06/LG-07; pre-product human validation is not a prerequisite under DEC-0052. | 76 | LG-08 |
 | L7 | Integrated Verification & Release Readiness | Prove the integrated release meets functional, UX, accessibility, security, privacy, reliability, recovery, and operational acceptance. | 48 | LG-09 |
-| L8 | Controlled Integrated-Product Pilot | Operate the real integrated product with a bounded cohort and collect minimum evidence on value, persistence, reliability, supportability, and funding. | 42 | LG-10 |
+| L8 | Controlled Integrated-Product Pilot | First active real-user validation stage: operate the fully integrated LG-09-approved product with a bounded cohort and collect value, comprehension, persistence, reliability, supportability and funding evidence. | 42 | LG-10 |
 | L9 | Pilot Evaluation & Production Decision | Synthesize pilot evidence and decide proceed, repeat, reduce, pivot, pause, or stop. | 8 | LG-11 |
 | L10 | Production Launch Readiness | Prepare the approved UK production baseline, policies, operations, website, acquisition engine, budget, and staged rollout. | 59 | LG-12 |
 | L11 | Production Launch & Stabilization | Launch in controlled stages, verify guardrails, correct high-value defects, and establish a stable operating baseline. | 9 | LG-14 |
@@ -40,6 +40,8 @@
 | PKG-16 | N | C | C | R | R | R | R | R | R | R | R | R | R | R |
 
 Legend: R = Required; C = Conditional with exact activation trigger below; N = Not Applicable with rationale below. A deliberate postponement uses EXC/DEFERRED_EXCEPTION, not N.
+
+**DEC-0052 / CR-0005 active-path override:** L3 is retired from the current pre-product sequence. Its 31 task rows are `NOT_APPLICABLE + PASS` exclusion records, not executed work. The matrix retains the original L3 R/C/N package obligations only as historical/reopen semantics; actual human/user validation starts in L8 after LG-09 PASS.
 
 #### 6.5.2 All 224 cell dispositions
 
