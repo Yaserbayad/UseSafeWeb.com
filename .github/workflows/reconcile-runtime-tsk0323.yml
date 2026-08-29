@@ -1,0 +1,44 @@
+name: Reconcile TSK-0323 PASS runtime state
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-runtime-tsk0323.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-governance-state
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: true
+
+      - name: Reconcile canonical runtime
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          [[ "$(whoami)" == "azureusr" ]]
+          python3 .github/scripts/reconcile_runtime_tsk0323.py
+          git diff --check
+          changed="$(git diff --name-only)"
+          if [[ -z "$changed" ]]; then
+            echo 'RUNTIME_TSK0323_NO_CHANGE=PASS'
+            exit 0
+          fi
+          [[ "$changed" == "CURRENT_STATE.md" ]]
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: accept TSK-0323 instruction catalogue'
+          git push origin HEAD:main
+          echo 'RUNTIME_TSK0323_RECONCILIATION=PASS'
