@@ -18,7 +18,8 @@
   min-width: 0;
 }
 
-.prototype-badge {
+.prototype-badge,
+.prototype-screen {
   overflow-wrap: anywhere;
 }
 
