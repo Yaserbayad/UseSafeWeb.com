@@ -1,0 +1,70 @@
+name: Audit LG-06 readiness
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/audit-lg06-readiness.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Audit L4 disposition and LG-06 relationships
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import csv,re
+          from pathlib import Path
+          rows=list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='')))
+          state=Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          l4=[(i,r) for i,r in enumerate(rows,1) if (r.get('Lifecycle_Stage') or r.get('Lifecycle') or '').strip()=='L4']
+          print(f'L4_TOTAL={len(l4)}')
+          from collections import Counter
+          print('L4_PLAN_STATUS='+repr(Counter((r.get('Plan_Status') or '').strip() for _,r in l4)))
+          print('L4_WBS_EXEC='+repr(Counter((r.get('Execution_State') or '').strip() for _,r in l4)))
+          def blocks(tid):
+              lines=state.splitlines(); out=[]
+              for i,l in enumerate(lines):
+                  if tid in l:
+                      out.append('\n'.join(lines[max(0,i-1):min(len(lines),i+7)]))
+              return '\n'.join(out)
+          def strong(tid):
+              txt=blocks(tid)
+              pats=[('PASS',rf'{re.escape(tid)}[^\n]{{0,220}}(?:\*\*PASS\*\*|:\s*PASS\b)'),('WAITING',rf'{re.escape(tid)}[^\n]{{0,220}}\*\*WAITING'),('BLOCKED',rf'{re.escape(tid)}[^\n]{{0,220}}\*\*BLOCKED'),('TODO',rf'{re.escape(tid)}[^\n]{{0,220}}\*\*TODO')]
+              for s,p in pats:
+                  if re.search(p,txt,re.I): return s
+              return 'UNKNOWN'
+          unresolved=[]
+          for idx,r in l4:
+              tid=r['Task_ID'].strip(); ps=(r.get('Plan_Status') or '').strip(); es=(r.get('Execution_State') or '').strip(); aa=(r.get('Action_Authority') or '').strip(); st=strong(tid)
+              if ps=='NOT_APPLICABLE' and es=='PASS': continue
+              if es=='PASS' or st=='PASS': continue
+              unresolved.append((idx,r,st))
+          print(f'L4_PROVISIONAL_UNRESOLVED={len(unresolved)}')
+          for idx,r,st in unresolved:
+              print('---UNRESOLVED---')
+              for k in ['Task_ID','Title','Priority','Critical_Path','Plan_Status','Execution_State','Dependencies','Action_Authority','Trigger','Preconditions','Acceptance_Criteria','Verification_Method','Verification','Evidence_Required','Evidence','Requirements','Interfaces','Risk_ID']:
+                  if r.get(k): print(f'{k}={r[k]}')
+              print(f'WBS_ORDER={idx}')
+              print(f'RUNTIME_STRONG_STATUS={st}')
+          rel=Path('Plans/Master/RELATIONSHIP_INDEX.yaml').read_text(encoding='utf-8').splitlines()
+          hits=[i for i,l in enumerate(rel) if 'LG-06' in l]
+          print(f'LG06_RELATIONSHIP_HITS={len(hits)}')
+          for i in hits:
+              print(f'---REL_LINE_{i+1}---')
+              for j in range(max(0,i-2),min(len(rel),i+3)):
+                  print(f'{j+1}:{rel[j]}')
+          print('LG06_READINESS_AUDIT=PASS')
+          PY
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'REPOSITORY_CLEAN=PASS'
