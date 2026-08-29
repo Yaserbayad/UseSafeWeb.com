@@ -1,0 +1,174 @@
+name: Verify TSK-0310 prototype
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-tsk0310.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify source, state model, privacy and rollback semantics
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check prototype/TSK-0310/model.mjs
+          node --check prototype/TSK-0310/app.mjs
+          test -f prototype/TSK-0310/index.html
+          test -f prototype/TSK-0310/prototype.css
+          test -f brand/system/TSK-0300/tokens.css
+          test -f brand/system/TSK-0300/components.css
+          test -f brand/identity/TSK-0301/safeweb-wordmark-primary.svg
+          grep -Fq 'noindex,nofollow' prototype/TSK-0310/index.html
+          grep -Fq 'dns.usesafeweb.com' prototype/TSK-0310/app.mjs
+          grep -Fq 'https://dns.usesafeweb.com/dns-query' prototype/TSK-0310/app.mjs
+          ! grep -Eqi 'localStorage|sessionStorage|document\.cookie|XMLHttpRequest|fetch\(|analytics|pixel|tracker' prototype/TSK-0310/index.html prototype/TSK-0310/app.mjs prototype/TSK-0310/model.mjs
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {createJourney, transition, EVIDENCE_STATE, SCREEN, stateCopy} from './prototype/TSK-0310/model.mjs';
+          const throws = fn => assert.throws(fn);
+          let s = createJourney();
+          assert.equal(s.screen, SCREEN.DISCOVERY);
+          throws(() => transition(s, 'DNS_CONFIGURED'));
+          s = transition(s, 'START');
+          s = transition(s, 'CHOOSE_PLATFORM', {platform:'android'});
+          s = transition(s, 'NATIVE_CONFIRMED');
+          assert.equal(s.nativeState, EVIDENCE_STATE.PARENT_CONFIRMED);
+          s = transition(s, 'DNS_CONFIGURED');
+          assert.equal(s.dnsState, EVIDENCE_STATE.PARENT_CONFIRMED);
+          assert.notEqual(s.dnsState, EVIDENCE_STATE.VERIFIED);
+          s = transition(s, 'VERIFY_RESULT', {result:'verified'});
+          assert.equal(s.dnsState, EVIDENCE_STATE.VERIFIED);
+          s = transition(s, 'SERVICE_NONE');
+          assert.equal(s.screen, SCREEN.MAP);
+          s = transition(s, 'REMOVE_DNS');
+          s = transition(s, 'CONFIRM_REMOVED');
+          assert.equal(s.dnsState, EVIDENCE_STATE.REMOVED);
+          s = transition(s, 'RECOVERY_OK');
+          assert.equal(s.screen, SCREEN.MAP);
+          assert.equal(s.dnsState, EVIDENCE_STATE.REMOVED);
+          s = transition(s, 'RESET');
+          assert.deepEqual(s, createJourney());
+          s = transition(createJourney(), 'START');
+          s = transition(s, 'CHOOSE_PLATFORM', {platform:'iphone'});
+          s = transition(s, 'NATIVE_ACTION_NEEDED');
+          s = transition(s, 'DNS_CONFIGURED');
+          s = transition(s, 'VERIFY_RESULT', {result:'action-needed'});
+          assert.equal(s.screen, SCREEN.TROUBLESHOOTING);
+          throws(() => transition(s, 'RETRY_AFTER_CHANGE', {changedCondition:false}));
+          s = transition(s, 'RETRY_AFTER_CHANGE', {changedCondition:true});
+          assert.equal(s.screen, SCREEN.VERIFY);
+          s = transition(s, 'VERIFY_RESULT', {result:'uncertain'});
+          assert.equal(s.dnsState, EVIDENCE_STATE.UNCERTAIN);
+          s = transition(s, 'RETURN');
+          assert.equal(s.screen, SCREEN.VERIFY);
+          s = transition(s, 'VERIFY_RESULT', {result:'not-covered'});
+          assert.equal(s.screen, SCREEN.LIMITATIONS);
+          s = transition(s, 'RETURN');
+          assert.equal(s.screen, SCREEN.VERIFY);
+          let o = transition(transition(createJourney(), 'START'), 'CHOOSE_PLATFORM', {platform:'other'});
+          assert.equal(o.screen, SCREEN.LIMITATIONS);
+          assert.equal(o.dnsState, EVIDENCE_STATE.NOT_COVERED);
+          assert.match(stateCopy(EVIDENCE_STATE.PARENT_CONFIRMED).supporting, /not independently verified/i);
+          assert.match(stateCopy(EVIDENCE_STATE.VERIFIED).supporting, /verified/i);
+          throws(() => transition(createJourney(), 'UNKNOWN'));
+          console.log('MODEL_TESTS=PASS');
+          NODE
+
+      - name: Verify rendered target environment in isolated headless browser
+        shell: bash
+        run: |
+          set -euo pipefail
+          BROWSER=''
+          for candidate in chromium chromium-browser google-chrome google-chrome-stable microsoft-edge; do
+            if command -v "$candidate" >/dev/null 2>&1; then BROWSER="$(command -v "$candidate")"; break; fi
+          done
+          if [ -z "$BROWSER" ]; then
+            echo 'BROWSER_RUNTIME=UNAVAILABLE'
+            exit 2
+          fi
+          echo "BROWSER_RUNTIME=$BROWSER"
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/tsk0310-http.log 2>&1 &
+          HTTP_PID=$!
+          TMP_PROFILE="$(mktemp -d)"
+          "$BROWSER" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --remote-debugging-port=9222 --user-data-dir="$TMP_PROFILE" about:blank >/tmp/tsk0310-browser.log 2>&1 &
+          BROWSER_PID=$!
+          cleanup() { kill "$BROWSER_PID" "$HTTP_PID" 2>/dev/null || true; rm -rf "$TMP_PROFILE"; }
+          trap cleanup EXIT
+          for i in $(seq 1 50); do curl -fsS http://127.0.0.1:9222/json/version >/tmp/tsk0310-version.json 2>/dev/null && break; sleep 0.2; done
+          curl -fsS http://127.0.0.1:8765/prototype/TSK-0310/index.html >/dev/null
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          const base = 'http://127.0.0.1:8765/prototype/TSK-0310/index.html';
+          const created = await fetch('http://127.0.0.1:9222/json/new?' + encodeURIComponent(base), {method:'PUT'}).then(r => { if (!r.ok) throw new Error(`CDP target creation failed ${r.status}`); return r.json(); });
+          const ws = new WebSocket(created.webSocketDebuggerUrl);
+          await new Promise((resolve,reject)=>{ ws.addEventListener('open',resolve,{once:true}); ws.addEventListener('error',reject,{once:true}); });
+          let id = 0;
+          const pending = new Map();
+          const exceptions = [];
+          const externalRequests = [];
+          ws.addEventListener('message', event => {
+            const msg = JSON.parse(event.data);
+            if (msg.id && pending.has(msg.id)) { const {resolve,reject}=pending.get(msg.id); pending.delete(msg.id); msg.error ? reject(new Error(JSON.stringify(msg.error))) : resolve(msg.result); return; }
+            if (msg.method === 'Runtime.exceptionThrown') exceptions.push(msg.params.exceptionDetails?.text || 'exception');
+            if (msg.method === 'Network.requestWillBeSent') {
+              const u = msg.params.request.url;
+              if (!u.startsWith('http://127.0.0.1:8765/') && !u.startsWith('data:')) externalRequests.push(u);
+            }
+          });
+          const call = (method, params={}) => new Promise((resolve,reject)=>{ const n=++id; pending.set(n,{resolve,reject}); ws.send(JSON.stringify({id:n,method,params})); });
+          const evalValue = async expression => {
+            const r = await call('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});
+            if (r.exceptionDetails) throw new Error(r.exceptionDetails.text || 'runtime evaluation error');
+            return r.result.value;
+          };
+          const wait = ms => new Promise(r=>setTimeout(r,ms));
+          await call('Runtime.enable'); await call('Network.enable'); await call('Page.enable');
+          await wait(700);
+          const screen = () => evalValue(`document.querySelector('[data-screen]')?.dataset.screen`);
+          const text = () => evalValue(`document.body.innerText`);
+          const click = async selector => { const ok=await evalValue(`(()=>{const e=document.querySelector(${JSON.stringify(selector)}); if(!e)return false; e.click(); return true})()`); assert.equal(ok,true,`missing ${selector}`); await wait(60); };
+          assert.equal(await screen(),'discovery');
+          assert.match(await text(),/does not promise complete safety/i);
+          await click('[data-action="SHOW_LIMITATIONS"]'); assert.equal(await screen(),'limitations');
+          await click('[data-action="RETURN"]'); assert.equal(await screen(),'discovery');
+          await click('[data-action="START"]'); assert.equal(await screen(),'router');
+          await click('[data-platform="android"]'); assert.equal(await screen(),'native');
+          await click('[data-action="NATIVE_CONFIRMED"]'); assert.equal(await screen(),'dns'); assert.match(await text(),/dns\.usesafeweb\.com/);
+          await click('[data-action="DNS_CONFIGURED"]'); assert.equal(await screen(),'verify'); assert.match(await text(),/not a production verifier/i);
+          await click('[data-result="verified"]'); assert.equal(await screen(),'service');
+          await click('[data-action="SERVICE_NONE"]'); assert.equal(await screen(),'map');
+          let states = await evalValue(`Array.from(document.querySelectorAll('[data-evidence-state]')).map(e=>e.dataset.evidenceState)`);
+          assert.deepEqual(states,['parent-confirmed','verified','not-covered']);
+          await click('[data-action="REMOVE_DNS"]'); assert.equal(await screen(),'removal');
+          await click('[data-action="CONFIRM_REMOVED"]'); assert.equal(await screen(),'recovery');
+          await click('[data-action="RECOVERY_OK"]'); assert.equal(await screen(),'map');
+          states = await evalValue(`Array.from(document.querySelectorAll('[data-evidence-state]')).map(e=>e.dataset.evidenceState)`);
+          assert.equal(states[1],'removed');
+          await evalValue(`document.querySelector('[data-global-action="RESET"]').click()`); await wait(60); assert.equal(await screen(),'discovery');
+          await click('[data-action="START"]'); await click('[data-platform="iphone"]'); await click('[data-action="NATIVE_ACTION_NEEDED"]'); await click('[data-action="DNS_CONFIGURED"]');
+          assert.match(await text(),/not a production verifier/i);
+          await click('[data-result="action-needed"]'); assert.equal(await screen(),'troubleshooting');
+          await click('[data-action="RETRY_AFTER_CHANGE"]'); assert.equal(await screen(),'verify');
+          await click('[data-result="not-covered"]'); assert.equal(await screen(),'limitations');
+          assert.equal(exceptions.length,0,`browser exceptions: ${exceptions.join('; ')}`);
+          assert.deepEqual(externalRequests,[],`unexpected external requests: ${externalRequests.join(', ')}`);
+          const assetFailures = await evalValue(`performance.getEntriesByType('resource').filter(r=>r.name.startsWith('http://127.0.0.1:8765/')).map(r=>r.name)`);
+          assert.ok(assetFailures.length >= 4,'expected local assets not loaded');
+          console.log('BROWSER_TESTS=PASS');
+          console.log('EXTERNAL_REQUESTS=0');
+          console.log('BROWSER_EXCEPTIONS=0');
+          ws.close();
+          NODE
