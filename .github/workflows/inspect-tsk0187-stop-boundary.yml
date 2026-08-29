@@ -1,0 +1,34 @@
+name: Inspect TSK-0187 stop boundary
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/inspect-tsk0187-stop-boundary.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Print TSK-0187 authority and runtime context
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv
+          with open('Plans/Master/WBS/master-wbs.csv',encoding='utf-8-sig',newline='') as f:
+              rows=list(csv.DictReader(f))
+          for r in rows:
+              if r.get('Task_ID')=='TSK-0187':
+                  print('ROW=' + ' | '.join(f'{k}={v}' for k,v in r.items()))
+          PY
+          echo 'RUNTIME_CONTEXT:'
+          grep -n -E 'TSK-0187|2027-08-27|RSK-0002|DEC-0050|CR-0003' CURRENT_STATE.md | tail -n 40 || true
