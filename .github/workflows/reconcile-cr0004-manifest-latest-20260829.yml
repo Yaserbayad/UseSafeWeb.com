@@ -1,0 +1,92 @@
+name: Reconcile CR-0004 manifest latest-change metadata
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/reconcile-cr0004-manifest-latest-20260829.yml
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Repair latest post-freeze change metadata
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git hash-object CURRENT_STATE.md)" = "46185aaff2bf30a8fc33a1aabbabb3845258226e"
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "6a25d63af125116a80f96ac0f1548b1ddb452a34"
+          test "$(git hash-object Plans/Master/MANIFEST.yaml)" = "ac2cb58336d53293f2d808da401f85d0c3728f5a"
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, subprocess
+          p=Path('Plans/Master/MANIFEST.yaml')
+          text=p.read_text(encoding='utf-8')
+          start=text.index('post_freeze_change_control:\n')
+          end=text.index('\ngenerated_assembly_contract:\n', start)
+          old=text[start:end]
+          assert 'latest_change: CR-0003' in old
+          new='''post_freeze_change_control:\n  latest_change: CR-0004\n  date: '2026-08-29'\n  status: owner-authorized provisional internal L4 Brand/UX/prototype dependency decoupling; real-participant behavioral validation and all legal/privacy/participant/build/publication/payment/launch fences remain controlling; canonical reliance requires deterministic validation plus GitHub publication/read-back\n  authority: explicit current Project Owner instruction 2026-08-29; DEC-0050/CR-0003 deferral remains active; actual applicable safety/legal/security/platform reality remains higher authority\n  affected_tasks:\n  - TSK-0298 (dependency changed from TSK-0187 to TSK-0139; provisional acceptance semantics)\n  - TSK-0299 (provisional acceptance semantics)\n  - TSK-0187 (unchanged mandatory representative-parent validation)\n  - TSK-0309 (unchanged hard dependency on TSK-0187)\n  - TSK-0301 (unchanged HUMAN_ONLY owner approval boundary)\n  affected_gates:\n  - LG-03 (remains DEFER/non-PASS)\n  - LG-04 (remains DEFER/non-PASS)\n  - LG-05 (remains DEFER/non-PASS)\n  - LG-06 (provisional L4 design progression only; no automatic PASS)\n  semantic_delta: internal non-public Brand/UX/prototype definition/design that can meet its own acceptance without representative-parent evidence may progress from TSK-0139; TSK-0187 remains mandatory before TSK-0309 and no legal, participant, L5/L6 build, publication, payment, market or launch authority is created\n  change_record: Registers/EXCEPTIONS_CHANGE_CONTROLS.md#post-freeze-material-change-records\n'''
+          p.write_text(text[:start]+new+text[end:],encoding='utf-8')
+          subprocess.run(['python3','Plans/Master/Tools/rebuild_master_plan.py'],check=True)
+          sums=Path('Plans/SHA256SUMS.txt')
+          out=[]
+          for line in sums.read_text(encoding='utf-8').splitlines():
+              if not line.strip(): continue
+              _, rel=line.split('  ',1)
+              f=Path('Plans')/rel
+              out.append(f'{hashlib.sha256(f.read_bytes()).hexdigest()}  {rel}')
+          sums.write_text('\n'.join(out)+'\n',encoding='utf-8')
+          PY
+          python3 Plans/Master/Tools/validate_master_plan.py | tee /tmp/cr0004-manifest-validation.txt
+          grep -Fx 'VALIDATION PASS' /tmp/cr0004-manifest-validation.txt
+          grep -Fx 'tasks=641' /tmp/cr0004-manifest-validation.txt
+          grep -Fx 'dependency_edges=849' /tmp/cr0004-manifest-validation.txt
+          grep -Fx 'broken_links=0' /tmp/cr0004-manifest-validation.txt
+          grep -Fx 'generated_missing_task_ids=0' /tmp/cr0004-manifest-validation.txt
+          grep -Fq 'latest_change: CR-0004' Plans/Master/MANIFEST.yaml
+          grep -Fq 'TSK-0309 (unchanged hard dependency on TSK-0187)' Plans/Master/MANIFEST.yaml
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "6a25d63af125116a80f96ac0f1548b1ddb452a34"
+          test "$(git hash-object CURRENT_STATE.md)" = "46185aaff2bf30a8fc33a1aabbabb3845258226e"
+          cat > CR_0004_MANIFEST_LATEST_CHANGE_RECONCILIATION_2026-08-29.md <<EOF
+          # CR-0004 manifest latest-change reconciliation
+
+          Date: 2026-08-29
+
+          GitHub read-back after CR-0004 publication found the manifest status marker updated but the `post_freeze_change_control.latest_change` metadata still pointing at CR-0003. Runtime adoption was stopped before any newly eligible work executed.
+
+          This reconciliation updates only the post-freeze latest-change metadata to CR-0004 and its exact affected-task/gate semantics, then rebuilds the derived full plan and checksums. WBS remains blob `6a25d63af125116a80f96ac0f1548b1ddb452a34`; CURRENT_STATE remains blob `46185aaff2bf30a8fc33a1aabbabb3845258226e` until separate runtime reconciliation.
+
+          Validation:
+
+          ```text
+          $(cat /tmp/cr0004-manifest-validation.txt)
+          ```
+
+          Post-repair blobs before commit:
+          - MANIFEST: `$(git hash-object Plans/Master/MANIFEST.yaml)`
+          - Generated full plan: `$(git hash-object Plans/Master/Generated/MASTER_PLAN_FULL.md)`
+          - SHA256SUMS: `$(git hash-object Plans/SHA256SUMS.txt)`
+          EOF
+          sed -i 's/[[:space:]]\+$//' CR_0004_MANIFEST_LATEST_CHANGE_RECONCILIATION_2026-08-29.md
+          git diff --check
+
+      - name: Commit and push reconciliation
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git add Plans/Master/MANIFEST.yaml Plans/Master/Generated/MASTER_PLAN_FULL.md Plans/SHA256SUMS.txt CR_0004_MANIFEST_LATEST_CHANGE_RECONCILIATION_2026-08-29.md
+          git diff --cached --check
+          git config user.name 'UseSafeWeb Governance Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git commit -m 'governance: reconcile CR-0004 manifest latest change'
+          git push origin HEAD:main
