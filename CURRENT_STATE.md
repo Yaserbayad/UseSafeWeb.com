@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-29T18:08:39Z
+**Updated:** 2026-08-29T18:12:54Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -840,3 +840,18 @@ Recompute current eligibility from the WBS/graph/gates with `TSK-0309=PASS`; sel
 ### Exact next authoritative step
 
 Recompute current L4 eligibility from WBS/graph/gates and Action Authority with `TSK-0327=PASS`; continue the highest-priority AUTO_ALLOWED work and do not self-certify HUMAN_ONLY tasks.
+
+## TSK-0322 product voice / claims / terminology — 2026-08-29
+
+`TSK-0322 — Create product voice, claims, and terminology guide`: **PASS**.
+
+- Guide: `content/TSK-0322/PRODUCT_VOICE_CLAIMS_TERMINOLOGY.md` blob `d12c1e707f0390915002b27bf3a5073d0135d466`, version `1.0.0`.
+- Machine policy: `content/TSK-0322/POLICY.json` blob `97c214504ceeeadebd92a79069e081311d60dd99`.
+- Durable evidence: `TSK_0322_PRODUCT_LANGUAGE_POLICY_EVIDENCE_2026-08-29.md`, blob `9cd540243be6855c28d709083ff30fa1ce7a73f6`.
+- Acceptance run/job: `33267585578` / `99140301619`; guide structure, source currency, state semantics, approved claims, representative content tasks and WBS/runtime authority all PASS.
+- Current visible identity is `SafeWeb`; S1-S6 labels remain TSK-0320 exact; no complete-safety, surveillance, fabricated-validation or public-authority claim is introduced.
+- ACC-0322/VER-0322/EVD-0322 satisfied.
+
+### Exact next authoritative step
+
+Execute `TSK-0323` against the accepted TSK-0322 policy and current source-backed instruction/state authorities; create the critical-path/error-state content library without inventing unsupported platform steps or strengthening claims.
