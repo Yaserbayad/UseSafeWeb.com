@@ -1,0 +1,89 @@
+{
+  "schema": "usesafeweb.device-service-instructions.v1",
+  "task_id": "TSK-0323",
+  "version": "1.0.0",
+  "status": "internal_l4",
+  "owner": "Content",
+  "last_source_review": "2026-08-29",
+  "sequencing": "DEC-0052/CR-0005",
+  "human_validation": "deferred_to_L8_not_claimed_pre_product",
+  "visible_product": "SafeWeb",
+  "technical_endpoints": {
+    "android_private_dns_hostname": "dns.usesafeweb.com",
+    "iphone_doh_url": "https://dns.usesafeweb.com/dns-query"
+  },
+  "canonical_sources": {
+    "TSK-0307": {"path": "TSK_0307_SOURCE_BACKED_INSTRUCTION_CONTENT_CATALOGUE_2026-08-28.md", "blob": "d717c9b3f66197abe1f3e73361633f222b817e7c"},
+    "TSK-0317": {"path": "TSK_0317_PLATFORM_INSTALL_VERIFICATION_REMOVAL_RECOVERY_DESIGN_CANDIDATE_2026-08-28.md", "blob": "d44daf376d0e8ed1d5839cc3b6b2ac10d090828d"},
+    "TSK-0409": {"path": "TSK_0409_SUPPORTED_OS_DEVICE_NETWORK_LIMIT_MATRIX_2026-08-28.md", "blob": "09318534ec097849cbe8c7391e2a1acc3ba5a79a"},
+    "TSK-0143": {"path": "TSK_0143_NATIVE_DEVICE_SAFEGUARD_ROUTING_REQUIREMENTS_2026-08-28.md", "blob": "20b588c27bc0d71249bec2c83f33cf551afa4ff0"},
+    "TSK-0144": {"path": "TSK_0144_ONE_RELEVANT_EXTERNAL_SERVICE_SAFEGUARD_REQUIREMENTS_2026-08-28.md", "blob": "f7821c8ef50aa517753c31477b383d660de11f40"},
+    "TSK-0320": {"path": "TSK_0320_PROTECTION_STATE_MODEL_AND_COPY_RULES_2026-08-28.md", "blob": "1146f7622f434590dde1253d11f14fb6a87e19de"},
+    "TSK-0322": {"path": "content/TSK-0322/PRODUCT_VOICE_CLAIMS_TERMINOLOGY.md", "blob": "d12c1e707f0390915002b27bf3a5073d0135d466"},
+    "TSK-0319": {"path": "TSK_0319_AUTOMATED_VERIFICATION_TROUBLESHOOTING_RECOVERY_HELP_DESIGN_CANDIDATE_2026-08-28.md", "blob": "86de353dd8446f02ed48c80638391a3caa852e59"}
+  },
+  "external_sources": {
+    "ANDROID-PRIVATE-DNS": {"url": "https://support.google.com/android/answer/9654714?hl=en", "checked": "2026-08-29"},
+    "CHROME-SECURE-DNS": {"url": "https://support.google.com/chrome/answer/10468685?co=GENIE.Platform%3DAndroid&hl=en", "checked": "2026-08-29"},
+    "APPLE-DNS-SETTINGS": {"url": "https://support.apple.com/en-gb/guide/deployment/dep86469ba99/1/web/1.0", "checked": "2026-08-29"},
+    "APPLE-PROFILE-INSTALL": {"url": "https://support.apple.com/en-euro/guide/iphone/iph6c493b19/ios", "checked": "2026-08-29"},
+    "APPLE-PROFILE-REMOVE": {"url": "https://support.apple.com/guide/personal-safety/review-and-delete-configuration-profiles-ips327569a75/1.0/web/1.0", "checked": "2026-08-29"},
+    "APPLE-SCREEN-TIME": {"url": "https://support.apple.com/en-gb/105121", "checked": "2026-08-29"},
+    "ANDROID-PARENTAL-CONTROLS": {"url": "https://support.google.com/android/answer/16766047?hl=en", "checked": "2026-08-29"},
+    "FAMILY-LINK-DEVICES": {"url": "https://support.google.com/families/answer/9116646?hl=en", "checked": "2026-08-29"}
+  },
+  "records": [
+    {
+      "id": "DEV-AND-DNS-SETUP", "version": "1.0.0", "platform_version_applicability": "Android phone 9+ with usable Private DNS provider-hostname control and no known policy block", "source_references": ["TSK-0307","TSK-0317","TSK-0409","ANDROID-PRIVATE-DNS"], "last_verified": "2026-08-29", "owner": "Content + Network Engineering", "expected_result": "dns.usesafeweb.com saved in provider-hostname mode; return for approved technical check; no S1 from configuration alone", "fallback": "Restore normal Private DNS policy, normally Automatic, if SafeWeb setup breaks connectivity", "unsupported_state": "Missing/locked/broken control -> S4/S5; no alternate VPN/client invented", "test_case": "TC-0323-AND-SETUP-01", "review_trigger": "Android Private DNS/settings/support/endpoint semantics change or target evidence contradicts path"
+    },
+    {
+      "id": "DEV-AND-DNS-VERIFY", "version": "1.0.0", "platform_version_applicability": "Current supported Android DNS tuple after setup", "source_references": ["TSK-0307","TSK-0409","TSK-0320","TSK-0322","CHROME-SECURE-DNS"], "last_verified": "2026-08-29", "owner": "Network Engineering + Content", "expected_result": "S1 only after approved technical check confirms intended encrypted DNS path without a known invalidating conflict", "fallback": "S3 for proven repair; S5 for inconclusive/conflicting evidence", "unsupported_state": "VPN/custom browser/app resolver/network block/unproven tuple -> S5/S4", "test_case": "TC-0323-AND-VERIFY-01", "review_trigger": "Verifier, browser resolver, VPN, support matrix, endpoint or network-conflict model changes"
+    },
+    {
+      "id": "DEV-AND-DNS-REMOVE", "version": "1.0.0", "platform_version_applicability": "Supported Android path with SafeWeb provider configured or partially configured", "source_references": ["TSK-0307","TSK-0317","TSK-0409","ANDROID-PRIVATE-DNS"], "last_verified": "2026-08-29", "owner": "Content + Network Engineering", "expected_result": "SafeWeb provider removed; normal platform DNS policy restored; S6 Removed; active SafeWeb DNS claim withdrawn", "fallback": "Neutral connectivity check and ordinary non-SafeWeb network troubleshooting if connectivity remains broken", "unsupported_state": "No silent plaintext fallback while retaining a SafeWeb protection claim", "test_case": "TC-0323-AND-REMOVE-01", "review_trigger": "Android removal/reset semantics or recovery evidence changes"
+    },
+    {
+      "id": "DEV-IOS-DNS-SETUP", "version": "1.0.0", "platform_version_applicability": "iPhone iOS 14+ with exact separately verified SafeWeb DNS profile; manual/local install allowed; not management-blocked", "source_references": ["TSK-0307","TSK-0317","TSK-0409","APPLE-DNS-SETTINGS","APPLE-PROFILE-INSTALL"], "last_verified": "2026-08-29", "owner": "Content + Network Engineering", "expected_result": "User explicitly approves exact profile using https://dns.usesafeweb.com/dns-query; return for technical check; no S1 from profile presence", "fallback": "Remove exact SafeWeb profile if the configuration causes material connectivity failure", "unsupported_state": "Unaccepted Apple family, managed/supervised restriction, or unavailable exact verified profile -> S4/S5", "test_case": "TC-0323-IOS-SETUP-01", "review_trigger": "iOS/profile/security/install/support/endpoint/profile-artifact semantics change"
+    },
+    {
+      "id": "DEV-IOS-DNS-VERIFY", "version": "1.0.0", "platform_version_applicability": "Current supported iPhone DNS tuple after exact profile installation", "source_references": ["TSK-0307","TSK-0409","TSK-0320","TSK-0322"], "last_verified": "2026-08-29", "owner": "Network Engineering + Content", "expected_result": "S1 only after approved technical verification of intended SafeWeb DNS path", "fallback": "S3 for proven repair; S5 for unresolved conflict", "unsupported_state": "VPN/Private Relay/custom resolver/network conflict or profile-only evidence -> S5; never infer S1", "test_case": "TC-0323-IOS-VERIFY-01", "review_trigger": "Verifier/profile/endpoint/support/conflict model or Private Relay/VPN evidence changes"
+    },
+    {
+      "id": "DEV-IOS-DNS-REMOVE", "version": "1.0.0", "platform_version_applicability": "Supported iPhone path with exact SafeWeb profile installed", "source_references": ["TSK-0307","TSK-0317","TSK-0409","APPLE-PROFILE-REMOVE"], "last_verified": "2026-08-29", "owner": "Content + Network Engineering", "expected_result": "Exact SafeWeb profile and associated settings removed; S6 Removed; neutral connectivity checked", "fallback": "Managed device/profile follows managing authority rather than bypassing controls", "unsupported_state": "Unknown/managed profile ownership -> stop and use management-authority guidance/S5", "test_case": "TC-0323-IOS-REMOVE-01", "review_trigger": "Apple profile-removal path/semantics or management guidance changes"
+    },
+    {
+      "id": "DEV-COMMON-CONFLICT", "version": "1.0.0", "platform_version_applicability": "Any supported-family attempt with VPN, Private Relay, custom browser/app resolver, transport block, captive portal, managed network or unproven tuple", "source_references": ["TSK-0409","TSK-0320","TSK-0322","CHROME-SECURE-DNS"], "last_verified": "2026-08-29", "owner": "Content + Network Engineering", "expected_result": "S3 only when a proven repair exists; otherwise S5/S4 with one safe next action", "fallback": "Removal/recovery or current official guidance; independent safe layers may continue only on their own evidence", "unsupported_state": "Never weaken required employer/school/security controls merely to obtain positive status", "test_case": "TC-0323-CONFLICT-01", "review_trigger": "Any conflict becomes directly accepted/rejected, resolver behavior changes, or support matrix changes"
+    },
+    {
+      "id": "DEV-COMMON-NOT-COVERED", "version": "1.0.0", "platform_version_applicability": "Any platform/device/network/profile tuple outside current TSK-0409 support", "source_references": ["TSK-0409","TSK-0320","TSK-0322"], "last_verified": "2026-08-29", "owner": "Content", "expected_result": "S4 Not covered with concise reason and no speculative setup", "fallback": "Official platform guidance may be linked for understanding only without a SafeWeb support claim", "unsupported_state": "Unsupported/not-yet-supported remains S4/S5 until current direct evidence updates owning support authority", "test_case": "TC-0323-NOTCOVERED-01", "review_trigger": "TSK-0409 support row changes or new direct evidence contradicts classification"
+    },
+    {
+      "id": "DEV-COMMON-RECOVERY", "version": "1.0.0", "platform_version_applicability": "Supported DNS path where SafeWeb configuration materially breaks intended resolution", "source_references": ["TSK-0317","TSK-0319","TSK-0409"], "last_verified": "2026-08-29", "owner": "Content + Network Engineering", "expected_result": "Exact SafeWeb configuration removed/reset; neutral connectivity check; S6 when removed", "fallback": "Restore platform normal DNS behavior; no unreviewed alternate resolver/client", "unsupported_state": "If neutral connectivity remains broken, SafeWeb cannot claim cause/resolution; route to ordinary network help/S5", "test_case": "TC-0323-RECOVERY-01", "review_trigger": "Recovery/removal behavior or direct target evidence changes"
+    },
+    {
+      "id": "DEV-IOS-NATIVE", "version": "1.0.0", "platform_version_applicability": "Current supported iPhone branch where Apple native Screen Time/Content & Privacy Restrictions are relevant and the parent can use Apple-owned flow", "source_references": ["TSK-0143","TSK-0320","TSK-0322","APPLE-SCREEN-TIME"], "last_verified": "2026-08-29", "owner": "Content", "expected_result": "Already configured -> S2 and duplicate setup skipped; needs setup -> current Apple-owned flow then S2 on parent confirmation; no S1 technical claim", "fallback": "Missing prerequisite/account/family state routes to Apple-owned setup without SafeWeb collecting credentials", "unsupported_state": "Managed/restricted/unmatched/stale path -> S4/S5; Family Link is not treated as equivalent iPhone supervision", "test_case": "TC-0323-IOS-NATIVE-01", "review_trigger": "Apple Screen Time/Family Sharing terminology, prerequisite, capability or routing changes"
+    },
+    {
+      "id": "DEV-AND-NATIVE", "version": "1.0.0", "platform_version_applicability": "Current supported Android phone with exact approved parental-control mechanism applicable to device/version/account state", "source_references": ["TSK-0143","TSK-0320","TSK-0322","ANDROID-PARENTAL-CONTROLS","FAMILY-LINK-DEVICES"], "last_verified": "2026-08-29", "owner": "Content", "expected_result": "Already configured -> S2/skip; Android 17+ on-device route only when applicable; Family Link only when exact prerequisites apply; no S1 technical claim", "fallback": "Use Google-owned flow for required account/supervision setup; SafeWeb never collects credentials", "unsupported_state": "Unknown OEM/managed/unmatched/stale path -> S4/S5; never infer Android 17+ from UI appearance", "test_case": "TC-0323-AND-NATIVE-01", "review_trigger": "Android parental-control/Family Link device/version/account/applicability guidance changes"
+    },
+    {
+      "id": "SVC-ONE-RELEVANT", "version": "1.0.0", "platform_version_applicability": "Zero or one external service only when a separately current approved named-service instruction exists and parent declares it relevant", "source_references": ["TSK-0144","TSK-0320","TSK-0322"], "last_verified": "2026-08-29", "owner": "Content", "expected_result": "Zero services is valid; one applicable current supported service may be guided; completion is S2 unless a future separately approved verifier exists", "fallback": "No relevant/current supported named service -> skip/S4; stale or ambiguous provider state -> S5", "unsupported_state": "No named external service is hard-coded in v1.0.0; any named service is unsupported until a current provider-specific record satisfies TSK-0144", "test_case": "TC-0323-SVC-ROUTE-01", "review_trigger": "Named provider instruction added/changed, provider age/account/control policy changes, or applicable legal/service availability changes"
+    }
+  ],
+  "unsupported_global": [
+    "Android below 9 for current SafeWeb native encrypted DNS",
+    "Android tablet, ChromeOS, unaccepted Android-derived family, or phone without usable provider-hostname control",
+    "iPhone below iOS 14 for current DNS-profile baseline",
+    "iPad, Mac, Apple Vision Pro, or other unaccepted Apple family for current public SafeWeb DNS path",
+    "managed/supervised paths without exact management-compatible acceptance evidence",
+    "captive-portal, enterprise-managed, IPv6-only/NAT64-only tuples without direct accepted evidence",
+    "unaccepted VPN/Private Relay/browser/app resolver coexistence",
+    "named external service without current provider-specific SafeWeb instruction record",
+    "any record after a material review trigger until reverified"
+  ],
+  "versioning": {
+    "major": "incompatible applicability/state/fallback/public-interaction change",
+    "minor": "new supported record without invalidating existing semantics",
+    "patch": "source/copy clarification without changing applicability, expected result, fallback or state meaning"
+  }
+}
