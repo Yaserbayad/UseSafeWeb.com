@@ -1,7 +1,7 @@
 # SafeWeb — Approved Identity System
 
 **Task:** TSK-0301  
-**Status:** implementation-ready identity decision; reusable production assets/tokens are created by TSK-0300  
+**Status:** owner-approved identity system with editable/versioned masters; reusable application tokens/templates and production export packaging are created by TSK-0300  
 **Owner approval record:** `TSK_0301_OWNER_IDENTITY_APPROVAL_2026-08-29.md`
 
 ## 1. Canonical visible brand
@@ -56,7 +56,20 @@ Required fallbacks:
 
 No critical information may depend on the green/maroon split.
 
-## 3. Wordmark construction
+## 3. Editable / versioned master set
+
+The approved TSK-0301 identity masters are source-controlled SVG text masters:
+
+- `safeweb-wordmark-primary.svg` — primary `Safe` green / `Web` maroon lockup;
+- `safeweb-wordmark-inverse.svg` — approved large dark-brand-surface treatment;
+- `safeweb-wordmark-monochrome.svg` — single-colour fallback using `currentColor`;
+- `safeweb-monogram.svg` — compact `Sw` secondary mark.
+
+All four are plain editable SVG/XML, versioned in GitHub and contain no embedded raster image, script, remote resource or font file. They use the declared editable font stack `Avenir Next, Segoe UI, Helvetica Neue, Arial, sans-serif` as the working Concept-A typographic source. No font file is exposed or embedded.
+
+This master set fixes the approved naming, colour split, hierarchy and composition. TSK-0300 must package reusable application assets/tokens and, where deterministic cross-platform reproduction requires it, create approved font-independent outlined/export variants from the owner-approved visual direction. TSK-0301 does not pretend a proprietary font file or unverified vector outline already exists.
+
+## 4. Wordmark construction
 
 The approved visual reference is Concept A's clean modern sans-serif wordmark treatment, with restrained custom character shaping and spacing.
 
@@ -68,11 +81,9 @@ Rules:
 - do not outline, shadow, bevel, gradient-fill, texture or distort the wordmark;
 - do not arbitrarily recolour individual letters beyond the approved `Safe`/`Web` split;
 - do not mirror, stretch, condense, rotate or rearrange the letters;
-- do not recreate the mark from a substitute font when an approved vector master exists.
+- do not substitute a different visible brand name.
 
-The exact production vector outlines, exports and source masters are intentionally deferred to TSK-0300. This specification does not fabricate an exact font family or vector path that has not yet been produced.
-
-## 4. Monogram / favicon
+## 5. Monogram / favicon
 
 Secondary compact identifier: **`Sw`**.
 
@@ -85,7 +96,7 @@ Preferred two-colour treatment:
 
 The monogram is for compact identity contexts such as favicon/app-like tile/avatar where the full wordmark is impractical. It is not a replacement for the full wordmark on normal public/product headers.
 
-## 5. Approved palette
+## 6. Approved palette
 
 | Role | Value | Use |
 | --- | --- | --- |
@@ -99,32 +110,30 @@ The monogram is for compact identity contexts such as favicon/app-like tile/avat
 
 Brand colours must never replace the protection-state semantics defined by TSK-0320 or other product-state rules. Statuses such as protected, needs attention, not covered, uncertain or failed must remain explicitly textual/non-colour-only.
 
-## 6. Accessibility and readability
+## 7. Accessibility and readability
 
-Static contrast review of the approved palette establishes approximately:
+Static WCAG relative-luminance calculation on the approved palette establishes approximately:
 
-- `#173F35` on `#F6F4EF`: ~10.6:1;
-- `#7A2E36` on `#F6F4EF`: ~8.4:1;
-- `#F6F4EF` on `#173F35`: ~10.6:1;
-- `#7A2E36` on `#173F35`: ~1.3:1.
+- `#173F35` on `#F6F4EF`: **10.6:1**;
+- `#7A2E36` on `#F6F4EF`: **8.4:1**;
+- `#F6F4EF` on `#173F35`: **10.6:1**;
+- `#7A2E36` on `#173F35`: **1.3:1**.
 
 The primary light-surface two-colour wordmark therefore has strong luminance separation from the off-white background. The maroon-on-dark-green display combination is low-contrast and must be treated as a large decorative/brand-mark exception, not normal text. For small/compact/accessibility-critical dark-background use, render the complete wordmark or monogram in `#F6F4EF`.
 
 Logo marks are not used as substitutes for readable product instructions. Body copy, CTA labels, states, errors and instructions follow their own WCAG/product-content requirements.
 
-## 7. Minimum-size / responsive use
-
-Until exact production vector metrics are generated in TSK-0300:
+## 8. Minimum-size / responsive use
 
 - use the full wordmark only when `SafeWeb` remains immediately readable;
 - switch to the `Sw` monogram for favicon/tiny-square identity contexts;
-- use monochrome fallback where the green/maroon split becomes visually unstable;
+- use the monochrome master where the green/maroon split becomes visually unstable;
 - never remove characters or abbreviate the public brand to `SW` in ordinary prose;
 - preserve clear surrounding space; do not crowd the mark with controls, status badges or legal copy.
 
-Exact pixel/mm minimums are not fabricated here; TSK-0300 must derive them from the final vector master and actual render tests.
+Exact production pixel/mm minimums are derived in TSK-0300 from the actual export set/render tests rather than fabricated here.
 
-## 8. Multilingual / RTL use
+## 9. Multilingual / RTL use
 
 `SafeWeb` is a proper brand name and remains **Latin-script, LTR and untranslated** in English, Turkish and Arabic interfaces.
 
@@ -138,7 +147,7 @@ In RTL layouts:
 
 This preserves one coherent identity while allowing the product/content system to localize normally.
 
-## 9. Iconography, imagery and visual language
+## 10. Iconography, imagery and visual language
 
 The identity should remain visually restrained and human rather than security-theatrical.
 
@@ -164,7 +173,7 @@ Preferred supporting visual language:
 - restrained rounded forms that are compatible with the approved monogram tile;
 - no decorative complexity that competes with the wordmark.
 
-## 10. Layout principles
+## 11. Layout principles
 
 - mobile-first readability;
 - generous whitespace;
@@ -175,7 +184,7 @@ Preferred supporting visual language:
 - off-white as the preferred calm light canvas;
 - no dense dashboard aesthetic for the accountless-first setup experience.
 
-## 11. Cross-surface hierarchy
+## 12. Cross-surface hierarchy
 
 ### Public website
 
@@ -189,7 +198,7 @@ Use the same wordmark, palette and primitives, but prioritize instructions, prot
 
 Prefer monochrome or high-contrast identity treatments where clarity dominates. The actual domain `UseSafeWeb.com` or resolver hostname may be shown when technically necessary without turning `Use` into visible brand naming.
 
-## 12. Rationale against accepted brand criteria
+## 13. Rationale against accepted brand criteria
 
 | Accepted TSK-0298/0299 criterion | Identity response |
 | --- | --- |
@@ -203,7 +212,7 @@ Prefer monochrome or high-contrast identity treatments where clarity dominates. 
 | Multilingual/RTL support | invariant LTR brand token with isolated RTL behavior |
 | Warmth requested by owner | maroon `Web` treatment and restrained secondary accents |
 
-## 13. Authority / non-inference
+## 14. Authority / non-inference
 
 This identity is owner-approved for provisional internal L4 work under DEC-0051/CR-0004. It does **not** prove representative-parent comprehension/preference and does not satisfy legal, participant, build, publication, payment, market or launch gates.
 
