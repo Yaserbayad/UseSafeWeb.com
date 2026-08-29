@@ -33,5 +33,5 @@ section = r'''
 Do not infer a successor from task numbering. Recompute eligible work from the current WBS, graph, gates, runtime evidence and Action Authority after this state write/read-back.
 '''
 
-path.write_text(text.rstrip() + section + '\n', encoding='utf-8')
+path.write_text(text.rstrip() + section.rstrip() + '\n', encoding='utf-8')
 print('RUNTIME_TSK0325_EDIT=PASS')
