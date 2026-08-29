@@ -19,6 +19,9 @@ jobs:
           ref: main
           fetch-depth: 1
           persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
 
       - name: Verify source, state model, privacy and rollback semantics
         shell: bash
@@ -165,8 +168,8 @@ jobs:
           await click('[data-result="not-covered"]'); assert.equal(await screen(),'limitations');
           assert.equal(exceptions.length,0,`browser exceptions: ${exceptions.join('; ')}`);
           assert.deepEqual(externalRequests,[],`unexpected external requests: ${externalRequests.join(', ')}`);
-          const assetFailures = await evalValue(`performance.getEntriesByType('resource').filter(r=>r.name.startsWith('http://127.0.0.1:8765/')).map(r=>r.name)`);
-          assert.ok(assetFailures.length >= 4,'expected local assets not loaded');
+          const localAssets = await evalValue(`performance.getEntriesByType('resource').filter(r=>r.name.startsWith('http://127.0.0.1:8765/')).map(r=>r.name)`);
+          assert.ok(localAssets.length >= 4,'expected local assets not loaded');
           console.log('BROWSER_TESTS=PASS');
           console.log('EXTERNAL_REQUESTS=0');
           console.log('BROWSER_EXCEPTIONS=0');
