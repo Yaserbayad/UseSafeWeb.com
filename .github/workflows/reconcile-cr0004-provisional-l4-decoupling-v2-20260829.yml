@@ -1,0 +1,46 @@
+name: Reconcile CR-0004 provisional L4 decoupling v2
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/reconcile-cr0004-provisional-l4-decoupling-v2-20260829.yml
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Assert no planning/runtime drift since approved prestate
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git diff --quiet ff842b851971a8ceb4dda5ca05c8a1a546d1863d HEAD -- Plans CURRENT_STATE.md
+
+      - name: Apply, rebuild and validate CR-0004
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 .github/scripts/cr0004_reconcile.py
+
+      - name: Inspect bounded diff and commit
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git diff --check
+          test -z "$(git status --short CURRENT_STATE.md)"
+          git status --short
+          git add Plans CR_0004_PROVISIONAL_L4_BRAND_UX_DECOUPLING_EVIDENCE_2026-08-29.md
+          git diff --cached --check
+          git config user.name 'UseSafeWeb Governance Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git commit -m 'governance: apply CR-0004 provisional L4 decoupling'
+          git push origin HEAD:main
