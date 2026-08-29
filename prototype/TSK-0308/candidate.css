@@ -100,7 +100,6 @@
   border-radius: var(--sw-radius-sm);
   direction: ltr;
   unicode-bidi: isolate;
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
 }
 
 .sw-ds-recovery {
