@@ -1,0 +1,62 @@
+name: Audit L4 queue after TSK-0330
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/audit-post-tsk0330-l4.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Derive immediate L4 queue
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          python3 - <<'PY'
+          import csv,re
+          from pathlib import Path
+          rows=list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='')))
+          state=Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          assert '## TSK-0330 accepted stable state — 2026-08-29' in state
+          assert re.search(r'TSK-0330[^\n]+\*\*PASS\*\*',state)
+          by={r['Task_ID'].strip():r for r in rows if r.get('Task_ID','').strip()}
+          for tid in ['TSK-0334','TSK-0335','TSK-0333']:
+              r=by[tid]
+              print('---TASK---')
+              for k in ['Task_ID','Title','Lifecycle_Stage','Priority','Plan_Status','Execution_State','Dependencies','Action_Authority','Trigger','Acceptance_Criteria','Verification_Method','Evidence_Required']:
+                  print(f'{k}={r.get(k,"")}')
+          # The previous reconciled audit established these are the only remaining active-path L4 rows after TSK-0330.
+          # Re-evaluate their dependency readiness from current authority.
+          def passed(tid):
+              r=by[tid]
+              if (r.get('Execution_State') or '').strip()=='PASS': return True
+              return bool(re.search(rf'## {re.escape(tid)}[^\n]*(?:accepted stable state|accepted|completion|PASS)',state,re.I) and re.search(rf'{re.escape(tid)}[^\n]+\*\*PASS\*\*',state,re.I))
+          candidates=[]
+          for tid in ['TSK-0334','TSK-0335','TSK-0333']:
+              r=by[tid]
+              deps=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
+              depok=all(passed(d) for d in deps)
+              print(f'{tid}_DEPS={deps}')
+              print(f'{tid}_READY={depok}')
+              if depok:
+                  candidates.append((tid,r))
+          print('READY='+','.join(t for t,_ in candidates))
+          # WBS-order tie break among same gate/priority after current dependency readiness.
+          order={r['Task_ID'].strip():i for i,r in enumerate(rows,1)}
+          for tid,r in candidates:
+              print(f'{tid}_WBS_ORDER={order[tid]}')
+          print('POST_TSK0330_QUEUE_AUDIT=PASS')
+          PY
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'REPOSITORY_CLEAN=PASS'
