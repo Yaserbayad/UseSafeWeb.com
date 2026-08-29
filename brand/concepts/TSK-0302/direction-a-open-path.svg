@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">UseSafeWeb visual direction A — Open Path</title>
+  <desc id="desc">Three rounded horizontal guardrail segments progress toward one open endpoint, representing a clear first-phone setup path without a closed shield or surveillance motif.</desc>
+  <g fill="none" stroke-linecap="round" stroke-width="24">
+    <path d="M48 72H142" stroke="#12344D"/>
+    <path d="M48 128H174" stroke="#147D64"/>
+    <path d="M48 184H206" stroke="#12344D"/>
+  </g>
+  <circle cx="190" cy="72" r="12" fill="#C75B12"/>
+</svg>
