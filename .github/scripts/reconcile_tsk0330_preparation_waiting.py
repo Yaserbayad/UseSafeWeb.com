@@ -7,7 +7,6 @@ heading = '## TSK-0330 prepared HUMAN_ONLY setup-flow boundary — 2026-08-29'
 if heading in s or 'TSK-0330 — Design Phone → Internet → Services setup flows' in s:
     raise SystemExit('TSK-0330 runtime record already exists; refusing duplicate state')
 block = '''
-
 ## TSK-0330 prepared HUMAN_ONLY setup-flow boundary — 2026-08-29
 
 `TSK-0330 — Design Phone → Internet → Services setup flows`: **WAITING / non-PASS**. The task-specific Phone → Internet → Services design candidate has been prepared and technically verified, but WBS Action Authority is `HUMAN_ONLY`; Project Owner disposition is required before acceptance or PASS.
@@ -23,6 +22,6 @@ block = '''
 
 Resolution condition: Project Owner must provide exactly `APPROVE TSK-0330 PHONE INTERNET SERVICES FLOWS` to accept the prepared candidate, or `REVISE TSK-0330: <specific change>` to reopen it. No TSK-0330 PASS, LG-06 PASS, L5/L6 authorization, real-user validation, public publication, payment, market activation or launch authority is inferred before the required disposition and subsequent verification/evidence/state reconciliation.
 '''
-s2 = s.rstrip('\n') + block + '\n'
+s2 = s.rstrip('\n') + '\n\n' + block.rstrip('\n') + '\n'
 p.write_text(s2, encoding='utf-8')
 print('RUNTIME_TSK0330_PREPARATION_WAITING_EDIT=PASS')
