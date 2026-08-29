@@ -1,0 +1,88 @@
+{
+  "schema": "usesafeweb.tsk0328.ia-map.v1",
+  "task_id": "TSK-0328",
+  "version": "1.0.0",
+  "authority": "non_authoritative_test_projection_of_INFORMATION_ARCHITECTURE_NAVIGATION.md",
+  "sequencing": "DEC-0052/CR-0005",
+  "human_validation_claimed": false,
+  "systems": [
+    {"id":"public","purpose":"discovery explanation compatibility privacy stable help and explicit start","user_specific_state_in_url":false},
+    {"id":"setup","purpose":"transient accountless routing setup verification coverage troubleshooting removal recovery reset","user_specific_state_in_url":false}
+  ],
+  "public_primary_navigation": ["Home","How it works","Compatibility & limits","Privacy","Help","Start setup"],
+  "public_routes": [
+    {"id":"PUB-HOME","path":"/","goal":"decide relevance and understand bounded proposition","requirements":["REQ-0028","CON-0010","CON-0017","INT-0009","INT-0010"],"index_intent":"candidate_after_publication_authority"},
+    {"id":"PUB-HOW","path":"/how-it-works","goal":"understand Phone Internet Service layers and evidence map","requirements":["REQ-0028","REQ-0030","REQ-0031","CON-0010","CON-0017","INT-0009","INT-0010"],"index_intent":"candidate_after_publication_authority"},
+    {"id":"PUB-COMPAT","path":"/compatibility","goal":"understand supported and unsupported boundaries","requirements":["REQ-0028","REQ-0029","REQ-0031","CON-0010","CON-0017","INT-0009","INT-0010"],"index_intent":"source_current_candidate_after_publication_authority"},
+    {"id":"PUB-PRIVACY","path":"/privacy","goal":"understand accountless non-surveillance and data-restraint principles","requirements":["REQ-0028","CON-0010","CON-0017","INT-0009","INT-0010"],"index_intent":"candidate_after_privacy_and_publication_authority"},
+    {"id":"PUB-HELP","path":"/help","goal":"find stable self-service setup verification removal and recovery guidance","requirements":["REQ-0028","REQ-0029","REQ-0031","CON-0010","CON-0017","INT-0009","INT-0010"],"index_intent":"stable_general_help_only_after_publication_authority"},
+    {"id":"PUB-NOTICES","path":null,"goal":"read actually approved required notices if owning authority creates them","requirements":["REQ-0028","CON-0017"],"index_intent":"owner_controlled_not_created_by_tsk0328"}
+  ],
+  "setup_route": {
+    "path":"/setup",
+    "noindex":true,
+    "state_model":"transient_in_memory",
+    "user_specific_state_in_url":false,
+    "persistent_account_required":false,
+    "local_storage_required":false,
+    "session_storage_required":false,
+    "cookie_required":false
+  },
+  "setup_utilities": [
+    {"label":"Help","state_mutating":false},
+    {"label":"Limitations","state_mutating":false},
+    {"label":"Exit","state_mutating":false},
+    {"label":"Start over","state_mutating":true,"effect":"clear web journey state only; does not remove device DNS"},
+    {"label":"Remove SafeWeb DNS","state_mutating":true,"applicability":"only when current journey evidence indicates SafeWeb DNS may be configured"}
+  ],
+  "screens": [
+    {"id":"SCR-START","goal":"route supported Android iPhone or unsupported other","touchpoints":["TP-01","TP-02"],"requirements":["REQ-0028","REQ-0029","REQ-0031","CON-0010","CON-0017","INT-0009","INT-0010"]},
+    {"id":"SCR-NATIVE","goal":"set or confirm applicable OS native safeguard without equating confirmation with verification","touchpoints":["TP-03"],"requirements":["REQ-0028","REQ-0030","REQ-0031","CON-0010","CON-0017","INT-0009","INT-0010"]},
+    {"id":"SCR-DNS-SETUP","goal":"perform exact current platform encrypted DNS action","touchpoints":["TP-04"],"requirements":["REQ-0028","REQ-0029","REQ-0031","CON-0010","CON-0017","INT-0009","INT-0010"]},
+    {"id":"SCR-VERIFY","goal":"determine current SafeWeb DNS evidence state","touchpoints":["TP-05"],"requirements":["REQ-0028","REQ-0029","REQ-0030","REQ-0031","CON-0010","CON-0017","INT-0009","INT-0010"]},
+    {"id":"SCR-SERVICE","goal":"configure or skip zero or one approved relevant service","touchpoints":["TP-06"],"requirements":["REQ-0028","REQ-0030","REQ-0031","CON-0010","CON-0017","INT-0009","INT-0010"]},
+    {"id":"SCR-MAP","goal":"review independent Phone Internet Service evidence states and limits","touchpoints":["TP-07"],"requirements":["REQ-0028","REQ-0030","REQ-0031","CON-0010","CON-0017","INT-0009","INT-0010"]},
+    {"id":"SCR-TROUBLESHOOT","goal":"apply one known evidence-backed corrective action after supported failure","touchpoints":["TP-08"],"requirements":["REQ-0028","REQ-0029","REQ-0031","CON-0010","CON-0017","INT-0009","INT-0010"]},
+    {"id":"SCR-NOT-COVERED","goal":"understand unsupported or out-of-scope boundary and stop optimistic progression","touchpoints":["TP-13"],"requirements":["REQ-0028","REQ-0029","REQ-0031","CON-0010","CON-0017","INT-0009","INT-0010"]},
+    {"id":"SCR-UNCERTAIN","goal":"understand unresolved evidence and next safe check if any","touchpoints":["TP-08","TP-13"],"requirements":["REQ-0028","REQ-0029","REQ-0030","REQ-0031","CON-0010","CON-0017","INT-0009","INT-0010"]},
+    {"id":"SCR-FALSE-POSITIVE","goal":"address legitimate-content blocking without inventing bypass or confusing filtering correctness with DNS-path verification","touchpoints":["TP-12","TP-09","TP-10"],"requirements":["REQ-0028","REQ-0029","REQ-0031","CON-0010","CON-0017","INT-0009","INT-0010"]},
+    {"id":"SCR-HELP","goal":"get source-current contextual self-service help without state mutation","touchpoints":["TP-12"],"requirements":["REQ-0028","REQ-0029","REQ-0031","CON-0010","CON-0017","INT-0009","INT-0010"]},
+    {"id":"SCR-LIMITS","goal":"understand support and evidence limitations without state mutation","touchpoints":["TP-13"],"requirements":["REQ-0028","REQ-0029","REQ-0031","CON-0010","CON-0017","INT-0009","INT-0010"]},
+    {"id":"SCR-REMOVE","goal":"remove exact current SafeWeb DNS and withdraw active protection claim","touchpoints":["TP-09"],"requirements":["REQ-0028","REQ-0029","REQ-0031","CON-0010","CON-0017","INT-0009","INT-0010"]},
+    {"id":"SCR-RECOVERY","goal":"confirm ordinary connectivity after removal without claiming SafeWeb protection","touchpoints":["TP-10"],"requirements":["REQ-0028","REQ-0029","REQ-0031","CON-0010","CON-0017","INT-0009","INT-0010"]},
+    {"id":"SCR-RESET-LOST","goal":"return to clean routing when transient state is intentionally reset or unavailable","touchpoints":["TP-11"],"requirements":["REQ-0028","REQ-0031","CON-0010","CON-0017","INT-0009","INT-0010"]}
+  ],
+  "required_paths": {
+    "normal":["PUB-HOME","SCR-START","SCR-NATIVE","SCR-DNS-SETUP","SCR-VERIFY","SCR-SERVICE","SCR-MAP"],
+    "already_configured":["SCR-START","SCR-NATIVE","SCR-VERIFY","SCR-SERVICE","SCR-MAP"],
+    "unsupported":["SCR-START","SCR-NOT-COVERED","PUB-COMPAT","SCR-HELP"],
+    "failed_activation":["SCR-VERIFY","SCR-TROUBLESHOOT","SCR-UNCERTAIN","SCR-REMOVE","SCR-RECOVERY"],
+    "false_positive":["SCR-MAP","SCR-FALSE-POSITIVE","SCR-REMOVE","SCR-RECOVERY"],
+    "resume":["SCR-HELP","SCR-LIMITS","SCR-RESET-LOST","SCR-START"],
+    "removal":["SCR-REMOVE","SCR-RECOVERY","SCR-RESET-LOST"],
+    "support":["SCR-HELP","SCR-LIMITS","PUB-HELP","PUB-COMPAT","PUB-PRIVACY"]
+  },
+  "forbidden_sections": ["Login","Sign up","Account","Dashboard","Profile","child/device history","Pricing gate","checkout before value","AdGuard admin console","browsing history","DNS query history","Apps marketplace","routine staffed-support portal","public per-device URLs"],
+  "navigation_invariants": [
+    "public content never manufactures protection state",
+    "setup does not display full marketing navigation",
+    "Start setup is the primary public-to-operational transition",
+    "Help and Limitations are state-neutral utility detours",
+    "browser Back is not an evidence-state machine",
+    "Start over does not remove device DNS",
+    "Exit does not claim DNS removal",
+    "Remove is not shown on an untouched unsupported path",
+    "lost transient state restarts rather than fabricating persistent resume",
+    "no account payment or identity step is inserted",
+    "no standalone completion acknowledgement is mandatory",
+    "language variants preserve the same architecture and never imply market activation"
+  ],
+  "source_blobs": {
+    "service_blueprint":"1701f5f7b13ac8f7fa3092e39005b3da7627c89f",
+    "prior_owner_approved_ia_candidate":"64f0e6382a5ce166c0aad2ad2e86a3796c5df379",
+    "experience_baseline":"76bb848ebdf6a2aee4dd84bc18e8af5ba8a99dbc",
+    "ui_component_rules":"0b7012a12070f7eccf45a1bbb2f453fde8507ff6",
+    "product_voice":"d12c1e707f0390915002b27bf3a5073d0135d466",
+    "wbs":"f23b4f017d1baf73258fa30ecd71549bbfe1b815"
+  }
+}
