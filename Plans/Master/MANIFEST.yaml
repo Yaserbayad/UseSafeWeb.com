@@ -337,20 +337,22 @@ canonicalization:
   canonical_activation_condition: TSK-0009 publication PASS plus TSK-0011 exact GitHub read-back PASS; volatile execution state is then rebaselined in repository CURRENT_STATE.md under TSK-0010
 
 post_freeze_change_control:
-  latest_change: CR-0003
-  date: '2026-08-28'
-  status: owner-authorized L3 real-participant behavioral-validation deferral and bounded provisional L4 definition/design rebaseline; LG-03/LG-04/LG-05 remain non-PASS; canonical reliance requires deterministic validation plus GitHub publication/read-back
-  authority: explicit current Project Owner instruction 2026-08-28; actual applicable safety/legal/security/platform reality remains higher authority
+  latest_change: CR-0004
+  date: '2026-08-29'
+  status: owner-authorized provisional internal L4 Brand/UX/prototype dependency decoupling; real-participant behavioral validation and all legal/privacy/participant/build/publication/payment/launch fences remain controlling; canonical reliance requires deterministic validation plus GitHub publication/read-back
+  authority: explicit current Project Owner instruction 2026-08-29; DEC-0050/CR-0003 deferral remains active; actual applicable safety/legal/security/platform reality remains higher authority
   affected_tasks:
-  - TSK-0139
-  - TSK-0141
-  - TSK-0326 (explicitly remains real-evidence-dependent/deferred)
+  - TSK-0298 (dependency changed from TSK-0187 to TSK-0139; provisional acceptance semantics)
+  - TSK-0299 (provisional acceptance semantics)
+  - TSK-0187 (unchanged mandatory representative-parent validation)
+  - TSK-0309 (unchanged hard dependency on TSK-0187)
+  - TSK-0301 (unchanged HUMAN_ONLY owner approval boundary)
   affected_gates:
   - LG-03 (remains DEFER/non-PASS)
   - LG-04 (remains DEFER/non-PASS)
   - LG-05 (remains DEFER/non-PASS)
-  - LG-06 (provisional L4 entry only; no automatic PASS)
-  semantic_delta: through 2027-08-27, bounded internal L4 product/brand/experience definition/design may proceed from current technical/synthetic evidence without claiming behavioral validation; real-evidence-dependent work, integrated build and public launch remain gated
+  - LG-06 (provisional L4 design progression only; no automatic PASS)
+  semantic_delta: internal non-public Brand/UX/prototype definition/design that can meet its own acceptance without representative-parent evidence may progress from TSK-0139; TSK-0187 remains mandatory before TSK-0309 and no legal, participant, L5/L6 build, publication, payment, market or launch authority is created
   change_record: Registers/EXCEPTIONS_CHANGE_CONTROLS.md#post-freeze-material-change-records
 
 generated_assembly_contract:
