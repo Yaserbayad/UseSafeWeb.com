@@ -1,0 +1,66 @@
+name: TSK-0310 browser capability probe
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/tsk0310-browser-capability-probe.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 2
+    steps:
+      - name: Read-only browser isolation capability probe
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          [[ "$(id -un)" == "azureusr" ]]
+          echo "HOST=adguardvm"
+          echo "USER=azureusr"
+          for c in chromium chromium-browser google-chrome firefox docker podman bwrap firejail unshare; do
+            if command -v "$c" >/dev/null 2>&1; then
+              echo "CAP_${c//-/_}=YES"
+            else
+              echo "CAP_${c//-/_}=NO"
+            fi
+          done
+          if command -v docker >/dev/null 2>&1; then
+            if docker info --format '{{.ServerVersion}}' >/dev/null 2>&1; then
+              echo "DOCKER_DAEMON_ACCESS=YES"
+              if docker images --format '{{.Repository}}:{{.Tag}}' | grep -Eiq 'playwright|chrom(e|ium)|puppeteer'; then
+                echo "CACHED_BROWSER_IMAGE=YES"
+              else
+                echo "CACHED_BROWSER_IMAGE=NO"
+              fi
+            else
+              echo "DOCKER_DAEMON_ACCESS=NO"
+              echo "CACHED_BROWSER_IMAGE=UNKNOWN"
+            fi
+          else
+            echo "DOCKER_DAEMON_ACCESS=NO"
+            echo "CACHED_BROWSER_IMAGE=NO"
+          fi
+          if command -v podman >/dev/null 2>&1; then
+            if podman info >/dev/null 2>&1; then echo "PODMAN_ACCESS=YES"; else echo "PODMAN_ACCESS=NO"; fi
+          else
+            echo "PODMAN_ACCESS=NO"
+          fi
+          if command -v unshare >/dev/null 2>&1 && unshare -Ur true >/dev/null 2>&1; then
+            echo "UNPRIV_USERNS=YES"
+          else
+            echo "UNPRIV_USERNS=NO"
+          fi
+          echo "CPU_COUNT=$(nproc)"
+          awk '/MemAvailable:/ {print "MEM_AVAILABLE_KB=" $2}' /proc/meminfo
+          df -Pk / | awk 'NR==2 {print "ROOT_AVAILABLE_KB=" $4}'
+          echo "TSK0310_CAPABILITY_PROBE=PASS"
