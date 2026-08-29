@@ -25,40 +25,53 @@ jobs:
           import csv,re
           runtime=Path('CURRENT_STATE.md').read_text(encoding='utf-8')
           passed=set()
-          # Historical PASS bullet section.
-          m=re.search(r'(?ms)^### PASS\s*$\n(.*?)(?=^### |^## )', runtime)
+          m=re.search(r'(?ms)^### PASS\s*$\n(.*?)(?=^### |^## )',runtime)
           if m:
               passed.update(re.findall(r'^- `?(TSK-\d{4})`?\b',m.group(1),flags=re.M))
-          # Later accepted-stable task statements.
           passed.update(re.findall(r'`(TSK-\d{4})[^`\n]*`:\s*\*\*PASS\b',runtime))
-          # Explicit inline task PASS statements retained in reconciliations.
           passed.update(re.findall(r'(?m)^-?\s*`?(TSK-\d{4})`?[^\n]{0,220}\bPASS\b',runtime))
-          # Normalize known false positives by requiring a task to appear in WBS below.
           with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='') as f:
-              rows=list(csv.DictReader(f))
-          ids={r['Task_ID'] for r in rows}
+              reader=csv.DictReader(f)
+              fields=reader.fieldnames or []
+              rows=list(reader)
+          print('WBS_FIELDS='+'|'.join(fields))
+          def resolve(exacts=(), contains=()):
+              for x in exacts:
+                  if x in fields: return x
+              for needle in contains:
+                  hits=[x for x in fields if needle in x.lower()]
+                  if len(hits)==1: return hits[0]
+              raise KeyError((exacts,contains,fields))
+          idk=resolve(('Task_ID',),('task_id',))
+          lifek=resolve(('Lifecycle','Lifecycle_Stage','Lifecycle_Stage_ID'),('lifecycle',))
+          psk=resolve(('Plan_Status','Planning_Status'),('plan_status','planning_status'))
+          depk=resolve(('Dependencies','Hard_Dependencies'),('dependenc',))
+          authk=resolve(('Action_Authority',),('action_authority',))
+          prik=resolve(('Priority',),('priority',))
+          titlek=resolve(('Task','Task_Title','Title'),('task_title',))
+          ids={r[idk] for r in rows}
           passed &= ids
-          assert len(passed)==71, (len(passed),sorted(passed))
+          assert len(passed)==71,(len(passed),sorted(passed))
           assert 'TSK-0139' in passed
           assert 'TSK-0146' not in passed
           candidates=[]
           for r in rows:
-              if r['Lifecycle']!='L4' or r['Task_ID'] in passed:
+              if (r.get(lifek) or '').strip()!='L4' or r[idk] in passed:
                   continue
-              ps=(r.get('Plan_Status') or '').upper()
+              ps=(r.get(psk) or '').strip().upper()
               if ps not in {'PLANNED','ACTIVE','IN_PROGRESS'}:
                   continue
-              deps={x.strip() for x in re.split(r'[;,]',r.get('Dependencies') or '') if x.strip().startswith('TSK-')}
+              deps={x.strip() for x in re.split(r'[;,]',r.get(depk) or '') if x.strip().startswith('TSK-')}
               if deps <= passed:
-                  candidates.append((r['Task_ID'],r.get('Priority',''),r.get('Action_Authority',''),sorted(deps),r['Task']))
+                  candidates.append((r[idk],r.get(prik,'') or '',r.get(authk,'') or '',sorted(deps),r.get(titlek,'') or ''))
           print(f'PASS_COUNT={len(passed)}')
           print('PASS_HAS_TSK0139=YES')
           print('PASS_HAS_TSK0146=NO')
           print(f'CANDIDATE_COUNT={len(candidates)}')
           for c in candidates:
               print('CANDIDATE|'+'|'.join([c[0],c[1],c[2],','.join(c[3]),c[4]]))
-          assert len(candidates)==1, candidates
-          assert candidates[0][0]=='TSK-0298', candidates
-          assert candidates[0][2]=='AUTO_ALLOWED', candidates
+          assert len(candidates)==1,candidates
+          assert candidates[0][0]=='TSK-0298',candidates
+          assert candidates[0][2]=='AUTO_ALLOWED',candidates
           print('NEXT_SELECTED=TSK-0298')
           PY
