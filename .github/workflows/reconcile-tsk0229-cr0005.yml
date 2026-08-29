@@ -1,0 +1,72 @@
+name: Reconcile TSK-0229 with CR-0005
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-tsk0229-cr0005.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-governance-state
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: true
+      - name: Reconcile TSK-0229 current runtime disposition
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          [[ "$(whoami)" == "azureusr" ]]
+          python3 - <<'PY'
+          from datetime import datetime, timezone
+          import pathlib, re
+
+          p=pathlib.Path('CURRENT_STATE.md')
+          text=p.read_text(encoding='utf-8')
+          marker='### TSK-0229 accepted stable state'
+          if marker not in text:
+              raise SystemExit('missing TSK-0229 runtime section')
+          if 'TSK_0229_CURRENT_REVALIDATION_EVIDENCE_2026-08-29.md' in text[text.index(marker):text.index(marker)+2200]:
+              print('TSK0229_RUNTIME_ALREADY_CURRENT=PASS')
+              raise SystemExit(0)
+
+          new='''### TSK-0229 accepted stable state — current under DEC-0052 / CR-0005
+
+`TSK-0229 — Define and approve the accountless journey data model, expiry, deletion, and no-linkage rules`: **PASS** under current `ACC-0229 / VER-0229 / EVD-0229` and `DEC-0052 / CR-0005` sequencing.
+
+The accepted `accountless-journey-data-v1` contract remains `TSK_0229_ACCOUNTLESS_JOURNEY_DATA_MODEL_EXPIRY_DELETION_NO_LINKAGE_2026-08-28.md`, blob `3fa48b11b6c7704ecc3748bcd865f77aa54f5605`. Current revalidation evidence is `TSK_0229_CURRENT_REVALIDATION_EVIDENCE_2026-08-29.md`, blob `7c6bd3b888196f2a487c7b7fe14d11e72bec424b`; successful verifier run `33269282897`, job `99144732470`, self-hosted `adguardvm`.
+
+ACC-0229 remains satisfied: J0 session-only state is preferred; optional J1 is minimal/transient; persistent parent/child/device identity, browsing/DNS history, cross-session linkage and raw diagnostics are prohibited; the J1 hard TTL is non-sliding and <=24 hours; early deletion is synchronous where possible or <=15 minutes; diagnostic/logging/backup boundaries and fourteen implementation-testable invariants remain explicit. The 24-hour/15-minute values are conservative internal product defaults, not legal thresholds.
+
+Current GDPR Article 5/25 and EDPB data-protection-by-design/default review found no contradiction with the minimisation/default-deletion direction. No final legal-compliance conclusion is inferred. `RSK-0002` remains nonblocking for this L4 PASS. Pre-product parent/user/participant validation is non-applicable under CR-0005 and is neither required nor claimed here.
+'''
+          pattern=r'### TSK-0229 accepted stable state\n.*?(?=\n### TSK-0408 accepted stable state)'
+          text,n=re.subn(pattern,new.rstrip(),text,count=1,flags=re.S)
+          if n!=1:
+              raise SystemExit(f'expected one TSK-0229 section replacement, got {n}')
+          now=datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
+          text,n2=re.subn(r'(?m)^\*\*Updated:\*\* .*$',f'**Updated:** {now}',text,count=1)
+          if n2!=1:
+              raise SystemExit('expected one top-level Updated field')
+          p.write_text(text.rstrip()+'\n',encoding='utf-8')
+          print('TSK0229_RUNTIME_CR0005_EDIT=PASS')
+          PY
+          git diff --check
+          changed="$(git diff --name-only)"
+          [[ "$changed" == "CURRENT_STATE.md" ]]
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: revalidate TSK-0229 under CR-0005'
+          git push origin HEAD:main
+          echo 'TSK0229_RUNTIME_CR0005_RECONCILIATION=PASS'
