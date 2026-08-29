@@ -1,0 +1,42 @@
+.prototype-frame {
+  width: min(100%, 32rem);
+  min-height: 100vh;
+  margin-inline: auto;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background: var(--sw-color-page);
+}
+
+.prototype-topbar,
+.prototype-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sw-space-3);
+  padding: var(--sw-space-4);
+  border-color: var(--sw-color-border);
+}
+
+.prototype-topbar { border-bottom: var(--sw-border-width) solid var(--sw-color-border); }
+.prototype-footer { border-top: var(--sw-border-width) solid var(--sw-color-border); flex-wrap: wrap; }
+.prototype-badge { font-size: var(--sw-font-size-sm); color: var(--sw-color-accent); font-weight: 700; }
+.prototype-app { padding: var(--sw-space-5); }
+.prototype-screen { display: grid; gap: var(--sw-space-5); align-content: start; }
+.prototype-screen h1 { margin: 0; color: var(--sw-color-heading); font-size: var(--sw-font-size-xl); line-height: var(--sw-line-height-tight); }
+.prototype-screen h2 { color: var(--sw-color-heading); }
+.prototype-actions { display: grid; gap: var(--sw-space-3); }
+.prototype-choice { width: 100%; text-align: start; }
+.prototype-meta { font-size: var(--sw-font-size-sm); }
+.prototype-code { display: block; padding: var(--sw-space-3); border: var(--sw-border-width) solid var(--sw-color-border); border-radius: var(--sw-radius-sm); overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+.prototype-map { display: grid; gap: var(--sw-space-4); }
+.prototype-map .sw-status { min-width: 0; }
+.prototype-limits { padding-inline-start: var(--sw-space-5); }
+.prototype-test-controls { border: var(--sw-border-width) dashed var(--sw-color-border); border-radius: var(--sw-radius-md); padding: var(--sw-space-4); }
+.prototype-test-controls legend { color: var(--sw-color-accent); font-weight: 700; }
+.prototype-test-controls .prototype-actions { margin-top: var(--sw-space-3); }
+
+@media (min-width: 48rem) {
+  body { padding: var(--sw-space-6); }
+  .prototype-frame { min-height: calc(100vh - (2 * var(--sw-space-6))); border: var(--sw-border-width) solid var(--sw-color-border); border-radius: var(--sw-radius-lg); overflow: hidden; }
+  .prototype-map { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
