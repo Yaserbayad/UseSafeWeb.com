@@ -46,6 +46,7 @@ jobs:
           PY
           python3 .github/scripts/apply_cr0005.py | tee /tmp/cr0005-validation.log
           grep -qx 'CR0005_AMENDMENT_VALIDATION=PASS' /tmp/cr0005-validation.log
+          git checkout -- .github/scripts/apply_cr0005.py
           git diff --check
           mapfile -t changed < <(git diff --name-only | sort)
           printf 'CR0005_CHANGED_PATH=%s\n' "${changed[@]}"
