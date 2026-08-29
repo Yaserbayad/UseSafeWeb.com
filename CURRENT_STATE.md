@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-29T17:54:39Z
+**Updated:** 2026-08-29T18:04:19Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -804,9 +804,24 @@ Resolve `TSK-0187` by running the approved representative-parent validation when
 - First actual human/user validation is L8 after `LG-09 PASS`. Do not resurrect the retired pre-product validation branch as a blocker unless a later explicit owner decision supersedes DEC-0052.
 - Technical/product/accessibility/browser/device/network/security/privacy/performance/recovery/operational verification remains mandatory where applicable.
 - `TSK-0310` remains **PASS** on durable rendered-browser evidence `TSK_0310_RENDERED_BROWSER_ACCEPTANCE_EVIDENCE_2026-08-29.md`.
-- `TSK-0309 — Freeze the implementation-ready experience baseline from current internal and automated acceptance evidence`: **TODO / eligible**. Its hard dependencies are satisfied under current semantics: `TSK-0310=PASS`; `TSK-0187=NOT_APPLICABLE+PASS` exclusion. It is L4, A3/AUTO_ALLOWED, and no current human-validation gate blocks it.
+- `TSK-0309 — Freeze the implementation-ready experience baseline from current internal and automated acceptance evidence`: **PASS**. Baseline `1.0.0` is frozen at `prototype/TSK-0309/`; durable evidence `TSK_0309_IMPLEMENTATION_READY_BASELINE_EVIDENCE_2026-08-29.md`, blob `b5944be85d9b60eb1ba4afdd31c151d340822e6e`. ACC-0309/VER-0309/EVD-0309 are satisfied.
 - `TSK-0327` remains planned downstream work; `TSK-0399` remains later L7 technical new-user-path acceptance.
 
 ### Exact next authoritative step
 
 Execute `TSK-0309` against its rebaselined ACC/VER/EVD contract using the current accepted prototype and internal/automated target-environment evidence; correct/retest any material pre-product defects, persist durable evidence, then independently evaluate PASS and recompute eligibility. No parent/user/participant testing is required or to be scheduled before LG-09/L8.
+
+## TSK-0309 implementation-ready experience baseline — 2026-08-29
+
+`TSK-0309`: **PASS**.
+
+- Frozen baseline: `prototype/TSK-0309/BASELINE.md` blob `76bb848ebdf6a2aee4dd84bc18e8af5ba8a99dbc`, version `1.0.0`.
+- Machine-readable manifest: `prototype/TSK-0309/BASELINE_MANIFEST.json` blob `dba23b4593224b81361bab06bc3fa4332015d1b5`.
+- Durable evidence: `TSK_0309_IMPLEMENTATION_READY_BASELINE_EVIDENCE_2026-08-29.md`, blob `b5944be85d9b60eb1ba4afdd31c151d340822e6e`.
+- Final acceptance run/job: `33267199945` / `99139256895` on `adguardvm`; baseline/source/WBS/model checks PASS; retained Chromium `151.0.7922.34`; `BROWSER_ACCEPTANCE_CHECKS=218`; rendered regression PASS; npm audit 0 vulnerabilities; AdGuard/Nginx configs, listeners and failed-unit state unchanged.
+- No prototype product-code change was justified or made; current evidence establishes zero open critical/high pre-product defects for this contract.
+- No new account/dashboard/persistence scope or release/production/payment/market/launch authority is created.
+
+### Exact next authoritative step
+
+Recompute current eligibility from the WBS/graph/gates with `TSK-0309=PASS`; select the highest-priority actually eligible task under current action authority before further mutation.
