@@ -1,0 +1,157 @@
+name: Verify approved TSK-0321 application
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/verify-tsk0321-approved-application.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 20
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: /home/azureusr/.cache/usesafeweb-playwright
+    steps:
+      - name: Checkout exact main commit
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify approved source identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          [[ "$(id -un)" == "azureusr" ]]
+          test "$(git rev-parse HEAD:prototype/TSK-0310/index.html)" = "5d80dfdefb52042bc34468723354fefd325285e4"
+          test "$(git rev-parse HEAD:prototype/TSK-0310/model.mjs)" = "01343273fd09c3c12d26f0c0eb1ae9a2fce10c91"
+          test "$(git rev-parse HEAD:prototype/TSK-0310/app.mjs)" = "a4a0aff8848f8541e2581e333efbf48767c9f0ff"
+          test "$(git rev-parse HEAD:prototype/TSK-0310/prototype.css)" = "004b0b34c0e5d94e3eacbeae25710284ef9a7886"
+          test "$(git rev-parse HEAD:prototype/TSK-0310/browser-acceptance.mjs)" = "f791a797f6a64be8b74eb13cbd2e628d5b083007"
+          test "$(git rev-parse HEAD:prototype/TSK-0321/accessibility-review.mjs)" = "0cfca762a0d83be7716194e13e940876e71534b4"
+          test "$(git rev-parse HEAD:prototype/TSK-0321/REMEDIATION_CANDIDATE.css)" = "5363c391cfdf96e4b454abb78f9ca4d8680caed1"
+          echo 'TSK0321_APPROVED_SOURCE_IDENTITY=PASS'
+
+      - name: Pre-test production health snapshot
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          systemctl is-active --quiet AdGuardHome.service
+          systemctl is-active --quiet nginx.service
+          AGH_CONFIG="$(sudo find /opt/AdGuardHome -maxdepth 2 -type f -name AdGuardHome.yaml -print -quit)"
+          [[ -n "$AGH_CONFIG" ]]
+          printf '%s\n' "$AGH_CONFIG" > /tmp/tsk0321-agh-config-path
+          sudo sha256sum "$AGH_CONFIG" | awk '{print $1}' > /tmp/tsk0321-agh-config-before
+          sudo sh -c 'find /etc/nginx -xdev -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk "{print \$1}"' > /tmp/tsk0321-nginx-config-before
+          ss -H -lntu | awk '{print $1, $5}' | sort -u > /tmp/tsk0321-listeners-before
+          systemctl --failed --no-legend --plain | awk '{print $1}' | sort -u > /tmp/tsk0321-failed-before
+          dpkg-query -W -f='${Package}\t${Version}\n' | sort > /tmp/tsk0321-packages-before
+          echo 'PRE_TEST_HEALTH=PASS'
+
+      - name: Provision Node 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Verify Chromium capability
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          tmp="$(mktemp -d)"
+          echo "$tmp" > /tmp/tsk0321-node-tmp
+          (cd "$tmp" && npm init -y >/dev/null 2>&1 && npm install --no-save --no-fund playwright@1.62.0 >/dev/null 2>&1 && npm audit --audit-level=high)
+          "$tmp/node_modules/.bin/playwright" install chromium >/dev/null
+          "$tmp/node_modules/.bin/playwright" --version
+          cp prototype/TSK-0310/browser-acceptance.mjs "$tmp/browser-acceptance.mjs"
+          cp prototype/TSK-0321/accessibility-review.mjs "$tmp/accessibility-review.mjs"
+          echo 'CHROMIUM_CAPABILITY=PASS'
+
+      - name: Re-run TSK-0310 rendered browser acceptance
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          tmp="$(cat /tmp/tsk0321-node-tmp)"
+          python3 -m http.server 4173 --bind 127.0.0.1 --directory "$GITHUB_WORKSPACE" >/tmp/tsk0310-approved-http.log 2>&1 &
+          server_pid=$!
+          cleanup() { kill "$server_pid" >/dev/null 2>&1 || true; wait "$server_pid" 2>/dev/null || true; }
+          trap cleanup EXIT
+          ready=0
+          for _ in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:4173/prototype/TSK-0310/ >/dev/null; then ready=1; break; fi
+            sleep 0.25
+          done
+          [[ "$ready" == 1 ]]
+          (cd "$tmp" && node browser-acceptance.mjs) | tee /tmp/tsk0310-approved-browser.log
+          grep -qx 'BROWSER_ACCEPTANCE_CHECKS=218' /tmp/tsk0310-approved-browser.log
+          grep -qx 'BROWSER_ACCEPTANCE=PASS' /tmp/tsk0310-approved-browser.log
+          cleanup
+          trap - EXIT
+          ! ss -H -lnt | awk '{print $4}' | grep -Eq '(^|:)4173$'
+          echo 'TSK0310_RENDERED_REACCEPTANCE=PASS'
+
+      - name: Run TSK-0321 accessibility review on authoritative source
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          tmp="$(cat /tmp/tsk0321-node-tmp)"
+          python3 -m http.server 4176 --bind 127.0.0.1 --directory "$GITHUB_WORKSPACE" >/tmp/tsk0321-approved-http.log 2>&1 &
+          server_pid=$!
+          cleanup() { kill "$server_pid" >/dev/null 2>&1 || true; wait "$server_pid" 2>/dev/null || true; }
+          trap cleanup EXIT
+          ready=0
+          for _ in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:4176/prototype/TSK-0310/ >/dev/null; then ready=1; break; fi
+            sleep 0.25
+          done
+          [[ "$ready" == 1 ]]
+          (cd "$tmp" && node accessibility-review.mjs) | tee /tmp/tsk0321-approved-a11y.log
+          grep -qx 'A11Y_CHECKS=667' /tmp/tsk0321-approved-a11y.log
+          grep -qx 'A11Y_FAILURES=0' /tmp/tsk0321-approved-a11y.log
+          grep -qx 'A11Y_ACCEPTANCE_FAILURES=0' /tmp/tsk0321-approved-a11y.log
+          grep -qx 'TSK0321_AUTOMATED_REVIEW=COMPLETE' /tmp/tsk0321-approved-a11y.log
+          cleanup
+          trap - EXIT
+          ! ss -H -lnt | awk '{print $4}' | grep -Eq '(^|:)4176$'
+          echo 'TSK0321_AUTHORITATIVE_ACCESSIBILITY_REVIEW=PASS'
+
+      - name: Post-test production health and invariants
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          systemctl is-active --quiet AdGuardHome.service
+          systemctl is-active --quiet nginx.service
+          AGH_CONFIG="$(cat /tmp/tsk0321-agh-config-path)"
+          sudo sha256sum "$AGH_CONFIG" | awk '{print $1}' > /tmp/tsk0321-agh-config-after
+          sudo sh -c 'find /etc/nginx -xdev -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk "{print \$1}"' > /tmp/tsk0321-nginx-config-after
+          cmp /tmp/tsk0321-agh-config-before /tmp/tsk0321-agh-config-after
+          cmp /tmp/tsk0321-nginx-config-before /tmp/tsk0321-nginx-config-after
+          ss -H -lntu | awk '{print $1, $5}' | sort -u > /tmp/tsk0321-listeners-after
+          cmp /tmp/tsk0321-listeners-before /tmp/tsk0321-listeners-after
+          ! ss -H -lnt | awk '{print $4}' | grep -Eq '(^|:)4173$|(^|:)4176$'
+          systemctl --failed --no-legend --plain | awk '{print $1}' | sort -u > /tmp/tsk0321-failed-after
+          cmp /tmp/tsk0321-failed-before /tmp/tsk0321-failed-after
+          dpkg-query -W -f='${Package}\t${Version}\n' | sort > /tmp/tsk0321-packages-after
+          echo 'PACKAGE_DELTA_BEGIN'
+          diff -u /tmp/tsk0321-packages-before /tmp/tsk0321-packages-after || true
+          echo 'PACKAGE_DELTA_END'
+          git diff --check
+          test -z "$(git status --porcelain)"
+          rm -rf "$(cat /tmp/tsk0321-node-tmp)"
+          echo 'ADGUARD_CONFIG_UNCHANGED=PASS'
+          echo 'NGINX_CONFIG_UNCHANGED=PASS'
+          echo 'LISTENERS_UNCHANGED=PASS'
+          echo 'NO_TEST_LISTENER=PASS'
+          echo 'FAILED_UNITS_UNCHANGED=PASS'
+          echo 'REPOSITORY_CLEAN=PASS'
+          echo 'POST_TEST_HEALTH=PASS'
+          echo 'TSK0321_APPROVED_APPLICATION_VERIFICATION=PASS'
