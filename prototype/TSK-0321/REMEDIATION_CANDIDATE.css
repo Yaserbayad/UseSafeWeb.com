@@ -1,0 +1,19 @@
+/* TSK-0321 accessibility remediation candidate.
+   NOT applied to the accepted TSK-0310 prototype until HUMAN_ONLY review/approval. */
+
+.prototype-topbar {
+  flex-wrap: wrap;
+}
+
+.prototype-topbar > * {
+  min-width: 0;
+}
+
+.prototype-badge {
+  overflow-wrap: anywhere;
+}
+
+.prototype-code {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
