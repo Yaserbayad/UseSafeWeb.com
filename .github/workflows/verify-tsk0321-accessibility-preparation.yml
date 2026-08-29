@@ -58,8 +58,18 @@ jobs:
           assert 'every critical screen/state' in r['Acceptance_Criteria']
           assert 'no unresolved critical accessibility barrier' in r['Acceptance_Criteria']
           state=pathlib.Path('CURRENT_STATE.md').read_text(encoding='utf-8')
-          for dep in ['TSK-0323','TSK-0324','TSK-0308','TSK-0310']:
-            assert f'{dep} accepted stable state' in state or (dep in state and '**PASS**' in state[state.rfind('\n## ',0,state.find(dep)):state.find('\n## ',state.find(dep)) if state.find('\n## ',state.find(dep))!=-1 else None])
+          headings=[
+            '## TSK-0323 accepted stable state',
+            '## TSK-0324 accepted stable state',
+            '## TSK-0308 accepted stable state',
+            '## TSK-0310 rendered-browser acceptance'
+          ]
+          for h in headings:
+            assert h in state,h
+            start=state.index(h)
+            end=state.find('\n## ',start+3)
+            section=state[start:end if end!=-1 else None]
+            assert '**PASS**' in section,h
           print('TSK0321_WBS_HUMAN_ONLY=PASS')
           print('TSK0321_SOURCE_BLOBS=PASS')
           print('TSK0321_DEPENDENCY_CONTEXT=PASS')
