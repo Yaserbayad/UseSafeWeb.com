@@ -1,0 +1,89 @@
+name: Derive post-TSK-0324 queue
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/derive-post-tsk0324-queue.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  derive:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Derive queue and inspect next task
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(hostname -s)" = "adguardvm"
+          python3 - <<'PY'
+          import csv, pathlib, re
+
+          with pathlib.Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8',newline='') as f:
+              rows=list(csv.DictReader(f))
+          by={r['Task_ID']:r for r in rows}
+          state=pathlib.Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          pass_ids=set()
+          pass_ids.update(re.findall(r'^#{2,3}\s+(TSK-\d{4})\b[^\n]*(?:accepted stable state|\bPASS\b)',state,re.M|re.I))
+          pass_ids.update(re.findall(r'`(TSK-\d{4})[^`\n]*`:\s*\*\*PASS\*\*',state))
+          pass_ids.update(re.findall(r'`(TSK-\d{4})`\s*(?:—|-)\s*[^\n]*\*\*PASS\*\*',state))
+          m=re.search(r'^### PASS\s*$([\s\S]*?)(?=^###\s|^##\s|\Z)',state,re.M)
+          if m: pass_ids.update(re.findall(r'TSK-\d{4}',m.group(1)))
+          for r in rows:
+              if r.get('Plan_Status')=='NOT_APPLICABLE' and r.get('Execution_State')=='PASS': pass_ids.add(r['Task_ID'])
+          assert 'TSK-0324' in pass_ids
+          assert 'TSK-0325' in pass_ids
+
+          pri={'CRITICAL':0,'HIGH':1,'MEDIUM':2,'LOW':3}
+          ready_auto=[]; ready_human=[]; blocked=[]
+          for idx,r in enumerate(rows):
+              tid=r['Task_ID']
+              if r.get('Lifecycle_Stage')!='L4' or r.get('Plan_Status')!='PLANNED' or tid in pass_ids: continue
+              deps=[x.strip() for x in re.split(r'[;,]',r.get('Dependencies','')) if x.strip()]
+              missing=[d for d in deps if d not in pass_ids]
+              rec=(pri.get(r.get('Priority',''),9),idx,tid,r,missing)
+              if missing: blocked.append(rec)
+              elif r.get('Action_Authority')=='AUTO_ALLOWED': ready_auto.append(rec)
+              else: ready_human.append(rec)
+          ready_auto.sort(); ready_human.sort(); blocked.sort()
+          print(f'PARSED_PASS_COUNT={len(pass_ids)}')
+          print(f'READY_AUTO_COUNT={len(ready_auto)}')
+          for _,idx,tid,r,_ in ready_auto:
+              print('READY_AUTO|'+'|'.join([tid,r['Priority'],r['Title'],r['Action_Authority'],r['Dependencies'],str(idx)]))
+          print(f'READY_HUMAN_COUNT={len(ready_human)}')
+          for _,idx,tid,r,_ in ready_human:
+              print('READY_HUMAN|'+'|'.join([tid,r['Priority'],r['Title'],r['Action_Authority'],r['Dependencies'],str(idx)]))
+          print(f'BLOCKED_L4_COUNT={len(blocked)}')
+          for _,idx,tid,r,missing in blocked[:20]:
+              print('BLOCKED|'+'|'.join([tid,r['Priority'],r['Title'],r['Action_Authority'],','.join(missing),str(idx)]))
+          assert ready_auto, 'no ready AUTO_ALLOWED L4 work'
+          r=ready_auto[0][3]
+          print('NEXT_AUTO_BEGIN')
+          for k,v in r.items(): print(f'{k}={v}')
+          print('NEXT_AUTO_END')
+          tid=r['Task_ID']
+          hits=[]
+          for p in pathlib.Path('.').rglob('*'):
+              if p.is_file() and '.git/' not in str(p) and (tid.replace('-','').lower() in str(p).replace('-','').lower() or tid.lower() in str(p).lower()):
+                  if str(p) != '.github/workflows/derive-post-tsk0324-queue.yml': hits.append(str(p))
+          print('EXISTING_PATHS_BEGIN')
+          for p in sorted(hits): print(p)
+          print('EXISTING_PATHS_END')
+          for depid in [x.strip() for x in re.split(r'[;,]',r['Dependencies']) if x.strip()]:
+              d=by[depid]
+              print('DEPENDENCY|'+'|'.join([depid,d['Title'],d['Lifecycle_Stage'],d['Plan_Status'],d['Execution_State'],d['Action_Authority']]))
+          print('POST_TSK0324_QUEUE_DERIVATION=PASS')
+          PY
+      - name: Repository cleanliness
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'REPOSITORY_CLEAN=PASS'
