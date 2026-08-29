@@ -30,67 +30,39 @@ jobs:
           python3 - <<'PY'
           import csv, pathlib, re
           root = pathlib.Path('Plans/Master')
-          wbs = root/'WBS/master-wbs.csv'
-          with wbs.open(encoding='utf-8', newline='') as f:
+          with (root/'WBS/master-wbs.csv').open(encoding='utf-8', newline='') as f:
               rows = list(csv.DictReader(f))
           fields = list(rows[0]) if rows else []
           print('WBS_FIELDS=' + '|'.join(fields))
-          def val(r, pred):
-              for k,v in r.items():
-                  if pred(k.lower()): return v or ''
-              return ''
-          def tid(r):
-              for v in r.values():
-                  if re.fullmatch(r'TSK-\d{4}', (v or '').strip()): return v.strip()
-              return ''
-          def lifecycle(r):
-              for v in r.values():
-                  if re.fullmatch(r'L(?:[0-9]|1[0-3])', (v or '').strip()): return v.strip()
-              return ''
-          def title(r):
-              t = val(r, lambda k: 'title' in k)
-              if t: return t
-              vals=list(r.values())
-              return vals[7] if len(vals)>7 else ''
-          def deps(r):
-              d = val(r, lambda k: 'depend' in k and 'type' not in k)
-              if d: return d
-              return ''
-          l3ids={tid(r) for r in rows if lifecycle(r)=='L3' and tid(r)}
+          def tid(r): return (r.get('Task_ID') or '').strip()
+          def lc(r): return (r.get('Lifecycle_Stage') or '').strip()
+          def title(r): return (r.get('Title') or '').strip()
+          def deps(r): return (r.get('Dependencies') or '').strip()
+          l3ids={tid(r) for r in rows if lc(r)=='L3' and tid(r)}
           print(f'L3_TASK_COUNT={len(l3ids)}')
-          print('L3_TASKS_BEGIN')
-          for r in rows:
-              if lifecycle(r)=='L3': print(f"{tid(r)}|{title(r)}|deps={deps(r)}")
-          print('L3_TASKS_END')
           print('CROSS_L3_DEPENDENTS_BEGIN')
           for r in rows:
-              if lifecycle(r) in {'L4','L5','L6','L7'}:
-                  found=sorted(i for i in l3ids if i and i in ' '.join(r.values()))
-                  if found: print(f"{tid(r)}|{lifecycle(r)}|{title(r)}|l3deps={';'.join(found)}|deps={deps(r)}")
+              if lc(r) in {'L4','L5','L6','L7'}:
+                  found=sorted(i for i in l3ids if i and i in deps(r))
+                  if found: print(f"{tid(r)}|{lc(r)}|{title(r)}|l3deps={';'.join(found)}|deps={deps(r)}")
           print('CROSS_L3_DEPENDENTS_END')
-          keys=('representative','participant','parent','user test','usability','comprehension','recruit','interview','behavioral validation','behavioural validation','cohort')
-          print('HUMAN_VALIDATION_CANDIDATES_L2_L7_BEGIN')
+          targets={'TSK-0034','TSK-0139','TSK-0141','TSK-0187','TSK-0188','TSK-0298','TSK-0309','TSK-0325','TSK-0326','TSK-0327','TSK-0333','TSK-0336','TSK-0399','TSK-0054','TSK-0056'}
+          print('TARGET_ROWS_BEGIN')
           for r in rows:
-              lc=lifecycle(r)
-              if lc in {'L2','L3','L4','L5','L6','L7'}:
-                  text=' '.join(r.values()).lower()
-                  hits=sorted({k for k in keys if k in text})
-                  if hits: print(f"{tid(r)}|{lc}|{title(r)}|hits={';'.join(hits)}|deps={deps(r)}")
-          print('HUMAN_VALIDATION_CANDIDATES_L2_L7_END')
-          print('TSK0187_DIRECT_DEPENDENTS_BEGIN')
+              if tid(r) in targets:
+                  print('ROW|' + '|'.join(f'{k}={r.get(k,"")}' for k in fields))
+          print('TARGET_ROWS_END')
+          print('TARGET_DIRECT_DEPENDENTS_BEGIN')
+          for target in sorted(targets):
+              hit=[]
+              for r in rows:
+                  if target in [x.strip() for x in deps(r).split(';') if x.strip()]:
+                      hit.append(f"{tid(r)}:{lc(r)}:{title(r)}")
+              if hit: print(target+'|'+' || '.join(hit))
+          print('TARGET_DIRECT_DEPENDENTS_END')
+          print('L3_FULL_ROWS_BEGIN')
           for r in rows:
-              if tid(r)!='TSK-0187' and 'TSK-0187' in ' '.join(r.values()):
-                  print(f"{tid(r)}|{lifecycle(r)}|{title(r)}|deps={deps(r)}")
-          print('TSK0187_DIRECT_DEPENDENTS_END')
-          patterns=('CR-0004','DEC-0051','TSK-0187','LG-03','LG-04','LG-05','representative-parent','representative parent','behavioral validation','behavioural validation')
-          print('AUTHORITATIVE_REFERENCE_COUNTS_BEGIN')
-          for p in sorted(root.rglob('*')):
-              if not p.is_file() or p.suffix.lower() not in {'.md','.yaml','.yml','.csv','.txt'}: continue
-              if '/Generated/' in p.as_posix(): continue
-              try: text=p.read_text(encoding='utf-8')
-              except Exception: continue
-              hits={pat:text.lower().count(pat.lower()) for pat in patterns if pat.lower() in text.lower()}
-              if hits: print(f"{p.as_posix()}|" + ';'.join(f'{k}={v}' for k,v in hits.items()))
-          print('AUTHORITATIVE_REFERENCE_COUNTS_END')
-          print('CR0005_AUDIT=PASS')
+              if lc(r)=='L3': print('ROW|' + '|'.join(f'{k}={r.get(k,"")}' for k in fields))
+          print('L3_FULL_ROWS_END')
+          print('CR0005_TARGETED_AUDIT=PASS')
           PY
