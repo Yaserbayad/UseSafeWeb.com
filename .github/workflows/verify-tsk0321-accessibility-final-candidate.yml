@@ -1,0 +1,92 @@
+name: Verify final TSK-0321 accessibility remediation candidate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-tsk0321-accessibility-final-candidate.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  review:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Verify pinned review inputs
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(hostname -s)" = "adguardvm"
+          test "$(git rev-parse HEAD:prototype/TSK-0310/index.html)" = "5d80dfdefb52042bc34468723354fefd325285e4"
+          test "$(git rev-parse HEAD:prototype/TSK-0310/model.mjs)" = "01343273fd09c3c12d26f0c0eb1ae9a2fce10c91"
+          test "$(git rev-parse HEAD:prototype/TSK-0310/app.mjs)" = "a4a0aff8848f8541e2581e333efbf48767c9f0ff"
+          test "$(git rev-parse HEAD:prototype/TSK-0310/prototype.css)" = "439ef05dd04da7fccf01cb4b85e317a828389edf"
+          test "$(git rev-parse HEAD:prototype/TSK-0321/accessibility-review.mjs)" = "0cfca762a0d83be7716194e13e940876e71534b4"
+          test "$(git rev-parse HEAD:prototype/TSK-0321/REMEDIATION_CANDIDATE.css)" = "5a1ce1f8b4d695dae20eb7bea18d17f88652eb57"
+          test "$(git rev-parse HEAD:Plans/Master/WBS/master-wbs.csv)" = "f23b4f017d1baf73258fa30ecd71549bbfe1b815"
+          echo 'TSK0321_FINAL_CANDIDATE_INPUTS=PASS'
+
+      - name: Pre-test production health
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo systemctl is-active --quiet AdGuardHome
+          sudo systemctl is-active --quiet nginx
+          ! ss -ltn | grep -Eq '127\.0\.0\.1:4176|\[::1\]:4176'
+          echo 'PRE_TEST_HEALTH=PASS'
+
+      - name: Run complete accessibility review with candidate overlay
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          tmp="$(mktemp -d)"; original="$tmp/index.html"; server_pid=""
+          cp prototype/TSK-0310/index.html "$original"
+          cleanup() {
+            if [ -n "$server_pid" ]; then kill "$server_pid" 2>/dev/null || true; fi
+            cp "$original" prototype/TSK-0310/index.html
+            rm -rf "$tmp"
+          }
+          trap cleanup EXIT
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('prototype/TSK-0310/index.html')
+          t=p.read_text(encoding='utf-8')
+          n='  <link rel="stylesheet" href="prototype.css">\n'
+          assert n in t and 'REMEDIATION_CANDIDATE.css' not in t
+          p.write_text(t.replace(n,n+'  <link rel="stylesheet" href="../TSK-0321/REMEDIATION_CANDIDATE.css">\n',1),encoding='utf-8')
+          PY
+          (cd "$tmp" && npm init -y >/dev/null 2>&1 && npm install --no-save --no-audit --no-fund playwright@1.62.0 >/dev/null 2>&1 && cp "$GITHUB_WORKSPACE/prototype/TSK-0321/accessibility-review.mjs" .)
+          export PLAYWRIGHT_BROWSERS_PATH="$HOME/.cache/ms-playwright"
+          "$tmp/node_modules/.bin/playwright" install chromium >/dev/null
+          python3 -m http.server 4176 --bind 127.0.0.1 >/tmp/tsk0321-final-http.log 2>&1 & server_pid=$!
+          for _ in $(seq 1 40); do curl -fsS http://127.0.0.1:4176/prototype/TSK-0310/ >/dev/null && break; sleep 0.25; done
+          curl -fsS http://127.0.0.1:4176/prototype/TSK-0310/ >/dev/null
+          (cd "$tmp" && node accessibility-review.mjs)
+          echo 'TSK0321_FINAL_CANDIDATE_BROWSER_REVIEW=PASS'
+
+      - name: Post-test invariants
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo systemctl is-active --quiet AdGuardHome
+          sudo systemctl is-active --quiet nginx
+          ! ss -ltn | grep -Eq '127\.0\.0\.1:4176|\[::1\]:4176'
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'POST_TEST_HEALTH=PASS'
+          echo 'NO_TEST_LISTENER=PASS'
+          echo 'REPOSITORY_CLEAN=PASS'
