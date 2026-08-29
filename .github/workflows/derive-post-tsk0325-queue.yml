@@ -1,0 +1,102 @@
+name: Derive post-TSK-0325 queue
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/derive-post-tsk0325-queue.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  derive:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Derive current L4 queue
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(hostname -s)" = "adguardvm"
+          python3 - <<'PY'
+          import csv, pathlib, re
+
+          wbs_path=pathlib.Path('Plans/Master/WBS/master-wbs.csv')
+          state_path=pathlib.Path('CURRENT_STATE.md')
+          with wbs_path.open(encoding='utf-8', newline='') as f:
+              rows=list(csv.DictReader(f))
+          by={r['Task_ID']:r for r in rows}
+          state=state_path.read_text(encoding='utf-8')
+
+          pass_ids=set()
+          # Current explicit accepted-state sections.
+          pass_ids.update(re.findall(r'^#{2,3}\s+(TSK-\d{4})\b[^\n]*(?:accepted stable state|\bPASS\b)', state, re.M|re.I))
+          # Explicit task disposition paragraphs, e.g. `TSK-0325 — ...`: **PASS**.
+          pass_ids.update(re.findall(r'`(TSK-\d{4})[^`\n]*`:\s*\*\*PASS\*\*', state))
+          pass_ids.update(re.findall(r'`(TSK-\d{4})`\s*(?:—|-)\s*[^\n]*\*\*PASS\*\*', state))
+          # The canonical Current technical task state / PASS block.
+          m=re.search(r'^### PASS\s*$([\s\S]*?)(?=^###\s|^##\s|\Z)', state, re.M)
+          if m:
+              pass_ids.update(re.findall(r'TSK-\d{4}', m.group(1)))
+          # CR-0005 verified exclusions are dependency-satisfying PASS only as exclusions.
+          for r in rows:
+              if r.get('Plan_Status')=='NOT_APPLICABLE' and r.get('Execution_State')=='PASS':
+                  pass_ids.add(r['Task_ID'])
+
+          assert 'TSK-0325' in pass_ids, 'current runtime TSK-0325 PASS not parsed'
+          assert 'TSK-0326' in pass_ids, 'CR-0005 exclusion TSK-0326 PASS not parsed'
+
+          pri={'CRITICAL':0,'HIGH':1,'MEDIUM':2,'LOW':3}
+          candidates=[]
+          blocked=[]
+          human=[]
+          for idx,r in enumerate(rows):
+              tid=r['Task_ID']
+              if r.get('Lifecycle_Stage')!='L4' or r.get('Plan_Status')!='PLANNED' or tid in pass_ids:
+                  continue
+              deps=[x.strip() for x in re.split(r'[;,]',r.get('Dependencies','')) if x.strip()]
+              missing=[d for d in deps if d not in pass_ids]
+              rec=(pri.get(r.get('Priority',''),9),idx,tid,r,missing)
+              if missing:
+                  blocked.append(rec)
+              elif r.get('Action_Authority')=='AUTO_ALLOWED':
+                  candidates.append(rec)
+              else:
+                  human.append(rec)
+
+          candidates.sort(); human.sort(); blocked.sort()
+          print(f'PARSED_PASS_COUNT={len(pass_ids)}')
+          print(f'READY_AUTO_COUNT={len(candidates)}')
+          for _,idx,tid,r,missing in candidates:
+              print('READY_AUTO|'+'|'.join([tid,r.get('Priority',''),r.get('Title',''),r.get('Action_Authority',''),r.get('Dependencies',''),r.get('Acceptance_ID',''),r.get('Verification_ID',''),r.get('Evidence_ID',''),str(idx)]))
+          print(f'READY_HUMAN_COUNT={len(human)}')
+          for _,idx,tid,r,missing in human:
+              print('READY_HUMAN|'+'|'.join([tid,r.get('Priority',''),r.get('Title',''),r.get('Action_Authority',''),r.get('Dependencies',''),r.get('Acceptance_ID',''),r.get('Verification_ID',''),r.get('Evidence_ID',''),str(idx)]))
+          print(f'BLOCKED_L4_COUNT={len(blocked)}')
+          for _,idx,tid,r,missing in blocked[:30]:
+              print('BLOCKED|'+'|'.join([tid,r.get('Priority',''),r.get('Title',''),r.get('Action_Authority',''),','.join(missing),r.get('Dependencies',''),str(idx)]))
+          if candidates:
+              r=candidates[0][3]
+              print('NEXT_AUTO_BEGIN')
+              for k,v in r.items(): print(f'{k}={v}')
+              print('NEXT_AUTO_END')
+          elif human:
+              r=human[0][3]
+              print('NEXT_HUMAN_BOUNDARY_BEGIN')
+              for k,v in r.items(): print(f'{k}={v}')
+              print('NEXT_HUMAN_BOUNDARY_END')
+          else:
+              print('NO_READY_L4=TRUE')
+          print('POST_TSK0325_QUEUE_DERIVATION=PASS')
+          PY
+      - name: Repository cleanliness
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'REPOSITORY_CLEAN=PASS'
