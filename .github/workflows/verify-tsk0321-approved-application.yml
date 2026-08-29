@@ -68,7 +68,8 @@ jobs:
           set -Eeuo pipefail
           tmp="$(mktemp -d)"
           echo "$tmp" > /tmp/tsk0321-node-tmp
-          (cd "$tmp" && npm init -y >/dev/null 2>&1 && npm install --no-save --no-fund playwright@1.62.0 >/dev/null 2>&1 && npm audit --audit-level=high)
+          cp prototype/TSK-0310/package.json "$tmp/package.json"
+          (cd "$tmp" && npm install --ignore-scripts --no-fund && npm audit --audit-level=high)
           "$tmp/node_modules/.bin/playwright" install chromium >/dev/null
           "$tmp/node_modules/.bin/playwright" --version
           cp prototype/TSK-0310/browser-acceptance.mjs "$tmp/browser-acceptance.mjs"
@@ -146,7 +147,7 @@ jobs:
           echo 'PACKAGE_DELTA_END'
           git diff --check
           test -z "$(git status --porcelain)"
-          rm -rf "$(cat /tmp/tsk0321-node-tmp)"
+          if [[ -f /tmp/tsk0321-node-tmp ]]; then rm -rf "$(cat /tmp/tsk0321-node-tmp)"; fi
           echo 'ADGUARD_CONFIG_UNCHANGED=PASS'
           echo 'NGINX_CONFIG_UNCHANGED=PASS'
           echo 'LISTENERS_UNCHANGED=PASS'
