@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-29T16:14:06Z
+**Updated:** 2026-08-29T16:21:18Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -755,3 +755,17 @@ Probe result: no Chromium/Chrome/Firefox; no Docker/Podman; no Bubblewrap/Fireja
 ### Exact next authoritative step
 
 Provide or explicitly approve a separate isolated browser-capable verification environment for `TSK-0310`. Acceptable resolution paths are: (1) a temporary isolated VM/self-hosted runner with a supported headless browser, or (2) explicit owner approval to use a GitHub-hosted browser-capable runner, including any applicable hosted-runner cost. Then rerun current VER-0310 rendered functional/negative/configuration/security-privacy/removal-reset checks and independently evaluate PASS.
+
+## TSK-0310 owner browser authorization — 2026-08-29
+
+The Project Owner explicitly authorizes installing Chromium/browser-test capability on operational runner `adguardvm` for the bounded purpose of completing current automated project testing, including `TSK-0310`. The browser may remain installed through the current testing tranche and is to be removed after that tranche when no longer needed.
+
+This current owner instruction supersedes the earlier TSK-0310-specific runtime fence that prohibited installing browser/container capability on `adguardvm` merely to close the browser-evidence gap. The override is limited to browser-test tooling and required runtime dependencies; it does not authorize unrelated server changes, new production functionality, participant processing, public publication, payment, market activation, or launch.
+
+Implementation must remain reversible and least-change: prefer a pinned Playwright-managed Chromium installation on Ubuntu 24.04, install only required browser runtime dependencies, do not alter AdGuard/Nginx configuration, do not expose a new listening service, retain privacy-safe verification evidence, and recheck AdGuard/Nginx health after installation/testing.
+
+`TSK-0310` remains non-PASS until current rendered functional, negative, configuration, security/privacy, and removal/reset verification succeeds and durable evidence is accepted.
+
+### Exact next authoritative step
+
+Install the bounded Chromium test capability on `adguardvm`, verify server health is unchanged, execute the complete current `VER-0310` browser acceptance suite, retain durable evidence, then reconcile the stable task outcome.
