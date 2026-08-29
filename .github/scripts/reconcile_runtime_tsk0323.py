@@ -43,6 +43,6 @@ Do not infer the successor from task numbering. Recompute current eligible work 
 Reread this state from GitHub after the state commit, verify only `CURRENT_STATE.md` changed, then derive the highest-priority dependency-ready `AUTO_ALLOWED` task from current canonical authority and execute it if no gate/constraint blocks it.
 '''
 
-updated = updated.rstrip() + section + "\n"
+updated = updated.rstrip() + section.rstrip() + "\n"
 PATH.write_text(updated, encoding="utf-8")
 print("RUNTIME_TSK0323_EDIT=PASS")
