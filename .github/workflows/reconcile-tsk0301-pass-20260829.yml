@@ -1,0 +1,90 @@
+name: Reconcile TSK-0301 PASS and queue
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/reconcile-tsk0301-pass-20260829.yml
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify TSK-0301 and derive next queue
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "6a25d63af125116a80f96ac0f1548b1ddb452a34"
+          test "$(git hash-object Plans/Master/MANIFEST.yaml)" = "acadf21483ee3fddd63ee57795126619f92a00f3"
+          test "$(git hash-object CURRENT_STATE.md)" = "c0128de5127a8548b3b6dcb557c82bb7f997e5dd"
+          test "$(git hash-object TSK_0301_OWNER_IDENTITY_APPROVAL_2026-08-29.md)" = "66f4b545c03571649a8baa4c0fe3d1df564b5949"
+          test "$(git hash-object brand/identity/TSK-0301/README.md)" = "b8ffd2ed234465a238558a7b94e56274de49696a"
+          test "$(git hash-object TSK_0301_FINAL_IDENTITY_EVIDENCE_2026-08-29.md)" = "0dd418f54542d6789eb5b64e4d5b66d1083e6678"
+          test "$(git hash-object brand/identity/TSK-0301/safeweb-wordmark-primary.svg)" = "f93958e3e4a16f9056693072c1b9b8b31fcda852"
+          test "$(git hash-object brand/identity/TSK-0301/safeweb-wordmark-inverse.svg)" = "c38709e4239a2d36b340b4d9d630df85a17bb494"
+          test "$(git hash-object brand/identity/TSK-0301/safeweb-wordmark-monochrome.svg)" = "ef9b6e0d52926f24c7e81bccb4489569067b852f"
+          test "$(git hash-object brand/identity/TSK-0301/safeweb-monogram.svg)" = "49f20bae1d92bb04f125e988cb4cc3ea8a822b9e"
+          grep -Fq '**ACC-0301: PASS.**' TSK_0301_FINAL_IDENTITY_EVIDENCE_2026-08-29.md
+          grep -Fq 'RSK-0002` remains OPEN' TSK_0301_FINAL_IDENTITY_EVIDENCE_2026-08-29.md
+          grep -Fq '**Decision:** APPROVED' TSK_0301_OWNER_IDENTITY_APPROVAL_2026-08-29.md
+          grep -Fq '**Brand name:** `SafeWeb`' TSK_0301_OWNER_IDENTITY_APPROVAL_2026-08-29.md
+          python3 - <<'PY'
+          from pathlib import Path
+          from datetime import datetime,timezone
+          import csv,re
+          runtime=Path('CURRENT_STATE.md')
+          text=runtime.read_text(encoding='utf-8')
+          assert 'TSK-0301 accepted stable state' not in text
+          passed=set()
+          m=re.search(r'(?ms)^### PASS\s*$\n(.*?)(?=^### |^## )',text)
+          if m:
+              passed.update(re.findall(r'^- `?(TSK-\d{4})`?\b',m.group(1),flags=re.M))
+          passed.update(re.findall(r'(?m)^### (TSK-\d{4}) accepted stable state\s*$',text))
+          passed.update(re.findall(r'(?m)^`(TSK-\d{4})[^`\n]*`:\s*\*\*PASS\b',text))
+          with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='') as f:
+              rows=list(csv.DictReader(f))
+          ids={r['Task_ID'] for r in rows}; passed &= ids
+          assert len(passed)==74,(len(passed),sorted(passed))
+          assert {'TSK-0298','TSK-0299','TSK-0302'} <= passed
+          assert 'TSK-0301' not in passed and 'TSK-0187' not in passed
+          passed.add('TSK-0301')
+          candidates=[]
+          for idx,r in enumerate(rows):
+              if r['Lifecycle_Stage']!='L4' or r['Task_ID'] in passed: continue
+              if (r['Plan_Status'] or '').upper() not in {'PLANNED','ACTIVE','IN_PROGRESS'}: continue
+              deps={x.strip() for x in re.split(r'[;,]',r['Dependencies'] or '') if x.strip().startswith('TSK-')}
+              if deps <= passed:
+                  candidates.append((idx,r,deps))
+          pri={'CRITICAL':0,'HIGH':1,'MEDIUM':2,'LOW':3}
+          candidates.sort(key=lambda item:(pri.get((item[1]['Priority'] or '').upper(),99), item[0], item[1]['Task_ID']))
+          print('POST_TSK0301_PASS_COUNT='+str(len(passed)))
+          print('CANDIDATE_COUNT='+str(len(candidates)))
+          for _,r,deps in candidates:
+              print('CANDIDATE|'+'|'.join([r['Task_ID'],r['Priority'],r['Action_Authority'],','.join(sorted(deps)),r['Title']]))
+          assert candidates,candidates
+          selected=candidates[0][1]
+          deps=sorted(x.strip() for x in re.split(r'[;,]',selected['Dependencies'] or '') if x.strip().startswith('TSK-'))
+          print('NEXT_SELECTED|'+'|'.join([selected['Task_ID'],selected['Priority'],selected['Action_Authority'],','.join(deps),selected['Title']]))
+          now=datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+          text=re.sub(r'\*\*Updated:\*\* [^\n]+',f'**Updated:** {now}',text,count=1)
+          text += f'''\n\n### TSK-0301 accepted stable state\n\n`TSK-0301 — {next(r['Title'] for r in rows if r['Task_ID']=='TSK-0301')}`: **PASS for the owner-approved provisional internal L4 SafeWeb identity under DEC-0051/CR-0004**. Owner approval `TSK_0301_OWNER_IDENTITY_APPROVAL_2026-08-29.md`, blob `66f4b545c03571649a8baa4c0fe3d1df564b5949`; identity specification `brand/identity/TSK-0301/README.md`, blob `b8ffd2ed234465a238558a7b94e56274de49696a`; acceptance evidence `TSK_0301_FINAL_IDENTITY_EVIDENCE_2026-08-29.md`, blob `0dd418f54542d6789eb5b64e4d5b66d1083e6678`.\n\nApproved visible brand: `SafeWeb`; `Safe` dark green `#173F35`, `Web` maroon `#7A2E36`, Concept A minimalist wordmark-first direction. Editable masters: primary `f93958e3e4a16f9056693072c1b9b8b31fcda852`, inverse `c38709e4239a2d36b340b4d9d630df85a17bb494`, monochrome `ef9b6e0d52926f24c7e81bccb4489569067b852f`, monogram `49f20bae1d92bb04f125e988cb4cc3ea8a822b9e`. The low-contrast maroon-on-dark-green treatment is restricted to large decorative brand display; a high-contrast monochrome/off-white fallback is mandatory for small/accessibility-critical dark contexts.\n\nACC-0301 is satisfied. `RSK-0002` remains OPEN; no representative-parent preference/comprehension, legal completion, participant activation, integrated build, publication, payment, market or launch authority is inferred.\n\n### Post-TSK-0301 L4 queue\n\nFresh dependency derivation with {len(passed)} durable PASS task IDs selects `{selected['Task_ID']} — {selected['Title']}` as the next dependency-satisfied L4 task. Priority `{selected['Priority']}`; Action Authority `{selected['Action_Authority']}`; dependencies `{'; '.join(deps) if deps else 'none'}`.\n\n### Exact next authoritative step\n\nProceed according to `{selected['Action_Authority']}` for `{selected['Task_ID']}` using its current WBS acceptance/evidence contract. Re-read its exact row and governing sources before execution; preserve all CR-0004 behavioral/legal/build/publication/payment/launch fences.\n'''
+          runtime.write_text(text,encoding='utf-8')
+          PY
+          git diff --check
+      - name: Commit and push runtime
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git add CURRENT_STATE.md
+          git diff --cached --check
+          git config user.name 'UseSafeWeb Governance Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git commit -m 'state: accept TSK-0301 final identity'
+          git push origin HEAD:main
