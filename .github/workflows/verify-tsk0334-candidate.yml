@@ -1,0 +1,76 @@
+name: Verify TSK-0334 candidate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/verify-tsk0334-candidate.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify authority pins and TSK-0334 contract
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          test "$(git rev-parse HEAD:Plans/Master/WBS/master-wbs.csv)" = "f23b4f017d1baf73258fa30ecd71549bbfe1b815"
+          test "$(git rev-parse HEAD:design/TSK-0330/PHONE_INTERNET_SERVICES_SETUP_FLOWS_CANDIDATE.md)" = "07fa10b3fa9b91ddd02f19f5d1c68b15184677a7"
+          test "$(git rev-parse HEAD:prototype/TSK-0325/SERVICE_BLUEPRINT.md)" = "1701f5f7b13ac8f7fa3092e39005b3da7627c89f"
+          test "$(git rev-parse HEAD:content/TSK-0323/DEVICE_SERVICE_INSTRUCTION_CATALOGUE.md)" = "bbe9ed90b205f2ca852ebdaefedf054446dd7f91"
+          test "$(git rev-parse HEAD:prototype/TSK-0324/UI_COMPONENT_RULES.md)" = "0b7012a12070f7eccf45a1bbb2f453fde8507ff6"
+          test "$(git rev-parse HEAD:design/TSK-0334/SUPPORT_FALSE_POSITIVE_REMOVAL_RECONFIGURATION_FLOWS_CANDIDATE.md)" = "44fab92b51ae8ed8b6f5f325ba1558bcd297eb5f"
+          python3 - <<'PY'
+          import csv,re
+          from pathlib import Path
+          rows=list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='')))
+          r=next(x for x in rows if x['Task_ID'].strip()=='TSK-0334')
+          assert r['Title'].strip()=='Design support, false-positive, removal, and reconfiguration flows'
+          assert r['Dependencies'].strip()=='TSK-0330'
+          assert r['Action_Authority'].strip()=='HUMAN_ONLY'
+          ac=r['Acceptance_Criteria']
+          for needle in ['accessible path','minimal diagnostic request','clear protection consequence','escalation option','success state']:
+              assert needle in ac, (needle,ac)
+          t=Path('design/TSK-0334/SUPPORT_FALSE_POSITIVE_REMOVAL_RECONFIGURATION_FLOWS_CANDIDATE.md').read_text(encoding='utf-8')
+          # Every major category must independently carry all five acceptance fields.
+          for code in ['SUP-01','SUP-02','SUP-03','SUP-04','SUP-05']:
+              m=re.search(rf'^## \d+\. {code}.*?(?=^## \d+\.|\Z)',t,re.M|re.S)
+              assert m, code
+              b=m.group(0)
+              for label in ['Accessible path','Minimal diagnostic','Protection consequence','Escalation option','Success state']:
+                  assert label in b, (code,label)
+          required=[
+            'Global Help','Report a problem','DEV-COMMON-CONFLICT','DEV-AND-DNS-REMOVE','DEV-IOS-DNS-REMOVE',
+            'Verified','You confirmed this is set up','Action needed','Not covered','Status uncertain','Removed',
+            'no browsing history','raw DNS','retry only after a changed condition','Acknowledgement does not alter protection state',
+            'APPROVE TSK-0334 SUPPORT FALSE-POSITIVE REMOVAL RECONFIGURATION FLOWS'
+          ]
+          low=t.lower()
+          for x in required:
+              assert x.lower() in low, x
+          for n in range(1,13): assert f'TC-0334-{n:02d}' in t
+          assert 'not accepted / not PASS' in t
+          assert 'does not mark TSK-0334 PASS' in t
+          forbidden=[
+            'mandatory SafeWeb account','unrestricted allowlist','collect browsing history','collect raw DNS queries',
+            'fully protected` as an approved claim','100% safe` as an approved claim'
+          ]
+          for x in forbidden: assert x not in t, x
+          print('TSK0334_WBS_AUTHORITY=PASS')
+          print('TSK0334_SOURCE_PINS=PASS')
+          print('TSK0334_SUPPORT_CATEGORIES=5/5_ACCEPTANCE_FIELDS_PASS')
+          print('TSK0334_TEST_MATRIX=12')
+          print('TSK0334_SCOPE_PRIVACY_TRUTH_GUARDS=PASS')
+          print('TSK0334_CANDIDATE_VERIFICATION=PASS')
+          PY
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'REPOSITORY_CLEAN=PASS'
