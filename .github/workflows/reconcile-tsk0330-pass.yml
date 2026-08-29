@@ -1,0 +1,42 @@
+name: Reconcile TSK-0330 PASS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/reconcile-tsk0330-pass.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-state-write
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - name: Reconcile runtime PASS
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          test "$(git rev-parse HEAD:design/TSK-0330/PHONE_INTERNET_SERVICES_SETUP_FLOWS_CANDIDATE.md)" = "07fa10b3fa9b91ddd02f19f5d1c68b15184677a7"
+          test "$(git rev-parse HEAD:TSK_0330_PHONE_INTERNET_SERVICES_FLOW_ACCEPTANCE_EVIDENCE_2026-08-29.md)" = "794e12b56e902270f6d4ef052abaa2d1fba1963b"
+          python3 .github/scripts/reconcile_tsk0330_pass.py
+          git diff --check
+          changed="$(git diff --name-only)"
+          [[ "$changed" == "CURRENT_STATE.md" ]]
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          [[ "$(git diff --cached --name-only)" == "CURRENT_STATE.md" ]]
+          git commit -m 'state: accept TSK-0330 setup flows'
+          git push origin HEAD:main
+          echo "RUNTIME_COMMIT=$(git rev-parse HEAD)"
+          echo "RUNTIME_STATE_BLOB=$(git rev-parse HEAD:CURRENT_STATE.md)"
+          sha256sum CURRENT_STATE.md | sed 's/^/RUNTIME_STATE_SHA256=/'
