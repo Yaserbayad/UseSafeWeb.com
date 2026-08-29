@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-29T07:55:48Z
+**Updated:** 2026-08-29T09:34:42Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -8,12 +8,15 @@
 
 ## Canonical planning authority
 
-**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0002 PUBLISHED AND READ-BACK VERIFIED.**
+**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0004 PUBLISHED, RECONCILED, READ-BACK VERIFIED.**
 
-- Current validated `Plans/` tree: `6e45973f0ec9c784ffb7774b149cdae559df3a1d`.
-- Latest post-freeze change: CR-0002, publication commit `9f770f23c257a960a59faefe70d245a3bab52ce2`; evidence `CR_0002_OWNER_LEGAL_SEQUENCING_OVERRIDE_EVIDENCE_2026-08-28.md`, blob `9234fe5b764801db513df0c477120efd2b096e18`.
-- CR-0001 dependency repair remains incorporated in the validated planning tree.
-- Validation: 641 tasks, 849 dependency edges, 5,178 relationship entities, 20,463 targets, 0 broken links, 0 generated missing task IDs, 51 checksum entries valid.
+- Latest post-freeze change: `CR-0004` / `DEC-0051`, explicit Project Owner authority 2026-08-29.
+- CR-0004 planning publication commit: `aa875f6dbb4014edda9d80473963280a33306041`; durable evidence `CR_0004_PROVISIONAL_L4_BRAND_UX_DECOUPLING_EVIDENCE_2026-08-29.md`.
+- Manifest latest-change reconciliation commit: `50b2882` with repaired evidence record commit `e42f90d2be66405c41acecf2088e5e9e2e60f4f0`.
+- Current authoritative WBS blob: `6a25d63af125116a80f96ac0f1548b1ddb452a34`; relationship-index blob: `9ed219b4ccb6b05e68c6a264fc2b21b1008b02a4`; manifest blob: `acadf21483ee3fddd63ee57795126619f92a00f3`.
+- Deterministic validation after amendment/reconciliation: 641 tasks, 849 dependency edges, 5,178 relationship entities, 20,463 targets, 0 broken links, 0 generated missing task IDs; checksum inventory regenerated and verified.
+- CR-0004 changes only the provisional Brand/UX/prototype sequencing needed for internal L4 design: `TSK-0298` now depends on the accepted provisional L4 bridge `TSK-0139` instead of `TSK-0187`; `TSK-0309 -> TSK-0187` remains unchanged.
+- `TSK-0187` remains mandatory representative-parent behavioral validation; `RSK-0002` remains OPEN; LG-03/LG-04/LG-05/LG-06 remain non-PASS as applicable; no legal/privacy/participant/L5-L6 build/publication/payment/market/launch authority is created.
 
 ## Frozen technical identity
 
@@ -603,3 +606,17 @@ TSK-0628 does not create a new authorized implementation path: its direct shown 
 ## Exact next authoritative step
 
 Do not manufacture additional work. Resume only when current authority materially changes or a missing required predecessor/gate becomes durably satisfied. For the visible Brand/prototype chain, the earliest governing boundary is the deferred representative-parent behavioral-validation path: before `2027-08-27`, progression requires an explicit newer Project Owner reactivation/change that supersedes the current deferral and all then-current participant/legal/privacy/gate prerequisites; at or after `2027-08-27`, re-read current authority and re-evaluate the deferral/gates rather than assuming automatic activation. Any other owner-approved canonical change that creates a dependency-satisfied L4 task also requires fresh queue derivation before execution.
+
+
+## CR-0004 accepted stable baseline and queue reopening — 2026-08-29
+
+- Project Owner explicitly approved the controlled decoupling of remaining provisional internal L4 Brand/UX/prototype design from deferred representative-parent behavioral validation, while preserving `TSK-0187`/`RSK-0002` and every legal, privacy, participant, build, publication, payment and launch fence.
+- Impact analysis identified one inappropriate early hard edge: `TSK-0298 -> TSK-0187`. CR-0004 replaces it with `TSK-0298 -> TSK-0139`, the existing provisional L4 entry bridge. The downstream behavioral correction/freeze edge `TSK-0309 -> TSK-0187` is intentionally unchanged.
+- `ACC-0298` and `ACC-0299` were narrowed to provisional design-conformance semantics so internal acceptance cannot be misread as representative-parent comprehension, behavioral validation or deferred legal completion. `TSK-0301` remains `HUMAN_ONLY`.
+- Full deterministic validation and direct fence assertions passed on self-hosted run `33245631573` / job `99082479123`; manifest read-back then exposed stale `latest_change: CR-0003`, so runtime adoption was correctly stopped. Manifest reconciliation run `33245704038` / job `99082663878` passed and published the corrected `latest_change: CR-0004` baseline.
+- Corrected post-change queue derivation run `33245788893` / job `99082882103` parsed the 71 current durable runtime PASS IDs and returned exactly `CANDIDATE_COUNT=1`: `TSK-0298`, HIGH, `AUTO_ALLOWED`, hard dependency `TSK-0139` satisfied. It separately confirmed `TSK-0146` is not current runtime PASS.
+- No existing PASS was invalidated by CR-0004. All provisional work remains subject to contradictory future real-participant evidence reopening affected work.
+
+### Exact next authoritative step
+
+Execute `TSK-0298 — Create the evidence-grounded brand strategy, promise, personality, audience, differentiation, trust, and prohibited-expression brief` against current accepted Product/Brand/Experience, claims, trust and non-surveillance authority. Require explicit `RSK-0002` limitation and no claim of representative-parent validation, legal completion, build/publication/payment/launch readiness. After durable PASS/read-back, recompute the L4 queue.
