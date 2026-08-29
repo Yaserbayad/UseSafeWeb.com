@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-29T09:50:31Z
+**Updated:** 2026-08-29T09:54:41Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -637,3 +637,20 @@ Fresh dependency derivation with 72 durable PASS task IDs exposes both `TSK-0299
 ### Exact next authoritative step
 
 Execute `TSK-0299 — Develop the verbal system: descriptors, message hierarchy, tone rules, approved claims, prohibited claims, taglines, CTA language, and product terminology` against the accepted TSK-0298 strategy and current claims/content/localization authority. Preserve provisional-parent-comprehension and deferred-legal limitations. After PASS/read-back, recompute the queue.
+
+
+### TSK-0299 accepted stable state
+
+`TSK-0299 — Define tone, voice, terminology, trust language, protection-state language, and communication examples`: **PASS for provisional internal L4 verbal-system acceptance under DEC-0051/CR-0004**. Artifact `TSK_0299_PROVISIONAL_VERBAL_SYSTEM_2026-08-29.md`, blob `a4ff2314ff02c407249e8b5d4d6b9600b89403b3`, publication commit `5f9cd0f2521fb81ba5b3692e110c9c1b197b5804`; independent acceptance evidence `TSK_0299_PROVISIONAL_VERBAL_SYSTEM_EVIDENCE_2026-08-29.md`, blob `061bc40ebfa096ae4fc74b56b49a72248cd3b6c8`, publication commit `259dcd09eaac755c915b46d9db86a28b262fe824`.
+
+ACC-0299 is satisfied: the system is parent-facing, plain-language, child-aware, non-alarmist and non-technical by default; it preserves all TSK-0320 evidence-state semantics; approved, conditional and prohibited claims are explicit; non-surveillance/accountless trust language is bounded; CTA/terminology patterns are reusable across public/setup/help surfaces; localization semantics preserve evidence strength across en-GB and provisional tr-TR/ar; representative-parent comprehension and legal completion remain explicitly unproven.
+
+This PASS does not establish real-parent comprehension/preference/trust, legal completion, native-speaker publication readiness, implementation/build, LG-03/LG-04/LG-05/LG-06 PASS, participant processing, publication, payment, market activation or launch. `RSK-0002` remains OPEN.
+
+### Post-TSK-0299 L4 queue
+
+Fresh dependency derivation with 73 durable PASS task IDs selects `TSK-0302 — Develop and evaluate a small set of coherent visual identity directions` as the next dependency-satisfied L4 task. It is MEDIUM / AUTO_ALLOWED and depends on TSK-0298, now PASS. `TSK-0301` remains HUMAN_ONLY and is not eligible until both TSK-0302 and TSK-0299 are PASS.
+
+### Exact next authoritative step
+
+Execute TSK-0302 as bounded internal visual-direction exploration: create a small set of distinct, accessible, scalable, editable directions aligned to TSK-0298/0299, evaluate them without premature high-volume asset production, preserve non-surveillance/no-safety-guarantee constraints, then read back and reconcile before reaching HUMAN_ONLY TSK-0301.
