@@ -8,7 +8,7 @@ on:
       - .github/workflows/runtime-patch-capture.yml
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: usesafeweb-runtime-patch-capture
@@ -23,8 +23,8 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
-          persist-credentials: false
-      - name: Generate exact patched runtime payload
+          persist-credentials: true
+      - name: Apply exact patched runtime state
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -34,6 +34,13 @@ jobs:
           git diff --check
           printf 'PATCHED_STATE_SHA256='; sha256sum CURRENT_STATE.md | awk '{print $1}'
           printf 'PATCHED_STATE_BYTES='; wc -c < CURRENT_STATE.md | tr -d ' '
-          printf 'PATCHED_STATE_B64_BEGIN\n'
-          base64 -w0 CURRENT_STATE.md
-          printf '\nPATCHED_STATE_B64_END\n'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          if git diff --cached --quiet; then
+            echo 'RUNTIME_ALREADY_RECONCILED=PASS'
+            exit 0
+          fi
+          git commit -m 'state: reconcile TSK-0310 partial verification'
+          git push origin HEAD:main
+          echo 'RUNTIME_RECONCILIATION=PASS'
