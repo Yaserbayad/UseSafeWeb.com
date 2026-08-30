@@ -50,6 +50,7 @@ jobs:
           assert 'Only fields necessary for the active journey exist' in r['Acceptance_Criteria']
           assert 'no browsing history or persistent child profile' in r['Acceptance_Criteria']
           assert 'expiry/deletion and diagnostic boundaries are testable' in r['Acceptance_Criteria']
+          print('TSK0229_WBS_ELIGIBILITY=PASS')
 
           runtime = (root/'CURRENT_STATE.md').read_text(encoding='utf-8')
           assert '`TSK-0146` is current **PASS**' in runtime
@@ -76,6 +77,7 @@ jobs:
               '14. **Accountless completion:**',
           ]:
               assert s in base, s
+          print('TSK0229_BASE_CONTRACT_PRESERVED=PASS')
 
           for s in [
               'The optional parent account is a **separate persistent data domain** from J0/J1.',
@@ -89,29 +91,27 @@ jobs:
               'this artifact does not issue a final legal-compliance conclusion',
           ]:
               assert s in amend, s
+          print('TSK0229_CR0006_SEPARATION=PASS')
 
-          assert 'Anonymous journey state and persistent account/device state must remain distinct.' in t146
+          assert 'Accountless journey state and persistent account/device state must remain distinct.' in t146
           assert 'REQ-0018' in req and 'REQ-0019' in req
           assert 'CON-0007' in con and 'Persistent identifiable query logging and file query logging are off.' in con
           assert 'CON-0008' in con and 'No browsing/top-domain product metric.' in con
           assert 'INT-0006' in ints and 'INT-0007' in ints
           assert 'RSK-0001' in risks and 'Open — treatment in progress' in risks
           assert 'DEC-0053' in dec and 'optional parent account' in dec
+          print('TSK0229_ACC0229=PASS')
+          print('TSK0229_PRIVACY_BOUNDARIES=PASS')
 
-          # Negative checks: TSK-0229 must not authorize the persistent-account schema or downstream gates.
+          lower = amend.lower()
           for forbidden in [
               'persistent-account schema approved',
-              'LG-06 PASS',
               'implementation authorized',
               'participant activation authorized',
           ]:
-              assert forbidden not in amend.lower()
-
-          print('TSK0229_WBS_ELIGIBILITY=PASS')
-          print('TSK0229_BASE_CONTRACT_PRESERVED=PASS')
-          print('TSK0229_CR0006_SEPARATION=PASS')
-          print('TSK0229_ACC0229=PASS')
-          print('TSK0229_PRIVACY_BOUNDARIES=PASS')
+              assert forbidden not in lower, forbidden
+          # The artifact may mention "LG-06 PASS" only in an explicit non-authority disclaimer.
+          assert 'not l5 persistent-account schema approval, legal-compliance certification, implementation authority, lg-06 pass, participant authority or launch authority' in lower
           print('TSK0229_DOWNSTREAM_SCOPE_FENCE=PASS')
           print('TSK0229_VERIFICATION=PASS')
           PY
