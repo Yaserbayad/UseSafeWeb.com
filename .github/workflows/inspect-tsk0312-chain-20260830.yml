@@ -1,0 +1,43 @@
+name: Inspect TSK-0312 account dependency chain
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/inspect-tsk0312-chain-20260830.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Print TSK-0312 chain
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object CURRENT_STATE.md)" = "6731369b823c9a3b4c8c5b344ad67b990b68850a"
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "3bb1598a6233a2bbefa52c746a7621867c6c6e89"
+          python3 - <<'PY'
+          import csv,json
+          from pathlib import Path
+          rows=list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='')))
+          by={r['Task_ID']:r for r in rows}
+          fields=['Task_ID','Title','Lifecycle_Stage','Priority','Plan_Status','Execution_State','Dependencies','Primary_Owner','AI_Capability_A0_A4','Action_Authority','Acceptance_ID','Acceptance_Criteria','Verification_ID','Verification_Method','Evidence_ID','Requirement_Reference','Risk_Reference','Interface_Reference','Notes']
+          def slim(r): return {k:r.get(k,'') for k in fields}
+          def deps(r): return [x.strip() for x in (r.get('Dependencies') or '').replace(',',';').split(';') if x.strip()]
+          queue=['TSK-0312']; seen=set()
+          while queue:
+              tid=queue.pop(0)
+              if tid in seen or tid not in by: continue
+              seen.add(tid); r=by[tid]
+              print('TASK_'+tid+'='+json.dumps(slim(r),ensure_ascii=False,sort_keys=True))
+              for d in deps(r):
+                  if d in by:
+                      print('DEP_'+tid+'_'+d+'='+json.dumps(slim(by[d]),ensure_ascii=False,sort_keys=True))
+                      if (by[d].get('Execution_State') or '').strip()!='PASS': queue.append(d)
+          PY
