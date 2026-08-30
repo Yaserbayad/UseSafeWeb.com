@@ -1,0 +1,73 @@
+name: Verify TSK-0141 post-CR-0006
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-tsk0141-post-cr0006-20260830.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Verify current scope freeze against CR-0006
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object CURRENT_STATE.md)" = "6731369b823c9a3b4c8c5b344ad67b990b68850a"
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "3bb1598a6233a2bbefa52c746a7621867c6c6e89"
+          test "$(git hash-object Plans/Master/Registers/DECISIONS_TRIGGERS.md)" = "9cb2908f4c6f19cb38fce4a8aff71abca3b7b095"
+          test "$(git hash-object TSK_0141_PROVISIONAL_MINIMUM_PRODUCT_SCOPE_AND_NON_GOALS_2026-08-28.md)" = "c72bfd906fdca4a106dcd7d4ff458a2577e32c90"
+          test "$(git hash-object TSK_0146_VERSION_1_OPTIONAL_ACCOUNT_PRODUCT_BASELINE_2026-08-30.md)" = "9d3870d90add696fc352829fb4763c834b8d09af"
+          python3 - <<'PY'
+          import csv
+          from pathlib import Path
+          root=Path('.')
+          rows=list(csv.DictReader((root/'Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='')))
+          r=next(x for x in rows if x['Task_ID']=='TSK-0141')
+          assert r['Lifecycle_Stage']=='L4'
+          assert r['Dependencies']=='TSK-0139'
+          assert r['AI_Capability_A0_A4']=='A3'
+          assert r['Action_Authority']=='AUTO_ALLOWED'
+          assert r['Acceptance_ID']=='ACC-0141'
+          acc=r['Acceptance_Criteria']
+          for s in [
+            'Version 1 includes optional parent accounts and lightweight dashboard/device management',
+            'preserving the complete core setup/protection journey without login',
+            'Mandatory login, browsing/activity history, child accounts, unrestricted DNS administration',
+            'No capability may be described as behaviorally/user validated before the L8 controlled integrated-product pilot'
+          ]: assert s in acc, s
+          runtime=(root/'CURRENT_STATE.md').read_text(encoding='utf-8')
+          assert '### TSK-0139 accepted stable state' in runtime
+          assert '`TSK-0139 — Translate provisional L4 owner authorization into authorised product outcomes`: **PASS' in runtime
+          old=(root/'TSK_0141_PROVISIONAL_MINIMUM_PRODUCT_SCOPE_AND_NON_GOALS_2026-08-28.md').read_text(encoding='utf-8')
+          assert 'Persistence, accounts and a parent dashboard are not required in the active baseline.' in old
+          assert 'Mandatory UseSafeWeb account, Google sign-in or other customer authentication | DEFERRED' in old
+          assert 'Persistent parent dashboard / persistent device list | DEFERRED' in old
+          new=(root/'TSK_0146_VERSION_1_OPTIONAL_ACCOUNT_PRODUCT_BASELINE_2026-08-30.md').read_text(encoding='utf-8')
+          for s in [
+            '### 3.1 Accountless core — required',
+            '### 3.2 Optional parent account — required in Version 1',
+            'a lightweight parent dashboard/device list',
+            'DNS query or visited-domain history',
+            'child accounts or persistent child behavioral profiles',
+            'unrestricted/raw AdGuard administration data as a parent-facing product feature',
+            'Future mandatory login',
+            'RSK-0002 remains OPEN'
+          ]: assert s in new, s
+          dec=(root/'Plans/Master/Registers/DECISIONS_TRIGGERS.md').read_text(encoding='utf-8')
+          assert 'DEC-0053' in dec and 'optional parent account' in dec
+          assert 'DEC-0052' in dec and 'actual human/user validation begins only after LG-09 PASS in L8' in dec
+          print('TSK0141_DEPENDENCY=PASS')
+          print('TSK0141_STALE_PRECR0006_SCOPE_DETECTED=PASS')
+          print('TSK0141_CURRENT_SCOPE_MAPPING=PASS')
+          print('TSK0141_ACC0141=PASS')
+          print('TSK0141_NO_BEHAVIORAL_INFERENCE=PASS')
+          print('TSK0141_VERIFICATION=PASS')
+          PY
