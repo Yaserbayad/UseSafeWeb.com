@@ -1,0 +1,41 @@
+name: Audit TSK-0146 evidence
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/audit-tsk0146-evidence.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Reconstruct TSK-0146 evidence from current authority
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          test "$(git rev-parse HEAD:Plans/Master/WBS/master-wbs.csv)" = "f23b4f017d1baf73258fa30ecd71549bbfe1b815"
+          python3 - <<'PY'
+          import csv,json
+          from pathlib import Path
+          rows=list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='')))
+          r=next(x for x in rows if x['Task_ID'].strip()=='TSK-0146')
+          print('TSK0146_FULL_ROW='+json.dumps(r,ensure_ascii=False,sort_keys=True))
+          PY
+          echo '--- FILES WITH 0146 IN NAME ---'
+          find . -type f -not -path './.git/*' -printf '%P\n' | grep -i '0146' || true
+          echo '--- CONTENT REFERENCES OUTSIDE WBS/CURRENT_STATE ---'
+          grep -RIl --exclude='master-wbs.csv' --exclude='CURRENT_STATE.md' --exclude='audit-tsk0146-evidence.yml' 'TSK-0146' . 2>/dev/null | head -100 || true
+          echo '--- ACCOUNTLESS BASELINE CANDIDATES ---'
+          find . -type f -not -path './.git/*' -printf '%P\n' | grep -Ei '(0140|0141|0229|accountless|product.brief|baseline)' | head -120 || true
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'REPOSITORY_CLEAN=PASS'
