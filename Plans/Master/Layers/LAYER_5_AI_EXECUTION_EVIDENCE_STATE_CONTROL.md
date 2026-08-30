@@ -69,6 +69,15 @@ No hidden chain-of-thought is evidence. Useful evidence is a source-cited analys
 - `LG-06` and `LG-07` remain mandatory before L6 build; `LG-08` remains mandatory before L7 integrated verification; `LG-09` remains mandatory before any L8 participant activation. Applicable legal, privacy, security, safeguarding, platform, data, vendor, cost, and action-authority requirements remain independently controlling.
 - Do not resurrect the retired pre-product validation branch as a blocker during ordinary governed execution unless a later explicit owner decision supersedes DEC-0052. Contradictory real evidence obtained in L8 or later reopens materially affected product/UX/claims tasks under the ordinary evidence-precedence rule.
 
+### 5.3.5 Owner-required Version-1 optional account scope (DEC-0053 / CR-0006)
+
+- Effective 2026-08-30, Version 1 includes an optional parent account capability with secure authentication/session, minimum parent/device ownership persistence and lightweight dashboard/device management; the complete core safety setup/protection journey remains usable without login.
+- This activates the existing `EXC-0001` account/persistence/dashboard branch. It does not authorize browsing/query/activity history, child accounts, unrestricted DNS administration, mandatory login for core value, or a browser-visible AdGuard administration secret/control plane.
+- Prior PASS/evidence remains valid only for unchanged facts. Any PASS whose acceptance depended on accounts being excluded is reopened and re-evaluated against the revised contract.
+- Google/Firebase is the planned initial auth route, not a pre-approved production fact: current official terms, quotas/pricing, data/transfer/privacy/security behavior and failure/exit handling must be verified at the owning L5 task before architecture approval.
+- `LG-06` requires the revised dual-mode L4 product/experience baseline; `LG-07` requires account/session/data/vendor/privacy/security architecture; `LG-08` requires implementation; L7 requires auth/authz/CSRF/IDOR/ClientID/deletion/recovery acceptance. `DEC-0052/CR-0005` remains controlling for human-validation sequencing.
+- No public release, participant activation, payment, market activation or launch authority is created by this owner scope correction.
+
 ### 5.4 Evidence and PASS rules
 
 - Each task has VER-xxxx, EVD-xxxx and ACC-xxxx identifiers.

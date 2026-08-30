@@ -41,11 +41,11 @@ This section intentionally does **not** repeat task titles, acceptance criteria,
 
 ## 4.4 Customer-value critical path
 
-Owner-authorized product definition from current evidence -> service blueprint/friction budget/truth state -> brand/prototype -> internal/automated accessibility, browser/device and truth-state acceptance -> LG-06 decision -> architecture/security/privacy/delivery readiness -> LG-07 -> accountless public/setup build plus real DNS -> LG-08 -> integrated L7 acceptance/self-service/recovery -> LG-09 -> first real-user controlled pilot in L8 -> product correction and production decision -> production readiness -> staged launch -> persistence/support/root-cause improvement -> Year-1 decision. Pre-L8 work must never be labelled user/behaviorally validated.
+Owner-authorized product definition from current evidence -> service blueprint/friction budget/truth state -> brand/prototype -> internal/automated accessibility, browser/device and truth-state acceptance -> LG-06 decision -> architecture/security/privacy/delivery readiness -> LG-07 -> accountless-core plus optional parent-account/dashboard build and real DNS -> LG-08 -> integrated L7 acceptance/self-service/recovery -> LG-09 -> first real-user controlled pilot in L8 -> product correction and production decision -> production readiness -> staged launch -> persistence/support/root-cause improvement -> Year-1 decision. Pre-L8 work must never be labelled user/behaviorally validated.
 
 ## 4.5 Technical critical path
 
-Current technical/privacy/security readiness -> DNS endpoint/platform mechanism contract -> accountless app and DNS integration architecture -> versioned DNS recovery bundle -> production-grade Ubuntu 24.04 recovery path -> security/idempotency/failure-injection/clean-server acceptance -> LG-06/LG-07 -> integrated build -> L7 integrated release verification -> LG-09 -> first L8 real-user pilot -> production deployment/runbooks -> Year-1 maintenance and recovery rehearsals.
+Current technical/privacy/security readiness -> DNS endpoint/platform mechanism contract -> dual-mode accountless-core plus optional-account/session/dashboard and DNS integration architecture -> versioned DNS recovery bundle -> production-grade Ubuntu 24.04 recovery path -> security/idempotency/failure-injection/clean-server acceptance -> LG-06/LG-07 -> integrated build -> L7 integrated release verification -> LG-09 -> first L8 real-user pilot -> production deployment/runbooks -> Year-1 maintenance and recovery rehearsals.
 
 ## 4.6 Legal/safety gate path
 

@@ -24996,10 +24996,6 @@ entities:
       type: belongs_to_deliverable
     - target: L5
       type: belongs_to_lifecycle
-    - target: TSK-0043
-      type: depends_on
-    - target: TSK-0321
-      type: depends_on
     - target: ACC-0052
       type: acceptance
     - target: VER-0052
@@ -25022,6 +25018,14 @@ entities:
       type: governed_by
     - target: USW-04.05.02.001
       type: migrated_from
+    - target: TSK-0043
+      type: depends_on
+    - target: TSK-0321
+      type: depends_on
+    - target: TSK-0309
+      type: depends_on
+    - target: TSK-0628
+      type: depends_on
     source: WBS/master-wbs.csv
     type: task
   TSK-0053:
@@ -34788,10 +34792,6 @@ entities:
       type: belongs_to_deliverable
     - target: L4
       type: belongs_to_lifecycle
-    - target: TSK-0310
-      type: depends_on
-    - target: TSK-0187
-      type: depends_on
     - target: ACC-0309
       type: acceptance
     - target: VER-0309
@@ -34816,6 +34816,12 @@ entities:
       type: governed_by
     - target: CON-0023
       type: governed_by
+    - target: TSK-0310
+      type: depends_on
+    - target: TSK-0321
+      type: depends_on
+    - target: TSK-0187
+      type: depends_on
     source: WBS/master-wbs.csv
     type: task
   TSK-0310:
@@ -35036,10 +35042,6 @@ entities:
       type: belongs_to_deliverable
     - target: L4
       type: belongs_to_lifecycle
-    - target: TSK-0149
-      type: depends_on
-    - target: TSK-0229
-      type: depends_on
     - target: ACC-0315
       type: acceptance
     - target: VER-0315
@@ -35060,6 +35062,12 @@ entities:
       type: governed_by
     - target: CON-0017
       type: governed_by
+    - target: TSK-0149
+      type: depends_on
+    - target: TSK-0229
+      type: depends_on
+    - target: TSK-0142
+      type: depends_on
     source: WBS/master-wbs.csv
     type: task
   TSK-0316:
@@ -35256,10 +35264,6 @@ entities:
       type: belongs_to_deliverable
     - target: L4
       type: belongs_to_lifecycle
-    - target: TSK-0323
-      type: depends_on
-    - target: TSK-0324
-      type: depends_on
     - target: ACC-0321
       type: acceptance
     - target: VER-0321
@@ -35282,6 +35286,12 @@ entities:
       type: governed_by
     - target: USW-04.03.03.004
       type: migrated_from
+    - target: TSK-0323
+      type: depends_on
+    - target: TSK-0324
+      type: depends_on
+    - target: TSK-0333
+      type: depends_on
     source: WBS/master-wbs.csv
     type: task
   TSK-0322:
@@ -35526,8 +35536,6 @@ entities:
       type: belongs_to_deliverable
     - target: L4
       type: belongs_to_lifecycle
-    - target: TSK-0325
-      type: depends_on
     - target: ACC-0328
       type: acceptance
     - target: VER-0328
@@ -35550,6 +35558,10 @@ entities:
       type: governed_by
     - target: USW-04.03.02.001
       type: migrated_from
+    - target: TSK-0325
+      type: depends_on
+    - target: TSK-0315
+      type: depends_on
     source: WBS/master-wbs.csv
     type: task
   TSK-0329:
@@ -35564,8 +35576,6 @@ entities:
       type: belongs_to_deliverable
     - target: L4
       type: belongs_to_lifecycle
-    - target: TSK-0328
-      type: depends_on
     - target: ACC-0329
       type: acceptance
     - target: VER-0329
@@ -35588,6 +35598,10 @@ entities:
       type: governed_by
     - target: USW-04.03.02.002
       type: migrated_from
+    - target: TSK-0328
+      type: depends_on
+    - target: TSK-0312
+      type: depends_on
     source: WBS/master-wbs.csv
     type: task
   TSK-0330:
@@ -35720,12 +35734,6 @@ entities:
       type: belongs_to_deliverable
     - target: L4
       type: belongs_to_lifecycle
-    - target: TSK-0335
-      type: depends_on
-    - target: TSK-0334
-      type: depends_on
-    - target: TSK-0146
-      type: depends_on
     - target: ACC-0333
       type: acceptance
     - target: VER-0333
@@ -35748,6 +35756,14 @@ entities:
       type: governed_by
     - target: USW-04.03.02.006
       type: migrated_from
+    - target: TSK-0335
+      type: depends_on
+    - target: TSK-0334
+      type: depends_on
+    - target: TSK-0146
+      type: depends_on
+    - target: TSK-0331
+      type: depends_on
     source: WBS/master-wbs.csv
     type: task
   TSK-0334:
@@ -46720,8 +46736,6 @@ entities:
       type: belongs_to_deliverable
     - target: L4
       type: belongs_to_lifecycle
-    - target: TSK-0319
-      type: depends_on
     - target: ACC-0628
       type: acceptance
     - target: VER-0628
@@ -46740,6 +46754,10 @@ entities:
       type: governed_by
     - target: CON-0010
       type: governed_by
+    - target: TSK-0319
+      type: depends_on
+    - target: TSK-0331
+      type: depends_on
     source: WBS/master-wbs.csv
     type: task
   TSK-0629:

@@ -17,7 +17,8 @@
 
 | In scope now | Explicitly out of active baseline / conditional only |
 | --- | --- |
-| Accountless discovery and guided first-phone setup | Mandatory account/authentication/persistent parent dashboard (EXC-0001) |
+| Accountless discovery and guided first-phone setup | Mandatory login for core value; child accounts; broad DNS administration |
+| Optional parent account with secure sign-in, minimum parent/device persistence and lightweight dashboard/device management | Browsing/activity history or invasive monitoring |
 | Native Apple/Google safeguard coordination | Rebuilding Apple/Google native parental controls |
 | AdGuard-backed encrypted DNS baseline | Customer-facing generic DNS administration console |
 | One relevant external-service safeguard | App catalogue or broad unsupported service configuration |
@@ -44,7 +45,7 @@ The governing rule is: **product correctness, security/privacy, reliability/trus
 | Principle | Binding interpretation |
 | --- | --- |
 | Near-zero friction | Every click/field/choice/account/confirmation/manual step requires a documented reason; remove anything not needed for decision, safety, or technical execution. |
-| No mandatory account | Immediate accountless value is the baseline; optional persistence only after EXC-0001 trigger and full approval. |
+| Optional Version-1 account | Version 1 includes parent accounts and a lightweight dashboard; the complete core safety setup remains usable without login unless a later owner decision explicitly changes that rule. |
 | Installation | Use automatic/profile/configuration installation where supported/reliable; otherwise use the simplest technically correct platform-specific fallback. |
 | Self-service | Ordinary issues are prevented or solved by UX, automated verification/troubleshooting, concise knowledge, AI assistance, recovery/removal. Repeated human help is a defect signal. |
 | Truth | Parent confirmation is never technical verification; DNS/native/external-service limitations are disclosed at the relevant moment. |
@@ -82,9 +83,9 @@ The governing rule is: **product correctness, security/privacy, reliability/trus
 | Backend | AdGuard, frozen unless verified material blocker/incompatibility/security/privacy/legal failure requires owner reconsideration. |
 | Encrypted DNS | Essential. |
 | Hosting | Microsoft Azure; owner provisions the base Azure VMs manually, and project automation begins only after an approved VM is available and reachable. |
-| Application | One accountless-first full-stack TypeScript + Next.js application under top-level `/website`, covering the public website and setup/product surfaces in one deployable codebase. |
+| Application | One full-stack TypeScript + Next.js application under top-level `/website`, covering the public website, accountless core setup/product path and optional Version-1 parent account/dashboard surfaces in one deployable codebase. |
 | Web UI/content | A mature accessible component library with light UseSafeWeb customization plus a lightweight browser-editable CMS; exact library/CMS implementation is selected at architecture execution against these constraints, not by adding a second application platform. |
-| Application state | No application database by default; introduce persistent local storage only for a concrete validated requirement. Stripe/PayPal remain billing source of truth with only minimum reliable local references if required. |
+| Application state | Accountless journey state remains minimum and short-lived. Version-1 accounts may persist only the minimum parent identity, session, device-ownership/settings and lifecycle metadata required for the approved dashboard; no browsing/query/activity history. Stripe/PayPal remain billing source of truth with only minimum reliable local references if required. |
 | Repository/deployment layout | One canonical monorepo; `/website` owns the web application and `/infrastructure/adguard-server` owns the reproducible AdGuard/server deployment system and non-secret deployment material. |
 | Server topology | Owner provides two separate fresh Ubuntu 24.04 LTS Azure VMs: one web/application server and one AdGuard/DNS server; Azure control-plane configuration is owner-managed; one AdGuard node initially; direct host installation is preferred and Docker/container orchestration is not a default requirement. |
 | Environments | Production/pilot plus CI/ephemeral preview/test environments; no persistent staging unless evidence later justifies it. |

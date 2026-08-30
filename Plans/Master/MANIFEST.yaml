@@ -4,7 +4,7 @@ canonical_root: Plans/Master
 source_plan:
   name: UseSafeWeb_Master_Plan_FINAL.md
   sha256: 04fe68fe4e922322cb878c3c35f97e0b5b4862a333df4c313cbfc2b359ebfc1e
-  status: 2.0-owner-frozen / OWNER_FREEZE_2026-08-27 / OWNER_TECHNICAL_COMMERCIAL_AMENDMENT_APPLIED / OWNER_LEGAL_HOLD_ACTIVE_TO_2027-08-27 / OWNER_AZURE_HANDOFF_BOUNDARY_APPLIED_2026-08-27 / POST_FREEZE_CR_0001_DEPENDENCY_REPAIR_2026-08-27 / OWNER_LEGAL_SEQUENCING_OVERRIDE_ACTIVE_TO_2027-08-27 / CR_0003_CR_0004_HISTORICAL_SEQUENCING_SUPERSEDED / OWNER_INTEGRATED_PRODUCT_FIRST_HUMAN_VALIDATION_SEQUENCE_2026-08-29 / PRE_PRODUCT_HUMAN_VALIDATION_EXCLUDED / deterministic validation pending CR-0005 execution readback
+  status: 2.0-owner-frozen / OWNER_FREEZE_2026-08-27 / OWNER_TECHNICAL_COMMERCIAL_AMENDMENT_APPLIED / OWNER_LEGAL_HOLD_ACTIVE_TO_2027-08-27 / OWNER_AZURE_HANDOFF_BOUNDARY_APPLIED_2026-08-27 / POST_FREEZE_CR_0001_DEPENDENCY_REPAIR_2026-08-27 / OWNER_LEGAL_SEQUENCING_OVERRIDE_ACTIVE_TO_2027-08-27 / CR_0003_CR_0004_HISTORICAL_SEQUENCING_SUPERSEDED / OWNER_INTEGRATED_PRODUCT_FIRST_HUMAN_VALIDATION_SEQUENCE_2026-08-29 / PRE_PRODUCT_HUMAN_VALIDATION_EXCLUDED / OWNER_V1_OPTIONAL_ACCOUNT_SCOPE_2026-08-30 / deterministic validation pending CR-0006 execution readback
 migration_prompt:
   name: UseSafeWeb_Master_Plan_Modularization_Prompt(1).txt
   sha256: 49031063a84f9b56ed98b5b07782f1d9818b01b84e0761d3c48018fc07ef5e5b
@@ -337,21 +337,20 @@ canonicalization:
   canonical_activation_condition: TSK-0009 publication PASS plus TSK-0011 exact GitHub read-back PASS; volatile execution state is then rebaselined in repository CURRENT_STATE.md under TSK-0010
 
 post_freeze_change_control:
-  latest_change: CR-0005
-  date: '2026-08-29'
-  status: owner-authorized integrated-product-first human-validation sequencing; pre-product parent/user/participant testing excluded from active L4-L7 progression; first real-user validation occurs in L8 only after LG-09 PASS; canonical reliance requires deterministic validation plus GitHub publication/read-back
-  authority: explicit current Project Owner instruction 2026-08-29; DEC-0052; actual applicable safety/legal/security/privacy/platform reality remains higher authority
-  affected_tasks:
-  - all 31 L3 tasks (NOT_APPLICABLE + PASS exclusion records; not executed)
-  - TSK-0187 (excluded pre-product representative-parent validation)
-  - TSK-0326 (excluded pre-product experiment-evidence synthesis)
-  - TSK-0336 (excluded pre-product human usability/comprehension testing)
-  - TSK-0309 / TSK-0327 / TSK-0399 (rebaselined to internal/automated technical/product acceptance before L8)
+  latest_change: CR-0006
+  date: '2026-08-30'
+  status: owner-required Version-1 optional parent-account scope activated while preserving the complete accountless core path; prior LG-06 readiness is superseded; canonical reliance requires deterministic validation plus GitHub publication/read-back
+  authority: explicit current Project Owner instruction 2026-08-30; DEC-0053; DEC-0052/CR-0005 remains controlling for human-validation sequencing; actual applicable safety/legal/security/privacy/platform reality remains higher authority
+  affected_scope:
+  - EXC-0001 activated for bounded Version-1 parent account/auth/session/minimum persistence/lightweight dashboard/device management
+  - prior account-exclusion-dependent L4 PASS evidence reopened for revised acceptance
+  - existing dormant account architecture/build/QA tasks activated without bypassing lifecycle or gates
   affected_gates:
-  - LG-03 / LG-04 / LG-05 (inactive/not-applicable to current pre-product path)
-  - LG-06 / LG-07 / LG-08 / LG-09 (remain mandatory technical/product/build/release gates; no real-human evidence required before LG-09)
-  - LG-10 (retained as post-L8 human/pilot evidence checkpoint)
-  semantic_delta: no pre-product human/user validation may block product completion; exclusion-PASS is not behavioral evidence; rigorous internal/automated/browser/device/accessibility/security/privacy/recovery/operational verification remains mandatory; first actual human/user testing starts in L8 after LG-09
+  - LG-06 requires revised dual-mode product/brand/experience acceptance
+  - LG-07 requires active account/session/data/vendor/privacy/security architecture evidence
+  - LG-08 requires account capability implementation while preserving accountless core
+  - LG-09 remains the prerequisite to first L8 real-user validation under DEC-0052
+  semantic_delta: Version 1 has optional accounts and a lightweight dashboard; core safety value remains usable without login; mandatory login, browsing/activity history, child accounts and broad DNS administration remain excluded; old accountless-only freeze/readiness evidence is not sufficient for the revised gate
   change_record: Registers/EXCEPTIONS_CHANGE_CONTROLS.md#post-freeze-material-change-records
 
 generated_assembly_contract:

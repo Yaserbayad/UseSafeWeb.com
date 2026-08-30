@@ -52,17 +52,25 @@ if cycle: err('dependency cycle')
 valid={('A1','HUMAN_ONLY'),('A2','HUMAN_APPROVAL_REQUIRED'),('A3','AUTO_ALLOWED'),('A4','AUTO_ALLOWED')}
 for r in rows:
     if (r['AI_Capability_A0_A4'],r['Action_Authority']) not in valid: err('authority mismatch '+r['Task_ID'])
-# specific accountless reconciliation controls
-corrected={'TSK-0024','TSK-0042','TSK-0044','TSK-0048','TSK-0049','TSK-0051','TSK-0052','TSK-0053','TSK-0055','TSK-0056','TSK-0141','TSK-0233','TSK-0235','TSK-0240','TSK-0246','TSK-0251','TSK-0252','TSK-0265','TSK-0288','TSK-0313','TSK-0336','TSK-0337','TSK-0340','TSK-0355','TSK-0485','TSK-0497','TSK-0499','TSK-0507','TSK-0516','TSK-0524','TSK-0534','TSK-0553','TSK-0586'}
+# current Version-1 optional-account reconciliation controls
 by={r['Task_ID']:r for r in rows}
-for tid in corrected:
-    if tid not in by: err('missing corrected task '+tid)
-# forbid stale active mandatory-identity phrases in corrected tasks
-for tid in corrected:
+required={'TSK-0146','TSK-0312','TSK-0142','TSK-0329','TSK-0331','TSK-0332','TSK-0356','TSK-0377','TSK-0394','TSK-0523'}
+for tid in required:
+    if tid not in by: err('missing V1 account task '+tid)
+    elif by[tid]['Plan_Status']=='DEFERRED': err('V1 account task still deferred '+tid)
+for tid in ['TSK-0187','TSK-0326','TSK-0336']:
+    if by[tid]['Plan_Status']!='NOT_APPLICABLE' or by[tid]['Execution_State']!='PASS': err('CR-0005 exclusion changed '+tid)
+if 'optional parent account' not in by['TSK-0146']['Acceptance_Criteria'].lower(): err('V1 account baseline missing')
+if 'without login' not in by['TSK-0146']['Acceptance_Criteria'].lower(): err('accountless core guarantee missing')
+if 'optional' not in by['TSK-0052']['Acceptance_Criteria'].lower(): err('LG-06 optional account contract missing')
+if 'accountless' not in by['TSK-0052']['Acceptance_Criteria'].lower(): err('LG-06 accountless core contract missing')
+if 'optional-account boundary' not in by['TSK-0398']['Title'].lower(): err('L7 optional account boundary verification missing')
+for tid in ['TSK-0146','TSK-0052','TSK-0398','TSK-0524']:
     a=by[tid]['Acceptance_Criteria'].lower()
-    bad=['firebase uid','google sign-in','google authentication','authenticated parent dashboard','parent/device ownership store','parent-device idor','production-like firebase/google auth']
-    for b in bad:
-        if b in a: err(f'stale account architecture remains {tid}: {b}')
+    if 'browsing/activity history' not in a and 'browsing/query/activity history' not in a: err('V1 privacy exclusion missing '+tid)
+old_note='deferred_exception exc-0001: account/persistence capability is not in the current accountless baseline'
+for r in rows:
+    if old_note in r['Notes'].lower(): err('stale EXC-0001 task note '+r['Task_ID'])
 # publication tree semantics
 for tid in ['TSK-0009','TSK-0011','TSK-0017']:
     if 'Plans/' not in by[tid]['Acceptance_Criteria'] and 'Plans/' not in by[tid]['Title']: err('publication not modular '+tid)
