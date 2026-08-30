@@ -1,0 +1,101 @@
+name: Verify TSK-0146 Version-1 baseline
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-tsk0146-v1-baseline-20260830.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Verify canonical sources and ACC-0146 baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "3bb1598a6233a2bbefa52c746a7621867c6c6e89"
+          test "$(git hash-object Plans/Master/Registers/REQUIREMENTS.md)" = "a2212059f69c4602eb0c05961d5d1639e3543f83"
+          test "$(git hash-object Plans/Master/Registers/CONSTRAINTS.md)" = "9464720bff94fd569e3b939568996a26eed83ca1"
+          test "$(git hash-object Plans/Master/Registers/INTERFACES.md)" = "b01b47e48fcd1bd5b9697e0ab35b496059e7eb6c"
+          test "$(git hash-object Plans/Master/Registers/RISKS.md)" = "0ebb7ab97ec4d418e61eaae0fce6a35e3a9e36ec"
+          test "$(git hash-object Plans/Master/Registers/DECISIONS_TRIGGERS.md)" = "9cb2908f4c6f19cb38fce4a8aff71abca3b7b095"
+          test "$(git hash-object TSK_0146_VERSION_1_OPTIONAL_ACCOUNT_PRODUCT_BASELINE_2026-08-30.md)" = "9d3870d90add696fc352829fb4763c834b8d09af"
+
+          python3 - <<'PY'
+          import csv
+          from pathlib import Path
+
+          root = Path('.')
+          rows = list(csv.DictReader((root/'Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='')))
+          r = next(x for x in rows if x['Task_ID'] == 'TSK-0146')
+          assert r['Title'] == 'Freeze Version-1 optional-account product baseline and accountless core path'
+          assert r['Lifecycle_Stage'] == 'L4'
+          assert r['Plan_Status'] == 'PLANNED'
+          assert r['Execution_State'] == 'TODO'
+          assert r['Dependencies'] == ''
+          assert r['AI_Capability_A0_A4'] == 'A3'
+          assert r['Action_Authority'] == 'AUTO_ALLOWED'
+          assert r['Acceptance_ID'] == 'ACC-0146'
+          assert r['Verification_ID'] == 'VER-0146'
+          acc = r['Acceptance_Criteria']
+          for s in [
+              'optional parent account',
+              'lightweight dashboard/device-management capability',
+              'complete core setup/protection journey remains usable without login',
+              'minimum identity/device persistence',
+              'authentication/session',
+              'deletion/recovery',
+              'privacy/security and failure boundaries',
+              'prohibits browsing/activity history, child accounts and broad DNS administration',
+              'future mandatory-login expansion to explicit Project Owner authority',
+          ]:
+              assert s in acc, s
+
+          req = (root/'Plans/Master/Registers/REQUIREMENTS.md').read_text(encoding='utf-8')
+          con = (root/'Plans/Master/Registers/CONSTRAINTS.md').read_text(encoding='utf-8')
+          dec = (root/'Plans/Master/Registers/DECISIONS_TRIGGERS.md').read_text(encoding='utf-8')
+          risk = (root/'Plans/Master/Registers/RISKS.md').read_text(encoding='utf-8')
+          art = (root/'TSK_0146_VERSION_1_OPTIONAL_ACCOUNT_PRODUCT_BASELINE_2026-08-30.md').read_text(encoding='utf-8')
+
+          assert 'REQ-0011' in req and 'optional parent account capability and lightweight dashboard/device management' in req
+          assert 'CON-0010' in con and 'Version 1 includes optional parent accounts' in con
+          assert 'DEC-0053' in dec and 'Google/Firebase remains the planned initial authentication route' in dec
+          assert 'DEC-0052' in dec and 'actual human/user validation begins only after LG-09 PASS in L8' in dec
+          assert 'RSK-0002' in risk and 'Human behavioral/usability/comprehension evidence is intentionally deferred until the L8 controlled integrated-product pilot' in risk
+
+          required = [
+              '### 3.1 Accountless core — required',
+              '### 3.2 Optional parent account — required in Version 1',
+              'Authentication-provider or account-datastore failure must not convert these core capabilities into a mandatory-login flow.',
+              'Google/Firebase is the planned initial authentication route under DEC-0053.',
+              'Accountless journey state and persistent account/device state must remain distinct.',
+              'DNS query or visited-domain history',
+              'child accounts or persistent child behavioral profiles',
+              'unrestricted/raw AdGuard administration data as a parent-facing product feature',
+              'Account ownership, device registration or dashboard presence must never be displayed as proof that DNS protection is technically active.',
+              'Future mandatory login',
+              'RSK-0002 remains OPEN',
+              'first real-user testing remains L8 after LG-09 PASS',
+          ]
+          for s in required:
+              assert s in art, s
+
+          # The artifact must not claim downstream implementation, vendor acceptance, LG-06 PASS, or human validation.
+          assert 'This L4 baseline does **not** certify that vendor choice' in art
+          assert 'not LG-06 PASS, build approval, launch approval, or human/user validation' in art
+          assert 'does not claim those controls are implemented' in art
+
+          print('TSK0146_WBS_CONTRACT=PASS')
+          print('TSK0146_SOURCE_BINDINGS=PASS')
+          print('TSK0146_ACC_REQUIRED_CLAUSES=PASS')
+          print('TSK0146_SCOPE_NON_GOALS=PASS')
+          print('TSK0146_NO_DOWNSTREAM_PASS_INFERENCE=PASS')
+          print('TSK0146_VERIFICATION=PASS')
+          PY
