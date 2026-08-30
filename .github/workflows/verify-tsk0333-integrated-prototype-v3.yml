@@ -1,0 +1,28 @@
+name: Verify TSK-0333 integrated prototype v3
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/verify-tsk0333-integrated-prototype-v3.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Execute full verifier against corrected app blob
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD:prototype/TSK-0333/app.mjs)" = "95427c081ae6b2dadc259ce93ac9be6ce13b730d"
+          awk 'f{sub(/^          /,""); print} /^        run: \|$/{f=1; next}' .github/workflows/verify-tsk0333-integrated-prototype.yml > /tmp/tsk0333-full-verifier.sh
+          sed -i 's/1d4674285a63ae32ae3e9472cc4854b819e2ece3/95427c081ae6b2dadc259ce93ac9be6ce13b730d/g' /tmp/tsk0333-full-verifier.sh
+          test -s /tmp/tsk0333-full-verifier.sh
+          bash /tmp/tsk0333-full-verifier.sh
