@@ -1,0 +1,77 @@
+name: Verify TSK-0140 post-CR-0006 candidate
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-tsk0140-post-cr0006-candidate-20260830.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Verify revised product brief preparation
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object CURRENT_STATE.md)" = "f72be596af026e9ea112f4017997578c7ac5737c"
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "3bb1598a6233a2bbefa52c746a7621867c6c6e89"
+          test "$(git hash-object Plans/Master/Registers/DECISIONS_TRIGGERS.md)" = "9cb2908f4c6f19cb38fce4a8aff71abca3b7b095"
+          test "$(git hash-object Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md)" = "864ce0c5b893930f24dc3bde814797b55fa0fa7e"
+          test "$(git hash-object TSK_0138_POST_CR0006_UNRESOLVED_PRODUCT_ASSUMPTIONS_AND_OWNER_DECISIONS_2026-08-30.md)" = "a628d84afda666b99e05e494a921fb01e73ac930"
+          test "$(git hash-object TSK_0140_PROVISIONAL_PRODUCT_BRIEF_CANDIDATE_2026-08-28.md)" = "334bd2e8513d3800573e1d1e9ec569ae3ff50432"
+          test "$(git hash-object TSK_0140_POST_CR0006_PRODUCT_BRIEF_CANDIDATE_2026-08-30.md)" = "955ebc6a4592439c3d2edbedde3671fd910fac7c"
+          python3 - <<'PY'
+          import csv
+          from pathlib import Path
+          root=Path('.')
+          rows=list(csv.DictReader((root/'Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='')))
+          r=next(x for x in rows if x['Task_ID']=='TSK-0140')
+          assert r['Lifecycle_Stage']=='L4'
+          assert r['Dependencies']=='TSK-0138'
+          assert r['AI_Capability_A0_A4']=='A3'
+          assert r['Action_Authority']=='AUTO_ALLOWED'
+          assert r['Acceptance_ID']=='ACC-0140'
+          assert 'reviewed by owner, product, network, privacy, security, UX, support, and finance' in r['Acceptance_Criteria']
+          runtime=(root/'CURRENT_STATE.md').read_text(encoding='utf-8')
+          assert '## TSK-0138 current accepted stable state — 2026-08-30 — POST-CR-0006' in runtime
+          assert '`TSK-0138 — Register unresolved product assumptions and owner decisions`: **PASS**' in runtime
+          old=(root/'TSK_0140_PROVISIONAL_PRODUCT_BRIEF_CANDIDATE_2026-08-28.md').read_text(encoding='utf-8')
+          assert 'persistent parent dashboard or persistent device list' in old
+          assert 'No mandatory account' in old
+          new=(root/'TSK_0140_POST_CR0006_PRODUCT_BRIEF_CANDIDATE_2026-08-30.md').read_text(encoding='utf-8')
+          required=[
+              'Version 1 is **dual-mode**',
+              'complete core setup/protection journey works **without login**',
+              '### 5.2 Optional parent account — required capability in Version 1',
+              'planned initial sign-in route: Google social sign-in',
+              'minimum parent/device ownership persistence',
+              'lightweight parent dashboard/device list',
+              'mandatory login for core safety value',
+              'browsing history, DNS-query/visited-domain/top-domain/activity reporting',
+              'child accounts, child behavioral profiles or surveillance data',
+              'unrestricted/raw customer-facing AdGuard administration',
+              'no automatic anonymous-state-to-account join/conversion/promotion is authorized',
+              'Account/device ownership never substitutes for technical Protection Map verification',
+              'Account/login/dashboard surfaces inherit the same accessibility/localization/truth requirements',
+              'ACC-0140:** **NOT YET PASS — PROJECT OWNER REVIEW OF THIS CURRENT CANDIDATE REQUIRED.'
+          ]
+          for token in required: assert token in new, token
+          for fn in ['Product','Network','Privacy','Security','UX','Support','Finance']:
+              assert f'| {fn} | **No canonical conflict found.**' in new, fn
+          assert 'Historical owner approval of the 2026-08-28 brief is not reused as approval' in new
+          assert 'first begins only in L8 after LG-09' in new
+          assert 'RSK-0002' in new
+          assert 'does not authorize LG-06' in new
+          assert 'Until explicit owner approval/rework is recorded, TSK-0140 remains non-PASS and TSK-0312 remains dependency-blocked.' in new
+          print('TSK0140_DEPENDENCY=PASS')
+          print('TSK0140_OLD_SCOPE_STALE=PASS')
+          print('TSK0140_DUAL_MODE_SCOPE=PASS')
+          print('TSK0140_PRIVACY_SECURITY_FENCES=PASS')
+          print('TSK0140_CROSS_FUNCTIONAL_ANALYTICAL_REVIEW=PASS')
+          print('TSK0140_OWNER_REVIEW_BOUNDARY=PASS')
+          print('TSK0140_PREPARATION_VERIFICATION=PASS')
+          PY
