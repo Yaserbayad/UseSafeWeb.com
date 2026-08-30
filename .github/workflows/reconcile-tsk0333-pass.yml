@@ -1,0 +1,36 @@
+name: Reconcile TSK-0333 PASS
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/reconcile-tsk0333-pass.yml
+permissions:
+  contents: write
+jobs:
+  reconcile:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - name: Reconcile current runtime PASS
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          test "$(git rev-parse HEAD:CURRENT_STATE.md)" = "75d077675ed09d7d5e42f470416b486258bd0857"
+          test "$(git rev-parse HEAD:Plans/Master/WBS/master-wbs.csv)" = "f23b4f017d1baf73258fa30ecd71549bbfe1b815"
+          test "$(git rev-parse HEAD:TSK_0333_END_TO_END_RESPONSIVE_INTERACTIVE_PROTOTYPE_EVIDENCE_2026-08-30.md)" = "2c7a359a1f55465ee9caed0ec107305141cdb148"
+          test "$(git rev-parse HEAD:prototype/TSK-0333/app.mjs)" = "95427c081ae6b2dadc259ce93ac9be6ce13b730d"
+          python3 .github/scripts/reconcile_tsk0333_pass.py
+          git diff --check
+          [[ "$(git diff --name-only)" == "CURRENT_STATE.md" ]]
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          [[ "$(git diff --cached --name-only)" == "CURRENT_STATE.md" ]]
+          git commit -m 'state: accept TSK-0333 integrated prototype'
+          git push origin HEAD:main
+          echo "RUNTIME_COMMIT=$(git rev-parse HEAD)"
+          echo "RUNTIME_STATE_BLOB=$(git rev-parse HEAD:CURRENT_STATE.md)"
+          sha256sum CURRENT_STATE.md | sed 's/^/RUNTIME_STATE_SHA256=/'
