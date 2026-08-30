@@ -1,0 +1,71 @@
+name: Verify TSK-0335 candidate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/verify-tsk0335-candidate.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify authority pins and TSK-0335 contract
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          test "$(git rev-parse HEAD:Plans/Master/WBS/master-wbs.csv)" = "f23b4f017d1baf73258fa30ecd71549bbfe1b815"
+          test "$(git rev-parse HEAD:TSK_0320_PROTECTION_STATE_MODEL_AND_COPY_RULES_2026-08-28.md)" = "1146f7622f434590dde1253d11f14fb6a87e19de"
+          test "$(git rev-parse HEAD:prototype/TSK-0324/UI_COMPONENT_RULES.md)" = "0b7012a12070f7eccf45a1bbb2f453fde8507ff6"
+          test "$(git rev-parse HEAD:prototype/TSK-0325/SERVICE_BLUEPRINT.md)" = "1701f5f7b13ac8f7fa3092e39005b3da7627c89f"
+          test "$(git rev-parse HEAD:prototype/TSK-0328/INFORMATION_ARCHITECTURE_NAVIGATION.md)" = "4efb624005061e242e427994953d0fc00fcd745f"
+          test "$(git rev-parse HEAD:design/TSK-0330/PHONE_INTERNET_SERVICES_SETUP_FLOWS_CANDIDATE.md)" = "07fa10b3fa9b91ddd02f19f5d1c68b15184677a7"
+          test "$(git rev-parse HEAD:design/TSK-0334/SUPPORT_FALSE_POSITIVE_REMOVAL_RECONFIGURATION_FLOWS_CANDIDATE.md)" = "44fab92b51ae8ed8b6f5f325ba1558bcd297eb5f"
+          test "$(git rev-parse HEAD:design/TSK-0335/PROTECTION_MAP_COVERAGE_LIMIT_INTERACTIONS_CANDIDATE.md)" = "7c65a697a98961d0df278658e59262ce39874ff5"
+          python3 - <<'PY'
+          import csv,re
+          from pathlib import Path
+          rows=list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='')))
+          r=next(x for x in rows if x['Task_ID'].strip()=='TSK-0335')
+          assert r['Title'].strip()=='Design Protection Map and coverage-limit interactions'
+          assert r['Dependencies'].strip()=='TSK-0330'
+          assert r['Action_Authority'].strip()=='HUMAN_ONLY'
+          ac=r['Acceptance_Criteria'].lower()
+          for x in ['never labels parent confirmation as verification','exposes material gaps at the right time','deterministic internal/automated truth-state checks','later l8 human comprehension validation']:
+              assert x in ac, (x,ac)
+          t=Path('design/TSK-0335/PROTECTION_MAP_COVERAGE_LIMIT_INTERACTIONS_CANDIDATE.md').read_text(encoding='utf-8')
+          low=t.lower()
+          for x in ['Verified','You confirmed this is set up','Action needed','Not covered','Status uncertain','Removed']:
+              assert x in t, x
+          for x in ['evidence map, not a safety score','Material-gap timing contract','Deterministic truth-state contract','Later L8 human-comprehension interaction points','SafeWeb has not independently verified this setting.','APPROVE TSK-0335 PROTECTION MAP COVERAGE-LIMIT INTERACTIONS']:
+              assert x.lower() in low, x
+          for n in range(1,17): assert f'TC-0335-{n:02d}' in t
+          for n in range(1,9): assert f'L8-PT-{n:02d}' in t
+          # Structural truth guards.
+          assert 'no seventh user-visible completion/success state' in low
+          assert 'zero or one' in low
+          assert 'no material limitation may exist only at level c' in low
+          assert 'acknowledgement is not evidence' in low
+          assert 'does not mark tsk-0335 pass' in low
+          forbidden=['overall safety score is permitted','fully protected` as an approved claim','100% safe` as an approved claim','parent confirmation becomes verification','persistent per-user/device Protection Map history is required']
+          for x in forbidden: assert x.lower() not in low, x
+          print('TSK0335_WBS_AUTHORITY=PASS')
+          print('TSK0335_SOURCE_PINS=PASS')
+          print('TSK0335_STATE_MODEL=6/6_PASS')
+          print('TSK0335_TRUTH_GAP_TIMING=PASS')
+          print('TSK0335_DETERMINISTIC_TEST_MATRIX=16')
+          print('TSK0335_L8_INTERACTION_POINTS=8')
+          print('TSK0335_PRIVACY_ACCESSIBILITY_GUARDS=PASS')
+          print('TSK0335_CANDIDATE_VERIFICATION=PASS')
+          PY
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'REPOSITORY_CLEAN=PASS'
