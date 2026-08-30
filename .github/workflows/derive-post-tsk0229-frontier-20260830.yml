@@ -1,0 +1,60 @@
+name: Derive post-TSK-0229 L4 frontier
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/derive-post-tsk0229-frontier-20260830.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  derive:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Derive current L4 frontier and account chain
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object CURRENT_STATE.md)" = "6731369b823c9a3b4c8c5b344ad67b990b68850a"
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "3bb1598a6233a2bbefa52c746a7621867c6c6e89"
+          python3 - <<'PY'
+          import csv, json
+          from pathlib import Path
+          rows=list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='')))
+          by={r['Task_ID'].strip():r for r in rows}
+          runtime=Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          assert '`TSK-0146` and `TSK-0229` are current **PASS**' in runtime
+          state={tid:(r.get('Execution_State') or '').strip() for tid,r in by.items()}
+          state['TSK-0146']='PASS'; state['TSK-0229']='PASS'
+          reopened=['TSK-0313','TSK-0315','TSK-0328','TSK-0333','TSK-0321','TSK-0309','TSK-0628']
+          for tid in reopened:
+              if tid in by: state[tid]=state[tid] if state[tid] != 'PASS' else 'WAITING'
+          def deps(r): return [x.strip() for x in (r.get('Dependencies') or '').replace(',',';').split(';') if x.strip()]
+          def sat(t): return state.get(t)=='PASS'
+          excluded={'DEFERRED','NOT_APPLICABLE','COMPLETED'}
+          pri={'CRITICAL':0,'HIGH':1,'MEDIUM':2,'LOW':3}
+          cand=[]
+          for i,r in enumerate(rows):
+              if (r.get('Lifecycle_Stage') or '').strip()!='L4': continue
+              if (r.get('Plan_Status') or '').strip() in excluded: continue
+              if state.get(r['Task_ID']) not in {'TODO','WAITING'}: continue
+              ds=deps(r)
+              if all(sat(d) for d in ds): cand.append((pri.get((r.get('Priority') or '').strip(),9),i,r,ds))
+          cand.sort()
+          fields=['Task_ID','Title','Priority','Plan_Status','Execution_State','Dependencies','Primary_Owner','AI_Capability_A0_A4','Action_Authority','Acceptance_ID','Acceptance_Criteria','Verification_ID','Verification_Method','Evidence_ID','Requirement_Reference','Risk_Reference','Interface_Reference','Gate_ID','Source_Reference','Notes']
+          def slim(r): return {k:r.get(k,'') for k in fields}
+          print('ELIGIBLE_COUNT='+str(len(cand)))
+          for n,(_,_,r,ds) in enumerate(cand,1):
+              x=slim(r); x['Resolved_Dependency_States']={d:state.get(d,'MISSING') for d in ds}
+              print(f'CANDIDATE_{n:02d}='+json.dumps(x,ensure_ascii=False,sort_keys=True))
+          focus=['TSK-0142','TSK-0143','TSK-0408','TSK-0325','TSK-0315','TSK-0328','TSK-0329','TSK-0332','TSK-0331','TSK-0333','TSK-0321','TSK-0309','TSK-0327','TSK-0628']
+          for tid in focus:
+              if tid not in by: continue
+              r=by[tid]; ds=deps(r); x=slim(r); x['Runtime_State']=state.get(tid); x['Resolved_Dependency_States']={d:state.get(d,'MISSING') for d in ds}; x['Dependencies_Satisfied']=all(sat(d) for d in ds)
+              print('FOCUS_'+tid+'='+json.dumps(x,ensure_ascii=False,sort_keys=True))
+          PY
