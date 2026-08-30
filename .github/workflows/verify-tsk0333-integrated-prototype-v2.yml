@@ -1,0 +1,29 @@
+name: Verify TSK-0333 integrated prototype v2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/verify-tsk0333-integrated-prototype-v2.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Execute unchanged full TSK-0333 verifier body
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          awk 'f{sub(/^          /,""); print} /^        run: \|$/{f=1; next}' .github/workflows/verify-tsk0333-integrated-prototype.yml > /tmp/tsk0333-full-verifier.sh
+          test -s /tmp/tsk0333-full-verifier.sh
+          bash /tmp/tsk0333-full-verifier.sh
