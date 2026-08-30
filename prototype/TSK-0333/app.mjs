@@ -57,9 +57,9 @@ function router() {
     <div class="sw-ds-screen__header"><p class="sw-kicker">Setup start</p><h1>Which phone are you setting up?</h1></div>
     <p>SafeWeb selects the current approved platform path. The parent does not need to choose a DNS protocol.</p>
     <div class="prototype-actions">
-      ${actionButton('Android 9+ with usable Private DNS control', 'CHOOSE_PLATFORM', 'data-platform="android" data-testid="choose-android"')}
-      ${actionButton('iPhone / iOS 14+ with approved DNS profile path', 'CHOOSE_PLATFORM', 'data-platform="iphone" data-testid="choose-iphone"')}
-      ${secondaryButton('Another or managed/blocked device', 'CHOOSE_PLATFORM', 'data-platform="other" data-testid="choose-other"')}
+      ${actionButton('Android 9+ with usable Private DNS control', 'CHOOSE_PLATFORM', 'data-platform="android"')}
+      ${actionButton('iPhone / iOS 14+ with approved DNS profile path', 'CHOOSE_PLATFORM', 'data-platform="iphone"')}
+      ${secondaryButton('Another or managed/blocked device', 'CHOOSE_PLATFORM', 'data-platform="other"')}
     </div>
   </section>`;
 }
