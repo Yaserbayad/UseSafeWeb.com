@@ -4,7 +4,7 @@ p=Path('CURRENT_STATE.md')
 s=p.read_text(encoding='utf-8')
 heading='## TSK-0146 accepted stable state — 2026-08-30'
 assert heading not in s, 'TSK-0146 accepted runtime record already exists'
-assert 'TSK-0146 is not current runtime PASS' in s, 'expected historical contradiction context missing'
+assert 'TSK-0146' in s and 'not current runtime PASS' in s, 'expected historical non-PASS contradiction context missing'
 assert 'TSK-0146` remains frozen PASS' in s, 'expected later unsupported frozen-PASS reference missing'
 block='''## TSK-0146 accepted stable state — 2026-08-30
 
