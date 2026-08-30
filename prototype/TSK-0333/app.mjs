@@ -272,10 +272,10 @@ function render(announce = true) {
   app.innerHTML = view();
   app.setAttribute('aria-busy', 'false');
   const heading = app.querySelector('h1');
-  if (heading) {
+  if (heading && announce) {
     heading.tabIndex = -1;
     heading.focus({ preventScroll: true });
-    if (announce) announcer.textContent = heading.textContent;
+    announcer.textContent = heading.textContent;
   }
   document.body.dataset.screen = journey.screen;
   document.body.dataset.platform = journey.platform || 'none';
