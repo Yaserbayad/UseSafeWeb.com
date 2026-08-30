@@ -1,0 +1,285 @@
+name: Verify TSK-0333 integrated prototype
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/verify-tsk0333-integrated-prototype.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify source, model, rendered paths, accessibility and host invariants
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          test "$(git rev-parse HEAD:Plans/Master/WBS/master-wbs.csv)" = "f23b4f017d1baf73258fa30ecd71549bbfe1b815"
+          test "$(git rev-parse HEAD:CURRENT_STATE.md)" = "75d077675ed09d7d5e42f470416b486258bd0857"
+          test "$(git rev-parse HEAD:prototype/TSK-0333/index.html)" = "70bc43e2fac6cae845b69f4e4c2c46fd1c23f15e"
+          test "$(git rev-parse HEAD:prototype/TSK-0333/model.mjs)" = "8752ec4d1f0b5450ca70cd379792cdee46336e5f"
+          test "$(git rev-parse HEAD:prototype/TSK-0333/app.mjs)" = "1d4674285a63ae32ae3e9472cc4854b819e2ece3"
+          test "$(git rev-parse HEAD:prototype/TSK-0333/prototype.css)" = "f92f2bdb507d23d37e009023f1bad3c1665af6a1"
+          test "$(git rev-parse HEAD:design/TSK-0330/PHONE_INTERNET_SERVICES_SETUP_FLOWS_CANDIDATE.md)" = "07fa10b3fa9b91ddd02f19f5d1c68b15184677a7"
+          test "$(git rev-parse HEAD:design/TSK-0334/SUPPORT_FALSE_POSITIVE_REMOVAL_RECONFIGURATION_FLOWS_CANDIDATE.md)" = "44fab92b51ae8ed8b6f5f325ba1558bcd297eb5f"
+          test "$(git rev-parse HEAD:design/TSK-0335/PROTECTION_MAP_COVERAGE_LIMIT_INTERACTIONS_CANDIDATE.md)" = "7c65a697a98961d0df278658e59262ce39874ff5"
+          test "$(git rev-parse HEAD:prototype/TSK-0324/UI_COMPONENT_RULES.md)" = "0b7012a12070f7eccf45a1bbb2f453fde8507ff6"
+          test "$(git rev-parse HEAD:prototype/TSK-0328/INFORMATION_ARCHITECTURE_NAVIGATION.md)" = "4efb624005061e242e427994953d0fc00fcd745f"
+          test "$(git rev-parse HEAD:prototype/TSK-0308/candidate.css)" = "de5571379ff240f36b5aecd50f555a07176dbd32"
+          test "$(git rev-parse HEAD:brand/system/TSK-0300/tokens.css)" = "cd7d9a7cd5109e1ff0baa76532495dfd7a27a70f"
+          test "$(git rev-parse HEAD:brand/system/TSK-0300/components.css)" = "831e92a74b6dda04252d93242cb33bd491a02381"
+          test "$(git rev-parse HEAD:content/TSK-0323/DEVICE_SERVICE_INSTRUCTION_CATALOGUE.md)" = "bbe9ed90b205f2ca852ebdaefedf054446dd7f91"
+          test "$(git rev-parse HEAD:TSK_0320_PROTECTION_STATE_MODEL_AND_COPY_RULES_2026-08-28.md)" = "1146f7622f434590dde1253d11f14fb6a87e19de"
+          test "$(git rev-parse HEAD:prototype/TSK-0309/BASELINE.md)" = "76bb848ebdf6a2aee4dd84bc18e8af5ba8a99dbc"
+
+          sudo test -f /opt/AdGuardHome/AdGuardHome.yaml
+          sudo sha256sum /opt/AdGuardHome/AdGuardHome.yaml | sudo tee /tmp/tsk0333-adguard-before.sha >/dev/null
+          sudo find /etc/nginx -type f -maxdepth 3 -print0 | sort -z | sudo xargs -0 sha256sum | sudo tee /tmp/tsk0333-nginx-before.sha >/dev/null
+          sudo ss -H -lntup | sed -E 's/pid=[0-9]+/pid=X/g' | sort > /tmp/tsk0333-listeners-before.txt
+          systemctl --failed --no-legend --plain | sort > /tmp/tsk0333-failed-before.txt
+          systemctl is-active --quiet AdGuardHome
+          systemctl is-active --quiet nginx
+          ! ss -H -lnt | awk '{print $4}' | grep -Eq '(^|:)41733$'
+
+          python3 - <<'PY'
+          import csv,re
+          from pathlib import Path
+          rows=list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='')))
+          r=next(x for x in rows if x['Task_ID'].strip()=='TSK-0333')
+          assert r['Dependencies'].strip()=='TSK-0335; TSK-0334; TSK-0146'
+          assert r['Action_Authority'].strip()=='AUTO_ALLOWED'
+          assert r['Acceptance_ID'].strip()=='ACC-0333'
+          print('TSK0333_WBS_AUTHORITY=PASS')
+
+          root=Path('prototype/TSK-0333')
+          html=(root/'index.html').read_text(encoding='utf-8')
+          model=(root/'model.mjs').read_text(encoding='utf-8')
+          app=(root/'app.mjs').read_text(encoding='utf-8')
+          css=(root/'prototype.css').read_text(encoding='utf-8')
+          joined='\n'.join([html,model,app,css])
+          for state in ['Verified','You confirmed this is set up','Action needed','Not covered','Status uncertain','Removed']:
+              assert state in joined, state
+          for screen in ['false-positive','troubleshoot','remove','recovery','reset-lost','screen-map','screen-help','screen-limits']:
+              assert screen in joined, screen
+          assert 'dns.usesafeweb.com' in app
+          assert 'https://dns.usesafeweb.com/dns-query' in app
+          assert 'data-analytics-mode="markers-only-no-transport"' in html
+          assert 'data-event-key=' in html and 'data-event-key=' in app
+          assert 'prototype-skip-link' in html and 'prototype-announcer' in html
+          assert 'aria-live="polite"' in html
+          assert 'no seventh completion state' in app
+          assert 'evidence map, not a safety score' in app.lower()
+          assert 'Acknowledgement is not evidence' in app
+          for forbidden in ['fetch(', 'XMLHttpRequest', 'new WebSocket', 'sendBeacon(', 'localStorage.', 'sessionStorage.', 'indexedDB.open', 'document.cookie =']:
+              assert forbidden not in joined, forbidden
+          assert '<form' not in html.lower() and '<input' not in html.lower()
+          # TSK-0333 must consume shared authorities rather than redeclare shared implementation tokens/fonts.
+          assert not re.search(r'--sw-[\w-]+\s*:',css)
+          assert 'font-family:' not in css
+          assert not re.search(r'#[0-9a-fA-F]{3,8}\b',css)
+          print('TSK0333_SOURCE_STRUCTURE=PASS')
+          print('TSK0333_STATES=6/6_PASS')
+          print('TSK0333_PRIVACY_TEST_MARKERS=PASS')
+          print('TSK0333_NO_DESIGN_SYSTEM_FORK=PASS')
+          PY
+
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import {createJourney,transition,EVIDENCE_STATE,SCREEN,assertJourney} from './prototype/TSK-0333/model.mjs';
+          const act=(s,a,p={})=>transition(s,a,p);
+          const configure=(platform='android')=>{
+            let s=createJourney(); s=act(s,'START'); s=act(s,'CHOOSE_PLATFORM',{platform}); s=act(s,'NATIVE_CONFIRMED'); s=act(s,'DNS_CONFIGURED'); return s;
+          };
+          let s=configure('android');
+          assert.equal(s.dnsState,EVIDENCE_STATE.PARENT_CONFIRMED);
+          s=act(s,'VERIFY_RESULT',{result:'verified'});
+          assert.equal(s.dnsState,EVIDENCE_STATE.VERIFIED);
+          s=act(s,'SERVICE_NONE');
+          assert.equal(s.screen,SCREEN.MAP);
+          assert.equal(s.nativeState,EVIDENCE_STATE.PARENT_CONFIRMED);
+          assert.equal(s.serviceState,EVIDENCE_STATE.NOT_COVERED);
+          s=act(s,'REMOVE_DNS'); s=act(s,'CONFIRM_REMOVED');
+          assert.equal(s.dnsState,EVIDENCE_STATE.REMOVED); assert.equal(s.dnsConfigured,false);
+          s=act(s,'RECOVERY_OK'); s=act(s,'RECONFIGURE');
+          assert.equal(s.screen,SCREEN.DNS); assert.equal(s.dnsState,EVIDENCE_STATE.ACTION_NEEDED);
+
+          s=configure('iphone'); s=act(s,'VERIFY_RESULT',{result:'action-needed'});
+          assert.equal(s.screen,SCREEN.TROUBLESHOOT);
+          assert.throws(()=>act(s,'RETRY_AFTER_CHANGE'));
+          s=act(s,'MARK_CONDITION_CHANGED'); s=act(s,'RETRY_AFTER_CHANGE');
+          assert.equal(s.screen,SCREEN.VERIFY);
+
+          s=configure('iphone'); s=act(s,'VERIFY_RESULT',{result:'uncertain'});
+          assert.equal(s.dnsState,EVIDENCE_STATE.UNCERTAIN);
+          s=configure('android'); s=act(s,'VERIFY_RESULT',{result:'not-covered'});
+          assert.equal(s.dnsState,EVIDENCE_STATE.NOT_COVERED);
+          let u=createJourney(); u=act(u,'START'); u=act(u,'CHOOSE_PLATFORM',{platform:'other'});
+          assert.equal(u.dnsState,EVIDENCE_STATE.NOT_COVERED); assert.equal(u.screen,SCREEN.LIMITS);
+          let lost=act(s,'SIMULATE_LOST_STATE'); assert.equal(lost.screen,SCREEN.RESET_LOST); assert.equal(lost.platform,null);
+          assertJourney(lost);
+          console.log('TSK0333_MODEL_BRANCHES=PASS');
+          JS
+
+          mkdir -p /tmp/tsk0333-pw
+          if [[ ! -d /tmp/tsk0333-pw/node_modules/playwright ]]; then
+            npm --prefix /tmp/tsk0333-pw install --no-save playwright@1.62.0 >/tmp/tsk0333-npm-install.log 2>&1
+          fi
+          node -e "const p=require('/tmp/tsk0333-pw/node_modules/playwright/package.json'); if(p.version!=='1.62.0') process.exit(1); console.log('PLAYWRIGHT_VERSION='+p.version)"
+          if ! node - <<'JS'
+          const {chromium}=require('/tmp/tsk0333-pw/node_modules/playwright');
+          try { console.log(chromium.executablePath()); process.exit(require('fs').existsSync(chromium.executablePath())?0:1); } catch(e){ process.exit(1); }
+          JS
+          then
+            /tmp/tsk0333-pw/node_modules/.bin/playwright install chromium
+          fi
+
+          python3 -m http.server 41733 --bind 127.0.0.1 >/tmp/tsk0333-http.log 2>&1 &
+          server_pid=$!
+          cleanup() {
+            kill "$server_pid" 2>/dev/null || true
+            wait "$server_pid" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:41733/prototype/TSK-0333/index.html >/dev/null && break; sleep 0.2; done
+          curl -fsS http://127.0.0.1:41733/prototype/TSK-0333/index.html >/dev/null
+
+          NODE_PATH=/tmp/tsk0333-pw/node_modules node <<'JS'
+          const assert=require('node:assert/strict');
+          const {chromium}=require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage({viewport:{width:320,height:900}});
+            const errors=[]; const remote=[];
+            page.on('console',m=>{if(m.type()==='error') errors.push(m.text())});
+            page.on('pageerror',e=>errors.push(e.message));
+            page.on('request',r=>{if(!r.url().startsWith('http://127.0.0.1:41733/')) remote.push(r.url())});
+            const url='http://127.0.0.1:41733/prototype/TSK-0333/index.html';
+            const go=async()=>{await page.goto(url,{waitUntil:'networkidle'}); await page.locator('[data-testid="screen-home"]').waitFor();};
+            const click=async(a,extra='')=>page.locator(`[data-action="${a}"]${extra}`).click();
+            const global=async(a)=>page.locator(`[data-global-action="${a}"]`).last().click();
+            const noOverflow=async(label)=>{const v=await page.evaluate(()=>({sw:document.documentElement.scrollWidth,cw:document.documentElement.clientWidth})); assert.ok(v.sw<=v.cw+1,`${label} overflow ${JSON.stringify(v)}`)};
+            const h1Focused=async()=>assert.equal(await page.evaluate(()=>document.activeElement?.tagName),'H1');
+            const persistentEmpty=async()=>{const v=await page.evaluate(async()=>({ls:localStorage.length,ss:sessionStorage.length,cookie:document.cookie,db: indexedDB.databases ? (await indexedDB.databases()).length : 0})); assert.deepEqual(v,{ls:0,ss:0,cookie:'',db:0});};
+            const normalToMap=async(platform='android',service='SERVICE_NONE')=>{
+              await go(); await click('START'); await h1Focused(); await noOverflow('router');
+              await page.locator(`[data-action="CHOOSE_PLATFORM"][data-platform="${platform}"]`).click(); await h1Focused();
+              await click('NATIVE_CONFIRMED');
+              if(platform==='android') assert.equal(await page.locator('[data-testid="android-dns-value"]').textContent(),'dns.usesafeweb.com');
+              else assert.equal(await page.locator('[data-testid="iphone-doh-value"]').textContent(),'https://dns.usesafeweb.com/dns-query');
+              await click('DNS_CONFIGURED'); await click('VERIFY_RESULT','[data-result="verified"]'); await click(service);
+              await page.locator('[data-testid="screen-map"]').waitFor(); await h1Focused(); await noOverflow(`${platform}-map`);
+            };
+
+            await go();
+            await page.keyboard.press('Tab');
+            assert.equal(await page.evaluate(()=>document.activeElement?.dataset.testid),'skip-link');
+            assert.equal(await page.locator('body').getAttribute('data-analytics-mode'),'markers-only-no-transport');
+            await persistentEmpty();
+            console.log('FOCUS_SKIP_LINK=PASS');
+
+            await normalToMap('android');
+            assert.equal(await page.locator('[data-testid="map-phone-label"]').textContent(),'You confirmed this is set up');
+            assert.equal(await page.locator('[data-testid="map-internet-label"]').textContent(),'Verified');
+            assert.equal(await page.locator('[data-testid="map-service-label"]').textContent(),'Not covered');
+            assert.match(await page.locator('[data-testid="map-no-score"]').textContent(),/not a safety score/i);
+            await click('OPEN_FALSE_POSITIVE');
+            assert.match(await page.locator('[data-testid="screen-false-positive"]').textContent(),/Acknowledgement is not evidence/);
+            await click('RETURN');
+            assert.equal(await page.locator('[data-testid="map-internet-label"]').textContent(),'Verified');
+            await global('OPEN_HELP'); assert.ok(await page.locator('[data-testid="screen-help"]').isVisible()); await click('RETURN');
+            await page.locator('[data-evidence-layer="internet"] [data-action="REMOVE_DNS"]').click();
+            await click('CONFIRM_REMOVED'); assert.ok(await page.locator('[data-testid="screen-recovery"]').isVisible());
+            await click('RECOVERY_OK'); assert.equal(await page.locator('[data-testid="map-internet-label"]').textContent(),'Removed');
+            await click('RECONFIGURE'); assert.ok(await page.locator('[data-testid="screen-dns-android"]').isVisible());
+            console.log('ANDROID_NORMAL_FALSE_POSITIVE_REMOVAL_RECONFIGURE=PASS');
+
+            await normalToMap('iphone','SERVICE_CONFIRMED');
+            assert.equal(await page.locator('[data-testid="map-phone-label"]').textContent(),'You confirmed this is set up');
+            assert.equal(await page.locator('[data-testid="map-internet-label"]').textContent(),'Verified');
+            assert.equal(await page.locator('[data-testid="map-service-label"]').textContent(),'You confirmed this is set up');
+            console.log('IPHONE_NORMAL=PASS');
+
+            await go(); await click('START'); await page.locator('[data-action="CHOOSE_PLATFORM"][data-platform="other"]').click();
+            assert.ok(await page.locator('[data-testid="screen-limits"]').isVisible());
+            assert.match(await page.locator('[data-testid="screen-limits"]').textContent(),/Not covered/);
+            console.log('UNSUPPORTED_PATH=PASS');
+
+            await go(); await click('START'); await page.locator('[data-action="CHOOSE_PLATFORM"][data-platform="android"]').click(); await click('NATIVE_ACTION_NEEDED'); await click('DNS_ALREADY_CONFIGURED'); await click('VERIFY_RESULT','[data-result="action-needed"]');
+            assert.ok(await page.locator('[data-testid="screen-troubleshoot"]').isVisible());
+            assert.equal(await page.locator('[data-action="RETRY_AFTER_CHANGE"]').count(),0);
+            await click('MARK_CONDITION_CHANGED'); assert.equal(await page.locator('[data-action="RETRY_AFTER_CHANGE"]').count(),1); await click('RETRY_AFTER_CHANGE'); assert.ok(await page.locator('[data-testid="screen-verify"]').isVisible());
+            console.log('ACTION_NEEDED_CHANGED_CONDITION_RETRY=PASS');
+
+            await go(); await click('START'); await page.locator('[data-action="CHOOSE_PLATFORM"][data-platform="iphone"]').click(); await click('NATIVE_CONFIRMED'); await click('DNS_CONFIGURED'); await click('VERIFY_RESULT','[data-result="uncertain"]');
+            assert.equal((await page.locator('[data-testid="screen-troubleshoot"] h1').textContent()).trim(),'Status uncertain');
+            console.log('UNCERTAIN_PATH=PASS');
+
+            await go(); await click('START'); await page.locator('[data-action="CHOOSE_PLATFORM"][data-platform="iphone"]').click(); await click('NATIVE_CONFIRMED'); await click('DNS_CONFIGURED'); await click('VERIFY_RESULT','[data-result="not-covered"]');
+            assert.ok(await page.locator('[data-testid="screen-limits"]').isVisible());
+            console.log('VERIFY_NOT_COVERED_PATH=PASS');
+
+            await go(); await global('SIMULATE_LOST_STATE'); assert.ok(await page.locator('[data-testid="screen-reset-lost"]').isVisible()); await click('START'); assert.ok(await page.locator('[data-testid="screen-router"]').isVisible());
+            console.log('LOST_TRANSIENT_STATE=PASS');
+
+            await go(); await page.locator('[data-testid="rtl-toggle"]').click(); assert.equal(await page.locator('html').getAttribute('dir'),'rtl');
+            await click('START'); await page.locator('[data-action="CHOOSE_PLATFORM"][data-platform="android"]').click(); await click('NATIVE_CONFIRMED');
+            assert.equal(await page.locator('[data-testid="android-dns-value"]').evaluate(e=>getComputedStyle(e).direction),'ltr');
+            await noOverflow('rtl-320');
+            console.log('RTL_LTR_TECH_ISOLATION=PASS');
+
+            for(const width of [320,768,1024,1440]){
+              await page.setViewportSize({width,height:900});
+              await normalToMap('android'); await noOverflow(`viewport-${width}`);
+              console.log(`VIEWPORT_${width}=PASS`);
+            }
+
+            await page.setViewportSize({width:320,height:900}); await normalToMap('android');
+            const smallTargets=await page.locator('button:visible,a.prototype-brand-link:visible').evaluateAll(els=>els.filter(e=>{const r=e.getBoundingClientRect(); return r.width<24||r.height<24}).map(e=>({text:e.textContent?.trim(),w:e.getBoundingClientRect().width,h:e.getBoundingClientRect().height})));
+            assert.deepEqual(smallTargets,[]);
+            console.log('TARGET_SIZE_FLOOR=PASS');
+
+            await page.emulateMedia({reducedMotion:'reduce'}); await go();
+            const anim=await page.evaluate(()=>{const el=document.createElement('span');el.className='sw-ds-busy__indicator';document.body.append(el);const v=getComputedStyle(el).animationName;el.remove();return v;});
+            assert.equal(anim,'none');
+            console.log('REDUCED_MOTION=PASS');
+
+            await page.evaluate(()=>document.documentElement.style.fontSize='200%'); await noOverflow('text-200-home');
+            await page.evaluate(()=>document.documentElement.style.fontSize='');
+            const unmarked=await page.locator('[data-action],[data-global-action]').evaluateAll(els=>els.filter(e=>!e.hasAttribute('data-event-key')).map(e=>e.outerHTML));
+            assert.deepEqual(unmarked,[]);
+            await persistentEmpty();
+            assert.deepEqual(remote,[]);
+            assert.deepEqual(errors,[]);
+            console.log('TEST_MARKERS_NO_TRANSPORT=PASS');
+            console.log('NO_PERSISTENCE=PASS');
+            console.log('BROWSER_CONSOLE=PASS');
+            console.log('TSK0333_RENDERED_PROTOTYPE=PASS');
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+
+          cleanup
+          trap - EXIT
+          ! ss -H -lnt | awk '{print $4}' | grep -Eq '(^|:)41733$'
+          systemctl is-active --quiet AdGuardHome
+          systemctl is-active --quiet nginx
+          sudo sha256sum /opt/AdGuardHome/AdGuardHome.yaml | sudo tee /tmp/tsk0333-adguard-after.sha >/dev/null
+          sudo find /etc/nginx -type f -maxdepth 3 -print0 | sort -z | sudo xargs -0 sha256sum | sudo tee /tmp/tsk0333-nginx-after.sha >/dev/null
+          sudo ss -H -lntup | sed -E 's/pid=[0-9]+/pid=X/g' | sort > /tmp/tsk0333-listeners-after.txt
+          systemctl --failed --no-legend --plain | sort > /tmp/tsk0333-failed-after.txt
+          cmp /tmp/tsk0333-adguard-before.sha /tmp/tsk0333-adguard-after.sha
+          cmp /tmp/tsk0333-nginx-before.sha /tmp/tsk0333-nginx-after.sha
+          cmp /tmp/tsk0333-listeners-before.txt /tmp/tsk0333-listeners-after.txt
+          cmp /tmp/tsk0333-failed-before.txt /tmp/tsk0333-failed-after.txt
+          echo 'PRODUCTION_INVARIANTS=PASS'
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'REPOSITORY_CLEAN=PASS'
