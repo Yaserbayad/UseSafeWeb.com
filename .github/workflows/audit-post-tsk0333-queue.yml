@@ -1,0 +1,61 @@
+name: Audit post-TSK-0333 queue
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/audit-post-tsk0333-queue.yml
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Derive narrow current queue
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          test "$(git rev-parse HEAD:CURRENT_STATE.md)" = "ad3fd01395150b802fbb025a48f7692e82b80244"
+          test "$(git rev-parse HEAD:Plans/Master/WBS/master-wbs.csv)" = "f23b4f017d1baf73258fa30ecd71549bbfe1b815"
+          python3 - <<'PY'
+          import csv,re,json
+          from pathlib import Path
+          state=Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          rows=list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='')))
+          # Current accepted runtime records are the strong source for PASS, not WBS planning snapshots.
+          pass_ids=set(re.findall(r'^## (TSK-\d{4}) accepted[^\n]*state',state,re.M|re.I))
+          # Include explicit accepted stable task lines outside heading convention, only where the line itself asserts PASS.
+          for m in re.finditer(r'^`(TSK-\d{4})[^`]*`: \*\*PASS\*\*',state,re.M): pass_ids.add(m.group(1))
+          assert {'TSK-0333','TSK-0335','TSK-0334','TSK-0146'} <= pass_ids
+          print('RUNTIME_ACCEPTED_PASS_COUNT='+str(len(pass_ids)))
+          print('DIRECT_SUCCESSORS_OF_TSK0333')
+          direct=[]
+          for r in rows:
+              deps=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
+              if 'TSK-0333' in deps:
+                  direct.append(r)
+                  print(json.dumps({k:r.get(k,'') for k in ['Task_ID','Title','Lifecycle_Stage','Priority','Plan_Status','Execution_State','Dependencies','Action_Authority','AI_Capability','Trigger','Acceptance_Criteria','Verification_Method','Evidence_Required','Gate_ID','Required_Gate','Gate']},ensure_ascii=False))
+          print('DIRECT_SUCCESSOR_COUNT='+str(len(direct)))
+
+          candidates=[]
+          for r in rows:
+              tid=r['Task_ID'].strip()
+              if tid in pass_ids: continue
+              if r.get('Plan_Status','').strip() in {'DEFERRED','NOT_APPLICABLE','CANCELLED'}: continue
+              deps=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
+              # Narrow late-L4 candidate projection. Gate/trigger authority is printed and must still be evaluated separately.
+              if r.get('Lifecycle_Stage','').strip()=='L4' and all(d in pass_ids for d in deps):
+                  candidates.append(r)
+          pri={'CRITICAL':0,'HIGH':1,'MEDIUM':2,'LOW':3}
+          candidates.sort(key=lambda r:(pri.get(r.get('Priority','').strip(),9), int(re.sub(r'\D','',r['Task_ID']) or 999999)))
+          print('L4_DEPENDENCY_SATISFIED_CANDIDATES='+str(len(candidates)))
+          for r in candidates[:25]:
+              print('CANDIDATE '+json.dumps({k:r.get(k,'') for k in ['Task_ID','Title','Priority','Plan_Status','Execution_State','Dependencies','Action_Authority','AI_Capability','Trigger','Acceptance_Criteria','Verification_Method','Evidence_Required','Gate_ID','Required_Gate','Gate']},ensure_ascii=False))
+          PY
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'REPOSITORY_CLEAN=PASS'
