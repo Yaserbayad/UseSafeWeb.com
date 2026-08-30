@@ -2,7 +2,7 @@
 
 ## Final disposition
 
-`TSK-0334 — Design support, false-positive, removal, and reconfiguration flows`: **PASS candidate pending final owner-bound verification and canonical runtime reconciliation**.
+`TSK-0334 — Design support, false-positive, removal, and reconfiguration flows`: **PASS candidate ready for canonical runtime reconciliation**.
 
 Project Owner authority received at `2026-08-30T08:09:29Z`:
 
@@ -32,6 +32,18 @@ Corrected semantic verification run/job `33280467616` / `99174669817` completed 
 - `REPOSITORY_CLEAN=PASS`
 
 The initial run `33280436944` / `99174585582` was a verifier wording false negative only; the candidate blob did not change.
+
+## Final owner-bound verification
+
+Final acceptance run/job `33300993073` / `99228994996` completed successfully on `adguardvm` and re-proved current WBS/candidate/preparation-evidence identity plus the exact owner approval binding.
+
+Terminal markers:
+
+- `TSK0334_OWNER_APPROVAL_BINDING=PASS`
+- `TSK0334_APPROVED_BLOB_IDENTITY=PASS`
+- `TSK0334_ACCEPTANCE_CONTRACT=PASS`
+- `TSK0334_FINAL_ACCEPTANCE=PASS`
+- `REPOSITORY_CLEAN=PASS`
 
 ## Current acceptance contract satisfied by the approved candidate
 
@@ -64,4 +76,4 @@ The approved candidate preserves:
 
 TSK-0334 is `HUMAN_ONLY`. The exact owner approval above closes the human decision condition for the exact verified candidate blob.
 
-This evidence does not authorize TSK-0335 approval, TSK-0333 execution, LG-06/L5/L6, real-user validation, publication, payment, market activation or launch. Canonical PASS becomes authoritative only after final owner-bound verification succeeds and `CURRENT_STATE.md` is reconciled and read back.
+This evidence does not authorize TSK-0335 approval, TSK-0333 execution, LG-06/L5/L6, real-user validation, publication, payment, market activation or launch. Canonical PASS becomes authoritative only after `CURRENT_STATE.md` is reconciled and read back.
