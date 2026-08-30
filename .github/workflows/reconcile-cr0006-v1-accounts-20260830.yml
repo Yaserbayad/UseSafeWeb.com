@@ -1,0 +1,332 @@
+name: Reconcile CR-0006 V1 account scope
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-cr0006-v1-accounts-20260830.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-cr0006-v1-account-scope
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Assert exact prestate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(hostname -s)" = "adguardvm"
+          test "$(git rev-parse HEAD^)" = "9606d83a82f121acffdf574e9973a7a937da0990"
+          test "$(git hash-object CURRENT_STATE.md)" = "ad3fd01395150b802fbb025a48f7692e82b80244"
+          test "$(git hash-object Plans/Master/MANIFEST.yaml)" = "1fc24e28e70c8005a75d37c1d21aecd4ea967ae5"
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "f23b4f017d1baf73258fa30ecd71549bbfe1b815"
+          test "$(git hash-object Plans/Master/RELATIONSHIP_INDEX.yaml)" = "9ed219b4ccb6b05e68c6a264fc2b21b1008b02a4"
+          test "$(git diff --name-only HEAD^ HEAD)" = ".github/workflows/reconcile-cr0006-v1-accounts-20260830.yml"
+
+      - name: Apply owner-authorized CR-0006 planning delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import csv, io, re
+
+          root=Path('.')
+          wbs=root/'Plans/Master/WBS/master-wbs.csv'
+          rel=root/'Plans/Master/RELATIONSHIP_INDEX.yaml'
+          ver=root/'Plans/Master/Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md'
+          req=root/'Plans/Master/Registers/REQUIREMENTS.md'
+          con=root/'Plans/Master/Registers/CONSTRAINTS.md'
+          gates=root/'Plans/Master/Registers/GATES.md'
+          risks=root/'Plans/Master/Registers/RISKS.md'
+          dec=root/'Plans/Master/Registers/DECISIONS_TRIGGERS.md'
+          exc=root/'Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md'
+          l1=root/'Plans/Master/Layers/LAYER_1_PROGRAM_ARCHITECTURE_STRATEGIC_BASELINE.md'
+          l4=root/'Plans/Master/Layers/LAYER_4_INTEGRATED_PROGRAM_CRITICAL_PATH.md'
+          l5=root/'Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md'
+          manifest=root/'Plans/Master/MANIFEST.yaml'
+
+          activation_note='DEC-0053/CR-0006: Version-1 optional parent-account, minimal persistence and lightweight dashboard/device-management scope is active. The core setup/protection journey remains usable without login; mandatory login, browsing/activity history, child accounts and broad DNS administration are not authorised.'
+          old_exc_note='DEFERRED_EXCEPTION EXC-0001: account/persistence capability is not in the current accountless baseline. Mandatory authenticated/dashboard/control-plane baseline is superseded by the latest accountless-first owner decision; any reusable AdGuard/API dependency work is reintroduced separately without mandatory identity or dashboard scope.'
+          active_trigger='Version-1 optional-account scope is active under DEC-0053/CR-0006; ordinary lifecycle, gate, dependency, privacy, security and precondition requirements still apply.'
+
+          task_updates={
+            'TSK-0024': {'Acceptance_Criteria':'Before LG-07, reject implementation outside the owner-authorised integrated-product-first sequence. Under DEC-0053/CR-0006, Version 1 includes an optional parent account, authentication/session, minimal parent/device ownership persistence and lightweight dashboard/device-management capability while the complete core safety setup remains usable without login. Mandatory login for core value, browsing/activity history, child accounts, broad DNS administration, GROW automation, native app, school portal, paid-acquisition system and complex safety paywalls remain excluded unless separately authorised.'},
+            'TSK-0025': {'Acceptance_Criteria':'CURRENT_STATE points to the centralized plan for planning/WBS authority, records the current Version-1 optional-account plus accountless-core owner decision without bypassing gates, and states that tracker/CSV artifacts remain derived until regenerated.'},
+            'TSK-0042': {'Acceptance_Criteria':'Requirements identify accountless setup/journey-state recovery, optional account access/session/revocation/deletion/recovery, device-configuration lifecycle, dashboard/device ownership, AdGuard/DNS integration, false-positive and unsupported-state incidents; remedies, escalation, data-minimising diagnostics, response expectations, deletion/removal/recovery and support-burden metrics are explicit.'},
+            'TSK-0044': {'Acceptance_Criteria':'NFRs define private/restricted AdGuard administration, secret storage/rotation, API/config timeouts/retries, partial-failure reconciliation, opaque setup/ClientID identifiers where required, explicit privacy booleans, version/contract regression checks, optional customer authentication/session and minimum persistence boundaries, and safe behavior when AdGuard, auth, datastore or verification paths are unavailable; no mandatory login for core value is introduced.'},
+            'TSK-0048': {'Acceptance_Criteria':'Backlog is dependency-ordered in small vertical slices and covers the accountless public/setup surfaces, optional Google sign-in/session, minimum parent/device ownership persistence, lightweight dashboard/device management, anonymous journey state, native safeguard routing, DNS setup/verification, Protection Map, relevant external-service guidance, account/device deletion and recovery, self-service support, privacy/security tests and required operations. Mandatory login, browsing/activity history, child accounts and unrestricted DNS administration remain excluded. Each task has owner, dependencies, acceptance, tests, artifacts, size, risk and release target.'},
+            'TSK-0049': {'Acceptance_Criteria':'For the architecture/privacy/security/operations component of LG-07, the dual-mode Version-1 boundary is approved: accountless core plus optional parent identity/session, minimum parent/device ownership persistence and lightweight dashboard/device management; DNS/AdGuard integration uses a typed allowlisted server-side boundary; threat model, auth/authz/CSRF/IDOR, deletion/recovery, DPIA/vendor/transfer position, cost/licence assumptions, failure/recovery/observability and operations evidence have no unresolved critical threat or high privacy risk.'},
+            'TSK-0051': {'Acceptance_Criteria':'LG-06 has passed and all LG-07 architecture/privacy/security/operations, implementation, test, release and resource evidence passes; the first vertical slice/checkpoint preserves the accountless core and implements the approved optional Version-1 account/session/dashboard boundary with no critical blocker.'},
+            'TSK-0052': {'Dependencies':'TSK-0043; TSK-0321; TSK-0309','Acceptance_Criteria':'LG-06 passes only if the Version-1 product/non-goals are frozen as a dual-mode baseline: the complete core setup/protection journey remains usable without login, and optional parent account, Google sign-in/session, minimum parent/device ownership persistence, lightweight dashboard/device management, account/device deletion/recovery and associated privacy/security/truth states are included. Requirements, setup/Protection-Map journey, brand/design system, content, accessibility/i18n, self-service and traceability must be internally/automatically accepted to the current L4 contract; mandatory login, browsing/activity history, child accounts and broad DNS administration remain excluded; critical conflicts are resolved. Under DEC-0052 no real-user evidence is required before this gate and none may be inferred.'},
+            'TSK-0053': {'Acceptance_Criteria':'LG-08 has passed; all critical acceptance evidence is current to the release, including accountless journey integrity, optional account/auth/session/ownership/dashboard isolation, DNS/AdGuard integration, privacy/deletion/removal, non-goal, recovery, self-service, accessibility and security tests; no severity-1/2 or blocking control failure remains and accepted residuals are explicit.'},
+            'TSK-0055': {'Acceptance_Criteria':'Traceability shows all authorised Version-1 functional requirements implemented: accountless public/setup surfaces remain usable without login; optional parent account/sign-in/session, minimum parent/device ownership persistence, lightweight dashboard/device management and account/device lifecycle are implemented; native safeguard routing, DNS activation/verification, Protection Map, relevant external-service guidance, recovery/removal and self-service support are complete. Browsing/activity history, child accounts and unrestricted DNS administration are absent; release candidate is frozen.'},
+            'TSK-0056': {'Acceptance_Criteria':'The integrated-acceptance component of LG-09 has passed; the production-like dual-mode Version-1 product, DNS service, optional account/session/dashboard path, accountless core path, legal/privacy/vendor/operations/support/measurement/deletion/removal/recovery evidence and rehearsal are complete; owner signs cohort/stop conditions; no participant is activated before PASS.'},
+            'TSK-0141': {'Acceptance_Criteria':'Every included capability maps to a current need assumption, mandatory operation/safety requirement, or explicit owner-approved product/architecture decision. Version 1 includes optional parent accounts and lightweight dashboard/device management while preserving the complete core setup/protection journey without login. Mandatory login, browsing/activity history, child accounts, unrestricted DNS administration and other advanced capabilities remain excluded unless separately reauthorised. No capability may be described as behaviorally/user validated before the L8 controlled integrated-product pilot.'},
+            'TSK-0146': {'Title':'Freeze Version-1 optional-account product baseline and accountless core path','Plan_Status':'PLANNED','Execution_State':'TODO','Trigger':'Applicable lifecycle/gate and all hard dependencies satisfied.','Acceptance_Criteria':'Product brief states that Version 1 includes an optional parent account and lightweight dashboard/device-management capability while the complete core setup/protection journey remains usable without login. It defines minimum identity/device persistence, authentication/session, deletion/recovery, privacy/security and failure boundaries; prohibits browsing/activity history, child accounts and broad DNS administration; and reserves any future mandatory-login expansion to explicit Project Owner authority.','Notes':'DEC-0053/CR-0006 reopens the prior accountless-only PASS because the owner now requires account capability in Version 1. Prior TSK-0146 evidence remains historical proof of the accountless-core requirement only and cannot satisfy the revised acceptance contract.'},
+            'TSK-0315': {'Title':'Create the dual-mode end-to-end service blueprint for accountless core and optional parent-account lifecycle','Dependencies':'TSK-0149; TSK-0229; TSK-0142','Plan_Status':'PLANNED','Execution_State':'WAITING','Acceptance_Criteria':'Blueprint covers discover/start, accountless setup, optional account entry/return/session, lightweight dashboard/device management, native safeguard routing, DNS activation/verification, relevant service guidance, Protection Map, false-positive/support, account/device deletion/revoke/reinstall/replacement, recovery/removal, provider outage and exit; frontstage/backstage/data/owner/failure/recovery are mapped without browsing/activity history or mandatory login.'},
+            'TSK-0328': {'Plan_Status':'PLANNED','Execution_State':'WAITING','Acceptance_Criteria':'Architecture supports normal and exception paths for the accountless core plus optional account sign-in/return/dashboard/account lifecycle, avoids unnecessary gated steps, keeps login optional for core value, and maps each screen to a user goal and requirement.'},
+            'TSK-0329': {'Dependencies':'TSK-0328; TSK-0312'},
+            'TSK-0333': {'Dependencies':'TSK-0335; TSK-0334; TSK-0146; TSK-0331','Plan_Status':'PLANNED','Execution_State':'WAITING','Acceptance_Criteria':'Prototype covers the full accountless core and optional Version-1 account paths: Google sign-in/account creation/return/session expiry/logout/delete entry, lightweight dashboard/device management, Android/iPhone DNS setup and verification, Protection Map, false-positive, support, account/device removal/revoke/reinstall/replacement/recovery, provider/error/unsupported states, responsive/mobile/RTL/accessibility and privacy boundaries. Core value never requires login; browsing/activity history and broad DNS administration are absent.'},
+            'TSK-0321': {'Dependencies':'TSK-0323; TSK-0324; TSK-0333','Plan_Status':'PLANNED','Execution_State':'WAITING','Acceptance_Criteria':'Review checks every critical accountless and optional-account screen/state, including sign-in/session/dashboard/account/device lifecycle, records conformance evidence and remediation, and leaves no unresolved critical accessibility barrier.'},
+            'TSK-0327': {'Dependencies':'TSK-0336; TSK-0321','Plan_Status':'PLANNED','Execution_State':'WAITING','Acceptance_Criteria':'All critical/high findings from current internal/automated accountless and optional-account functional, auth/session/trust-state, accessibility, responsive, privacy/security and recovery review are fixed or formally accepted by the owner with rationale; retest evidence confirms critical paths and truthful Protection Map semantics. No human comprehension claim is required or inferred before L8.'},
+            'TSK-0309': {'Dependencies':'TSK-0333; TSK-0327; TSK-0187','Plan_Status':'PLANNED','Execution_State':'WAITING','Acceptance_Criteria':'The implementation-ready Version-1 baseline is frozen only after the revised dual-mode prototype and internal/automated findings review pass: accountless core remains usable without login; optional parent account/sign-in/session/minimum ownership persistence/lightweight dashboard and deletion/recovery paths are accepted; no critical/high internal technical, accessibility, privacy/security or truth-state defect remains. Under DEC-0052 the TSK-0187 exclusion-PASS satisfies sequencing only and no user evidence is inferred.'},
+            'TSK-0337': {'Acceptance_Criteria':'Protection Map data contract works for anonymous journey state and, when the optional parent account is used, for the minimum authorised parent/device ownership record; verified vs parent-confirmed evidence remains separate; no browsing/query/activity history or unrestricted DNS administration is exposed.'},
+            'TSK-0354': {'Title':'Design the Version-1 accountless-core plus optional-account application architecture and data boundary','Dependencies':'TSK-0146; TSK-0229; TSK-0309; TSK-0232','Acceptance_Criteria':'One production-capable Next.js application preserves the complete accountless core while supporting optional parent authentication/session, minimum parent/device ownership persistence and lightweight dashboard/device management. Architecture defines trust boundaries, session/account deletion/recovery, auth/provider/datastore failure behavior, typed AdGuard integration, no browser admin secret, no browsing/activity history and no mandatory login for core value.'},
+            'TSK-0355': {'Acceptance_Criteria':'ADRs fix framework/deployment/runtime boundaries, anonymous ephemeral state, minimum persistent account/device ownership store required by Version 1, authentication/session pattern, server-only AdGuard adapter, observability, backups/deletion/recovery, and explicit non-goals. Persistent data is limited to the approved account/device purpose; no browsing/activity history is introduced.'},
+            'TSK-0358': {'Acceptance_Criteria':'Server/browser state machine supports the complete accountless core plus optional account entry/return/expiry/logout and dashboard routing; state transitions preserve truthful evidence, recover safely from lost/expired state, and never force login for core value or persist browsing/activity history.'},
+            'TSK-0398': {'Title':'Verify Version-1 optional-account boundary and accountless-core availability','Dependencies':'TSK-0399; TSK-0523','Acceptance_Criteria':'Build/runtime/routes/data/vendors/telemetry and end-to-end journeys prove the optional account/sign-in/session/dashboard/device-ownership capability is present and isolated while the complete core setup/protection journey remains usable without login. Cross-parent access, hidden mandatory authentication, browsing/activity history, child accounts, broad DNS administration and browser exposure of AdGuard admin credentials fail acceptance.'},
+            'TSK-0524': {'Acceptance_Criteria':'Automated end-to-end tests cover public start -> accountless setup/routing -> native safeguard guidance -> DNS setup/verification -> relevant external-service step -> Protection Map -> recovery/reinstall/remove/clear-state, plus the optional Version-1 sign-in/session/dashboard/device-management/account-deletion paths and critical failures. Tests fail on incorrect state/evidence/privacy, cross-account leakage or any hidden mandatory-login dependency for core value.'}
+          }
+
+          lines=wbs.read_text(encoding='utf-8-sig').splitlines()
+          header=next(csv.reader([lines[0]])); idx={n:i for i,n in enumerate(header)}
+          required_cols={'Task_ID','Title','Plan_Status','Execution_State','Dependencies','Trigger','Acceptance_ID','Acceptance_Criteria','Verification_ID','Verification_Method','Evidence_ID','Evidence_Required','Notes'}
+          assert required_cols <= set(idx), required_cols-set(idx)
+          changed=set(); activated=[]; old_deps={}; final_rows={}
+          out_lines=[lines[0]]
+          for line in lines[1:]:
+              row=next(csv.reader([line]))
+              tid=row[idx['Task_ID']]
+              old_deps[tid]=row[idx['Dependencies']]
+              notes=row[idx['Notes']]
+              if old_exc_note in notes:
+                  row[idx['Notes']]=notes.replace(old_exc_note,activation_note)
+                  if row[idx['Plan_Status']]=='DEFERRED': row[idx['Plan_Status']]='PLANNED'
+                  row[idx['Execution_State']]='WAITING'
+                  row[idx['Trigger']]=active_trigger
+                  activated.append(tid); changed.add(tid)
+              if tid in task_updates:
+                  for k,v in task_updates[tid].items():
+                      assert k in idx, (tid,k)
+                      row[idx[k]]=v
+                  changed.add(tid)
+              final_rows[tid]={name:row[i] for name,i in idx.items()}
+              if tid in changed:
+                  s=io.StringIO(newline=''); csv.writer(s,lineterminator='').writerow(row); line=s.getvalue()
+              out_lines.append(line)
+          assert set(task_updates) <= set(final_rows)
+          assert len(activated) >= 10, len(activated)
+          wbs.write_text('\n'.join(out_lines)+'\n',encoding='utf-8')
+
+          # Synchronize changed WBS acceptance/state rows into the audit register.
+          vlines=ver.read_text(encoding='utf-8').splitlines(); seen=set(); vout=[]
+          def esc(s): return str(s).replace('|','\\|')
+          for line in vlines:
+              m=re.match(r'^\| (TSK-\d{4}) \|',line)
+              if m and m.group(1) in changed:
+                  tid=m.group(1); r=final_rows[tid]
+                  line='| ' + ' | '.join(map(esc,[tid,r['Verification_ID'],r['Verification_Method'],r['Evidence_ID'],r['Evidence_Required'],r['Acceptance_ID'],r['Acceptance_Criteria'],r['Execution_State']])) + ' |'
+                  seen.add(tid)
+              vout.append(line)
+          assert seen==changed, (len(seen),len(changed),sorted(changed-seen)[:10])
+          ver.write_text('\n'.join(vout)+'\n',encoding='utf-8')
+
+          # Synchronize relationship-index depends_on edges for dependency-mutated tasks only.
+          new_deps={tid:final_rows[tid]['Dependencies'] for tid in changed if final_rows[tid]['Dependencies']!=old_deps[tid]}
+          text=rel.read_text(encoding='utf-8')
+          for tid,deps_s in new_deps.items():
+              start=text.index(f'  {tid}:\n')
+              m=re.search(r'^  [A-Z][A-Z0-9-]*:\n',text[start+1:],re.M)
+              end=(start+1+m.start()) if m else len(text)
+              block=text[start:end]
+              block=re.sub(r'    - target: TSK-\d{4}\n      type: depends_on\n','',block)
+              deps=[d.strip() for d in deps_s.split(';') if d.strip()]
+              ins=''.join(f'    - target: {d}\n      type: depends_on\n' for d in deps)
+              marker='    source: WBS/master-wbs.csv\n'
+              assert marker in block, tid
+              block=block.replace(marker,ins+marker,1)
+              text=text[:start]+block+text[end:]
+          rel.write_text(text,encoding='utf-8')
+
+          def patch_table(path,key,updates):
+              ls=path.read_text(encoding='utf-8').splitlines(); hit=0; out=[]
+              for line in ls:
+                  if line.startswith(f'| {key} |'):
+                      p=[x.strip() for x in line.strip().strip('|').split('|')]
+                      for col,val in updates.items(): p[col]=val
+                      line='| '+' | '.join(p)+' |'; hit+=1
+                  out.append(line)
+              assert hit==1,(path,key,hit)
+              path.write_text('\n'.join(out)+'\n',encoding='utf-8')
+
+          # Requirements and binding constraint.
+          req_updates={
+            'REQ-0011':'Version 1 shall provide an optional parent account capability and lightweight dashboard/device management while preserving a fully usable accountless core setup/protection journey. Login shall not be required for core safety value unless a later explicit owner decision changes that rule.',
+            'REQ-0034':'Product requirements shall define both the accountless core path and optional Version-1 account path, including native routing, DNS, Protection Map, relevant service, account/session/dashboard/device ownership, deletion/recovery, unsupported states, help and removal without surveillance.',
+            'REQ-0037':'The accountless journey shall retain only minimum short-lived state with explicit expiry/clear behavior. Optional Version-1 accounts may persist only the minimum parent identity, session, device-ownership/settings and lifecycle metadata required for the approved dashboard; browsing/query/activity history is prohibited.',
+            'REQ-0040':'Version-1 Google/Firebase authentication architecture shall use current supported terms/quotas/pricing, data-region/transfer/subprocessor/privacy review, secure server-side session handling, provider outage/revocation/deletion behavior and migration/exit criteria; no SMS/password expansion is assumed without separate approval.',
+            'REQ-0041':'Optional parent authentication, minimum parent/device ownership persistence and lightweight dashboard/device management are required Version-1 scope under DEC-0053/CR-0006. The complete core safety journey must remain usable without login. Mandatory login, child accounts, browsing/activity history and unrestricted customer DNS administration remain excluded.'
+          }
+          for k,v in req_updates.items(): patch_table(req,k,{3:v})
+          patch_table(con,'CON-0010',{1:'Version 1 includes optional parent accounts, minimum parent/device ownership persistence and a lightweight dashboard while the complete core safety setup remains usable without login.',2:'Mandatory login for core value requires a later explicit owner decision; account scope must remain minimum, privacy-safe and non-surveillant under DEC-0053/CR-0006.'})
+
+          # Gates now require the activated account path before freeze/build acceptance.
+          patch_table(gates,'LG-06',{3:'Freeze the dual-mode Version-1 product, brand and experience baseline: accountless core plus optional parent account/dashboard.',4:'Applicable L4 dependencies and current owner product authority satisfied under DEC-0052 and DEC-0053; LG-05 is not an active-path prerequisite.',5:'Product/non-goals; traceability; internally/automatically accepted dual-mode prototype and critical journeys; optional account/sign-in/session/dashboard/device lifecycle; accountless-core availability; brand/design system; self-service; content sources; accessibility/i18n; privacy/security boundaries; unresolved risks. No real-user evidence is required before this gate and none may be inferred.',9:'Unlocks final architecture/delivery readiness only on actual LG-06 PASS; the activated Version-1 account scope must proceed through LG-07 privacy/security/architecture controls.'})
+          patch_table(gates,'LG-07',{5:'Architecture/ADRs; accountless-core plus optional identity/session/ownership/dashboard data model; auth/authz/CSRF/IDOR and deletion/recovery; Google/Firebase/vendor/privacy/transfer; typed AdGuard/ClientID integration; security/threat; measurement; test plan; recovery design; budget; delivery plan; residual risks.'})
+          patch_table(gates,'LG-08',{5:'Exact release/config; accountless public/setup surfaces; optional account/sign-in/session/dashboard/device lifecycle; minimum persistence and ownership isolation; DNS integration; recovery script; CI/tests; auth/authz/IDOR/ClientID acceptance; non-goal/secret/data checks.'})
+
+          # Decision register: supersede old shape and record the new owner decision.
+          patch_table(dec,'DEC-0009',{3:'SUPERSEDED by DEC-0053 for Version-1 account scope. Historical accountless-first product-shape decision remains traceable; the accountless core itself is retained as a required path.',4:'Superseded by explicit Project Owner instruction 2026-08-30.',5:'DEC-0053/CR-0006 governs Version-1 account scope; prior evidence remains usable only where it does not depend on excluding accounts.'})
+          dtext=dec.read_text(encoding='utf-8')
+          assert '| DEC-0053 |' not in dtext
+          drow='| DEC-0053 | New | Version-1 optional parent accounts with accountless core retained | ACTIVE OWNER DECISION — Version 1 must include an optional parent account capability with secure sign-in/session, minimum parent/device ownership persistence and a lightweight dashboard/device-management experience. The complete core safety setup/protection journey remains usable without login. Google/Firebase remains the planned initial authentication route subject to current L5 vendor/privacy/security verification. Mandatory login, browsing/activity history, child accounts and unrestricted DNS administration are not authorised. | Explicit Project Owner instruction 2026-08-30; supersedes DEC-0009 and activates EXC-0001 for this bounded Version-1 scope. | Reopen any prior PASS whose acceptance depended on accounts being excluded; complete account-specific L4/L5 design, privacy/security/vendor architecture, L6 implementation and L7 auth/authz/IDOR/ClientID/deletion/recovery acceptance before later gates. | Project Owner | EXC-0001; TSK-0146; TSK-0312; TSK-0142; TSK-0329; TSK-0331; TSK-0332; TSK-0333; TSK-0309; TSK-0052; TSK-0354; TSK-0356; TSK-0523; LG-06; LG-07; LG-08 | Explicit Project Owner instruction 2026-08-30; CR-0006 |\n'
+          pos=dtext.index('| DEC-0052 |'); e=dtext.index('\n',pos)+1
+          dec.write_text(dtext[:e]+drow+dtext[e:],encoding='utf-8')
+
+          # Activate EXC-0001 and record CR-0006.
+          patch_table(exc,'EXC-0001',{2:'ACTIVATED_V1_SCOPE',3:'Explicit Project Owner Version-1 account requirement 2026-08-30; DEC-0053/CR-0006.',4:'Version 1 includes optional parent authentication/account, minimum parent/device ownership persistence and lightweight dashboard/device management. Core safety value remains usable without login; mandatory login, browsing/activity history, child accounts and broad DNS administration remain outside this activation.'})
+          etext=exc.read_text(encoding='utf-8')
+          assert '| CR-0006 |' not in etext
+          crrow='| CR-0006 | Project Owner | 2026-08-30 | Activate the existing optional parent-account/authentication/minimum-persistence/lightweight-dashboard branch as required Version-1 scope while retaining the complete accountless core path. | DEC-0009, EXC-0001, requirements/constraint/gates, affected WBS acceptance/dependencies/statuses, relationship index, risk dispositions, Layers 1/4/5, manifest/generated/checksums, prior LG-06 readiness. | Explicit owner correction: website must be able to have accounts from Version 1. | Project Owner DEC-0053; actual privacy/security/legal/platform reality remains higher authority. | Reopen prior account-exclusion-dependent PASS; activate existing EXC-0001 tasks; require revised L4 dual-mode product/UX acceptance before LG-06, account/privacy/security architecture before LG-07, implementation before LG-08, and auth/authz/IDOR/ClientID/deletion/recovery verification in L7. | Revert this CR only by later explicit owner decision; preserve accountless evidence and restore prior task/gate semantics from Git history if reversed. | Rebuild generated plan; regenerate SHA-256s; run master validator; prove 641 tasks, zero broken links/cycles, no account task still deferred solely by EXC-0001, revised dependency graph, preserved DEC-0052 human-validation sequence and exact GitHub read-back. | Pending publication/read-back at record creation. | ACTIVE — LG-06 old readiness is superseded; no launch/publication/participant/payment authority is created. |\n'
+          # Append after CR-0005 if present, otherwise before terminal explanatory paragraph.
+          pos=etext.index('| CR-0005 |'); e=etext.index('\n',pos)+1
+          exc.write_text(etext[:e]+crrow+etext[e:],encoding='utf-8')
+
+          # Account-specific risks become active controls; RSK-0045 becomes scope-creep guard instead of anti-account guard.
+          patch_table(risks,'RSK-0037',{7:'Use the approved Version-1 Google/Firebase route only after current pricing/quota/terms/privacy/security verification; no SMS/Identity Platform upgrade by default; provider health/error states, revocation/deletion, migration trigger and cost headroom are required. Accountless DNS protection remains available during auth outage.',12:'Open — active Version-1 auth/vendor risk under DEC-0053/CR-0006'})
+          patch_table(risks,'RSK-0038',{7:'Server-validated identity; Secure/HttpOnly/SameSite sessions; CSRF; revocation; server-side ownership checks on every operation; opaque IDs; cross-parent negative/IDOR tests; rate/security monitoring. Release is blocked until the active Version-1 account path passes these controls.',12:'Open — active release-blocking Version-1 auth/authz risk'})
+          patch_table(risks,'RSK-0040',{7:'High-entropy opaque IDs; never use ClientID as authorization; one-device ownership constraints; idempotent provisioning; revoke/replace/reconcile lifecycle; ownership and stale-state tests. Release is blocked until the active Version-1 account path proves these controls.',12:'Open — active Version-1 ClientID/ownership risk'})
+          patch_table(risks,'RSK-0041',{12:'Open — active Version-1 deletion/reconciliation risk'})
+          patch_table(risks,'RSK-0043',{12:'Open — active Version-1 dashboard scope-creep risk'})
+          patch_table(risks,'RSK-0045',{2:'Version-1 account/dashboard scope becomes mandatory for core value or expands into surveillance/complex administration beyond the bounded owner-approved optional account capability.',7:'Keep the core setup/protection journey usable without login; enforce minimum account/device data, explicit dashboard non-goals, no browsing/activity history, no child account or raw DNS policy editor, and fresh owner/privacy/security review for expansion.',8:'Remove or reduce the offending scope, delete excess data if collected, restore accountless-core availability and rerun affected product/privacy/security gates.',9:'Core value requires login; new browsing/activity field appears; child account/raw DNS administration is proposed; account scope exceeds DEC-0053.',12:'Open — active scope-control risk under DEC-0053/CR-0006'})
+
+          # Layer 1 constitutional baseline.
+          t=l1.read_text(encoding='utf-8')
+          reps={
+            '| Accountless discovery and guided first-phone setup | Mandatory account/authentication/persistent parent dashboard (EXC-0001) |':'| Accountless discovery and guided first-phone setup | Mandatory login for core value; child accounts; broad DNS administration |\n| Optional parent account with secure sign-in, minimum parent/device persistence and lightweight dashboard/device management | Browsing/activity history or invasive monitoring |',
+            '| No mandatory account | Immediate accountless value is the baseline; optional persistence only after EXC-0001 trigger and full approval. |':'| Optional Version-1 account | Version 1 includes parent accounts and a lightweight dashboard; the complete core safety setup remains usable without login unless a later owner decision explicitly changes that rule. |',
+            '| Application | One accountless-first full-stack TypeScript + Next.js application under top-level `/website`, covering the public website and setup/product surfaces in one deployable codebase. |':'| Application | One full-stack TypeScript + Next.js application under top-level `/website`, covering the public website, accountless core setup/product path and optional Version-1 parent account/dashboard surfaces in one deployable codebase. |',
+            '| Application state | No application database by default; introduce persistent local storage only for a concrete validated requirement. Stripe/PayPal remain billing source of truth with only minimum reliable local references if required. |':'| Application state | Accountless journey state remains minimum and short-lived. Version-1 accounts may persist only the minimum parent identity, session, device-ownership/settings and lifecycle metadata required for the approved dashboard; no browsing/query/activity history. Stripe/PayPal remain billing source of truth with only minimum reliable local references if required. |'
+          }
+          for a,b in reps.items(): assert t.count(a)==1,a; t=t.replace(a,b,1)
+          l1.write_text(t,encoding='utf-8')
+
+          # Layer 4 critical path.
+          t=l4.read_text(encoding='utf-8')
+          a='LG-06 decision -> architecture/security/privacy/delivery readiness -> LG-07 -> accountless public/setup build plus real DNS -> LG-08'
+          b='LG-06 decision -> architecture/security/privacy/delivery readiness -> LG-07 -> accountless-core plus optional parent-account/dashboard build and real DNS -> LG-08'
+          assert t.count(a)==1; t=t.replace(a,b,1)
+          a='DNS endpoint/platform mechanism contract -> accountless app and DNS integration architecture -> versioned DNS recovery bundle'
+          b='DNS endpoint/platform mechanism contract -> dual-mode accountless-core plus optional-account/session/dashboard and DNS integration architecture -> versioned DNS recovery bundle'
+          assert t.count(a)==1; t=t.replace(a,b,1)
+          l4.write_text(t,encoding='utf-8')
+
+          # Layer 5 owner-change execution semantics.
+          t=l5.read_text(encoding='utf-8')
+          assert '### 5.3.5 Owner-required Version-1 optional account scope' not in t
+          section='''### 5.3.5 Owner-required Version-1 optional account scope (DEC-0053 / CR-0006)\n\n- Effective 2026-08-30, Version 1 must include an optional parent account capability with secure authentication/session, minimum parent/device ownership persistence and lightweight dashboard/device management; the complete core safety setup/protection journey must remain usable without login.\n- This activates the existing `EXC-0001` account/persistence/dashboard branch. It does not authorize browsing/query/activity history, child accounts, unrestricted DNS administration, mandatory login for core value, or a browser-visible AdGuard administration secret/control plane.\n- Prior PASS/evidence remains valid only for unchanged facts. Any PASS whose acceptance depended on accounts being excluded is reopened and must be re-evaluated against the revised contract. In particular, the prior `TSK-0146`, revised integrated prototype/accessibility/findings/freeze chain and LG-06 readiness may not be reused as final evidence without account-inclusive verification.\n- Google/Firebase is the planned initial auth route, not a pre-approved production fact: current official terms, quotas/pricing, data/transfer/privacy/security behavior and failure/exit handling must be verified at the owning L5 task before architecture approval.\n- `LG-06` requires the revised dual-mode L4 product/experience baseline; `LG-07` requires account/session/data/vendor/privacy/security architecture; `LG-08` requires implementation; L7 requires auth/authz/CSRF/IDOR/ClientID/deletion/recovery acceptance. `DEC-0052/CR-0005` remains controlling for human-validation sequencing: no pre-L8 user evidence is invented or required.\n- No public release, participant activation, payment, market activation or launch authority is created by this owner scope correction.\n\n'''
+          marker='### 5.4 Evidence and PASS rules\n'
+          assert t.count(marker)==1; l5.write_text(t.replace(marker,section+marker,1),encoding='utf-8')
+
+          # Manifest becomes CR-0006 current authority.
+          t=manifest.read_text(encoding='utf-8')
+          old='  status: 2.0-owner-frozen / OWNER_FREEZE_2026-08-27 / OWNER_TECHNICAL_COMMERCIAL_AMENDMENT_APPLIED / OWNER_LEGAL_HOLD_ACTIVE_TO_2027-08-27 / OWNER_AZURE_HANDOFF_BOUNDARY_APPLIED_2026-08-27 / POST_FREEZE_CR_0001_DEPENDENCY_REPAIR_2026-08-27 / OWNER_LEGAL_SEQUENCING_OVERRIDE_ACTIVE_TO_2027-08-27 / CR_0003_CR_0004_HISTORICAL_SEQUENCING_SUPERSEDED / OWNER_INTEGRATED_PRODUCT_FIRST_HUMAN_VALIDATION_SEQUENCE_2026-08-29 / PRE_PRODUCT_HUMAN_VALIDATION_EXCLUDED / deterministic validation pending CR-0005 execution readback'
+          new='  status: 2.0-owner-frozen / OWNER_FREEZE_2026-08-27 / OWNER_TECHNICAL_COMMERCIAL_AMENDMENT_APPLIED / OWNER_LEGAL_HOLD_ACTIVE_TO_2027-08-27 / OWNER_AZURE_HANDOFF_BOUNDARY_APPLIED_2026-08-27 / POST_FREEZE_CR_0001_DEPENDENCY_REPAIR_2026-08-27 / OWNER_LEGAL_SEQUENCING_OVERRIDE_ACTIVE_TO_2027-08-27 / CR_0003_CR_0004_HISTORICAL_SEQUENCING_SUPERSEDED / OWNER_INTEGRATED_PRODUCT_FIRST_HUMAN_VALIDATION_SEQUENCE_2026-08-29 / PRE_PRODUCT_HUMAN_VALIDATION_EXCLUDED / OWNER_V1_OPTIONAL_ACCOUNT_SCOPE_2026-08-30 / deterministic validation pending CR-0006 execution readback'
+          assert t.count(old)==1; t=t.replace(old,new,1)
+          block='''post_freeze_change_control:\n  latest_change: CR-0006\n  date: '2026-08-30'\n  status: owner-required Version-1 optional parent-account scope activated while preserving the complete accountless core path; prior LG-06 readiness is superseded; canonical reliance requires deterministic validation plus GitHub publication/read-back\n  authority: explicit current Project Owner instruction 2026-08-30; DEC-0053; DEC-0052/CR-0005 remains controlling for human-validation sequencing; actual applicable safety/legal/security/privacy/platform reality remains higher authority\n  affected_scope:\n  - EXC-0001 activated for bounded Version-1 parent account/auth/session/minimum persistence/lightweight dashboard/device management\n  - prior account-exclusion-dependent L4 PASS evidence reopened for revised acceptance\n  - existing dormant account architecture/build/QA tasks activated without bypassing lifecycle or gates\n  affected_gates:\n  - LG-06 requires revised dual-mode product/brand/experience acceptance\n  - LG-07 requires active account/session/data/vendor/privacy/security architecture evidence\n  - LG-08 requires account capability implementation while preserving accountless core\n  - LG-09 remains the prerequisite to first L8 real-user validation under DEC-0052\n  semantic_delta: Version 1 has optional accounts and a lightweight dashboard; core safety value remains usable without login; mandatory login, browsing/activity history, child accounts and broad DNS administration remain excluded; old accountless-only freeze/readiness evidence is not sufficient for the revised gate\n  change_record: Registers/EXCEPTIONS_CHANGE_CONTROLS.md#post-freeze-material-change-records\n'''
+          t2=re.sub(r'post_freeze_change_control:\n.*?(?=generated_assembly_contract:)',block+'\n',t,flags=re.S)
+          assert t2!=t; manifest.write_text(t2,encoding='utf-8')
+
+          evidence=root/'CR_0006_V1_OPTIONAL_ACCOUNT_SCOPE_EVIDENCE_2026-08-30.md'
+          evidence.write_text(f'''# CR-0006 — Version-1 optional account scope amendment evidence\n\n**Owner authority:** explicit Project Owner instruction 2026-08-30: the website must be able to have accounts from Version 1.\n\n## Decision\n\nDEC-0053 activates the existing account/authentication/minimum-persistence/lightweight-dashboard branch for Version 1. The complete core safety setup remains usable without login. Mandatory login, browsing/activity history, child accounts and unrestricted DNS administration remain excluded. DEC-0052/CR-0005 human-validation sequencing is unchanged.\n\n## Impact\n\n- Activated {len(activated)} existing WBS rows previously deferred solely by EXC-0001.\n- Reopened the prior account-exclusion-dependent L4 freeze/evidence chain rather than fabricating equivalence.\n- Revised LG-06/LG-07/LG-08 acceptance so account product, architecture/security/privacy, implementation and release evidence occur in order.\n- Activated existing auth/authz/IDOR/ClientID/deletion/recovery risks and tests.\n- Preserved all prior evidence that remains valid for the unchanged accountless core, DNS, brand, content and other unaffected facts.\n\n## Pre-change identities\n\n- main parent: `9606d83a82f121acffdf574e9973a7a937da0990`\n- WBS blob: `f23b4f017d1baf73258fa30ecd71549bbfe1b815`\n- relationship index blob: `9ed219b4ccb6b05e68c6a264fc2b21b1008b02a4`\n- manifest blob: `1fc24e28e70c8005a75d37c1d21aecd4ea967ae5`\n- runtime blob before later reconciliation: `ad3fd01395150b802fbb025a48f7692e82b80244`\n\n## Verification required\n\nThe official master-plan validator, relationship/dependency checks, stale-accountless-scope assertions, generated-plan rebuild and checksum verification must all pass before CR-0006 is relied upon. `CURRENT_STATE.md` is reconciled only after this planning publication is read back.\n''',encoding='utf-8')
+
+          print('ACTIVATED_EXC0001_TASKS='+str(len(activated)))
+          print('CHANGED_TASKS='+str(len(changed)))
+          print('DEPENDENCY_MUTATIONS='+str(len(new_deps)))
+          PY
+
+      - name: Rebuild derived plan and checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 Plans/Master/Tools/rebuild_master_plan.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          sums=Path('Plans/SHA256SUMS.txt'); out=[]
+          for line in sums.read_text(encoding='utf-8').splitlines():
+              if not line.strip(): continue
+              _,rel=line.split('  ',1); p=Path('Plans')/rel
+              out.append(f'{hashlib.sha256(p.read_bytes()).hexdigest()}  {rel}')
+          sums.write_text('\n'.join(out)+'\n',encoding='utf-8')
+          PY
+
+      - name: Full deterministic and semantic validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 Plans/Master/Tools/validate_master_plan.py | tee /tmp/cr0006-validation.txt
+          grep -Fx 'VALIDATION PASS' /tmp/cr0006-validation.txt
+          grep -Fx 'tasks=641' /tmp/cr0006-validation.txt
+          grep -Fx 'broken_links=0' /tmp/cr0006-validation.txt
+          grep -Fx 'generated_missing_task_ids=0' /tmp/cr0006-validation.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          import csv,re
+          with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='') as f:
+              rows={r['Task_ID']:r for r in csv.DictReader(f)}
+          assert len(rows)==641
+          assert rows['TSK-0146']['Plan_Status']=='PLANNED' and rows['TSK-0146']['Execution_State']=='TODO'
+          assert 'optional parent account' in rows['TSK-0146']['Acceptance_Criteria'].lower()
+          assert rows['TSK-0312']['Plan_Status']=='PLANNED'
+          assert rows['TSK-0142']['Plan_Status']=='PLANNED'
+          assert set(x.strip() for x in rows['TSK-0329']['Dependencies'].split(';'))=={'TSK-0328','TSK-0312'}
+          assert 'TSK-0331' in rows['TSK-0333']['Dependencies']
+          assert 'TSK-0333' in rows['TSK-0321']['Dependencies']
+          assert set(x.strip() for x in rows['TSK-0309']['Dependencies'].split(';'))=={'TSK-0333','TSK-0327','TSK-0187'}
+          assert set(x.strip() for x in rows['TSK-0052']['Dependencies'].split(';'))=={'TSK-0043','TSK-0321','TSK-0309'}
+          assert rows['TSK-0052']['Action_Authority']=='HUMAN_ONLY'
+          assert rows['TSK-0356']['Plan_Status']=='PLANNED'
+          assert rows['TSK-0523']['Plan_Status']=='PLANNED'
+          assert 'optional-account boundary' in rows['TSK-0398']['Title'].lower()
+          assert rows['TSK-0187']['Plan_Status']=='NOT_APPLICABLE' and rows['TSK-0187']['Execution_State']=='PASS'
+          assert rows['TSK-0326']['Plan_Status']=='NOT_APPLICABLE' and rows['TSK-0326']['Execution_State']=='PASS'
+          assert rows['TSK-0336']['Plan_Status']=='NOT_APPLICABLE' and rows['TSK-0336']['Execution_State']=='PASS'
+          text=Path('Plans/Master/WBS/master-wbs.csv').read_text(encoding='utf-8')
+          for stale in ['DEFERRED_EXCEPTION EXC-0001','unless EXC-0001 is activated','remains deferred under EXC-0001']:
+              assert stale not in text, stale
+          assert 'DEC-0053' in Path('Plans/Master/Registers/DECISIONS_TRIGGERS.md').read_text(encoding='utf-8')
+          assert 'CR-0006' in Path('Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md').read_text(encoding='utf-8')
+          assert 'ACTIVATED_V1_SCOPE' in Path('Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md').read_text(encoding='utf-8')
+          assert 'latest_change: CR-0006' in Path('Plans/Master/MANIFEST.yaml').read_text(encoding='utf-8')
+          assert 'Owner-required Version-1 optional account scope' in Path('Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md').read_text(encoding='utf-8')
+          # Dependency cycles independent of validator summary.
+          graph={k:[x.strip() for x in v['Dependencies'].split(';') if x.strip()] for k,v in rows.items()}
+          temp=set(); done=set()
+          def visit(n):
+              if n in done:return
+              if n in temp:raise AssertionError('cycle '+n)
+              temp.add(n)
+              for d in graph[n]: visit(d)
+              temp.remove(n); done.add(n)
+          for n in graph: visit(n)
+          print('CR0006_SEMANTIC_ASSERTIONS=PASS')
+          PY
+          git diff --check
+
+      - name: Commit and push canonical planning amendment
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "UseSafeWeb Project Governor"
+          git config user.email "actions@users.noreply.github.com"
+          git add Plans CR_0006_V1_OPTIONAL_ACCOUNT_SCOPE_EVIDENCE_2026-08-30.md
+          git diff --cached --quiet && { echo 'No planning delta'; exit 1; }
+          git commit -m "governance: activate Version-1 optional account scope"
+          git push origin HEAD:main
+          echo "CR0006_COMMIT=$(git rev-parse HEAD)"
+          echo "CR0006_WBS_BLOB=$(git rev-parse HEAD:Plans/Master/WBS/master-wbs.csv)"
+          echo "CR0006_REL_BLOB=$(git rev-parse HEAD:Plans/Master/RELATIONSHIP_INDEX.yaml)"
+          echo "CR0006_MANIFEST_BLOB=$(git rev-parse HEAD:Plans/Master/MANIFEST.yaml)"
+          echo "CR0006_EVIDENCE_BLOB=$(git rev-parse HEAD:CR_0006_V1_OPTIONAL_ACCOUNT_SCOPE_EVIDENCE_2026-08-30.md)"
