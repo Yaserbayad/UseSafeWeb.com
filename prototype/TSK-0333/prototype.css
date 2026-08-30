@@ -1,0 +1,206 @@
+.prototype-frame {
+  width: min(100%, 64rem);
+  min-height: 100vh;
+  margin-inline: auto;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background: var(--sw-color-page);
+}
+
+.prototype-topbar,
+.prototype-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sw-space-3);
+  padding: var(--sw-space-4);
+  border-color: var(--sw-color-border);
+  min-width: 0;
+}
+
+.prototype-topbar {
+  border-bottom: var(--sw-border-width) solid var(--sw-color-border);
+  flex-wrap: wrap;
+}
+
+.prototype-footer {
+  border-top: var(--sw-border-width) solid var(--sw-color-border);
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.prototype-topbar__tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sw-space-2);
+  min-width: 0;
+}
+
+.prototype-brand-link,
+.prototype-topbar > *,
+.prototype-app,
+.prototype-screen,
+.prototype-screen > *,
+.prototype-actions,
+.prototype-actions > * {
+  min-width: 0;
+}
+
+.prototype-brand-link {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--sw-radius-sm);
+}
+
+.prototype-brand-link:focus-visible,
+.prototype-skip-link:focus-visible {
+  outline: var(--sw-focus-width) solid var(--sw-color-focus);
+  outline-offset: var(--sw-space-1);
+}
+
+.prototype-badge,
+.prototype-screen {
+  overflow-wrap: anywhere;
+}
+
+.prototype-badge,
+.prototype-meta {
+  font-size: var(--sw-font-size-sm);
+}
+
+.prototype-badge {
+  color: var(--sw-color-accent);
+  font-weight: 700;
+}
+
+.prototype-app {
+  padding: var(--sw-space-5);
+}
+
+.prototype-screen {
+  display: grid;
+  gap: var(--sw-space-5);
+  align-content: start;
+}
+
+.prototype-screen h1 {
+  margin: 0;
+  color: var(--sw-color-heading);
+  font-size: var(--sw-font-size-xl);
+  line-height: var(--sw-line-height-tight);
+}
+
+.prototype-screen h2 {
+  color: var(--sw-color-heading);
+}
+
+.prototype-actions {
+  display: grid;
+  gap: var(--sw-space-3);
+}
+
+.prototype-choice {
+  width: 100%;
+  text-align: start;
+}
+
+.prototype-test-controls {
+  border: var(--sw-border-width) dashed var(--sw-color-border);
+  border-radius: var(--sw-radius-md);
+  padding: var(--sw-space-4);
+}
+
+.prototype-test-controls legend {
+  color: var(--sw-color-accent);
+  font-weight: 700;
+}
+
+.prototype-test-controls .prototype-actions {
+  margin-top: var(--sw-space-3);
+}
+
+.prototype-steps,
+.prototype-limits {
+  padding-inline-start: var(--sw-space-5);
+}
+
+.prototype-steps li + li,
+.prototype-limits li + li {
+  margin-block-start: var(--sw-space-2);
+}
+
+.prototype-state-card > .sw-button {
+  margin-block-start: var(--sw-space-2);
+}
+
+.prototype-error {
+  margin-block-end: var(--sw-space-4);
+}
+
+.prototype-announcer {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.prototype-skip-link {
+  position: fixed;
+  inset-block-start: var(--sw-space-2);
+  inset-inline-start: var(--sw-space-2);
+  z-index: 10;
+  padding: var(--sw-space-2) var(--sw-space-3);
+  background: var(--sw-color-surface);
+  color: var(--sw-color-heading);
+  border: var(--sw-border-width) solid var(--sw-color-border);
+  border-radius: var(--sw-radius-sm);
+  transform: translateY(-200%);
+}
+
+.prototype-skip-link:focus {
+  transform: translateY(0);
+}
+
+[dir="rtl"] .prototype-choice {
+  text-align: start;
+}
+
+[dir="rtl"] code,
+[dir="rtl"] .sw-ds-tech,
+[dir="rtl"] .sw-brand-token {
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: start;
+}
+
+@media (min-width: 48rem) {
+  body {
+    padding: var(--sw-space-6);
+  }
+
+  .prototype-frame {
+    min-height: calc(100vh - (2 * var(--sw-space-6)));
+    border: var(--sw-border-width) solid var(--sw-color-border);
+    border-radius: var(--sw-radius-lg);
+    overflow: hidden;
+  }
+
+  .prototype-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 64rem) {
+  .prototype-app {
+    padding: var(--sw-space-6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prototype-skip-link {
+    transition: none;
+  }
+}
