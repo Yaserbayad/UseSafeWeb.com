@@ -1,0 +1,45 @@
+name: Audit TSK-0333 preflight
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/audit-tsk0333-preflight.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Audit exact WBS contract and runtime predecessors
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          test "$(git rev-parse HEAD:Plans/Master/WBS/master-wbs.csv)" = "f23b4f017d1baf73258fa30ecd71549bbfe1b815"
+          test "$(git rev-parse HEAD:CURRENT_STATE.md)" = "504088e620f34cad7384427dc7e68ce7b4b47bdd"
+          python3 - <<'PY'
+          import csv,re
+          from pathlib import Path
+          rows=list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='')))
+          r=next(x for x in rows if x['Task_ID'].strip()=='TSK-0333')
+          for k in ['Task_ID','Title','Lifecycle_Stage','Priority','Plan_Status','Execution_State','Dependencies','Action_Authority','AI_Capability','Trigger','Acceptance_Criteria','Verification_Method','Evidence_Required','Requirements','Constraints','Interfaces','Risk']:
+              print(f'{k}={r.get(k,"")}')
+          s=Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          for dep in [d.strip() for d in r['Dependencies'].split(';') if d.strip()]:
+              assert re.search(rf'`{re.escape(dep)}[^`]*`: \*\*PASS\*\*',s) or re.search(rf'## {re.escape(dep)} accepted stable state',s), dep
+              print(f'DEPENDENCY_{dep}=PASS')
+          assert r['Lifecycle_Stage'].strip()=='L4'
+          assert r['Action_Authority'].strip()=='AUTO_ALLOWED'
+          print('TSK0333_WBS_PREFLIGHT=PASS')
+          print('TSK0333_ELIGIBILITY_DIRECT=PASS')
+          PY
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'REPOSITORY_CLEAN=PASS'
