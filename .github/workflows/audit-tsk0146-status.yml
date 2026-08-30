@@ -1,0 +1,46 @@
+name: Audit TSK-0146 status
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/audit-tsk0146-status.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Inspect TSK-0146 authority and runtime evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          test "$(git rev-parse HEAD:Plans/Master/WBS/master-wbs.csv)" = "f23b4f017d1baf73258fa30ecd71549bbfe1b815"
+          test "$(git rev-parse HEAD:CURRENT_STATE.md)" = "504088e620f34cad7384427dc7e68ce7b4b47bdd"
+          python3 - <<'PY'
+          import csv
+          from pathlib import Path
+          rows=list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='')))
+          for tid in ['TSK-0146','TSK-0333']:
+              r=next(x for x in rows if x['Task_ID'].strip()==tid)
+              print(f'--- {tid} WBS ---')
+              for k in ['Task_ID','Title','Lifecycle_Stage','Priority','Plan_Status','Execution_State','Dependencies','Action_Authority','Trigger','Acceptance_Criteria','Verification_Method','Evidence_Required','Gate_ID','Required_Gate','Gate']:
+                  print(f'{k}={r.get(k,"")}')
+          lines=Path('CURRENT_STATE.md').read_text(encoding='utf-8').splitlines()
+          hits=[i for i,l in enumerate(lines) if 'TSK-0146' in l]
+          print(f'TSK0146_RUNTIME_HITS={len(hits)}')
+          for i in hits:
+              print('--- RUNTIME CONTEXT ---')
+              for j in range(max(0,i-3),min(len(lines),i+4)):
+                  print(f'{j+1}:{lines[j]}')
+          PY
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'REPOSITORY_CLEAN=PASS'
