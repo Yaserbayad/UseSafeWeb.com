@@ -1,0 +1,56 @@
+name: Diagnose CR-0006 corrected graph
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/diagnose-cr0006-cycle-v2-20260830.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Assert unchanged canonical planning and test candidate graph
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(hostname -s)" = "adguardvm"
+          test "$(git hash-object CURRENT_STATE.md)" = "ad3fd01395150b802fbb025a48f7692e82b80244"
+          test "$(git hash-object Plans/Master/MANIFEST.yaml)" = "1fc24e28e70c8005a75d37c1d21aecd4ea967ae5"
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "f23b4f017d1baf73258fa30ecd71549bbfe1b815"
+          test "$(git hash-object Plans/Master/RELATIONSHIP_INDEX.yaml)" = "9ed219b4ccb6b05e68c6a264fc2b21b1008b02a4"
+          python3 .github/scripts/cr0006_reconcile_v3.py >/tmp/cr0006-v3.txt
+          cat /tmp/cr0006-v3.txt
+          python3 - <<'PY'
+          import csv
+          from pathlib import Path
+          with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='') as f:
+              rows={r['Task_ID']:r for r in csv.DictReader(f)}
+          graph={k:[x.strip() for x in v['Dependencies'].split(';') if x.strip()] for k,v in rows.items()}
+          state={}; stack=[]; pos={}; found=[]
+          def dfs(n):
+              state[n]=1; pos[n]=len(stack); stack.append(n)
+              for d in graph[n]:
+                  if state.get(d,0)==0:
+                      if dfs(d): return True
+                  elif state.get(d)==1:
+                      found.extend(stack[pos[d]:]+[d]); return True
+              stack.pop(); pos.pop(n,None); state[n]=2; return False
+          for n in graph:
+              if state.get(n,0)==0 and dfs(n): break
+          print('CR0006_EXACT_CYCLE=' + (' -> '.join(found) if found else 'NONE'))
+          assert not found
+          assert set(graph['TSK-0333'])=={'TSK-0335','TSK-0334','TSK-0146','TSK-0331'}
+          assert 'accountless core' in rows['TSK-0052']['Acceptance_Criteria'].lower()
+          assert 'browsing/query/activity history' in rows['TSK-0524']['Acceptance_Criteria'].lower()
+          print('CR0006_CORRECTED_GRAPH=PASS')
+          PY
+          git reset --hard HEAD
+          git clean -ffdx
