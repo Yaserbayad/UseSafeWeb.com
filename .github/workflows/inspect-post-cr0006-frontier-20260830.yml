@@ -16,39 +16,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-      - name: Print authoritative task frontier
+      - name: Print exact TSK-0146 execution contract
         shell: bash
         run: |
           python3 - <<'PY'
           import csv, json
           from pathlib import Path
-
-          p = Path('Plans/Master/WBS/master-wbs.csv')
-          rows = list(csv.DictReader(p.open(encoding='utf-8-sig', newline='')))
-          by_id = {r.get('Task_ID','').strip(): r for r in rows}
-
-          target = by_id['TSK-0146']
-          def deps(r):
-              raw = (r.get('Dependencies') or r.get('Hard_Dependencies') or '').strip()
-              return [x.strip() for x in raw.replace(',', ';').split(';') if x.strip()]
-
-          target_deps = deps(target)
-          successors = [r for r in rows if 'TSK-0146' in deps(r)]
-
-          wanted = [
-              'Task_ID','Task_Name','Title','Lifecycle_Stage','Lifecycle','Plan_Status','Plan_State',
-              'Execution_Status','Execution_State','Dependencies','Hard_Dependencies','Owner','AI_Capability',
-              'Autonomy','Action_Authority','Acceptance_Criteria','Acceptance_Criteria_ID','Verification',
-              'Verification_ID','Evidence','Evidence_ID','Gate','Gate_ID','Source_Reference','Notes'
-          ]
-          def slim(r):
-              out = {k: r.get(k,'') for k in wanted if k in r}
-              if not out:
-                  out = r
-              return out
-
-          print('HEAD_TASK=' + json.dumps(slim(target), ensure_ascii=False, sort_keys=True))
-          print('DIRECT_DEPS=' + json.dumps([slim(by_id[d]) for d in target_deps if d in by_id], ensure_ascii=False, sort_keys=True))
-          print('DIRECT_SUCCESSORS=' + json.dumps([slim(r) for r in successors], ensure_ascii=False, sort_keys=True))
-          print('WBS_COLUMNS=' + json.dumps(list(target.keys()), ensure_ascii=False))
+          rows = list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='')))
+          row = next(r for r in rows if r['Task_ID'].strip() == 'TSK-0146')
+          print('FULL_TARGET=' + json.dumps(row, ensure_ascii=False, sort_keys=True))
           PY
