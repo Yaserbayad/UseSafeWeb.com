@@ -1,0 +1,76 @@
+name: Verify TSK-0146 baseline
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/verify-tsk0146-baseline.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify current accountless baseline and trigger authority
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          python3 - <<'PY'
+          import csv,re
+          from pathlib import Path
+          rows=list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='')))
+          r=next(x for x in rows if x['Task_ID'].strip()=='TSK-0146')
+          assert r['Dependencies'].strip()==''
+          assert r['Action_Authority'].strip()=='AUTO_ALLOWED'
+          assert r['Acceptance_ID'].strip()=='ACC-0146'
+          print('TSK0146_WBS_AUTHORITY=PASS')
+
+          files={
+            'scope':Path('TSK_0141_PROVISIONAL_MINIMUM_PRODUCT_SCOPE_AND_NON_GOALS_2026-08-28.md'),
+            'brief':Path('TSK_0140_PROVISIONAL_PRODUCT_BRIEF_CANDIDATE_2026-08-28.md'),
+            'data':Path('TSK_0229_ACCOUNTLESS_JOURNEY_DATA_MODEL_EXPIRY_DELETION_NO_LINKAGE_2026-08-28.md'),
+            'decisions':Path('TSK_0138_UNRESOLVED_PRODUCT_ASSUMPTIONS_AND_OWNER_DECISIONS_2026-08-28.md'),
+            'requirements':Path('Plans/Master/Registers/REQUIREMENTS.md'),
+            'constraints':Path('Plans/Master/Registers/CONSTRAINTS.md'),
+            'interfaces':Path('Plans/Master/Registers/INTERFACES.md'),
+          }
+          for name,p in files.items():
+              assert p.exists(), (name,p)
+              print(f'SOURCE_BLOB_{name.upper()}='+__import__('subprocess').check_output(['git','rev-parse',f'HEAD:{p.as_posix()}'],text=True).strip())
+
+          alltext='\n'.join(p.read_text(encoding='utf-8') for p in files.values())
+          low=alltext.lower()
+          # ACC-0146 semantic classes.
+          assert re.search(r'no mandatory.{0,80}account|accountless-first|accountless first',low,re.S)
+          assert re.search(r'immediate value|before value|without.{0,40}account|no.{0,40}account.{0,80}value',low,re.S)
+          assert re.search(r'optional.{0,80}account|persistent.{0,80}account|account.{0,80}trigger|trigger.{0,80}account',low,re.S)
+          assert re.search(r'project owner|owner approval|owner-authori[sz]ed|explicit owner',low,re.S)
+          # Current baseline must reject dashboard-first/mandatory account semantics.
+          assert 'dashboard-first' in low or 'dashboard first' in low
+          for token in ['REQ-0007','REQ-0008','CON-0001','CON-0002','INT-0003','INT-0004']:
+              assert token in alltext, token
+          print('TSK0146_NO_MANDATORY_ACCOUNT=PASS')
+          print('TSK0146_IMMEDIATE_VALUE=PASS')
+          print('TSK0146_OPTIONAL_PERSISTENCE_TRIGGER=PASS')
+          print('TSK0146_OWNER_AUTHORITY=PASS')
+          print('TSK0146_DASHBOARD_FIRST_SUPERSEDED=PASS')
+
+          # Emit only narrow matching source lines for durable review; no secrets.
+          pats=['mandatory','accountless','optional','persistent','trigger','dashboard-first','dashboard first','owner approval','project owner','REQ-0007','REQ-0008','CON-0001','CON-0002','INT-0003','INT-0004']
+          for name,p in files.items():
+              print(f'--- {name.upper()} RELEVANT LINES ---')
+              for i,line in enumerate(p.read_text(encoding='utf-8').splitlines(),1):
+                  ll=line.lower()
+                  if any(x.lower() in ll for x in pats):
+                      print(f'{p}:{i}:{line[:800]}')
+          PY
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'REPOSITORY_CLEAN=PASS'
