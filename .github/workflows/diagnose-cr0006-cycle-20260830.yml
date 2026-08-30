@@ -1,0 +1,80 @@
+name: Diagnose CR-0006 dependency cycle
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/diagnose-cr0006-cycle-20260830.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-cr0006-cycle-diagnostic
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Assert canonical planning remained unchanged
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(hostname -s)" = "adguardvm"
+          test "$(git rev-parse HEAD^)" = "29141523121e31fe1e36910bd5ead1be3f5d2043"
+          test "$(git hash-object CURRENT_STATE.md)" = "ad3fd01395150b802fbb025a48f7692e82b80244"
+          test "$(git hash-object Plans/Master/MANIFEST.yaml)" = "1fc24e28e70c8005a75d37c1d21aecd4ea967ae5"
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "f23b4f017d1baf73258fa30ecd71549bbfe1b815"
+          test "$(git hash-object Plans/Master/RELATIONSHIP_INDEX.yaml)" = "9ed219b4ccb6b05e68c6a264fc2b21b1008b02a4"
+
+      - name: Apply candidate only in disposable checkout and print exact cycle
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/cr0006_reconcile_v2.py >/tmp/cr0006-apply.txt
+          cat /tmp/cr0006-apply.txt
+          python3 - <<'PY'
+          import csv
+          from pathlib import Path
+          with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='') as f:
+              rows={r['Task_ID']:r for r in csv.DictReader(f)}
+          graph={k:[x.strip() for x in v['Dependencies'].split(';') if x.strip()] for k,v in rows.items()}
+          state={}; stack=[]; pos={}; found=[]
+          def dfs(n):
+              state[n]=1; pos[n]=len(stack); stack.append(n)
+              for d in graph[n]:
+                  if state.get(d,0)==0:
+                      if dfs(d): return True
+                  elif state.get(d)==1:
+                      found.extend(stack[pos[d]:]+[d]); return True
+              stack.pop(); pos.pop(n,None); state[n]=2
+              return False
+          for n in graph:
+              if state.get(n,0)==0 and dfs(n): break
+          if not found:
+              print('CR0006_EXACT_CYCLE=NONE')
+          else:
+              print('CR0006_EXACT_CYCLE='+' -> '.join(found))
+              for n in found[:-1]:
+                  print('CYCLE_NODE',n,'DEPENDS_ON',','.join(graph[n]))
+          # Report whether suspect LG-06 additions are descendants/ancestors.
+          def path(src,target):
+              q=[(src,[src])]; seen={src}
+              while q:
+                  n,p=q.pop(0)
+                  if n==target:return p
+                  for d in graph[n]:
+                      if d not in seen: seen.add(d); q.append((d,p+[d]))
+              return None
+          for a,b in [('TSK-0052','TSK-0309'),('TSK-0309','TSK-0052'),('TSK-0052','TSK-0628'),('TSK-0628','TSK-0052'),('TSK-0321','TSK-0333'),('TSK-0333','TSK-0321')]:
+              p=path(a,b)
+              print(f'PATH_{a}_{b}=' + (' -> '.join(p) if p else 'NONE'))
+          PY
+          git reset --hard HEAD
+          git clean -ffdx
