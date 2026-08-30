@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-30T10:34:50Z
+**Updated:** 2026-08-30T10:56:09Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -16,7 +16,7 @@
 - Current authoritative WBS blob: `3bb1598a6233a2bbefa52c746a7621867c6c6e89`; relationship-index blob: `c108d2c162bcea2ee4cc01def46d0487a9501032`; manifest blob: `06af6e55e63e2dfac211bb6c989d5e542cf2e903`; validator blob: `fcdde594524e57ceaaaa41776d16a54081d991a8`.
 - `EXC-0001` is now `ACTIVATED_V1_SCOPE`: 43 existing account/authentication/minimum-persistence/dashboard tasks formerly deferred solely by that exception are active again, subject to ordinary lifecycle, gate, dependency, privacy, security and action-authority rules.
 - The approved Version-1 boundary excludes mandatory login for core value, browsing/query/activity history, child accounts and unrestricted customer DNS administration. Google/Firebase is the planned initial authentication route but remains subject to current L5 vendor/privacy/security verification before architecture approval.
-- Prior PASS/evidence remains valid only for unchanged facts. Account-exclusion-dependent L4 evidence is reopened: `TSK-0146` is current `TODO`; revised account-inclusive `TSK-0313`, `TSK-0315`, `TSK-0328`, `TSK-0333`, `TSK-0321`, `TSK-0309`, and `TSK-0628` are non-PASS until their current acceptance contracts are satisfied. Activated HUMAN_ONLY account UX decisions (`TSK-0329`, `TSK-0332`, `TSK-0331`) remain human-authority work when dependency-eligible.
+- Prior PASS/evidence remains valid only for unchanged facts. `TSK-0146` is current **PASS** under the revised DEC-0053/CR-0006 dual-mode Version-1 contract and evidence recorded below; revised account-inclusive `TSK-0313`, `TSK-0315`, `TSK-0328`, `TSK-0333`, `TSK-0321`, `TSK-0309`, and `TSK-0628` remain non-PASS until their current acceptance contracts are satisfied. Activated HUMAN_ONLY account UX decisions (`TSK-0329`, `TSK-0332`, `TSK-0331`) remain human-authority work when dependency-eligible.
 - The prior `TSK_0052_LG06_READINESS_REVIEW_2026-08-30.md` is **superseded as a readiness conclusion** by CR-0006. `LG-06` is not PASS and must not be presented for owner approval until the revised dual-mode L4 baseline is complete.
 - `CR-0005` / `DEC-0052` remains controlling for human-validation sequencing: all 31 L3 tasks plus `TSK-0187`, `TSK-0326`, and `TSK-0336` remain `NOT_APPLICABLE + PASS` exclusion records; no behavioral/user evidence is inferred. First real-user validation remains L8 after LG-09 PASS.
 - LG-06/LG-07/LG-08/LG-09 remain mandatory in order. CR-0006 creates no public publication, participant processing, payment, market activation or launch authority. `RSK-0002` remains OPEN and non-blocking before L8.
@@ -24,8 +24,26 @@
 ## CR-0006 current execution boundary
 
 - Current product scope is dual-mode Version 1: accountless core plus optional parent account/session/minimum ownership persistence/lightweight dashboard/device management.
-- Historical accepted-stable sections for `TSK-0146`, `TSK-0333`, `TSK-0321`, `TSK-0309`, `TSK-0628` or other account-exclusion-dependent artifacts are historical evidence only where CR-0006 changed acceptance; they do not satisfy the revised task state.
-- Exact next task must be recomputed from the CR-0006 WBS/graph after this runtime write/read-back; do not infer the successor from task numbering or the old LG-06 readiness package.
+- The historical pre-CR-0006 `TSK-0146` accepted-stable section is superseded by the current post-CR-0006 TSK-0146 state below. Historical accepted-stable sections for `TSK-0333`, `TSK-0321`, `TSK-0309`, `TSK-0628` or other account-exclusion-dependent artifacts remain historical evidence only where CR-0006 changed acceptance; they do not satisfy the revised task state.
+- After this TSK-0146 PASS is persisted/read back, exact next work must be recomputed from current WBS dependencies, gates, Action Authority and runtime evidence; do not infer the successor from task numbering or the old LG-06 readiness package.
+
+## TSK-0146 current accepted stable state — 2026-08-30 — POST-CR-0006
+
+`TSK-0146 — Freeze Version-1 optional-account product baseline and accountless core path`: **PASS** under `ACC-0146 / VER-0146 / EVD-0146` and current `DEC-0053 / CR-0006` authority.
+
+- Current WBS blob `3bb1598a6233a2bbefa52c746a7621867c6c6e89`: L4, CRITICAL, zero hard dependencies, A3, `AUTO_ALLOWED`; WBS planning snapshot was `TODO` before this execution and is not used as runtime proof.
+- Accepted Version-1 baseline: `TSK_0146_VERSION_1_OPTIONAL_ACCOUNT_PRODUCT_BASELINE_2026-08-30.md`, version `1.0.0`, blob `9d3870d90add696fc352829fb4763c834b8d09af`, publication commit `1a913b44a09c383ac6c9939959648629351d9f6c`.
+- Durable acceptance evidence: `TSK_0146_VERSION_1_OPTIONAL_ACCOUNT_PRODUCT_BASELINE_EVIDENCE_2026-08-30.md`, blob `b785c4a52217b24cf6eb9f66dce0773ddef7a639`.
+- Deterministic verification run/job `33307541477 / 99246630910`: SUCCESS on self-hosted `adguardvm`; WBS contract, exact canonical source hashes, all required ACC-0146 clauses, non-goals and no-downstream-PASS-inference checks passed.
+- Frozen product rule: Version 1 includes a required **optional parent account** with secure-session product requirements, minimum parent/device ownership persistence and lightweight dashboard/device management, while the complete core safety setup/protection journey remains usable without login.
+- Mandatory login, browsing/query/activity history, child accounts and unrestricted/raw customer DNS administration remain prohibited absent later explicit Project Owner change. Account ownership/device registration never substitutes for technical Protection Map verification.
+- Google/Firebase remains the planned initial authentication route only; L5 vendor/privacy/security/architecture acceptance is not inferred. Exact persistence schema, retention, storage, access, backup, deletion and ownership mechanics remain downstream tasks.
+- `RSK-0002` remains OPEN/non-blocking before L8 under DEC-0052; no human/user validation is inferred. Account/dashboard privacy-drift risk remains for downstream design/build/runtime verification.
+- LG-06 remains non-PASS. Revised account-inclusive L4 UX/prototype tasks, L5 architecture/security/privacy/vendor work, L6 implementation and L7 auth/authz/IDOR/ClientID/deletion/recovery acceptance retain their own task/gate requirements.
+
+### Queue status after post-CR-0006 TSK-0146 acceptance
+
+Recompute current eligibility from WBS hard dependencies, current runtime evidence, lifecycle/gates and Action Authority. Do not revive pre-CR-0006 PASS for tasks whose acceptance changed, and do not infer LG-06 readiness from the superseded readiness review.
 
 ## Frozen technical identity
 
@@ -1013,7 +1031,9 @@ Do not infer a successor from task numbering. Recompute current eligibility from
 
 Do not infer a successor from task numbering. Recompute current eligibility from WBS, dependencies, gates, runtime evidence and Action Authority after this state write/read-back.
 
-## TSK-0146 accepted stable state — 2026-08-30
+## Historical TSK-0146 pre-CR-0006 accepted state — 2026-08-30 — SUPERSEDED
+
+> Historical only. DEC-0053/CR-0006 superseded this account-exclusion-dependent acceptance. Do not use this section as current TSK-0146 runtime state.
 
 `TSK-0146 — Freeze accountless-first product baseline and optional-account trigger`: **PASS** under `ACC-0146 / VER-0146 / EVD-0146` after current-evidence reconstruction resolved the prior runtime contradiction.
 
