@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-29T19:39:11Z
+**Updated:** 2026-08-30T10:34:50Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -8,15 +8,24 @@
 
 ## Canonical planning authority
 
-**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0005 PUBLISHED, RECONCILED, READ-BACK VERIFIED.**
+**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0006 PUBLISHED, RECONCILED, READ-BACK VERIFIED.**
 
-- Latest post-freeze change: `CR-0005` / `DEC-0052`, explicit Project Owner authority 2026-08-29: integrated product first; no parent/user/participant testing before LG-09/L8.
-- CR-0005 planning publication commit: `16e4007d8a4856f92cb690e29d6df90fa3356549`; durable evidence `CR_0005_INTEGRATED_PRODUCT_FIRST_VALIDATION_SEQUENCE_EVIDENCE_2026-08-29.md`, blob `c511be2de8ad55a50909514b7965b67bbe7539cc`.
-- CR-0005 fresh-checkout read-back run/job: `33266767165` / `99138083913`; all declared checksums and the official master-plan validator passed.
-- Current authoritative WBS blob: `f23b4f017d1baf73258fa30ecd71549bbfe1b815`; relationship-index blob remains `9ed219b4ccb6b05e68c6a264fc2b21b1008b02a4`; manifest blob: `1fc24e28e70c8005a75d37c1d21aecd4ea967ae5`.
-- Deterministic validation/read-back after CR-0005: 641 tasks, 849 dependency edges, 5,178 relationship entities, 20,463 targets, 0 broken links, 0 generated missing task IDs; all declared checksums verified from fresh GitHub checkout.
-- CR-0005 supersedes CR-0003/CR-0004 for human-validation sequencing: all 31 L3 tasks plus `TSK-0187`, `TSK-0326`, and `TSK-0336` are `NOT_APPLICABLE + PASS` exclusion records; they were not executed and supply no behavioral evidence. Historical dependency edges remain for traceability.
-- `TSK-0187` no longer blocks pre-product progression; its dependency is satisfied only by verified exclusion semantics. LG-03/LG-04/LG-05 are inactive on the current path; LG-06/LG-07/LG-08/LG-09 remain mandatory technical/product/build/release gates. `RSK-0002` remains OPEN as an accepted product-assumption risk, not a pre-product human-testing blocker. No legal/privacy/participant/publication/payment/market/launch authority is created.
+- Latest post-freeze change: `CR-0006` / `DEC-0053`, explicit Project Owner authority 2026-08-30: **Version 1 includes an optional parent account capability and lightweight dashboard/device management while the complete accountless core setup/protection journey remains usable without login.**
+- CR-0006 planning publication commit: `40a5e4612e08b25ac63dd9e63b142eec1179b877`; evidence `CR_0006_V1_OPTIONAL_ACCOUNT_SCOPE_EVIDENCE_2026-08-30.md`, blob `e74844b94d164a57bdbe708eedd4bd26b522c8f2`.
+- CR-0006 validation/publication run/job: `33306724533` / `99244479114`: `VALIDATION PASS`, 641 tasks, 858 dependency edges, 5,178 relationship entities, 20,472 relationship targets, 0 broken links, 0 generated missing task IDs; direct CR-0006 semantic assertions PASS.
+- Current authoritative WBS blob: `3bb1598a6233a2bbefa52c746a7621867c6c6e89`; relationship-index blob: `c108d2c162bcea2ee4cc01def46d0487a9501032`; manifest blob: `06af6e55e63e2dfac211bb6c989d5e542cf2e903`; validator blob: `fcdde594524e57ceaaaa41776d16a54081d991a8`.
+- `EXC-0001` is now `ACTIVATED_V1_SCOPE`: 43 existing account/authentication/minimum-persistence/dashboard tasks formerly deferred solely by that exception are active again, subject to ordinary lifecycle, gate, dependency, privacy, security and action-authority rules.
+- The approved Version-1 boundary excludes mandatory login for core value, browsing/query/activity history, child accounts and unrestricted customer DNS administration. Google/Firebase is the planned initial authentication route but remains subject to current L5 vendor/privacy/security verification before architecture approval.
+- Prior PASS/evidence remains valid only for unchanged facts. Account-exclusion-dependent L4 evidence is reopened: `TSK-0146` is current `TODO`; revised account-inclusive `TSK-0313`, `TSK-0315`, `TSK-0328`, `TSK-0333`, `TSK-0321`, `TSK-0309`, and `TSK-0628` are non-PASS until their current acceptance contracts are satisfied. Activated HUMAN_ONLY account UX decisions (`TSK-0329`, `TSK-0332`, `TSK-0331`) remain human-authority work when dependency-eligible.
+- The prior `TSK_0052_LG06_READINESS_REVIEW_2026-08-30.md` is **superseded as a readiness conclusion** by CR-0006. `LG-06` is not PASS and must not be presented for owner approval until the revised dual-mode L4 baseline is complete.
+- `CR-0005` / `DEC-0052` remains controlling for human-validation sequencing: all 31 L3 tasks plus `TSK-0187`, `TSK-0326`, and `TSK-0336` remain `NOT_APPLICABLE + PASS` exclusion records; no behavioral/user evidence is inferred. First real-user validation remains L8 after LG-09 PASS.
+- LG-06/LG-07/LG-08/LG-09 remain mandatory in order. CR-0006 creates no public publication, participant processing, payment, market activation or launch authority. `RSK-0002` remains OPEN and non-blocking before L8.
+
+## CR-0006 current execution boundary
+
+- Current product scope is dual-mode Version 1: accountless core plus optional parent account/session/minimum ownership persistence/lightweight dashboard/device management.
+- Historical accepted-stable sections for `TSK-0146`, `TSK-0333`, `TSK-0321`, `TSK-0309`, `TSK-0628` or other account-exclusion-dependent artifacts are historical evidence only where CR-0006 changed acceptance; they do not satisfy the revised task state.
+- Exact next task must be recomputed from the CR-0006 WBS/graph after this runtime write/read-back; do not infer the successor from task numbering or the old LG-06 readiness package.
 
 ## Frozen technical identity
 
