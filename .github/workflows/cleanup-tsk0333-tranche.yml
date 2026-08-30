@@ -44,8 +44,8 @@ jobs:
             .github/workflows/cleanup-tsk0333-tranche.yml
           )
           git rm -f --ignore-unmatch -- "${files[@]}"
-          git diff --check
-          changed="$(git diff --name-only | sort)"
+          git diff --cached --check
+          changed="$(git diff --cached --name-only | sort)"
           expected="$(printf '%s\n' "${files[@]}" | while read -r f; do git cat-file -e "HEAD:$f" 2>/dev/null && echo "$f" || true; done | sort)"
           [[ "$changed" == "$expected" ]]
           git config user.name 'github-actions[bot]'
