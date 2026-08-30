@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-30T11:04:24Z
+**Updated:** 2026-08-30T11:10:27Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -16,7 +16,7 @@
 - Current authoritative WBS blob: `3bb1598a6233a2bbefa52c746a7621867c6c6e89`; relationship-index blob: `c108d2c162bcea2ee4cc01def46d0487a9501032`; manifest blob: `06af6e55e63e2dfac211bb6c989d5e542cf2e903`; validator blob: `fcdde594524e57ceaaaa41776d16a54081d991a8`.
 - `EXC-0001` is now `ACTIVATED_V1_SCOPE`: 43 existing account/authentication/minimum-persistence/dashboard tasks formerly deferred solely by that exception are active again, subject to ordinary lifecycle, gate, dependency, privacy, security and action-authority rules.
 - The approved Version-1 boundary excludes mandatory login for core value, browsing/query/activity history, child accounts and unrestricted customer DNS administration. Google/Firebase is the planned initial authentication route but remains subject to current L5 vendor/privacy/security verification before architecture approval.
-- Prior PASS/evidence remains valid only for unchanged facts. `TSK-0146` and `TSK-0229` are current **PASS** under the revised DEC-0053/CR-0006 dual-mode Version-1 contract and evidence recorded below; revised account-inclusive `TSK-0313`, `TSK-0315`, `TSK-0328`, `TSK-0333`, `TSK-0321`, `TSK-0309`, and `TSK-0628` remain non-PASS until their current acceptance contracts are satisfied. Activated HUMAN_ONLY account UX decisions (`TSK-0329`, `TSK-0332`, `TSK-0331`) remain human-authority work when dependency-eligible.
+- Prior PASS/evidence remains valid only for unchanged facts. `TSK-0146`, `TSK-0229`, and post-CR-0006 `TSK-0141` are current **PASS** under the revised DEC-0053/CR-0006 dual-mode Version-1 contract and evidence recorded below; revised account-inclusive `TSK-0313`, `TSK-0315`, `TSK-0328`, `TSK-0333`, `TSK-0321`, `TSK-0309`, and `TSK-0628` remain non-PASS until their current acceptance contracts are satisfied. Activated HUMAN_ONLY account UX decisions (`TSK-0329`, `TSK-0332`, `TSK-0331`) remain human-authority work when dependency-eligible.
 - The prior `TSK_0052_LG06_READINESS_REVIEW_2026-08-30.md` is **superseded as a readiness conclusion** by CR-0006. `LG-06` is not PASS and must not be presented for owner approval until the revised dual-mode L4 baseline is complete.
 - `CR-0005` / `DEC-0052` remains controlling for human-validation sequencing: all 31 L3 tasks plus `TSK-0187`, `TSK-0326`, and `TSK-0336` remain `NOT_APPLICABLE + PASS` exclusion records; no behavioral/user evidence is inferred. First real-user validation remains L8 after LG-09 PASS.
 - LG-06/LG-07/LG-08/LG-09 remain mandatory in order. CR-0006 creates no public publication, participant processing, payment, market activation or launch authority. `RSK-0002` remains OPEN and non-blocking before L8.
@@ -25,7 +25,7 @@
 
 - Current product scope is dual-mode Version 1: accountless core plus optional parent account/session/minimum ownership persistence/lightweight dashboard/device management.
 - The historical pre-CR-0006 `TSK-0146` accepted-stable section is superseded by the current post-CR-0006 TSK-0146 state below. Historical accepted-stable sections for `TSK-0333`, `TSK-0321`, `TSK-0309`, `TSK-0628` or other account-exclusion-dependent artifacts remain historical evidence only where CR-0006 changed acceptance; they do not satisfy the revised task state.
-- `TSK-0146` and post-CR-0006 `TSK-0229` are now the current accepted product/privacy baselines recorded below. Exact next work must be recomputed from current WBS dependencies, gates, Action Authority and runtime evidence; do not infer the successor from task numbering or the old LG-06 readiness package.
+- `TSK-0146`, post-CR-0006 `TSK-0229`, and post-CR-0006 `TSK-0141` are now current accepted product/privacy/scope baselines recorded below. Exact next work must be recomputed from current WBS dependencies, gates, Action Authority and runtime evidence; do not infer the successor from task numbering or the old LG-06 readiness package.
 
 ## TSK-0146 current accepted stable state — 2026-08-30 — POST-CR-0006
 
@@ -66,6 +66,25 @@ Recompute current eligibility from WBS hard dependencies, current runtime eviden
 ### Queue status after post-CR-0006 TSK-0229 acceptance
 
 TSK-0229 may now satisfy its hard-dependency edges, including the TSK-0315 dependency, but every successor must be independently recomputed against its other WBS hard dependencies, current runtime state, gates, inputs and Action Authority.
+
+## TSK-0141 current accepted stable state — 2026-08-30 — POST-CR-0006
+
+`TSK-0141 — Freeze minimum product scope and non-goals`: **PASS** under current `ACC-0141 / VER-0141 / EVD-0141` and `DEC-0053 / CR-0006` authority.
+
+- Current WBS blob `3bb1598a6233a2bbefa52c746a7621867c6c6e89`: L4, dependency `TSK-0139`, A3 / `AUTO_ALLOWED`; WBS planning snapshot is not runtime proof.
+- Dependency `TSK-0139` remains current PASS for bounded L4 product-definition/design authority; CR-0006 did not invalidate its evidence-limits mandate.
+- Historical pre-CR-0006 scope artifact `TSK_0141_PROVISIONAL_MINIMUM_PRODUCT_SCOPE_AND_NON_GOALS_2026-08-28.md`, blob `c72bfd906fdca4a106dcd7d4ff458a2577e32c90`, remains evidence only for compatible facts. Its clauses deferring accounts/Google sign-in/persistent dashboard are superseded.
+- Current revised scope is supplied without duplication by accepted `TSK_0146_VERSION_1_OPTIONAL_ACCOUNT_PRODUCT_BASELINE_2026-08-30.md`, version `1.0.0`, blob `9d3870d90add696fc352829fb4763c834b8d09af`.
+- Durable revalidation evidence: `TSK_0141_POST_CR0006_SCOPE_REVALIDATION_EVIDENCE_2026-08-30.md`, blob `384455df94b084982d75d71eca1560cf24766412`.
+- Deterministic verifier run/job `33308167888 / 99248297105`: SUCCESS on self-hosted `adguardvm`; dependency, stale pre-CR-0006 scope detection, current-scope mapping, ACC-0141 and no-behavioral-inference checks all PASS.
+- Current minimum scope includes optional parent accounts plus lightweight dashboard/device management while preserving the complete core setup/protection journey without login.
+- Mandatory login, browsing/query/activity history, child accounts/profiles and unrestricted DNS administration remain excluded/prohibited absent later explicit authority.
+- No capability is represented as behaviorally/user validated before the controlled integrated-product pilot in L8 after LG-09; `RSK-0002` remains OPEN.
+- This PASS does not approve detailed account requirements, persistent schema, vendor/privacy/security architecture, account UX/prototype, implementation, LG-06, participant processing, release, payment or launch.
+
+### Queue status after post-CR-0006 TSK-0141 acceptance
+
+TSK-0141 may now satisfy its current hard-dependency edges. Successor eligibility must still be recomputed against all other current WBS dependencies, runtime evidence, lifecycle/gates and Action Authority.
 
 ## Frozen technical identity
 
@@ -423,7 +442,9 @@ The Project Owner explicitly deferred the complete real-participant Experiment-1
 
 This PASS does not mean LG-03/LG-04/LG-05 or LG-06 passed, does not supply real-parent behavioral evidence, and does not authorize integrated build, participants, legal completion, payment activation or public launch.
 
-### TSK-0141 accepted stable state
+### Historical TSK-0141 accepted stable state — PRE-CR-0006 — SUPERSEDED
+
+> Historical only. DEC-0053/CR-0006 superseded the account-exclusion clauses in this acceptance. Use the post-CR-0006 TSK-0141 section below for current runtime state.
 
 `TSK-0141 — Freeze minimum product scope and non-goals`: **PASS for provisional L4 scope under DEC-0050/CR-0003**. Scope artifact `TSK_0141_PROVISIONAL_MINIMUM_PRODUCT_SCOPE_AND_NON_GOALS_2026-08-28.md`, blob `c72bfd906fdca4a106dcd7d4ff458a2577e32c90`; independent evidence `TSK_0141_PROVISIONAL_MINIMUM_PRODUCT_SCOPE_EVIDENCE_2026-08-28.md`, blob `a7881f443a85c72cda63e628e0d6def8d41c6564`. ACC-0141 is satisfied: every included capability has an Owner-approved, Mandatory, or Provisional/unvalidated basis; accountless-first is preserved; authentication/persistent dashboard/customer AdGuard control plane remain deferred; surveillance/history/child-account/advanced scope is excluded; synthetic evidence is not behavioral proof.
 
