@@ -1,5 +1,6 @@
 import csv
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -118,8 +119,9 @@ for token in ['dashboard record deletion', 'revoke', 'account deletion', 'separa
     require(token in path_g, f'Path G lifecycle semantic missing: {token}')
 
 overlay = section(art, '12. Optional account/device continuity overlay').lower()
-for token in ['tp-08', 'tp-09', 'tp-10', 'tp-11', 'tp-17', 'logout/session expiry', 'account access', 'configured dns', 'device-record deletion', 'account deletion', 'j0/j1 deletion', 'physical dns removal', 'separate', 'stored ownership/history', 'verified']:
+for token in ['tp-08', 'tp-09', 'tp-10', 'tp-11', 'tp-17', 'logout/session expiry', 'account access', 'configured dns', 'device-record deletion', 'account deletion', 'physical dns removal', 'separate', 'stored ownership/history', 'verified']:
     require(token in overlay, f'account overlay semantic missing: {token}')
+require(re.search(r'\bj0[-/]j1 deletion\b', overlay) is not None, 'account overlay J0/J1 deletion semantics missing')
 print('TSK0325_ARTIFACT_LIFECYCLE_STRUCTURE=PASS')
 
 require('Historical TSK-0325 v1.0.0 was accepted' in ev, 'historical impact analysis absent')
