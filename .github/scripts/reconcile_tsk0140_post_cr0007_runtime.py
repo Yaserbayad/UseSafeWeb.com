@@ -70,8 +70,8 @@ required = [
     '33391565765 / 99486171756',
     'd2cc63426736ff9ae77bfe8fa32f812c1b55a5e2',
     '### Historical TSK-0140 accepted stable state — PRE-CR-0006/0007 — SUPERSEDED',
-    'TSK-0140 has now been separately rebuilt, independently re-evaluated and durably evidenced PASS',
-    'LG-06` remains non-PASS',
+    '`TSK-0140` has now been separately rebuilt, independently re-evaluated and durably evidenced PASS',
+    '`LG-06` remains non-PASS',
 ]
 for token in required:
     if token not in s:
