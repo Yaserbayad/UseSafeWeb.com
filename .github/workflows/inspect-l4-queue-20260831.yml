@@ -18,6 +18,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$(hostname -s)" = "adguardvm"
+          # Focused preflight after TSK-0140 PASS.
           python3 .github/scripts/inspect_l4_queue_20260831.py
           git diff --check
           test -z "$(git status --porcelain)"
