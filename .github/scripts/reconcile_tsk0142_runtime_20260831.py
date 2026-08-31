@@ -54,9 +54,13 @@ section = r'''
 TSK-0142 may satisfy its outgoing hard-dependency edges. Recompute the current L4 queue from WBS dependencies, relationship graph, runtime evidence, gates/constraints and Action Authority before selecting any successor; do not infer the next task from numbering or prior conversation.
 '''
 
-STATE.write_text(text.rstrip() + section + '\n', encoding='utf-8')
+out = text.rstrip() + section.rstrip() + '\n'
+require(not out.endswith('\n\n'), 'runtime transform would create blank line at EOF')
+STATE.write_text(out, encoding='utf-8')
 out = STATE.read_text(encoding='utf-8')
 require('## TSK-0142 current accepted stable state — 2026-08-31' in out, 'TSK-0142 section missing after transform')
 require('Independent verifier run/job `33401200803 / 99517634917`' in out, 'verifier binding missing after transform')
 require('LG-06 or any later gate PASS' in out, 'downstream PASS fence missing after transform')
+require(not out.endswith('\n\n'), 'blank line at EOF after write')
 print('TSK0142_RUNTIME_TRANSFORM=PASS')
+print('TSK0142_EOF_GUARD=PASS')
