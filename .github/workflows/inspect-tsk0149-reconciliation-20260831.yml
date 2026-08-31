@@ -1,0 +1,23 @@
+name: Inspect TSK-0149 reconciliation
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/inspect-tsk0149-reconciliation-20260831.yml'
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Inspect TSK-0149 durable evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(hostname -s)" = "adguardvm"
+          python3 .github/scripts/inspect_tsk0149_reconciliation_20260831.py
+          git diff --check
+          test -z "$(git status --porcelain)"
