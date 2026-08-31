@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-31T12:17:47Z
+**Updated:** 2026-08-31T13:28:05Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -34,7 +34,7 @@
 - Retained human authority: named official-market activation; organizational/entity/formalization decisions; new contracts; regulated fees; banking/merchant identity; legal attestations/signatures; material/unbudgeted spend; strategic modify/pivot/pause/stop/transfer/resume; irreversible acts that actually require human authority; material frozen-scope changes.
 - Routine technical scaling inside approved architecture/budget, routine reversible already-budgeted spend, routine incidents/retries/rollback/recovery/remediation, and detailed account/dashboard UX inside DEC-0053 scope are autonomous.
 - Year-1 automatically CONTINUEs only if frozen annual thresholds pass; alternative strategic outcomes remain human.
-- **No task or gate became PASS solely because CR-0007 changed authority.** Re-evaluate any changed acceptance against current evidence. In particular, the post-CR-0006 `TSK-0140` candidate (`955ebc6a4592439c3d2edbedde3671fd910fac7c`) had preparation evidence but was previously waiting for a ceremonial owner review; CR-0007 removes that ceremonial requirement, yet `TSK-0140` remains non-PASS until its revised objective ACC is independently re-evaluated and durably evidenced.
+- **No task or gate became PASS solely because CR-0007 changed authority.** Re-evaluate any changed acceptance against current evidence. `TSK-0140` has now been separately rebuilt, independently re-evaluated and durably evidenced PASS under its current objective ACC; that fresh PASS is recorded below and does not infer any successor or gate PASS.
 - Exact next governed work is not persisted here; recompute it from the current WBS, graph, gates, runtime PASS evidence and DEC-0054 action authority.
 
 ## CR-0006 current execution boundary
@@ -119,6 +119,26 @@ TSK-0141 may now satisfy its current hard-dependency edges. Successor eligibilit
 ### Queue status after post-CR-0007 TSK-0138 re-acceptance
 
 TSK-0138 may satisfy its outgoing hard-dependency edges, including TSK-0140. Successor eligibility must still be recomputed against current WBS dependencies, runtime evidence, gates, constraints and Action Authority.
+
+## TSK-0140 current accepted stable state — 2026-08-31 — POST-CR-0007
+
+`TSK-0140 — Issue the post-validation product brief`: **PASS** under current `ACC-0140 / VER-0140 / EVD-0140`, `DEC-0053/CR-0006` and `DEC-0054/CR-0007` authority.
+
+- Current WBS blob `f3c29b5db8b835ef2c896f61335656ea51d8ba1c`: L4, hard dependency `TSK-0138`, A4 / `AUTO_ALLOWED`; the WBS planning snapshot is not runtime proof.
+- Hard dependency `TSK-0138` is current post-CR-0007 PASS under its independently re-accepted artifact/evidence.
+- Current product brief: `TSK_0140_POST_CR0007_PRODUCT_BRIEF_2026-08-31.md`, version `3.0.0-post-cr0007`, blob `8ed698b3e34540aefac617e5f6754e20d9dfbdc3`, publication commit `0e6f7d5aa26238a227778c55883ebc3f606f4b42`.
+- Analytical acceptance evidence: `TSK_0140_POST_CR0007_ACCEPTANCE_EVIDENCE_2026-08-31.md`, blob `a3388e6c5bed3e8908028ba0513bb8370f8dee62`, publication commit `dfc43bf086cbe07d873654ec1ad16b41d9d93a88`.
+- Supplemental deterministic evidence: `TSK_0140_POST_CR0007_DETERMINISTIC_VERIFICATION_EVIDENCE_2026-08-31.md`, blob `d2cc63426736ff9ae77bfe8fa32f812c1b55a5e2`, publication commit `ee74dfb40813abfe2f9ac08e685bd2f1361ffd5a`.
+- Successful independent verification run/job `33391565765 / 99486171756` on self-hosted `adguardvm`: WBS contract PASS; current TSK-0138 dependency PASS; CR-0006 dual-mode reconciliation PASS; CR-0007 authority/lifecycle reconciliation PASS; ACC semantics PASS; stale owner-review absence PASS; independent verification PASS; `git diff --check` and clean-status checks passed.
+- Initial diagnostic run `33391353069 / 99485483541` failed only because its verifier omitted Markdown backticks in a runtime-fence substring assertion; it produced no product/evidence/runtime mutation and is not acceptance proof. A fresh corrected run, not the pinned rerun, supplied the successful evidence above.
+- Current brief preserves the complete accountless core plus optional parent account/session/minimum ownership persistence/lightweight dashboard/device management; mandatory login, browsing/query/activity history, child accounts and unrestricted/raw DNS administration remain excluded.
+- The accepted brief preserves accountless/persistent-state separation, AdGuard/encrypted-DNS technical truth, downstream security/privacy/provider obligations, free-core commercial limits, and the current LG-06 -> LG-07 -> LG-08 -> LG-09 -> bounded live-production lifecycle.
+- No behavioral/user evidence is inferred before L8; no provider, architecture, implementation, release, legal/privacy/consent, payment, production, publication or launch completion is inferred.
+- `LG-06` remains non-PASS until every current applicable L4 acceptance requirement is independently evidenced. Material frozen-scope changes and other retained human/nondelegable acts remain separately controlled.
+
+### Queue status after post-CR-0007 TSK-0140 acceptance
+
+TSK-0140 may now satisfy its outgoing hard-dependency edges, including `TSK-0312`. Recompute the L4 queue from current WBS/graph/runtime evidence, gate/constraint state and Action Authority before choosing the next task.
 
 ## Frozen technical identity
 
@@ -632,7 +652,10 @@ The matrix is explicitly derived/non-authoritative and does not duplicate the re
 
 `NCF-0043-01` preserves legacy `G-04` as an alias resolved through the current Gate Register to `LG-05`; `NCF-0043-02` prevents `REQ-0039` from being misread as proof that provisional L4 was behaviorally validated. Neither changes canonical requirements or owner decisions. `RSK-0002` remains OPEN; `REQ-0022` remains intentionally unresolved; LG-03/LG-04/LG-05/LG-06 remain non-PASS; no L5/L6 build, participant processing, legal completion, payment, publication or launch is authorized by this PASS.
 
-### TSK-0140 accepted stable state
+### Historical TSK-0140 accepted stable state — PRE-CR-0006/0007 — SUPERSEDED
+
+> Historical only. CR-0006 changed the Version-1 product scope and CR-0007 changed the objective action/gate authority and post-LG-09 lifecycle. Use the post-CR-0007 TSK-0140 current section below for runtime truth.
+
 
 `TSK-0140 — Issue the post-validation product brief`: **PASS for the bounded provisional internal L4 product-brief acceptance under DEC-0050/CR-0003**. Approved candidate `TSK_0140_PROVISIONAL_PRODUCT_BRIEF_CANDIDATE_2026-08-28.md`, blob `334bd2e8513d3800573e1d1e9ec569ae3ff50432`, publication commit `4c11da3201289fd069aff03059b4c5ce12a68c5e`; preparation verification `TSK_0140_PROVISIONAL_PRODUCT_BRIEF_PREPARATION_EVIDENCE_2026-08-28.md`, blob `64c4e30d9f35877cf9cdb64ab54700602403f7a2`; Project Owner approval `TSK_0140_OWNER_APPROVAL_2026-08-28.md`, blob `6381dcd535dcb3cb3b4d3f9fc7f33c793cbfa1b3`, publication commit `8fb35565430a4635e3d7ff88d6b71a82fff3e1be`; independent acceptance evidence `TSK_0140_PRODUCT_BRIEF_ACCEPTANCE_EVIDENCE_2026-08-28.md`, blob `8c75d973eb0b5b13db9a405bda738dfea583f7eb`, publication commit `4b025d0e30a09fcf06c561ea979143cd38064b06`.
 
