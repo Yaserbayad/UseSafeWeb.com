@@ -74,7 +74,11 @@ export function transition(state, action, payload = {}) {
   const next = clone(state); next.lastEvent = action.toLowerCase();
 
   switch (action) {
-    case 'START': requireScreen(state, SCREEN.HOME, SCREEN.RESET_LOST, SCREEN.ACCOUNT_ENTRY); next.screen = SCREEN.ROUTER; break;
+    case 'START':
+      requireScreen(state, SCREEN.HOME, SCREEN.RESET_LOST, SCREEN.ACCOUNT_ENTRY, SCREEN.ACCOUNT_ERROR, SCREEN.REAUTH);
+      next.authStatus = state.screen === SCREEN.REAUTH || state.screen === SCREEN.ACCOUNT_ERROR ? 'signed-out' : next.authStatus;
+      next.screen = SCREEN.ROUTER;
+      break;
     case 'CHOOSE_PLATFORM': {
       requireScreen(state, SCREEN.ROUTER); const platform = payload.platform;
       if (!['android','iphone','other'].includes(platform)) throw new Error('Unsupported platform choice');
