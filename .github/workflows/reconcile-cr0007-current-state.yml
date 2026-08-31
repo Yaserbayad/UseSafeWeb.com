@@ -1,0 +1,84 @@
+name: Reconcile CURRENT_STATE for CR-0007
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-cr0007-current-state.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Verify published planning authority and reconcile runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "c730c8c147e8cb4559ee03c8fe5b8a91429bc2c6"
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "f3c29b5db8b835ef2c896f61335656ea51d8ba1c"
+          test "$(git hash-object Plans/Master/MANIFEST.yaml)" = "a72000ce586c70914195d079254417a46a04fa68"
+          test "$(git hash-object Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md)" = "6d0cd068512967f495ea20b63a1c2be0c7678eb1"
+          test "$(git hash-object Plans/Master/Registers/DECISIONS_TRIGGERS.md)" = "380ff579dcffb7b8df73611e9159c672f9ed489e"
+          test "$(git hash-object Plans/Master/Registers/GATES.md)" = "87cf9060954a82e1d5a092200d3c922f1986a5da"
+          test "$(git hash-object CR_0007_OWNER_AUTONOMY_PRODUCTION_ONLY_EVIDENCE_2026-08-31.md)" = "4a95f1f855c5920127d860fe037a480983c85006"
+          python3 - <<'PY'
+          from pathlib import Path
+          from datetime import datetime, timezone
+          p=Path('CURRENT_STATE.md')
+          s=p.read_text(encoding='utf-8')
+          if '## CR-0007 current authority and execution boundary' in s:
+              raise SystemExit('CR-0007 runtime section already present; reconcile instead of duplicating')
+          old='**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0006 PUBLISHED, RECONCILED, READ-BACK VERIFIED.**'
+          new='**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0007 PUBLISHED, RECONCILED, READ-BACK VERIFIED.**'
+          if s.count(old)!=1: raise SystemExit(f'canonical status match count={s.count(old)}')
+          s=s.replace(old,new,1)
+          ts=datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+          s=s.replace('**Updated:** 2026-08-30T16:38:22Z',f'**Updated:** {ts}',1)
+
+          latest='- Latest post-freeze change: `CR-0006` / `DEC-0053`, explicit Project Owner authority 2026-08-30: **Version 1 includes an optional parent account capability and lightweight dashboard/device management while the complete accountless core setup/protection journey remains usable without login.**'
+          replacement='''- Latest post-freeze change: `CR-0007` / `DEC-0054`, explicit Project Owner authority 2026-08-31: **maximize evidence-driven AI autonomy and use a production-only active lifecycle after integrated readiness; no separate mandatory pilot or staging lifecycle/environment.**\n- `CR-0006` / `DEC-0053` remains the controlling underlying Version-1 product-scope decision: optional parent account/lightweight dashboard plus a complete accountless core path.\n- CR-0007 planning publication commit: `c730c8c147e8cb4559ee03c8fe5b8a91429bc2c6`; evidence `CR_0007_OWNER_AUTONOMY_PRODUCTION_ONLY_EVIDENCE_2026-08-31.md`, blob `4a95f1f855c5920127d860fe037a480983c85006`.\n- CR-0007 validation/publication run/job: `33385926233` / `99468414319`: **SUCCESS**; deterministic validator PASS with 641 tasks, 858 dependency edges, 5,178 relationship entities, 20,472 relationship targets, 0 broken links, 0 generated missing task IDs; direct CR-0007 semantic audit PASS and `git diff --check` PASS.\n- Current CR-0007 authority blobs: WBS `f3c29b5db8b835ef2c896f61335656ea51d8ba1c`; manifest `a72000ce586c70914195d079254417a46a04fa68`; Layer 5 `6d0cd068512967f495ea20b63a1c2be0c7678eb1`; decisions `380ff579dcffb7b8df73611e9159c672f9ed489e`; gates `87cf9060954a82e1d5a092200d3c922f1986a5da`.'''
+          if s.count(latest)!=1: raise SystemExit(f'latest CR-0006 line match count={s.count(latest)}')
+          s=s.replace(latest,replacement,1)
+
+          stale='- Current authoritative WBS blob: `3bb1598a6233a2bbefa52c746a7621867c6c6e89`; relationship-index blob: `c108d2c162bcea2ee4cc01def46d0487a9501032`; manifest blob: `06af6e55e63e2dfac211bb6c989d5e542cf2e903`; validator blob: `fcdde594524e57ceaaaa41776d16a54081d991a8`.'
+          if s.count(stale)==1:
+              s=s.replace(stale,'- Relationship-index blob remains `c108d2c162bcea2ee4cc01def46d0487a9501032`; validator blob remains `fcdde594524e57ceaaaa41776d16a54081d991a8`; CR-0007 did not change dependency edges or validator logic.',1)
+
+          staleux='- Prior PASS/evidence remains valid only for unchanged facts. `TSK-0146`, `TSK-0229`, and post-CR-0006 `TSK-0141` are current **PASS** under the revised DEC-0053/CR-0006 dual-mode Version-1 contract and evidence recorded below; revised account-inclusive `TSK-0313`, `TSK-0315`, `TSK-0328`, `TSK-0333`, `TSK-0321`, `TSK-0309`, and `TSK-0628` remain non-PASS until their current acceptance contracts are satisfied. Activated HUMAN_ONLY account UX decisions (`TSK-0329`, `TSK-0332`, `TSK-0331`) remain human-authority work when dependency-eligible.'
+          newux='- Prior PASS/evidence remains valid only for unchanged facts. `TSK-0146`, `TSK-0229`, and post-CR-0006 `TSK-0141` remain current **PASS** where their evidence still proves unchanged acceptance; revised account-inclusive successors remain non-PASS until independently evidenced. Under DEC-0054/CR-0007, detailed account UX tasks including `TSK-0329`, `TSK-0331`, and `TSK-0332` are `A4 / AUTO_ALLOWED` inside the frozen Version-1 scope; material product/scope-policy change remains owner-controlled.'
+          if s.count(staleux)==1: s=s.replace(staleux,newux,1)
+
+          staleval='- `CR-0005` / `DEC-0052` remains controlling for human-validation sequencing: all 31 L3 tasks plus `TSK-0187`, `TSK-0326`, and `TSK-0336` remain `NOT_APPLICABLE + PASS` exclusion records; no behavioral/user evidence is inferred. First real-user validation remains L8 after LG-09 PASS.'
+          newval='- `CR-0005` / `DEC-0052` remains controlling for the pre-L8 rule: all 31 L3 tasks plus `TSK-0187`, `TSK-0326`, and `TSK-0336` remain `NOT_APPLICABLE + PASS` exclusion records; no behavioral/user evidence is inferred. DEC-0054/CR-0007 supersedes the downstream pilot/staging model: first real-user validation remains after `LG-09` PASS but occurs as bounded/ramped **live production validation**, not a separate pilot or staging environment.'
+          if s.count(staleval)==1: s=s.replace(staleval,newval,1)
+
+          stalefence='- LG-06/LG-07/LG-08/LG-09 remain mandatory in order. CR-0006 creates no public publication, participant processing, payment, market activation or launch authority. `RSK-0002` remains OPEN and non-blocking before L8.'
+          newfence='- `LG-06`/`LG-07`/`LG-08`/`LG-09` remain mandatory in order. DEC-0054/CR-0007 creates standing **conditional** authority for evidence-complete automatic gates/live-production activation/public-production GO, but creates no PASS by itself and cannot waive missing evidence or actually applicable legal/privacy/consent/security/platform requirements. `RSK-0002` remains OPEN and non-blocking before L8.'
+          if s.count(stalefence)==1: s=s.replace(stalefence,newfence,1)
+
+          s=s.replace('- LG-06 remains non-PASS/HUMAN_ONLY; legal/participant/public/payment/launch/advanced-scope fences remain active.','- LG-06 remains non-PASS until its current objective acceptance is evidenced; DEC-0054 makes the in-scope gate evidence-driven/AUTO rather than HUMAN_ONLY. Retained legal/nondelegable/named-market/formalization/material-commitment/strategic-transition boundaries remain active.',1)
+
+          marker='## CR-0006 current execution boundary'
+          if s.count(marker)!=1: raise SystemExit(f'CR-0006 boundary marker count={s.count(marker)}')
+          section='''## CR-0007 current authority and execution boundary\n\n- `DEC-0054 / CR-0007` is the current authority for action rights and the active post-LG-09 lifecycle. If older text in this runtime file mentions mandatory pilot/staging, human-only public launch/material-risk acceptance, or human-only account UX, it is historical/superseded where it conflicts with DEC-0054/CR-0007.\n- Objective work inside frozen scope is AI-autonomous by default. `LG-07`, ordinary `LG-08`, `LG-12`, and other specified evidence gates are automatic when every current requirement is proven; `LG-13` is automatic GO only when all prerequisites and time-sensitive checks are current.\n- First real users are live production users after `LG-09` and all actually applicable prerequisites. Pre-release/local/CI/synthetic/device/network/security/privacy/accessibility/performance/recovery/rollback verification remains mandatory; bounded/capped/ramped rollout is a production-safety mechanism, not a separate pilot/staging lifecycle.\n- AI may accept project-defined material residual risk where evidence supports it and no higher actual legal/safety/security/platform/technical prohibition or nondelegable human/professional act applies. No compliance, consent, signature, contract, identity/provider acceptance, or other fact may be fabricated.\n- Retained human authority: named official-market activation; organizational/entity/formalization decisions; new contracts; regulated fees; banking/merchant identity; legal attestations/signatures; material/unbudgeted spend; strategic modify/pivot/pause/stop/transfer/resume; irreversible acts that actually require human authority; material frozen-scope changes.\n- Routine technical scaling inside approved architecture/budget, routine reversible already-budgeted spend, routine incidents/retries/rollback/recovery/remediation, and detailed account/dashboard UX inside DEC-0053 scope are autonomous.\n- Year-1 automatically CONTINUEs only if frozen annual thresholds pass; alternative strategic outcomes remain human.\n- **No task or gate became PASS solely because CR-0007 changed authority.** Re-evaluate any changed acceptance against current evidence. In particular, the post-CR-0006 `TSK-0140` candidate (`955ebc6a4592439c3d2edbedde3671fd910fac7c`) had preparation evidence but was previously waiting for a ceremonial owner review; CR-0007 removes that ceremonial requirement, yet `TSK-0140` remains non-PASS until its revised objective ACC is independently re-evaluated and durably evidenced.\n- Exact next governed work is not persisted here; recompute it from the current WBS, graph, gates, runtime PASS evidence and DEC-0054 action authority.\n\n'''
+          s=s.replace(marker,section+marker,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+          git diff --check
+          grep -q 'CR-0007 current authority and execution boundary' CURRENT_STATE.md
+          grep -q 'c730c8c147e8cb4559ee03c8fe5b8a91429bc2c6' CURRENT_STATE.md
+          grep -q '33385926233.*99468414319' CURRENT_STATE.md
+          grep -q 'No task or gate became PASS solely because CR-0007' CURRENT_STATE.md
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add CURRENT_STATE.md
+          git commit -m "state: reconcile CR-0007 owner authority"
+          git push
