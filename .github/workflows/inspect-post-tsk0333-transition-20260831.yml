@@ -1,0 +1,27 @@
+name: Inspect post-TSK-0333 transition
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/scripts/inspect_post_tsk0333_transition_20260831.py'
+      - '.github/workflows/inspect-post-tsk0333-transition-20260831.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Inspect current post-TSK-0333 transition
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(hostname -s)" = "adguardvm"
+          python3 .github/scripts/inspect_post_tsk0333_transition_20260831.py
+          git diff --check
+          test -z "$(git status --porcelain)"
