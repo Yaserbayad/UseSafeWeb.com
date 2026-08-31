@@ -1,250 +1,198 @@
 # TSK-0325 — End-to-End Parent Journey and Service Blueprint
 
-**Version:** 1.0.0  
-**Status:** internal L4 implementation/QA contract  
+**Version:** 2.0.0-post-cr0007  
+**Status:** current L4 candidate; implementation/QA contract input only  
 **Owner:** UX/UI  
 **Action authority:** A3 / AUTO_ALLOWED  
-**Sequencing:** DEC-0052 / CR-0005  
+**Sequencing:** DEC-0052/CR-0005 + DEC-0053/CR-0006 + DEC-0054/CR-0007  
 **Human-validation claim:** none; real-user validation remains deferred to L8 after LG-09 PASS.  
 **Publication/release authority:** none.
 
 ## 1. Purpose and authority
 
-This blueprint converts the frozen TSK-0309 implementation-ready experience baseline and the current TSK-0323 instruction catalogue into one end-to-end parent journey that engineering and QA can implement and test without inventing states, setup steps, persistence, account requirements, recovery behavior, support behavior, or protection claims.
+This artifact is the current **parent-journey view** of the accepted post-CR-0007 TSK-0315 dual-mode service blueprint. It owns the ACC-0325 path taxonomy and touchpoint-to-requirement trace; it does not duplicate the full service-lane/data/owner/failure matrix already owned by TSK-0315.
+
+It supersedes v1.0.0 where that version treated persistent parent/device continuity as absent. Current Version 1 remains accountless-first **and** includes an optional parent account/session/lightweight dashboard. Login is never required for core safety value.
 
 Normative hierarchy for this artifact:
 
-1. Current owner-frozen planning authority and DEC-0052 / CR-0005.
-2. `prototype/TSK-0309/BASELINE.md` v1.0.0 — frozen journey/state/product boundary.
-3. `content/TSK-0323/DEVICE_SERVICE_INSTRUCTION_CATALOGUE.md` and `CATALOGUE.json` v1.0.0 — current technical instruction authority.
-4. TSK-0320 state semantics and TSK-0322 claims/terminology rules cited by those sources.
-5. This blueprint for cross-touchpoint orchestration only.
+1. current WBS/decisions/constraints and runtime authority;
+2. current TSK-0315 dual-mode service blueprint;
+3. TSK-0312 account/session/minimal-intake requirements and TSK-0142 dashboard/device-management requirements;
+4. TSK-0229 accountless/persistent-domain separation;
+5. current technical instruction/state contracts including TSK-0320 and source-backed platform/DNS instructions;
+6. this artifact for parent path/touchpoint orchestration.
 
-This blueprint does not copy or replace device procedures. Where a technical action is required, implementation must consume the cited TSK-0323 instruction ID/version.
+## 2. Binding journey rules
 
-## 2. Binding product and interaction rules
+- The full core path remains usable without login, parent identity, child identity or payment.
+- Optional account entry is continuity/management only; cancel/error/provider outage returns safely to accountless operation.
+- No automatic J0/J1-to-account/device join, promotion or expiry extension is authorized.
+- Every field, choice, confirmation and account step needs an explicit necessity under REQ-0028.
+- Supported platform setup uses current reliable source-backed methods/fallbacks under REQ-0029; unsupported paths stop rather than improvise.
+- Parent confirmation never becomes system verification; stored account/device ownership never becomes system verification.
+- Current evidence states remain: `Verified`, `You confirmed this is set up`, `Action needed`, `Status uncertain`, `Not covered`, `Removed`.
+- Browsing/query/activity history, child accounts/profiles and raw/unrestricted AdGuard administration remain excluded.
+- English/Turkish/Arabic+RTL technical capability does not imply non-UK market activation.
+- Global Help/Limitations remain state-neutral; ordinary support is self-service.
+- Retry requires a changed condition/new evidence or an independently safe idempotent operation.
+- No complete-safety, certification, surveillance or aggregate safety-score claim is permitted.
 
-- Accountless-first: no mandatory SafeWeb account, login, persistent parent identity, child account, customer-facing AdGuard administration, payment step, or browsing-history surface.
-- Every interaction must be necessary under `REQ-0028`. No field, choice, confirmation, or account step may be added without an explicit need and current authority.
-- Platform setup must use current reliable supported methods or explicit supported fallbacks under `REQ-0029`; unsupported paths stop rather than improvise.
-- Parent confirmation never becomes system verification. `Verified` requires current qualifying technical evidence.
-- Only the frozen states are permitted: `Verified`, `You confirmed this is set up`, `Action needed`, `Status uncertain`, `Not covered`, `Removed`.
-- English, Turkish, and Arabic/RTL are first-release language capabilities under `CON-0017`; language availability must not be presented as non-UK market/legal/support activation.
-- `SafeWeb` remains invariant Latin/LTR. Technical endpoints remain exact and untranslated.
-- Global Help and Limitations are reachable from every critical path without mutating protection state.
-- No routine human-support dependency is introduced. Ordinary support is self-service; exceptional human escalation belongs to later operational authority.
-- Retry verification only after a changed condition. Repeating the same failed check without a changed condition is not a valid recovery step.
-- No complete-safety, certification, surveillance, safety-score, or equivalent claim is permitted.
+## 3. Current touchpoint catalogue and necessity trace
 
-## 3. Service lanes
+Every implemented journey touchpoint must correspond to one of these IDs or receive a new documented necessity review. TSK-0315 owns the full service-stage mapping; this table owns the parent-facing journey trace.
 
-The implementation must preserve these lane responsibilities:
+| ID | Touchpoint | Necessary purpose | Required trace |
+| --- | --- | --- | --- |
+| `TP-01` | Discovery / Start | Explain bounded proposition/limits and intentionally enter setup. | REQ-0028; CON-0010; CON-0017; INT-0009; INT-0010 |
+| `TP-02` | Platform router | Select a supported platform/path or stop truthfully. | REQ-0028; REQ-0029; CON-0010; CON-0017; INT-0009; INT-0010 |
+| `TP-03` | Native safeguard status | Avoid duplicate work and preserve parent-confirmed vs verified truth. | REQ-0028; REQ-0029; CON-0010; CON-0017; INT-0009; INT-0010 |
+| `TP-04` | DNS setup | Present the exact supported encrypted-DNS procedure. | REQ-0028; REQ-0029; CON-0010; CON-0017; INT-0009; INT-0010 |
+| `TP-05` | DNS verify | Establish current qualifying technical DNS/filtering evidence. | REQ-0028; REQ-0029; CON-0010; CON-0017; INT-0009; INT-0010 |
+| `TP-06` | Relevant service | Route zero or one supported relevant service; zero is valid. | REQ-0028; CON-0010; CON-0017; INT-0009; INT-0010 |
+| `TP-07` | Protection Map | Explain Phone/Internet/Services using truthful evidence strength. | REQ-0028; CON-0010; CON-0017; INT-0009; INT-0010 |
+| `TP-08` | Optional account entry | Offer bounded continuity without gating core value. | REQ-0028; CON-0010; CON-0017; TSK-0312; INT-0009; INT-0010 |
+| `TP-09` | Sign-in / session | Establish or restore an authorized account session; handle cancel/error/expiry. | REQ-0028; CON-0010; CON-0017; TSK-0312; INT-0009; INT-0010 |
+| `TP-10` | Dashboard / device list | Show only explicitly managed device records and truthful evidence/currentness. | REQ-0028; CON-0010; CON-0017; TSK-0142; INT-0009; INT-0010 |
+| `TP-11` | Device management | Add/rename/continue/verify/reinstall/replace/revoke/remove within approved scope. | REQ-0028; REQ-0029; CON-0010; CON-0017; TSK-0142; INT-0009; INT-0010 |
+| `TP-12` | Troubleshooting / false positive | Diagnose known issues and show one safe evidence-backed next action. | REQ-0028; REQ-0029; CON-0010; CON-0017; INT-0009; INT-0010 |
+| `TP-13` | Physical DNS removal | Remove exact UseSafeWeb DNS configuration and withdraw active claim. | REQ-0028; REQ-0029; CON-0010; CON-0017; INT-0009; INT-0010 |
+| `TP-14` | Recovery check | Confirm ordinary connectivity/recovery without claiming UseSafeWeb protection. | REQ-0028; REQ-0029; CON-0010; CON-0017; INT-0009; INT-0010 |
+| `TP-15` | Reset / reconfigure | Restart accountless journey or current device setup without conflating web reset with DNS removal. | REQ-0028; REQ-0029; CON-0010; CON-0017; INT-0009; INT-0010 |
+| `TP-16` | Global Help / Limitations | Provide source-current, privacy-minimal help without mutating protection state. | REQ-0028; REQ-0029; CON-0010; CON-0017; INT-0009; INT-0010 |
+| `TP-17` | Account/device lifecycle | Logout, revoke/unlink, delete device record, delete account; keep each distinct from physical DNS removal. | REQ-0028; CON-0010; CON-0017; TSK-0312; TSK-0142; INT-0009; INT-0010 |
 
-| Lane | Responsibility |
-| --- | --- |
-| Parent | Chooses platform, performs OS-owned actions, confirms only facts they can observe, decides whether a supported external service is relevant, can remove/reset. |
-| SafeWeb UI | Routes, presents current instruction IDs, records ephemeral journey state, runs approved verification, renders truthful Protection Map, troubleshooting, help, limitations, removal/recovery. |
-| OS / external platform | Owns Private DNS, profile installation/removal, native parental-control/account/security authorization. SafeWeb must not silently perform or bypass these actions. |
-| SafeWeb DNS / verifier | Supplies qualifying technical evidence for DNS state only; it does not verify native safeguards or unsupported external-service states unless a separately approved verifier exists. |
-| Content/instruction authority | TSK-0323 owns technical procedures, applicability, expected result, fallback and unsupported state. |
-| QA | Tests each path, state transition, negative branch, recovery, accessibility/localization behavior and requirement trace below. |
+## 4. Path A — Normal supported accountless setup
 
-## 4. Touchpoint catalogue and necessity trace
+`TP-01 → TP-02 → TP-03 → TP-04 → TP-05 → TP-06 → TP-07`
 
-Every implementation touchpoint must correspond to one of these IDs. Adding another touchpoint requires a current necessity justification under REQ-0028.
+1. Parent starts without login/payment/identity collection.
+2. Platform route selects only current supported instructions.
+3. Native safeguard is parent-confirmed unless an approved verifier exists.
+4. DNS configuration presence alone never yields `Verified`.
+5. Current qualifying DNS verification can establish `Verified` only for its supported mechanism/context.
+6. Zero or one relevant external service is valid.
+7. Protection Map renders each layer independently; no overall safe score.
+8. Parent may finish/exit here with no account.
+9. Optional continuity may be offered only after/alongside the core without making it a gate.
 
-| ID | Touchpoint | Necessary purpose | Instruction binding | Required trace |
-| --- | --- | --- | --- | --- |
-| `TP-01` | Discovery | Explain bounded proposition/limits and let parent intentionally start. | none | REQ-0028; REQ-0031; CON-0010; CON-0017; INT-0009; INT-0010 |
-| `TP-02` | Platform router | Select Android, iPhone, or unsupported/other so only tested setup is shown. | `DEV-COMMON-NOT-COVERED` for unsupported | REQ-0028; REQ-0029; REQ-0031; CON-0010; CON-0017; INT-0009; INT-0010 |
-| `TP-03` | Native safeguard status | Avoid duplicate work; distinguish already configured, needs action, uncertain/not covered. | `DEV-AND-NATIVE` or `DEV-IOS-NATIVE` | REQ-0028; REQ-0030; REQ-0031; CON-0010; CON-0017; INT-0009; INT-0010 |
-| `TP-04` | DNS setup | Present exact supported encrypted-DNS procedure only. | `DEV-AND-DNS-SETUP` or `DEV-IOS-DNS-SETUP` | REQ-0028; REQ-0029; REQ-0031; CON-0010; CON-0017; INT-0009; INT-0010 |
-| `TP-05` | DNS verify | Convert current qualifying technical evidence into truthful DNS state. | `DEV-AND-DNS-VERIFY` or `DEV-IOS-DNS-VERIFY` | REQ-0028; REQ-0029; REQ-0030; REQ-0031; CON-0010; CON-0017; INT-0009; INT-0010 |
-| `TP-06` | Optional external service | Route zero or one current supported relevant service; zero is valid. | `SVC-ONE-RELEVANT` | REQ-0028; REQ-0030; REQ-0031; CON-0010; CON-0017; INT-0009; INT-0010 |
-| `TP-07` | Protection Map | Explain Phone / Internet / Service using evidence states, never a safety score. | state authority through TSK-0320/0322 | REQ-0028; REQ-0030; REQ-0031; CON-0010; CON-0017; INT-0009; INT-0010 |
-| `TP-08` | Troubleshooting | Diagnose known conflicts and show one safe next action. | `DEV-COMMON-CONFLICT` | REQ-0028; REQ-0029; REQ-0031; CON-0010; CON-0017; INT-0009; INT-0010 |
-| `TP-09` | Removal | Remove exact SafeWeb DNS configuration and withdraw active DNS protection claim. | `DEV-AND-DNS-REMOVE` or `DEV-IOS-DNS-REMOVE` | REQ-0028; REQ-0029; REQ-0031; CON-0010; CON-0017; INT-0009; INT-0010 |
-| `TP-10` | Recovery check | Confirm ordinary connectivity after removal/reset without claiming SafeWeb protection. | `DEV-COMMON-RECOVERY` | REQ-0028; REQ-0029; REQ-0031; CON-0010; CON-0017; INT-0009; INT-0010 |
-| `TP-11` | Reset/reconfigure | Return to a clean discovery state when state is intentionally reset/lost. | none | REQ-0028; REQ-0031; CON-0010; CON-0017; INT-0009; INT-0010 |
-| `TP-12` | Global Help | Point-of-need self-service without changing journey/protection state. | current help/content authority only | REQ-0028; REQ-0031; CON-0010; CON-0017; INT-0009; INT-0010 |
-| `TP-13` | Limitations | Explain unsupported/unverified scope without inventing workaround or strengthening claims. | `DEV-COMMON-NOT-COVERED` | REQ-0028; REQ-0029; REQ-0031; CON-0010; CON-0017; INT-0009; INT-0010 |
+**Terminal:** truthful Protection Map and completed core journey; optional account remains optional.
 
-## 5. Path A — Normal supported setup
+## 5. Path B — Already configured
 
-**Entry:** parent starts from discovery on a currently supported Android phone or iPhone.
+1. At TP-03, skip duplicate native setup where the parent can truthfully confirm an existing setting; strongest default is parent-confirmed, not system-verified.
+2. If UseSafeWeb DNS appears configured, skip duplicate configuration only when current platform/context can safely proceed to verification.
+3. TP-05 determines DNS truth: qualifying evidence → `Verified`; known repair → `Action needed`; conflict/inconclusive → `Status uncertain`; unsupported → `Not covered`.
+4. Existing account/dashboard records do not bypass current verification or upgrade evidence.
+5. Continue to TP-06/TP-07 and optionally TP-08–TP-11 without automatic J0/J1 migration.
 
-| Step | Parent | SafeWeb / platform behavior | State/output | Touchpoint |
-| --- | --- | --- | --- | --- |
-| A1 | Reads proposition/limits; chooses Start setup. | No account/payment/identity collection. | journey begins | TP-01 |
-| A2 | Chooses Android or iPhone. | Route only to current supported family. | platform branch | TP-02 |
-| A3 | Indicates whether relevant native safeguard is already configured or needs action; completes OS-owned flow if needed. | Consume `DEV-AND-NATIVE` or `DEV-IOS-NATIVE`; SafeWeb never collects OS/provider credentials. | S2 after parent confirmation; S4/S5 if unsupported/uncertain | TP-03 |
-| A4 | Performs exact OS-owned DNS configuration. | Consume platform setup instruction; no S1 from configuration presence. | pending verification | TP-04 |
-| A5 | Returns and requests verification. | Run approved technical check. | S1 only on qualifying evidence; otherwise branch to failed activation | TP-05 |
-| A6 | Selects no service or one supported relevant service if one exists. | Zero services is valid. No named service may be invented. | S2/S4/S5 as evidence permits | TP-06 |
-| A7 | Reviews Protection Map. | Render Phone / Internet / Service independently with textual state labels and limitations. | truthful map | TP-07 |
+**Terminal:** duplicate work avoided without weakening verification or privacy rules.
 
-**Normal completion:** Internet may be `Verified`; native/service may be `You confirmed this is set up`, `Not covered`, or `Status uncertain` according to evidence. There is no overall “safe” score.
+## 6. Path C — Unsupported / not covered
 
-## 6. Path B — Already configured
+1. Any current applicability check can stop an unsupported platform/device/network/service branch.
+2. Render `Not covered` or `Status uncertain` with the current reason; do not invent VPN/client/profile/service fallbacks.
+3. Help/Limitations may explain the boundary without creating a support claim or changing state.
+4. Parent may reset to another genuinely supported branch.
+5. If the parent is signed in, dashboard presence still cannot convert unsupported scope to supported/verified.
 
-**Entry:** parent reports that a native safeguard and/or SafeWeb DNS appears already configured.
+**Terminal:** truthful unsupported/uncertain outcome and safe exit/re-route.
 
-1. At TP-03, do not force duplicate native setup. Consume the relevant native instruction and record only S2 when the parent confirms the setting; do not manufacture S1.
-2. If SafeWeb DNS appears present, skip duplicate configuration only when the current platform tuple is identifiable enough to run the approved verifier safely.
-3. At TP-05, verification determines DNS truth:
-   - qualifying current evidence -> S1 `Verified`;
-   - known repairable issue -> S3 `Action needed`;
-   - inconclusive/conflicting evidence -> S5 `Status uncertain`;
-   - unsupported tuple -> S4 `Not covered`.
-4. Continue to TP-06/TP-07 without adding an account, identity, browsing history, or persistent device profile.
+## 7. Path D — Failed activation / verification failure
 
-**QA assertion:** “already configured” is a friction-reduction branch, not a shortcut around verification truth.
+1. TP-05 uses `Action needed` only for a known repair; otherwise `Status uncertain`/`Not covered` as evidence dictates.
+2. TP-12 provides an evidence-backed correction; repeated unchanged retry is not a recovery plan.
+3. Do not ask the parent to weaken required school/employer/security/privacy controls merely to obtain a positive state.
+4. If configuration materially breaks resolution or safe recovery requires rollback, route TP-13 → TP-14.
+5. Signed-in users receive the same technical truth; account ownership cannot preserve stale `Verified`.
 
-## 7. Path C — Unsupported / not covered
+**Terminal:** corrected and reverified, or truthful unresolved state, or removed/recovered.
 
-**Entry:** unsupported platform/device/version/management/network tuple or missing current accepted instruction.
+## 8. Path E — False positive / legitimate content blocked
 
-1. TP-02 or any later applicability check invokes `DEV-COMMON-NOT-COVERED`.
-2. Stop the affected setup path; do not invent VPN/client/profile/service workarounds.
-3. Show S4 `Not covered` or S5 `Status uncertain` with a concise reason and current limitation.
-4. Global Help/Limitations may explain the boundary or link to official platform information for understanding only; such links do not create a SafeWeb support claim.
-5. Do not expose Removal if SafeWeb DNS was never configured through the journey.
-6. Parent may reset/reconfigure to another genuinely supported device branch.
+1. Keep DNS-path verification distinct from filtering correctness.
+2. TP-12 uses the current narrow reproducible exception/report process where separately implemented; do not invent a broad per-domain dashboard control.
+3. Do not recommend disabling unrelated required safeguards or silently changing to an unreviewed resolver.
+4. After a justified narrow correction, re-test the legitimate path and relevant blocked regression under the owning technical process.
+5. If the safe immediate recovery is removal, use TP-13/TP-14 and withdraw the active UseSafeWeb claim.
+6. No browsing/query history is collected as a convenience for this path.
 
-**QA assertion:** unsupported always fails safely and cannot be converted to `Verified` through confirmation alone.
+**Terminal:** narrow correction + truthful recheck, unresolved help state, or removal/recovery.
 
-## 8. Path D — Failed activation / verification failure
+## 9. Path F — Resume after interruption
 
-**Entry:** setup was attempted but approved verification does not establish the intended SafeWeb encrypted-DNS path, or configuration breaks connectivity.
+### Accountless core
+- Same-active-session context may resume from authorized transient J0/J1 state.
+- Lost/expired accountless state must not be fabricated as durable history; route to TP-15 and re-establish current evidence.
+- Account sign-in/activity cannot extend J1 expiry.
 
-1. TP-05 renders S3 `Action needed` only when a proven repair exists; otherwise S5/S4.
-2. TP-08 consumes `DEV-COMMON-CONFLICT` and identifies a current evidence-backed next action for known VPN, Private Relay, browser/app resolver, network block, captive portal, management or other accepted conflict classes.
-3. Do not ask the parent to weaken required employer/school/security controls merely to obtain positive state.
-4. A retry is offered only after a changed condition.
-5. If SafeWeb configuration materially breaks resolution, route to TP-09/TP-10 using the exact platform removal instruction and `DEV-COMMON-RECOVERY`.
-6. After removal, DNS state is S6 `Removed`; ordinary connectivity may be checked, but SafeWeb protection cannot remain asserted.
+### Optional account continuity
+- A valid authenticated account may resume only the minimum account/device lifecycle state authorized by downstream architecture.
+- Account/device records may route the parent to a device/setup step, but historical status is not automatically current verification.
+- No automatic J0/J1-to-account/device import is authorized; any future explicit transfer requires the approved downstream field-level data-flow contract.
 
-**QA assertion:** repeated identical failed verification is rejected as a recovery loop; state never silently advances.
+**Terminal:** resume from legitimate current state, or clean restart/reverification when currentness is unavailable.
 
-## 9. Path E — False positive / legitimate content blocked
+## 10. Path G — Removal and recovery
 
-**Entry:** the encrypted DNS path may still be technically verified, but the parent reports a legitimate destination/service is blocked.
+1. TP-13 uses exact current platform-specific removal for the configured UseSafeWeb mechanism.
+2. Once supporting evidence/confirmation establishes removal, Internet state becomes `Removed`; active UseSafeWeb DNS wording is withdrawn.
+3. TP-14 checks neutral ordinary connectivity/recovery where available.
+4. If connectivity still fails, show an evidence-bounded recovery state; do not fabricate root cause.
+5. Dashboard record deletion/revoke/account deletion are separate operations and must not claim physical DNS removal.
+6. Reinstall begins from `Action needed`/setup and requires new qualifying evidence before returning to `Verified`.
 
-1. Preserve the distinction between **DNS path verification** and **filtering correctness**. A false positive does not automatically make technical-path evidence false, but it is a material service problem.
-2. TP-12 presents current self-service false-positive guidance and current approved exception/report route only if that route is separately implemented and source-current. This blueprint does not invent a user-facing bypass control.
-3. Do not recommend disabling required native safeguards or silently switching to an unreviewed resolver.
-4. If the only safe immediate recovery is removal of SafeWeb DNS, use TP-09/TP-10 and set S6 `Removed`.
-5. If SafeWeb remains configured while the issue is unresolved, the Protection Map must not imply that “Verified” means all legitimate content will work or all harmful content will be blocked.
+**Terminal:** truthful `Removed` plus recovery result, or explicit unresolved recovery state.
 
-**QA assertion:** no complete-safety/zero-error claim; false-positive help cannot mutate verified state without actual evidence/state change.
+## 11. Path H — Support / help
 
-## 10. Path F — Resume after interruption
+1. TP-16 is reachable from critical accountless and account/device paths and is state-neutral when opened/closed.
+2. Use current source-backed instructions and issue-specific decision trees first.
+3. Do not collect browsing history, child identity, provider credentials or unrestricted diagnostics as ordinary help input.
+4. Account/session problems use TSK-0312 recovery; device-management problems use TSK-0142 lifecycle requirements; technical DNS failures use owning technical rules.
+5. Provider outage blocks account-only functions but leaves accountless setup/verification/help/removal available.
+6. Exceptional security/privacy/legal/safeguarding incidents remain outside routine L4 self-service and follow their owning authority.
 
-**Entry:** parent leaves a screen temporarily or navigates to Help/Limitations and returns.
+**Terminal:** self-service resolution, truthful unsupported/uncertain state, or separately governed exceptional escalation.
 
-1. Within the same active in-memory journey, preserve the current lawful transient state so Help/Limitations does not corrupt progress.
-2. No `localStorage`, `sessionStorage`, cookie, service worker, persistent parent/device profile, or mandatory account is introduced by this blueprint.
-3. If the browser/page process loses transient journey state, do **not** pretend persistent resume exists. Route to TP-11 clean reset/reconfigure.
-4. On a clean restart, current device/platform facts and verification must be re-established before S1 is shown.
-5. Previously remembered parent confirmation outside the active journey cannot become system verification.
+## 12. Optional account/device continuity overlay
 
-**QA assertion:** resume behavior matches the frozen privacy boundary; persistence is not fabricated merely for convenience.
+This overlay is not a ninth mandatory core path; it is an optional branch available from an appropriate downstream-designed entry point.
 
-## 11. Path G — Removal and recovery
+`TP-08 → TP-09 → TP-10 → TP-11 / TP-17`
 
-**Entry:** parent intentionally removes SafeWeb, activation failed materially, or recovery requires rollback.
+Required behavior:
 
-1. TP-09 uses `DEV-AND-DNS-REMOVE` or `DEV-IOS-DNS-REMOVE` exactly for the active supported family.
-2. OS-owned confirmation remains in the OS flow; SafeWeb does not silently alter settings.
-3. Once the exact SafeWeb configuration is removed, Internet state becomes S6 `Removed` and active SafeWeb DNS protection wording is withdrawn.
-4. TP-10 runs a neutral connectivity check where available.
-5. If connectivity remains broken after removal, use ordinary network help/S5; SafeWeb must not falsely claim cause or successful recovery.
-6. TP-11 may return to clean discovery for a later intentional reconfiguration.
-
-**QA assertion:** removal is reversible and truthful; it cannot leave stale `Verified` state or a hidden plaintext “protected” fallback.
-
-## 12. Path H — Support / help
-
-**Entry:** Help is opened from any critical screen or a troubleshooting/support need is detected.
-
-1. TP-12 is globally reachable and never changes protection state merely by being opened/closed.
-2. Present point-of-need content based on current journey context without collecting browsing history, child identity, provider credentials or persistent diagnostics.
-3. Use TSK-0323 current instruction IDs for technical help; never fork/copy technical semantics into help content.
-4. Ordinary help is self-service. Do not make routine human support a prerequisite for successful setup/recovery.
-5. When a path is unsupported or evidence is insufficient, TP-13 exposes the limitation instead of inventing a fix.
-6. Exceptional security/legal/safeguarding/operational escalation remains outside this L4 blueprint and must follow its owning authority.
-
-**QA assertion:** Help is state-neutral, privacy-minimal, source-current and does not become an undocumented support workflow.
+- Google social sign-in is the planned current route; no local password/SMS flow is introduced.
+- cancel/error/provider outage returns safely to the accountless experience.
+- dashboard list/empty states expose only authorized parent-owned device records.
+- add/manage/reverify/reinstall/replace/revoke/remove actions preserve TSK-0142 truth semantics.
+- logout/session expiry only affects account access, not configured DNS.
+- device-record deletion/account deletion/J0-J1 deletion/physical DNS removal remain separate.
+- stored ownership/history never yields technical `Verified`.
 
 ## 13. State-transition invariants
 
-Engineering and QA must enforce all of the following:
-
-- configuration presence -> never directly S1;
-- parent confirmation -> S2 at most, never S1;
-- qualifying technical verifier success -> may establish S1 for the supported DNS layer only;
-- failed known repair -> S3;
-- unsupported scope -> S4;
-- insufficient/conflicting evidence -> S5;
-- exact SafeWeb DNS removal -> S6;
-- S6 cannot become S1 without a new supported setup plus current qualifying verification;
+- configuration presence → never directly `Verified`;
+- parent confirmation → parent-confirmed at most;
+- qualifying current verifier success → may establish `Verified` for the exact supported mechanism;
+- known repairable failure → `Action needed`;
+- unsupported → `Not covered`;
+- inconclusive/conflicting/stale → `Status uncertain`;
+- removal → `Removed` and active claim withdrawn;
 - Help/Limitations navigation is state-neutral;
-- reset clears transient journey state and returns to discovery;
-- external-service completion is S2 unless a separately approved future verifier explicitly changes that contract;
-- native-safeguard completion remains parent-confirmed unless separately approved technical evidence exists;
-- no state transition is justified solely by color, copy optimism, elapsed time, or repeated unchanged retry.
+- reset/reconfigure does not itself remove physical DNS;
+- account/session/dashboard presence cannot strengthen evidence;
+- current contradictory evidence overrides historical optimistic state.
 
-## 14. Accessibility, responsive and localization acceptance
+## 14. Accessibility/localization/claims inheritance
 
-Every path must remain testable under the frozen TSK-0309 accessibility/responsive contract:
+All touchpoints inherit the project WCAG 2.2 AA target, mobile-first responsive behavior and English/Turkish/Arabic+RTL technical capability. State meaning must not depend on color alone. Translation must preserve evidence strength. Language availability does not imply named-market readiness. No user-tested/comprehension claim is made before L8.
 
-- mobile-first, including representative 320 px viewport without horizontal overflow;
-- focus moves to current screen heading on screen transitions;
-- explicit busy state settles correctly;
-- buttons have explicit semantics;
-- state meaning is textual, not color-only;
-- English, Turkish and Arabic/RTL variants preserve the same path/state semantics;
-- `SafeWeb` and technical endpoints remain LTR/untranslated inside RTL UI;
-- localization may not strengthen a claim or imply market/legal/support activation.
+## 15. ACC-0325 current disposition
 
-## 15. QA acceptance matrix
+ACC-0325 requires the map to cover normal, already-configured, unsupported, failed-activation, false-positive, resume, removal and support paths, with every touchpoint mapped to requirements.
 
-TSK-0325 cannot PASS unless QA can deterministically assert all eight required paths:
+This v2 artifact retains all eight required path classes and expands the touchpoint trace from 13 to 17 to reconcile current optional-account/session/dashboard/device-lifecycle scope. It consumes rather than duplicates the full accepted TSK-0315 service blueprint and preserves the login-free core, no-linkage, no-history and truthful-evidence boundaries.
 
-| Path | Required terminal/asserted outcome |
-| --- | --- |
-| Normal | Supported branch reaches truthful Protection Map; S1 only from current technical evidence. |
-| Already configured | Duplicate work skipped without bypassing DNS verification or upgrading parent confirmation to S1. |
-| Unsupported | S4/S5 with explicit limitation; no speculative setup/removal. |
-| Failed activation | S3/S5/S4 as evidence dictates; bounded corrective action; removal/recovery available when needed. |
-| False positive | Filtering problem is represented without complete-safety claim or invented bypass; recovery remains truthful. |
-| Resume | Same active in-memory state can resume; lost state cleanly restarts; no hidden persistence/account. |
-| Removal | Exact SafeWeb DNS removed, S6 shown, active protection claim withdrawn, neutral connectivity checked. |
-| Support | Help is state-neutral, source-current, self-service and privacy-minimal. |
-
-Cross-cutting QA must additionally prove:
-
-- every implementation touchpoint maps to the trace in section 4;
-- no unlisted mandatory field/account step exists;
-- all device/service technical actions resolve to current TSK-0323 IDs;
-- no named external service is invented;
-- all frozen state semantics remain exact;
-- unsupported/uncertain cases fail safely;
-- no human/user validation claim is made pre-L8;
-- no release/publication/production/payment/market/launch authority is inferred.
-
-## 16. Accepted source/version set
-
-- `prototype/TSK-0309/BASELINE.md` v1.0.0 — blob `76bb848ebdf6a2aee4dd84bc18e8af5ba8a99dbc`.
-- `content/TSK-0323/DEVICE_SERVICE_INSTRUCTION_CATALOGUE.md` v1.0.0 — blob `bbe9ed90b205f2ca852ebdaefedf054446dd7f91`.
-- `content/TSK-0323/CATALOGUE.json` v1.0.0 — blob `842e18c5666a82d53e2d348715dd6b9198daa44c`.
-- `TSK_0320_PROTECTION_STATE_MODEL_AND_COPY_RULES_2026-08-28.md` — blob `1146f7622f434590dde1253d11f14fb6a87e19de`.
-- `TSK_0310_RENDERED_BROWSER_ACCEPTANCE_EVIDENCE_2026-08-29.md` — blob `02b34756862a62091908e60d32b490059a84a67c`.
-- Current WBS at CR-0005 — blob `f23b4f017d1baf73258fa30ecd71549bbfe1b815`.
-- Current risk `RSK-0002` remains open/non-blocking under DEC-0052/CR-0005; no behavioral evidence is claimed by this artifact.
-
-## 17. Change control
-
-This blueprint is the TSK-0325 L4 cross-touchpoint orchestration contract. A material change to journey order, state truth, technical setup mechanism, supported platform scope, persistence/account behavior, external-service scope, removal/recovery behavior, help/support dependency, claims, accessibility, or localization behavior requires impact review against the owning authority before reuse.
-
-Contradictory current source/device/browser/security/privacy evidence reopens the affected path. This artifact cannot authorize production implementation, public release, participant processing, payment, market activation or launch by itself.
+**Candidate disposition:** ACC-0325 is ready for independent post-publication verification. TSK-0325 remains non-PASS under current CR-0006/0007 semantics until that verification and durable runtime reconciliation succeed.
