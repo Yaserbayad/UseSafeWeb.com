@@ -3,33 +3,30 @@ from pathlib import Path
 
 with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='') as f:
     rows = list(csv.DictReader(f))
-if not rows:
-    raise SystemExit('empty WBS')
-
-matches = [r for r in rows if r.get('Task_ID') == 'TSK-0312']
-if len(matches) != 1:
-    raise SystemExit(f'TSK-0312 row count={len(matches)}')
-r = matches[0]
-for key in r.keys():
-    print('TSK0312_FIELD|' + key + '|' + r.get(key,'').replace('\n',' ').replace('|','/'))
-
-if r.get('Lifecycle_Stage') != 'L4': raise SystemExit('TSK-0312 not L4')
-if r.get('Dependencies') != 'TSK-0140': raise SystemExit('TSK-0312 dependency mismatch')
-if r.get('Action_Authority') != 'AUTO_ALLOWED': raise SystemExit('TSK-0312 not AUTO_ALLOWED')
-if r.get('Acceptance_ID') != 'ACC-0312': raise SystemExit('TSK-0312 acceptance mismatch')
+by_id = {r['Task_ID']: r for r in rows}
+fields = ['Task_ID','Parent_ID','Package_ID','Phase_ID','Deliverable_ID','Lifecycle_Stage','Title','Purpose','Plan_Status','Execution_State','Priority','Critical_Path','Dependencies','Trigger','Preconditions','Inputs','Acceptance_ID','Acceptance_Criteria','Verification_ID','Verification_Method','Evidence_ID','Primary_Owner','AI_Capability_A0_A4','Action_Authority','Risk_Reference','Interface_Reference','Requirement_Reference','Relative_Timing','Source_Reference','Notes']
+for tid in ['TSK-0142','TSK-0329']:
+    if tid not in by_id: raise SystemExit(tid + ' missing')
+    r = by_id[tid]
+    for key in fields:
+        print(f'{tid}_FIELD|{key}|' + r.get(key,'').replace('\n',' ').replace('|','/'))
 
 state = Path('CURRENT_STATE.md').read_text(encoding='utf-8')
-if '## TSK-0140 current accepted stable state — 2026-08-31 — POST-CR-0007' not in state:
-    raise SystemExit('current TSK-0140 PASS section missing')
-if '`TSK-0140 — Issue the post-validation product brief`: **PASS**' not in state:
-    raise SystemExit('current TSK-0140 PASS token missing')
-if '## TSK-0312 current accepted stable state' in state:
-    raise SystemExit('TSK-0312 already has a current accepted runtime section')
+for tid in ['TSK-0312','TSK-0041','TSK-0328']:
+    # Print bounded context around the first exact accepted-state heading if present.
+    marker = f'### {tid} accepted stable state'
+    marker2 = f'## {tid} current accepted stable state'
+    idx = state.find(marker2)
+    if idx < 0: idx = state.find(marker)
+    print(f'RUNTIME_MARKER|{tid}|' + ('FOUND' if idx >= 0 else 'MISSING'))
+    if idx >= 0:
+        snippet = state[idx:idx+1800].replace('\n',' ')
+        print(f'RUNTIME_SNIPPET|{tid}|' + snippet.replace('|','/'))
 
-rel = Path('Plans/Master/RELATIONSHIP_INDEX.yaml').read_text(encoding='utf-8')
-for token in ['TSK-0140','TSK-0312']:
-    if token not in rel: raise SystemExit(token + ' missing from relationship index')
-print('TSK0312_PREFLIGHT_STATIC=PASS')
-print('TSK0312_RUNTIME_DEPENDENCY=PASS')
-print('TSK0312_CURRENT_PASS_ABSENT=PASS')
-print('TSK0312_RELATIONSHIP_COVERAGE=PASS')
+# Identify direct WBS successors of TSK-0312, regardless of lifecycle.
+for r in rows:
+    deps = [d.strip() for d in r.get('Dependencies','').replace(';',',').split(',') if d.strip()]
+    if 'TSK-0312' in deps:
+        print('TSK0312_SUCCESSOR|' + '|'.join(r.get(k,'').replace('\n',' ').replace('|','/') for k in ['Task_ID','Lifecycle_Stage','Title','Plan_Status','Execution_State','Priority','Critical_Path','Dependencies','AI_Capability_A0_A4','Action_Authority','Acceptance_ID']))
+
+print('POST_TSK0312_SUCCESSOR_INSPECTION=PASS')
