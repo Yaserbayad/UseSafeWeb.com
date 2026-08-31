@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-31T15:24:05Z
+**Updated:** 2026-08-31T15:35:11Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -1320,3 +1320,31 @@ Recompute eligibility from current WBS dependencies, current runtime evidence, g
 ### Queue status after post-CR-0007 TSK-0328 acceptance
 
 Recompute eligibility from current WBS dependencies, relationship graph, runtime evidence, gates/constraints and Action Authority. TSK-0329 may be reconsidered only after a fresh dependency/authority check; no successor PASS is inherited from TSK-0328.
+
+## TSK-0329 current accepted stable state — 2026-08-31 — POST-CR-0007
+
+`TSK-0329 — Design and prototype Google sign-in, first-session account creation, and signed-in return interactions`: **PASS** under current `ACC-0329 / VER-0329 / EVD-0329`, `DEC-0053/CR-0006` and `DEC-0054/CR-0007` authority.
+
+- Current WBS blob `f3c29b5db8b835ef2c896f61335656ea51d8ba1c`: L4, MEDIUM, dependencies `TSK-0328; TSK-0312`, A4 / `AUTO_ALLOWED`; WBS planning snapshot is not runtime proof.
+- Relationship graph blob `c108d2c162bcea2ee4cc01def46d0487a9501032`; bounded current-authority inspection run/job `33408418927 / 99541674501`: **SUCCESS**.
+- Both hard dependencies are current durable PASS: post-CR-0007 TSK-0328 information architecture and current TSK-0312 parent authentication/account/session/minimal-intake requirements.
+- Accepted normative prototype: `prototype/TSK-0329/AUTH_ACCOUNT_INTERACTION_PROTOTYPE.md`, version `1.0.0-post-cr0007`, blob `bc9ff6c3240c06e12af977097ccbc05fca9ad8ef`.
+- Structured interaction state model: `prototype/TSK-0329/INTERACTION_STATE_MODEL.json`, blob `c4ffbe4c5795b57dc074f41e1480fe610784679d`.
+- Analytical evidence: `TSK_0329_AUTH_ACCOUNT_INTERACTION_ACCEPTANCE_EVIDENCE_2026-08-31.md`, blob `8f416952e33c09c3508d88ae5a5873b75f3814ca`.
+- Deterministic evidence: `TSK_0329_DETERMINISTIC_VERIFICATION_EVIDENCE_2026-08-31.md`, blob `66f6ed2237481815874212b90381f0c40448dc07`.
+- Corrected structured verifier blob `a3226acb62c8ded1e016246d29843cc27a61fb4a`; workflow blob `f88bdd71321c962a0bc290b9a847234b7915bc72`; final run/job `33409037262 / 99543709479`: **SUCCESS** on self-hosted `adguardvm`.
+- Final observed markers: WBS contract PASS; graph contract PASS; dependency/runtime PASS; structured interaction model PASS; artifact structure PASS; analytical/downstream-PASS fences PASS; current-scope reconciliation PASS; independent verification PASS; `git diff --check` and clean-worktree checks also succeeded.
+- Initial run/job `33408877929 / 99543192828` is retained as diagnostic evidence only. It failed on a verifier section-scope false negative for `screen-reader`; the normative prototype, state model, analytical evidence, WBS, graph and runtime were unchanged. The corrected semantic-scope check passed.
+- Accepted interaction scope covers optional Google sign-in, explicit first-session product-account creation, signed-in return, provider/cancel/network/ambiguous-identity/session errors, session expiry/re-authentication, logout, account-deletion entry, minimum intake-field states, back/refresh/retry/resume and data-use explanation.
+- The complete accountless core remains usable without login. No local password/SMS/child-login path is authorized; Google remains the planned Version-1 route only and this PASS does not approve provider/security/vendor architecture.
+- No automatic J0/J1 join/conversion/promotion/linkage or expiry extension is authorized. Account/session/dashboard presence never directly establishes technical `Verified` evidence.
+- Provider/session failures are account-only and do not change configured DNS/core truth. Ambiguous identity fails closed without silent merge, duplicate-account creation or password/SMS fallback.
+- Logout, account deletion, dashboard/device-record deletion, J0/J1 deletion and physical DNS removal remain distinct operations.
+- Child identity, browsing/query/activity history and unnecessary provider-profile intake remain excluded. Email/display name/profile image are not product-required by default merely because the provider may supply them.
+- WCAG 2.2 AA target, mobile-first behavior and English/Turkish/Arabic+RTL interaction capability are represented without inferring non-UK market activation or pre-L8 behavioral validation.
+- This PASS does **not** infer TSK-0331, TSK-0332, TSK-0333, provider/vendor/security/privacy architecture, persistent schema/storage, actual account-deletion execution, implementation/build, behavioral validation, LG-06 or any later gate PASS.
+- `RSK-0002` remains OPEN/non-blocking before L8. `LG-06` remains non-PASS.
+
+### Queue status after post-CR-0007 TSK-0329 acceptance
+
+Recompute eligibility from current WBS dependencies, relationship graph, runtime evidence, gates/constraints and Action Authority. No successor or gate inherits PASS from TSK-0329.
