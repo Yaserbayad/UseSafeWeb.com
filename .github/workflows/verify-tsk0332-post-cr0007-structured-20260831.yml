@@ -22,11 +22,21 @@ jobs:
           set -euo pipefail
           test "$(hostname -s)" = "adguardvm"
           python3 .github/scripts/verify_tsk0332_post_cr0007_structured_20260831.py
+
+          node_bin="$(find "$HOME/.nvm/versions/node" -maxdepth 3 -type f -name node -perm -u+x 2>/dev/null | sort -V | tail -n 1)"
+          test -n "$node_bin"
+          export PATH="$(dirname "$node_bin"):$PATH"
           node --version
+
+          playwright_pkg="$(find "$HOME" -type f -path '*/node_modules/playwright/package.json' 2>/dev/null | head -n 1)"
+          test -n "$playwright_pkg"
+          playwright_module="$(dirname "$playwright_pkg")"
+          echo "TSK0332_PLAYWRIGHT_MODULE=$playwright_module"
+
           python3 -m http.server 8032 --bind 127.0.0.1 >/tmp/tsk0332-http.log 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
           sleep 1
-          TSK0332_BASE_URL='http://127.0.0.1:8032/prototype/TSK-0332/index.html' node .github/scripts/verify_tsk0332_browser_20260831.mjs
+          TSK0332_BASE_URL='http://127.0.0.1:8032/prototype/TSK-0332/index.html' TSK0332_PLAYWRIGHT_MODULE="$playwright_module" node .github/scripts/verify_tsk0332_browser_20260831.mjs
           git diff --check
           test -z "$(git status --porcelain)"
