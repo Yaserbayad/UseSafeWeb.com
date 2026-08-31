@@ -1,0 +1,117 @@
+{
+  "schema": "usesafeweb.tsk0331.lifecycle-prototype.v1",
+  "version": "1.0.0-post-cr0007",
+  "task": "TSK-0331",
+  "acceptance": "ACC-0331",
+  "verification": "VER-0331",
+  "evidence": "EVD-0331",
+  "dependencies": ["TSK-0332", "TSK-0334"],
+  "normative_artifact": "prototype/TSK-0331/ACCOUNT_DEVICE_LIFECYCLE_FLOWS.md",
+  "states": [
+    {"id":"account","screen":"LIFE-ACCOUNT","truth":"account management hub; no protection mutation"},
+    {"id":"delete-entry","screen":"LIFE-DELETE-ENTRY","truth":"explain account deletion scope before confirmation"},
+    {"id":"delete-confirm","screen":"LIFE-DELETE-CONFIRM","truth":"explicit destructive confirmation required"},
+    {"id":"delete-pending","screen":"LIFE-DELETE-PENDING","truth":"mutation unresolved; duplicate submit disabled"},
+    {"id":"delete-success","screen":"LIFE-DELETE-SUCCESS","truth":"account-domain deletion confirmed; physical protection unchanged"},
+    {"id":"delete-failed","screen":"LIFE-DELETE-FAILED","truth":"confirmed failure; no completion claim"},
+    {"id":"delete-unknown","screen":"LIFE-DELETE-UNKNOWN","truth":"authoritative read-back required before retry"},
+    {"id":"device","screen":"LIFE-DEVICE","truth":"saved management record is not technical verification"},
+    {"id":"unlink-confirm","screen":"LIFE-UNLINK-CONFIRM","truth":"confirmation for management association removal only"},
+    {"id":"unlink-pending","screen":"LIFE-UNLINK-PENDING","truth":"association mutation unresolved"},
+    {"id":"unlink-success","screen":"LIFE-UNLINK-SUCCESS","truth":"management link removed; physical protection unchanged"},
+    {"id":"unlink-unknown","screen":"LIFE-UNLINK-UNKNOWN","truth":"association result unknown; no duplicate action"},
+    {"id":"remove-record-confirm","screen":"LIFE-REMOVE-RECORD-CONFIRM","truth":"confirmation for saved record deletion only"},
+    {"id":"remove-record-success","screen":"LIFE-REMOVE-RECORD-SUCCESS","truth":"saved record deleted; physical protection unchanged"},
+    {"id":"remove-protection-confirm","screen":"LIFE-REMOVE-PROTECTION-CONFIRM","truth":"separate physical protection removal flow"},
+    {"id":"remove-protection-success","screen":"LIFE-REMOVE-PROTECTION-SUCCESS","truth":"physical removal confirmed; account/record unchanged"},
+    {"id":"reconfigure","screen":"LIFE-RECONFIGURE","truth":"new setup/reverification; stale positive evidence not retained"},
+    {"id":"replace-confirm","screen":"LIFE-REPLACE-CONFIRM","truth":"explicit replacement consequence confirmation"},
+    {"id":"replace-new","screen":"LIFE-REPLACE-NEW","truth":"new device starts without inherited verification/confirmation"},
+    {"id":"session-expired","screen":"LIFE-SESSION-EXPIRED","truth":"account-only authorization unavailable; destructive action not replayed"},
+    {"id":"provider-error","screen":"LIFE-PROVIDER-ERROR","truth":"account-only provider failure; physical protection unchanged"},
+    {"id":"ownership-mismatch","screen":"LIFE-OWNERSHIP-MISMATCH","truth":"authorization fails closed without cross-account disclosure"},
+    {"id":"recovery","screen":"LIFE-RECOVERY","truth":"resolve authoritative operation state before retry"}
+  ],
+  "actions": [
+    "delete-account",
+    "unlink-device",
+    "remove-record",
+    "remove-protection",
+    "reconfigure",
+    "replace-device",
+    "logout",
+    "reauth",
+    "resolve-unknown"
+  ],
+  "required_invariants": [
+    "account deletion does not claim physical protection removal",
+    "record deletion does not claim physical protection removal",
+    "unknown destructive outcome is not automatically replayed",
+    "ownership mismatch fails closed",
+    "account/session/provider failure does not alter physical protection truth",
+    "new replacement device inherits no verified or parent-confirmed state",
+    "core usable without login",
+    "logout changes session access only",
+    "anonymous J0/J1 deletion remains separate from account and device lifecycle",
+    "physical protection removal requires owning removal evidence",
+    "cancellation leaves pre-action state unchanged",
+    "duplicate destructive submission remains disabled while result is pending or unknown"
+  ],
+  "metadata_semantics": {
+    "account_delete_target": [
+      "UseSafeWeb parent account record",
+      "account-owned saved device records and nicknames",
+      "account-to-device management associations",
+      "account-scoped optional-dashboard settings",
+      "active UseSafeWeb sessions",
+      "provider binding material only if owned/stored by the later approved architecture"
+    ],
+    "not_implied_deleted_by_account_delete": [
+      "physical UseSafeWeb configuration",
+      "unrelated anonymous J0/J1 state",
+      "future explicitly approved limited-purpose retention if any"
+    ],
+    "record_delete_target": [
+      "selected saved device-management record and record-owned metadata"
+    ],
+    "unlink_target": [
+      "selected account-to-device management association or revocable account-side access"
+    ]
+  },
+  "failure_classes": [
+    "provider-unavailable-before-mutation",
+    "session-expired-before-confirmation",
+    "network-loss-after-submit",
+    "confirmed-operation-failure",
+    "unknown-operation-result",
+    "ownership-mismatch",
+    "physical-removal-partial",
+    "replacement-setup-failure"
+  ],
+  "acceptance_cases": [
+    "D31-01","D31-02","D31-03","D31-04","D31-05","D31-06","D31-07","D31-08","D31-09","D31-10",
+    "D31-11","D31-12","D31-13","D31-14","D31-15","D31-16","D31-17","D31-18","D31-19","D31-20"
+  ],
+  "excluded_surfaces": [
+    "browsing history",
+    "query history",
+    "activity history",
+    "top sites",
+    "raw AdGuard administration",
+    "raw DNS logs",
+    "child identity/profile",
+    "provider password/token",
+    "broad per-domain administration"
+  ],
+  "downstream_non_inference": [
+    "provider/vendor/security/privacy architecture",
+    "storage schema and authorization implementation",
+    "backup/legal retention policy",
+    "production deletion executor",
+    "production physical removal",
+    "build/deployment behavior",
+    "real-user validation",
+    "TSK-0333",
+    "LG-06"
+  ]
+}
