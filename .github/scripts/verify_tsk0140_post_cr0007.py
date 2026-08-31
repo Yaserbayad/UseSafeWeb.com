@@ -52,7 +52,7 @@ for token in [
     '## TSK-0138 current accepted stable state — 2026-08-31 — POST-CR-0007',
     '`TSK-0138 — Register unresolved product assumptions and owner decisions`: **PASS**',
     'TSK_0138_POST_CR0007_ACCEPTANCE_EVIDENCE_2026-08-31.md',
-    'TSK-0140 remains non-PASS until its revised objective ACC is independently re-evaluated and durably evidenced',
+    '`TSK-0140` remains non-PASS until its revised objective ACC is independently re-evaluated and durably evidenced',
 ]:
     if token not in state:
         raise SystemExit('runtime prerequisite token missing: ' + token)
@@ -107,7 +107,6 @@ for forbidden in [
     if forbidden in brief:
         raise SystemExit('stale acceptance token present: ' + forbidden)
 
-# Cross-package/requirement sanity checks for claims carried by the brief.
 requirements = Path('Plans/Master/Registers/REQUIREMENTS.md').read_text(encoding='utf-8')
 for token in [
     '| REQ-0007 | MUST | PKG-02 | The product shall remain UseSafeWeb - First Phone Safety Setup',
