@@ -1,0 +1,28 @@
+name: Verify post-CR-0007 TSK-0335 final acceptance
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/scripts/verify_tsk0335_post_cr0007_final_acceptance_20260831.py'
+      - '.github/workflows/verify-tsk0335-post-cr0007-final-acceptance-20260831.yml'
+      - 'TSK_0335_POST_CR0007_OWNER_APPROVAL_EVIDENCE_2026-08-31.md'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify exact owner-bound current TSK-0335 acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(hostname -s)" = "adguardvm"
+          python3 .github/scripts/verify_tsk0335_post_cr0007_final_acceptance_20260831.py
+          git diff --check
+          test -z "$(git status --porcelain)"
