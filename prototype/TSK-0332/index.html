@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>UseSafeWeb — Your devices</title>
+  <link rel="stylesheet" href="prototype.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="site-header">
+    <a class="brand" href="#empty" aria-label="UseSafeWeb home">UseSafeWeb</a>
+    <nav aria-label="Account navigation">
+      <button class="quiet" data-state="help">Help</button>
+      <button class="quiet" data-state="account-error">Account</button>
+    </nav>
+  </header>
+  <main id="main" tabindex="-1">
+    <div class="page-heading">
+      <div>
+        <p class="eyebrow">Optional parent dashboard</p>
+        <h1 id="state-title">Your devices</h1>
+      </div>
+      <button class="primary compact" data-state="add-device">Add device</button>
+    </div>
+    <p id="live-status" class="sr-only" aria-live="polite"></p>
+    <section id="state-view" aria-labelledby="state-title"></section>
+  </main>
+  <footer>
+    <p>Core setup and protection remain available without an account.</p>
+  </footer>
+  <script type="module" src="app.mjs"></script>
+</body>
+</html>
