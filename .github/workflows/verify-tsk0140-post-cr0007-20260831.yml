@@ -1,0 +1,26 @@
+name: Verify TSK-0140 post-CR-0007 acceptance
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-tsk0140-post-cr0007-20260831.yml'
+permissions:
+  contents: read
+concurrency:
+  group: usesafeweb-tsk0140-post-cr0007-verify
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify exact current TSK-0140 acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(hostname -s)" = "adguardvm"
+          python3 .github/scripts/verify_tsk0140_post_cr0007.py
+          git diff --check
+          test -z "$(git status --porcelain)"
