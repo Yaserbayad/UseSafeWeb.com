@@ -1,0 +1,23 @@
+name: Inspect TSK-0328 graph
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/inspect-tsk0328-graph-20260831.yml'
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Inspect current TSK-0328 relationship edges
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(hostname -s)" = "adguardvm"
+          python3 .github/scripts/inspect_tsk0328_graph_20260831.py
+          git diff --check
+          test -z "$(git status --porcelain)"
