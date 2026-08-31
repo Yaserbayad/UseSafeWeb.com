@@ -94,10 +94,13 @@ for phrase in [
     'No automatic J0/J1-to-account/device join, promotion or expiry extension is authorized',
     'stored account/device ownership never becomes system verification',
     'TP-08 → TP-09 → TP-10 → TP-11 / TP-17',
-    'logout, revoke/unlink, device-record deletion, account deletion and physical DNS removal remain distinct operations',
     'Browsing/query/activity history, child accounts/profiles and raw/unrestricted AdGuard administration remain excluded',
 ]:
     require(phrase in art, f'missing current-scope invariant: {phrase}')
+# Verify lifecycle separation semantically rather than requiring one exact prose sentence.
+require('logout/session expiry only affects account access, not configured DNS' in art, 'logout/session separation absent')
+require('revoke/unlink is distinct from physical removal' in art, 'revoke/unlink separation absent')
+require('device-record deletion/account deletion/J0-J1 deletion/physical DNS removal remain separate' in art, 'deletion/removal separation absent')
 print('TSK0325_CURRENT_SCOPE_RECONCILIATION=PASS')
 
 require('Historical TSK-0325 v1.0.0 was accepted' in ev, 'historical impact analysis absent')
