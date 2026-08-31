@@ -4,39 +4,36 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
-  <title>SafeWeb — Integrated internal prototype</title>
+  <title>UseSafeWeb — Integrated dual-mode prototype</title>
   <link rel="stylesheet" href="../../brand/system/TSK-0300/tokens.css">
   <link rel="stylesheet" href="../../brand/system/TSK-0300/components.css">
   <link rel="stylesheet" href="../TSK-0308/candidate.css">
   <link rel="stylesheet" href="prototype.css">
 </head>
 <body data-testid="prototype-root" data-analytics-mode="markers-only-no-transport">
-  <a class="prototype-skip-link" href="#main-content" data-testid="skip-link">Skip to current task</a>
+  <a class="prototype-skip-link" id="skip-link" href="#main-content" data-testid="skip-link">Skip to current task</a>
   <div class="prototype-frame">
-    <header class="prototype-topbar" data-testid="prototype-header">
-      <a class="prototype-brand-link" href="#" data-global-action="RESET" data-event-key="journey_reset" aria-label="SafeWeb home">
-        <img class="sw-logo sw-brand-token" src="../../brand/identity/TSK-0301/safeweb-wordmark-primary.svg" alt="SafeWeb">
-      </a>
-      <div class="prototype-topbar__tools">
-        <span class="prototype-badge">Internal prototype · no telemetry</span>
-        <button class="sw-button sw-button--quiet" type="button" data-global-action="TOGGLE_RTL" data-testid="rtl-toggle" data-event-key="rtl_toggle" aria-pressed="false">RTL structure</button>
-      </div>
+    <header class="prototype-topbar" aria-label="UseSafeWeb prototype navigation">
+      <button class="prototype-brand" type="button" data-global-action="RESET" data-event-key="journey_reset">UseSafeWeb</button>
+      <nav class="prototype-topbar__tools" aria-label="Prototype shortcuts">
+        <button type="button" class="sw-button sw-button--secondary" data-global-action="START_SETUP">Start setup</button>
+        <button type="button" class="sw-button sw-button--secondary" data-global-action="ACCOUNT_ENTRY">Sign in</button>
+        <button type="button" class="sw-button sw-button--secondary" data-global-action="DASHBOARD">Dashboard</button>
+        <button type="button" class="sw-button sw-button--secondary" data-global-action="TOGGLE_RTL" aria-pressed="false">RTL</button>
+      </nav>
     </header>
 
-    <main id="main-content" class="prototype-app" tabindex="-1">
-      <div id="prototype-announcer" class="prototype-announcer" aria-live="polite" aria-atomic="true"></div>
-      <div id="app" aria-busy="false"></div>
+    <main id="main-content" class="prototype-main" tabindex="-1" aria-live="off">
+      <div id="app"></div>
     </main>
 
-    <footer class="prototype-footer" aria-label="Setup utilities">
-      <button class="sw-button sw-button--quiet" type="button" data-global-action="OPEN_HELP" data-testid="global-help" data-event-key="help_open">Help</button>
-      <button class="sw-button sw-button--quiet" type="button" data-global-action="OPEN_LIMITS" data-testid="global-limits" data-event-key="limits_open">Limitations</button>
-      <button class="sw-button sw-button--quiet" type="button" data-global-action="SIMULATE_LOST_STATE" data-testid="lost-state-test" data-event-key="state_loss_test">Test lost state</button>
-      <button class="sw-button sw-button--quiet" type="button" data-global-action="RESET" data-testid="global-reset" data-event-key="journey_reset">Start over</button>
+    <footer class="prototype-footer">
+      <p><strong>Internal L4 prototype.</strong> Core protection setup works without login. Account continuity is optional.</p>
+      <p>No browsing history, activity history, raw DNS history, child profile, safety score, or broad DNS administration is provided.</p>
     </footer>
   </div>
 
-  <noscript>This internal prototype requires JavaScript to demonstrate the accepted transient journey state machine.</noscript>
+  <div id="prototype-announcer" class="prototype-visually-hidden" aria-live="polite" aria-atomic="true"></div>
   <script type="module" src="app.mjs"></script>
 </body>
 </html>
