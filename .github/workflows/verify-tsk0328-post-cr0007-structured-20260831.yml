@@ -1,0 +1,24 @@
+name: Verify structured post-CR-0007 TSK-0328 acceptance
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-tsk0328-post-cr0007-structured-20260831.yml'
+      - '.github/scripts/verify_tsk0328_post_cr0007_structured_20260831.py'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify exact current TSK-0328 acceptance structurally
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(hostname -s)" = "adguardvm"
+          python3 .github/scripts/verify_tsk0328_post_cr0007_structured_20260831.py
+          git diff --check
+          test -z "$(git status --porcelain)"
