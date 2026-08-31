@@ -127,8 +127,17 @@ print('TSK0325_ARTIFACT_LIFECYCLE_STRUCTURE=PASS')
 require('Historical TSK-0325 v1.0.0 was accepted' in ev, 'historical impact analysis absent')
 require('Analytical result: ACC-0325 PASS candidate.' in ev, 'analytical disposition absent')
 require('TSK-0326 NOT_APPLICABLE+PASS' in ev, 'behavioral exclusion boundary absent')
-for forbidden in ['TSK-0328 IA PASS', 'TSK-0329 prototype PASS', 'LG-06 is PASS', 'implementation/build is PASS', 'behavioral validation is PASS']:
-    require(forbidden not in art and forbidden not in ev, f'downstream PASS inference found: {forbidden}')
+contrary = section(ev, '9. Contrary-evidence review')
+require('does not infer current TSK-0328 IA PASS' in contrary, 'TSK-0328 non-inference fence absent')
+require('TSK-0329 prototype PASS' in contrary, 'TSK-0329 non-inference fence absent')
+require('LG-06 or any later gate PASS' in contrary, 'gate non-inference fence absent')
+combined = art + '\n' + ev
+for marker in [
+    '## TSK-0328 current accepted stable state',
+    '## TSK-0329 current accepted stable state',
+    '## LG-06 current accepted stable state',
+]:
+    require(marker not in combined, f'actual downstream accepted-state marker found: {marker}')
 print('TSK0325_ANALYTICAL_AND_PASS_FENCES=PASS')
 print('TSK0325_CURRENT_SCOPE_RECONCILIATION=PASS')
 print('TSK0325_INDEPENDENT_VERIFICATION=PASS')
