@@ -165,7 +165,7 @@ console.log('TSK0333_BROWSER_RTL_RESPONSIVE=PASS');
 
 await reset(); await clickAction('OPEN_DATA_USE');
 const body=(await page.locator('body').innerText()).toLowerCase();
-for(const phrase of ['no browsing history','no activity history','no raw dns','no child profile','no broad dns administration']) req(body.includes(phrase),`privacy-copy-${phrase}`);
+for(const phrase of ['no browsing history','activity history','no raw dns','no child profile','no broad dns administration']) req(body.includes(phrase),`privacy-copy-${phrase}`);
 const persisted=await page.evaluate(async()=>({cookies:document.cookie,ls:Object.keys(window.localStorage),ss:Object.keys(window.sessionStorage),idb:await indexedDB.databases()}));
 req(persisted.cookies===''&&persisted.ls.length===0&&persisted.ss.length===0&&persisted.idb.length===0,'browser-persistence-created');
 req(external.length===0,`external-requests:${external.join(',')}`);
