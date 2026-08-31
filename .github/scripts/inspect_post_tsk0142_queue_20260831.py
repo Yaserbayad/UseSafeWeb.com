@@ -40,6 +40,20 @@ def marker_found(tid):
 if '## TSK-0142 current accepted stable state — 2026-08-31' not in state:
     raise SystemExit('TSK-0142 current PASS marker missing')
 
+# Print exact rows needed to resolve stale dependency applicability and the next candidate.
+row_fields = [
+    'Task_ID','Lifecycle_Stage','Title','Purpose','Plan_Status','Execution_State','Priority','Critical_Path',
+    'Dependencies','Trigger','Preconditions','Inputs','Acceptance_ID','Acceptance_Criteria','Verification_ID',
+    'Verification_Method','Evidence_ID','AI_Capability_A0_A4','Action_Authority','Risk_Reference',
+    'Interface_Reference','Requirement_Reference','Source_Reference','Notes'
+]
+for tid in ['TSK-0149','TSK-0328','TSK-0329','TSK-0352']:
+    r = by_id.get(tid)
+    if r is None:
+        raise SystemExit(tid + ' missing')
+    for key in row_fields:
+        print(f'{tid}_FIELD|{key}|' + r.get(key,'').replace('\n',' ').replace('|','/'))
+
 candidates = []
 for r in rows:
     ds = deps(r)
