@@ -1,4 +1,8 @@
-import { chromium } from 'playwright';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const playwrightModule = process.env.TSK0332_PLAYWRIGHT_MODULE || 'playwright';
+const { chromium } = require(playwrightModule);
 
 const base = process.env.TSK0332_BASE_URL || 'http://127.0.0.1:8032/prototype/TSK-0332/index.html';
 const browser = await chromium.launch({headless:true});
