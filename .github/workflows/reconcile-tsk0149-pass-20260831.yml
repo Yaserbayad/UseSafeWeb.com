@@ -1,0 +1,35 @@
+name: Reconcile TSK-0149 PASS runtime
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-tsk0149-pass-20260831.yml'
+permissions:
+  contents: write
+jobs:
+  reconcile:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Reconcile CURRENT_STATE
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(hostname -s)" = "adguardvm"
+          python3 .github/scripts/reconcile_tsk0149_runtime_20260831.py
+          git diff --check
+          test "$(git diff --name-only)" = "CURRENT_STATE.md"
+      - name: Commit and push runtime reconciliation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "UseSafeWeb Project Governor"
+          git config user.email "actions@users.noreply.github.com"
+          git add CURRENT_STATE.md
+          git commit -m "state: accept TSK-0149"
+          git push origin HEAD:main
+          echo "TSK0149_RUNTIME_COMMIT=$(git rev-parse HEAD)"
+          echo "TSK0149_RUNTIME_BLOB=$(git rev-parse HEAD:CURRENT_STATE.md)"
+          echo "TSK0149_RUNTIME_RECONCILIATION=PASS"
