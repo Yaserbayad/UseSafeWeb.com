@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-31T11:15:45Z
+**Updated:** 2026-08-31T12:17:47Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -102,22 +102,23 @@ TSK-0229 may now satisfy its hard-dependency edges, including the TSK-0315 depen
 
 TSK-0141 may now satisfy its current hard-dependency edges. Successor eligibility must still be recomputed against all other current WBS dependencies, runtime evidence, lifecycle/gates and Action Authority.
 
-## TSK-0138 current accepted stable state — 2026-08-30 — POST-CR-0006
+## TSK-0138 current accepted stable state — 2026-08-31 — POST-CR-0007
 
-`TSK-0138 — Register unresolved product assumptions and owner decisions`: **PASS** under current `ACC-0138 / VER-0138 / EVD-0138` and `DEC-0052/CR-0005 + DEC-0053/CR-0006` authority.
+`TSK-0138 — Register unresolved product assumptions and owner decisions`: **PASS** under current `ACC-0138 / VER-0138 / EVD-0138` and `DEC-0052/CR-0005 + DEC-0053/CR-0006 + DEC-0054/CR-0007` authority.
 
-- Current WBS blob `3bb1598a6233a2bbefa52c746a7621867c6c6e89`: L4, dependency `TSK-0141`, A3 / `AUTO_ALLOWED`; WBS planning snapshot is not runtime proof.
-- Dependency `TSK-0141` is current post-CR-0006 PASS.
-- Current register: `TSK_0138_POST_CR0006_UNRESOLVED_PRODUCT_ASSUMPTIONS_AND_OWNER_DECISIONS_2026-08-30.md`, blob `a628d84afda666b99e05e494a921fb01e73ac930`.
-- Durable evidence: `TSK_0138_POST_CR0006_UNRESOLVED_ASSUMPTIONS_DECISIONS_EVIDENCE_2026-08-30.md`, blob `645e3df77bae21690b8272e7dc786da39023cb7f`.
-- Deterministic verifier run/job `33322945034 / 99288000661`: SUCCESS on self-hosted `adguardvm`; dependency, stale historical assumptions, DEC-0052/0053 rebaseline, all open-item control fields and owner boundaries passed.
-- Historical UPA-009/010/017 are resolved/superseded: bounded optional V1 accounts/dashboard are required while the accountless core remains required, and integrated build no longer waits for pre-product human validation.
-- Seventeen current unresolved items remain controlled. Real-parent behavioral unknowns are deferred to L8 after LG-09, not fabricated or used as L4-L7 blockers.
-- LG-06 remains non-PASS until its current objective acceptance is evidenced; DEC-0054 makes the in-scope gate evidence-driven/AUTO rather than HUMAN_ONLY. Retained legal/nondelegable/named-market/formalization/material-commitment/strategic-transition boundaries remain active.
+- Current WBS blob `f3c29b5db8b835ef2c896f61335656ea51d8ba1c`: L4, hard dependency `TSK-0141`, A3 / `AUTO_ALLOWED`; WBS planning snapshot is not runtime proof.
+- Dependency `TSK-0141` remains current post-CR-0006 PASS; CR-0007 did not alter its product-scope acceptance.
+- Current register: `TSK_0138_POST_CR0007_UNRESOLVED_PRODUCT_ASSUMPTIONS_AND_OWNER_DECISIONS_2026-08-31.md`, version `2.0.0-post-cr0007`, blob `a0992efa33c3a54511957c2e34f02a1fc97ad10a`, publication commit `439c6519df2ce3e63cb99dff66dda11ed8fa3208`.
+- Durable independent acceptance evidence: `TSK_0138_POST_CR0007_ACCEPTANCE_EVIDENCE_2026-08-31.md`, blob `fac88076539a51292caa2279d9bcd3076e96b75e`, publication commit `1e39f9c4c92f3cfa4b0d95788bb680e83579b20f`.
+- Fresh post-publication verification passed every current ACC-0138 control field for all 17 unresolved items and found no unresolved contradiction against DEC-0052/0053/0054.
+- CR-0007 corrections are current: LG-06 is evidence-driven/AUTO_ALLOWED inside frozen scope; LG-12 readiness and LG-13 UK public-production GO are automatic only when all current prerequisites pass; routine technical scaling is AUTO only inside approved architecture/budget; no mandatory separate pilot/staging lifecycle exists.
+- Real-parent behavioral unknowns remain unresolved until L8 live-production evidence after LG-09; legal/privacy/consent/security/platform prerequisites and retained human/nondelegable boundaries remain controlling where actually applicable.
+- Historical UPA-009/010/017 remain resolved/superseded; UPA-016 and UPA-018 now carry current CR-0007 authority rather than stale owner-only semantics.
+- This PASS does not infer TSK-0140, LG-06, architecture/build/release gates, production activation, payment, publication or launch PASS.
 
-### Queue status after post-CR-0006 TSK-0138 acceptance
+### Queue status after post-CR-0007 TSK-0138 re-acceptance
 
-TSK-0138 may now satisfy its hard-dependency edges, including TSK-0140. Successor eligibility must still be recomputed against current WBS dependencies, runtime evidence, gates and Action Authority.
+TSK-0138 may satisfy its outgoing hard-dependency edges, including TSK-0140. Successor eligibility must still be recomputed against current WBS dependencies, runtime evidence, gates, constraints and Action Authority.
 
 ## Frozen technical identity
 
