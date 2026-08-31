@@ -1,0 +1,43 @@
+name: Patch CR-0007 capability column
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patch-cr0007-capability-column.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Correct authoritative WBS capability-column handling
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('.github/workflows/apply-cr0007-owner-autonomy.yml')
+          s=p.read_text(encoding='utf-8')
+          old="if 'AI_Capability' in r: r['AI_Capability']='A4'"
+          new="if 'AI_Capability_A0_A4' in r: r['AI_Capability_A0_A4']='A4'"
+          if s.count(old)!=1: raise SystemExit(f'capability mutation match count={s.count(old)}')
+          s=s.replace(old,new,1)
+          old2="caps=collections.Counter(r.get('AI_Capability','') for r in rows)"
+          new2="caps=collections.Counter(r.get('AI_Capability_A0_A4','') for r in rows)"
+          if s.count(old2)!=1: raise SystemExit(f'capability count match count={s.count(old2)}')
+          s=s.replace(old2,new2,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+          git diff --check
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add .github/workflows/apply-cr0007-owner-autonomy.yml
+          git commit -m "fix: bind CR-0007 to canonical WBS capability column"
+          git push
