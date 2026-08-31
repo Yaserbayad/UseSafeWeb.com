@@ -33,3 +33,4 @@ jobs:
           echo "TSK0142_RUNTIME_COMMIT=$(git rev-parse HEAD)"
           echo "TSK0142_RUNTIME_BLOB=$(git rev-parse HEAD:CURRENT_STATE.md)"
           echo "TSK0142_RUNTIME_RECONCILIATION=PASS"
+# rerun after EOF-format guard fix
