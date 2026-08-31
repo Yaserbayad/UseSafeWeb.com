@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-31T16:40:54Z
+**Updated:** 2026-08-31T16:46:52Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -1375,3 +1375,26 @@ Recompute eligibility from current WBS dependencies, relationship graph, runtime
 ### Queue status after post-CR-0007 TSK-0332 acceptance
 
 Recompute eligibility from current WBS dependencies, relationship graph, runtime evidence, gates/constraints and Action Authority. No successor or gate inherits PASS from TSK-0332.
+
+## TSK-0334 current state — 2026-08-31 — POST-CR-0007
+
+`TSK-0334 — Design support, false-positive, removal, and reconfiguration flows`: **WAITING / HUMAN_APPROVAL_REQUIRED**, not PASS.
+
+- Current WBS blob `f3c29b5db8b835ef2c896f61335656ea51d8ba1c`: L4, MEDIUM, dependency `TSK-0330`, A1 / `HUMAN_ONLY`.
+- Historical owner-approved base candidate remains evidence for still-valid technical support categories only: `design/TSK-0334/SUPPORT_FALSE_POSITIVE_REMOVAL_RECONFIGURATION_FLOWS_CANDIDATE.md`, blob `44fab92b51ae8ed8b6f5f325ba1558bcd297eb5f`.
+- Its account-system/persistent-device exclusions are stale under DEC-0053/CR-0006 and cannot alone satisfy current scope.
+- Prepared current amendment: `design/TSK-0334/POST_CR0007_ACCOUNT_SUPPORT_LIFECYCLE_AMENDMENT_CANDIDATE.md`, version `1.0.0-post-cr0007`, blob `de423bdb8aeb2b0a0f25a85850be380cfab7e67d`.
+- Preparation evidence: `TSK_0334_POST_CR0007_CURRENT_SCOPE_PREPARATION_EVIDENCE_2026-08-31.md`, blob `652845396bc62a1df859b2a9f1944576268066b6`.
+- Deterministic preparation run/job `33415828154 / 99566111401`: **SUCCESS** on `adguardvm`; WBS human boundary PASS; eight-category coverage PASS; current-scope semantics PASS; HUMAN_ONLY PASS fence PASS; preparation verification PASS; repository diff/clean checks PASS.
+- Current candidate preserves SUP-01..SUP-05 and adds SUP-06 account/session/provider access, SUP-07 saved-device/ownership/unlink, and SUP-08 account/device deletion/lifecycle-result support.
+- Account/session/provider failures remain account-only; ownership mismatch fails closed; uncertain destructive outcomes require authoritative resolution; no destructive action auto-replays after re-authentication.
+- Logout, account deletion, dashboard-record deletion, unlinking, J0/J1 deletion and physical UseSafeWeb removal remain distinct.
+- No password/token/child identity/browsing-query-activity history/raw DNS logs or unrestricted administration is introduced.
+- **Required human decision:** approve or reject the exact base candidate + current amendment. No approval is inferred from prior instructions or from preparation success.
+- Exact approval phrase accepted for this bounded decision: `APPROVE TSK-0334 POST-CR-0007 CURRENT-SCOPE SUPPORT AMENDMENT`.
+- TSK-0331 remains not eligible because its hard dependencies are `TSK-0332; TSK-0334`; TSK-0332 is current PASS, TSK-0334 is WAITING.
+- No TSK-0331, TSK-0333, LG-06, implementation, provider/vendor/security/privacy architecture, production operation or behavioral-validation PASS is inferred. `RSK-0002` remains OPEN/non-blocking before L8.
+
+### Queue status at TSK-0334 human boundary
+
+Stop governed progression on this active dependency chain until the Project Owner explicitly approves or rejects the exact current candidate. Recompute eligibility after that decision is persisted and read back.
