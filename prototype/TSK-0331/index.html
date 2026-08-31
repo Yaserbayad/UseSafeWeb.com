@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>UseSafeWeb — Account and device lifecycle</title>
+  <link rel="stylesheet" href="prototype.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="site-header">
+    <a class="brand" href="#account" aria-label="UseSafeWeb lifecycle prototype home">UseSafeWeb</a>
+    <nav aria-label="Lifecycle navigation">
+      <button class="quiet" data-state="device">Devices</button>
+      <button class="quiet" data-state="account">Account</button>
+      <button class="quiet" data-state="recovery">Help</button>
+    </nav>
+  </header>
+  <main id="main" tabindex="-1">
+    <div class="page-heading">
+      <div>
+        <p class="eyebrow">Account and device lifecycle</p>
+        <h1 id="page-title">Manage safely</h1>
+      </div>
+    </div>
+    <p id="live-status" class="sr-only" aria-live="polite"></p>
+    <section id="state-view" aria-labelledby="page-title"></section>
+  </main>
+  <footer>
+    <p>Account and dashboard actions are separate from physical UseSafeWeb protection.</p>
+  </footer>
+  <script type="module" src="app.mjs"></script>
+</body>
+</html>
