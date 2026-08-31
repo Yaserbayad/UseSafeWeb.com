@@ -88,5 +88,8 @@ document.addEventListener('click', e => {
   if (location.hash === `#${next}`) render({focus:true});
   else location.hash=next;
 });
-window.addEventListener('hashchange',()=>render({focus:true}));
+window.addEventListener('hashchange',()=>{
+  const key=location.hash.replace(/^#/,'');
+  if (states[key]) render({focus:true});
+});
 render();
