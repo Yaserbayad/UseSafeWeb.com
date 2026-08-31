@@ -71,8 +71,9 @@ for invariant in ('core usable without login','record presence never establishes
 print('TSK0332_STRUCTURED_MODEL=PASS')
 
 low=proto.lower()
-for token in ('mobile-first','empty dashboard','add device','protection map','contextual help','session expired','provider/account unavailable','ownership mismatch','remove from dashboard','remove usesafeweb protection','english','turkish','arabic','rtl','wcag 2.2 aa'):
+for token in ('mobile-first','empty dashboard','add device','protection map','contextual help','provider/account unavailable','ownership mismatch','remove from dashboard','remove usesafeweb protection','english','turkish','arabic','rtl','wcag 2.2 aa'):
     require(token in low,f'TSK0332_PROTO_SEMANTIC_MISSING={token}')
+require(('dash-session-expired' in low or 'session expired' in low or 'session ended' in low) and 'sign in again' in low,'TSK0332_SESSION_EXPIRY_SEMANTIC_MISSING')
 require('browsing/query/activity history' in low,'TSK0332_HISTORY_EXCLUSION_MISSING')
 require('record presence' in low and 'verified' in low,'TSK0332_VERIFICATION_SEPARATION_MISSING')
 require('without login' in low,'TSK0332_ACCOUNTLESS_CORE_MISSING')
