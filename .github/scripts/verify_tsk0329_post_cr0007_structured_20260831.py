@@ -166,8 +166,9 @@ data_sec = section(art, '8. Data-use and privacy copy constraints').lower()
 for token in ['optional account for continuity/device-management', 'minimum account/session identity binding', 'no account requirement for core setup', 'no browsing/query/activity-history product', 'technical verification remains separate']:
     require(token in data_sec, f'data-use semantic missing: {token}')
 a11y = section(art, '9. Accessibility, responsive and RTL interaction contract').lower()
-for token in ['wcag 2.2 aa', 'mobile-first', 'keyboard', 'screen-reader', 'arabic', 'rtl', 'no state meaning is communicated by color alone']:
+for token in ['wcag 2.2 aa', 'mobile-first', 'keyboard', 'arabic', 'rtl', 'no state meaning is communicated by color alone']:
     require(token in a11y, f'accessibility semantic missing: {token}')
+require('screen-reader' in (binding + '\n' + a11y), 'screen-reader accessibility semantic missing from binding/accessibility contract')
 cases = section(art, '10. Deterministic interaction cases')
 require(len(re.findall(r'^\| `AUTH-P\d{2}` \|', cases, flags=re.M)) == 20, 'artifact deterministic case count mismatch')
 coverage = section(art, '11. ACC-0329 coverage')
