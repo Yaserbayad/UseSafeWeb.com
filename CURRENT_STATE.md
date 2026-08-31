@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-31T14:22:00Z
+**Updated:** 2026-08-31T14:28:00Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -1233,3 +1233,24 @@ TSK-0142 may satisfy its outgoing hard-dependency edges. Recompute the current L
 ### Queue status after TSK-0149 acceptance
 
 TSK-0149 may now satisfy its outgoing hard-dependency edges. Recompute current L4 eligibility from WBS dependencies, current runtime evidence, graph, gates/constraints and Action Authority before selecting a successor.
+
+## TSK-0315 current accepted stable state — 2026-08-31 — POST-CR-0007
+
+`TSK-0315 — Create the dual-mode end-to-end service blueprint for accountless core and optional parent-account lifecycle`: **PASS** under current `ACC-0315 / VER-0315 / EVD-0315`, `DEC-0053/CR-0006` and `DEC-0054/CR-0007` authority.
+
+- Current WBS blob `f3c29b5db8b835ef2c896f61335656ea51d8ba1c`: L4, priority HIGH, hard dependencies `TSK-0149; TSK-0229; TSK-0142`, A3 / `AUTO_ALLOWED`; the WBS planning/execution snapshot is not runtime proof.
+- All three hard dependencies are current durable PASS: post-CR-0007 TSK-0149 outcome split, post-CR-0006 TSK-0229 accountless/persistent separation, and current TSK-0142 dashboard/device-management requirements.
+- Current blueprint: `TSK_0315_POST_CR0007_DUAL_MODE_END_TO_END_SERVICE_BLUEPRINT_2026-08-31.md`, version `2.0.0-post-cr0007`, blob `97cf09f294c757f80ad5c0fbe6110ed8d471159c`, publication commit `90bd9e6a4e4891d67e350db6a4001848e7610703`.
+- Analytical acceptance evidence: `TSK_0315_POST_CR0007_DUAL_MODE_SERVICE_BLUEPRINT_ACCEPTANCE_EVIDENCE_2026-08-31.md`, blob `5c9c9278349323b67200f084716be8baf9724110`, publication commit `b7bee6f7453d0ccb68f9cb6c0034d9296cbf5a5c`.
+- Deterministic verification evidence: `TSK_0315_POST_CR0007_DETERMINISTIC_VERIFICATION_EVIDENCE_2026-08-31.md`, blob `f458ade10b26d686cf45b5c839d2acc39fac1568`, publication commit `9a6e32f7774f4f0bead70d0e3f6cdd301f1cd425`.
+- Independent verifier run/job `33402665013 / 99522523592` on self-hosted `adguardvm`: WBS contract, all dependency markers, 25-stage mapping, all ACC semantics, 24 deterministic assertions, analytical evidence and no-downstream-PASS inference all PASS; repository diff/clean checks passed.
+- The historical accountless-only `TSK_0315_ACCOUNTLESS_END_TO_END_SERVICE_BLUEPRINT_2026-08-28.md` is superseded for current acceptance where it excludes the now-authorized optional account/dashboard scope.
+- Accepted current blueprint preserves a complete login-free core and maps optional Google account entry/creation/return/session, dashboard/device lifecycle, provider outage, false-positive support, reinstall/reconfigure, replace, revoke/unlink, device-record/account deletion, physical DNS removal/recovery and exit.
+- Every mapped stage includes frontstage, backstage, data boundary, responsible owner, failure/uncertainty and recovery. No automatic J0/J1 linkage or browsing/query/activity history is authorized.
+- Account/device ownership or stored history never substitutes for current technical protection verification; account/device/J0-J1 deletion and physical DNS removal remain separate operations.
+- This PASS is service-design only. It does not infer current IA/navigation, provider/security architecture, persistent schema/storage, implementation/build, legal/privacy compliance, real-user evidence, LG-06 or any later gate PASS.
+- `RSK-0002` remains OPEN/non-blocking before L8 under current sequencing.
+
+### Queue status after TSK-0315 acceptance
+
+TSK-0315 may now satisfy its outgoing hard-dependency edges. Recompute the current L4 queue from WBS dependencies, relationship graph, runtime evidence, gates/constraints and Action Authority; stale pre-CR-0006 PASS evidence must not satisfy a changed successor acceptance.
