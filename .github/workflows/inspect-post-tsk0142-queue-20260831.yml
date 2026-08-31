@@ -21,3 +21,4 @@ jobs:
           python3 .github/scripts/inspect_post_tsk0142_queue_20260831.py
           git diff --check
           test -z "$(git status --porcelain)"
+# rerun with focused TSK-0328/0329/0352 rows
