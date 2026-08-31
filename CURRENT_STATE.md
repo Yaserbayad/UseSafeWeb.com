@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-31T19:23:58Z
+**Updated:** 2026-08-31T19:33:18Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -1139,21 +1139,27 @@ Do not infer a successor from task numbering. Recompute current eligibility from
 - Accepted scope preserves accountless-first self-service support, minimal diagnostics, truthful evidence states, bounded exceptional escalation, explicit false-positive/removal/recovery/reconfiguration behavior, and current accessibility/mobile/RTL rules.
 - `DEC-0052 / CR-0005` sequencing remains unchanged. No pre-product human validation, LG-06/L5/L6 authority, publication, payment, market activation or launch authority is created by this PASS.
 
-## TSK-0335 current waiting state — 2026-08-31 — POST-CR-0007
+## TSK-0335 current accepted stable state — 2026-08-31 — POST-CR-0007
 
-`TSK-0335 — Design Protection Map and coverage-limit interactions`: **WAITING / HUMAN_APPROVAL_REQUIRED** under current `ACC-0335 / VER-0335 / EVD-0335` and post-CR-0007 authority.
+`TSK-0335 — Design Protection Map and coverage-limit interactions`: **PASS** under current `ACC-0335 / VER-0335 / EVD-0335`, `DEC-0053/CR-0006`, `DEC-0054/CR-0007`, and explicit Project Owner approval at `2026-08-31T19:30:51Z`.
 
-- Current WBS blob `f3c29b5db8b835ef2c896f61335656ea51d8ba1c`: L4, MEDIUM, dependency `TSK-0330`, A1 / `HUMAN_ONLY`.
-- Dependency `TSK-0330` is current-qualified PASS.
-- Historical owner-approved base remains `design/TSK-0335/PROTECTION_MAP_COVERAGE_LIMIT_INTERACTIONS_CANDIDATE.md`, blob `7c65a697a98961d0df278658e59262ce39874ff5`; its unchanged six-state/no-score/material-gap/deterministic/L8-hook semantics remain valid evidence.
-- Current-scope amendment candidate: `design/TSK-0335/POST_CR0007_DUAL_MODE_PROTECTION_MAP_AMENDMENT_CANDIDATE.md`, version `1.0.0-post-cr0007`, blob `80db66d9261e6ccf85e0253530819ad262b39497`.
-- Preparation evidence: `TSK_0335_POST_CR0007_CURRENT_SCOPE_PREPARATION_EVIDENCE_2026-08-31.md`, blob `03e7a35b7943586d635975fdc9a53bfd0e99ee44`.
-- Deterministic preparation run/job `33430327495 / 99613846431`: **SUCCESS**; exact input blobs, current WBS/graph, current dependency and HUMAN_ONLY boundary, historical truth contract, dual-mode amendment, privacy/accessibility fences, current-source alignment, `git diff --check`, and clean-worktree checks PASS.
-- The amendment supersedes only stale accountless-only whole-product assumptions: the optional dashboard may present the same Protection Map truth model, while saved records/accounts/sessions never create `Verified`, stale results are not treated as current, and account/data lifecycle remains distinct from physical protection removal.
-- The historical 2026-08-30 owner approval does **not** approve this later current-scope amendment.
-- Deterministic resolution condition: exact Project Owner approval `APPROVE TSK-0335 POST-CR-0007 DUAL-MODE PROTECTION MAP AMENDMENT`, followed by final owner-bound verification and guarded runtime PASS reconciliation.
-- Until that condition is satisfied, TSK-0335 is non-PASS; TSK-0333, LG-06, implementation, real-user validation and launch do not inherit PASS.
+- Current WBS blob `f3c29b5db8b835ef2c896f61335656ea51d8ba1c`: L4, MEDIUM, dependency `TSK-0330`, A1 / `HUMAN_ONLY`; dependency TSK-0330 is current-qualified PASS.
+- Historical owner-approved Protection Map base remains `design/TSK-0335/PROTECTION_MAP_COVERAGE_LIMIT_INTERACTIONS_CANDIDATE.md`, blob `7c65a697a98961d0df278658e59262ce39874ff5`.
+- Current dual-mode amendment: `design/TSK-0335/POST_CR0007_DUAL_MODE_PROTECTION_MAP_AMENDMENT_CANDIDATE.md`, blob `80db66d9261e6ccf85e0253530819ad262b39497`.
+- Preparation evidence: `TSK_0335_POST_CR0007_CURRENT_SCOPE_PREPARATION_EVIDENCE_2026-08-31.md`, blob `03e7a35b7943586d635975fdc9a53bfd0e99ee44`; preparation run/job `33430327495 / 99613846431`: SUCCESS.
+- Owner approval evidence: `TSK_0335_POST_CR0007_OWNER_APPROVAL_EVIDENCE_2026-08-31.md`, blob `f1b6dcaf10ee276593563e1adf732d305e5d5789`; exact owner command: `APPROVE TSK-0335 POST-CR-0007 DUAL-MODE PROTECTION MAP AMENDMENT`.
+- Deterministic final acceptance evidence: `TSK_0335_POST_CR0007_DETERMINISTIC_ACCEPTANCE_EVIDENCE_2026-08-31.md`, blob `a907e91a046e07a16b761b0687d4397dc48a7acd`.
+- Final owner-bound verifier run/job `33431191778 / 99616661300`: SUCCESS; exact blobs, WBS/graph, WAITING precondition, owner approval binding, preparation proof, current acceptance, source alignment, privacy/validation fences and repository cleanliness all PASS.
+- Accepted current interaction model preserves the six-state evidence map, strict technical `Verified` versus parent-confirmed separation, immediate material-gap disclosure, independent Phone/Internet/Service truth, deterministic state checks, no overall safety score, and future L8 comprehension hooks without claiming L4 human evidence.
+- The same truth model is valid in the complete accountless core and optional signed-in dashboard/device-detail context. Account/session/dashboard/device-record presence never creates technical `Verified`; stored/earlier results are not automatically current; provider/session/account failure does not rewrite physical protection truth.
+- No automatic J0/J1 promotion is authorized. Logout, unlink/revoke, dashboard-record deletion, account deletion, J0/J1 deletion and physical UseSafeWeb removal remain distinct; physical `Removed` requires owning physical-removal evidence.
+- No browsing/query/activity history, child profiles, raw DNS logs, unrestricted DNS administration, broad per-domain controls or safety certification is introduced. Full core Protection Map/help/recovery remains usable without login.
+- No TSK-0333, LG-06, L5 architecture/security/privacy/vendor, implementation, production behavior, real-user validation, publication or launch PASS is inferred.
 - `RSK-0002` remains OPEN/non-blocking before L8.
+
+### Queue status after post-CR-0007 TSK-0335 acceptance
+
+Recompute eligibility from current WBS dependencies, relationship graph, runtime evidence, gates/constraints, changed-scope validity and Action Authority. TSK-0333 may use TSK-0335 as a dependency only after this PASS mutation is committed and read back; no successor inherits PASS automatically.
 
 ## TSK-0335 accepted stable state — 2026-08-30
 
