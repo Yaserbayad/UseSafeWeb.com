@@ -1,0 +1,23 @@
+name: Verify dependency-complete TSK-0334
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-tsk0334-dependency-complete-20260831.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify dependency-complete current TSK-0334
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(hostname -s)" = "adguardvm"
+          python3 .github/scripts/verify_tsk0334_dependency_complete_20260831.py
+          git diff --check
+          test -z "$(git status --porcelain)"
