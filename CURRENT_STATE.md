@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-30T16:38:22Z
+**Updated:** 2026-08-31T11:15:45Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -8,18 +8,34 @@
 
 ## Canonical planning authority
 
-**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0006 PUBLISHED, RECONCILED, READ-BACK VERIFIED.**
+**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0007 PUBLISHED, RECONCILED, READ-BACK VERIFIED.**
 
-- Latest post-freeze change: `CR-0006` / `DEC-0053`, explicit Project Owner authority 2026-08-30: **Version 1 includes an optional parent account capability and lightweight dashboard/device management while the complete accountless core setup/protection journey remains usable without login.**
+- Latest post-freeze change: `CR-0007` / `DEC-0054`, explicit Project Owner authority 2026-08-31: **maximize evidence-driven AI autonomy and use a production-only active lifecycle after integrated readiness; no separate mandatory pilot or staging lifecycle/environment.**
+- `CR-0006` / `DEC-0053` remains the controlling underlying Version-1 product-scope decision: optional parent account/lightweight dashboard plus a complete accountless core path.
+- CR-0007 planning publication commit: `c730c8c147e8cb4559ee03c8fe5b8a91429bc2c6`; evidence `CR_0007_OWNER_AUTONOMY_PRODUCTION_ONLY_EVIDENCE_2026-08-31.md`, blob `4a95f1f855c5920127d860fe037a480983c85006`.
+- CR-0007 validation/publication run/job: `33385926233` / `99468414319`: **SUCCESS**; deterministic validator PASS with 641 tasks, 858 dependency edges, 5,178 relationship entities, 20,472 relationship targets, 0 broken links, 0 generated missing task IDs; direct CR-0007 semantic audit PASS and `git diff --check` PASS.
+- Current CR-0007 authority blobs: WBS `f3c29b5db8b835ef2c896f61335656ea51d8ba1c`; manifest `a72000ce586c70914195d079254417a46a04fa68`; Layer 5 `6d0cd068512967f495ea20b63a1c2be0c7678eb1`; decisions `380ff579dcffb7b8df73611e9159c672f9ed489e`; gates `87cf9060954a82e1d5a092200d3c922f1986a5da`.
 - CR-0006 planning publication commit: `40a5e4612e08b25ac63dd9e63b142eec1179b877`; evidence `CR_0006_V1_OPTIONAL_ACCOUNT_SCOPE_EVIDENCE_2026-08-30.md`, blob `e74844b94d164a57bdbe708eedd4bd26b522c8f2`.
 - CR-0006 validation/publication run/job: `33306724533` / `99244479114`: `VALIDATION PASS`, 641 tasks, 858 dependency edges, 5,178 relationship entities, 20,472 relationship targets, 0 broken links, 0 generated missing task IDs; direct CR-0006 semantic assertions PASS.
-- Current authoritative WBS blob: `3bb1598a6233a2bbefa52c746a7621867c6c6e89`; relationship-index blob: `c108d2c162bcea2ee4cc01def46d0487a9501032`; manifest blob: `06af6e55e63e2dfac211bb6c989d5e542cf2e903`; validator blob: `fcdde594524e57ceaaaa41776d16a54081d991a8`.
+- Relationship-index blob remains `c108d2c162bcea2ee4cc01def46d0487a9501032`; validator blob remains `fcdde594524e57ceaaaa41776d16a54081d991a8`; CR-0007 did not change dependency edges or validator logic.
 - `EXC-0001` is now `ACTIVATED_V1_SCOPE`: 43 existing account/authentication/minimum-persistence/dashboard tasks formerly deferred solely by that exception are active again, subject to ordinary lifecycle, gate, dependency, privacy, security and action-authority rules.
 - The approved Version-1 boundary excludes mandatory login for core value, browsing/query/activity history, child accounts and unrestricted customer DNS administration. Google/Firebase is the planned initial authentication route but remains subject to current L5 vendor/privacy/security verification before architecture approval.
-- Prior PASS/evidence remains valid only for unchanged facts. `TSK-0146`, `TSK-0229`, and post-CR-0006 `TSK-0141` are current **PASS** under the revised DEC-0053/CR-0006 dual-mode Version-1 contract and evidence recorded below; revised account-inclusive `TSK-0313`, `TSK-0315`, `TSK-0328`, `TSK-0333`, `TSK-0321`, `TSK-0309`, and `TSK-0628` remain non-PASS until their current acceptance contracts are satisfied. Activated HUMAN_ONLY account UX decisions (`TSK-0329`, `TSK-0332`, `TSK-0331`) remain human-authority work when dependency-eligible.
+- Prior PASS/evidence remains valid only for unchanged facts. `TSK-0146`, `TSK-0229`, and post-CR-0006 `TSK-0141` remain current **PASS** where their evidence still proves unchanged acceptance; revised account-inclusive successors remain non-PASS until independently evidenced. Under DEC-0054/CR-0007, detailed account UX tasks including `TSK-0329`, `TSK-0331`, and `TSK-0332` are `A4 / AUTO_ALLOWED` inside the frozen Version-1 scope; material product/scope-policy change remains owner-controlled.
 - The prior `TSK_0052_LG06_READINESS_REVIEW_2026-08-30.md` is **superseded as a readiness conclusion** by CR-0006. `LG-06` is not PASS and must not be presented for owner approval until the revised dual-mode L4 baseline is complete.
-- `CR-0005` / `DEC-0052` remains controlling for human-validation sequencing: all 31 L3 tasks plus `TSK-0187`, `TSK-0326`, and `TSK-0336` remain `NOT_APPLICABLE + PASS` exclusion records; no behavioral/user evidence is inferred. First real-user validation remains L8 after LG-09 PASS.
-- LG-06/LG-07/LG-08/LG-09 remain mandatory in order. CR-0006 creates no public publication, participant processing, payment, market activation or launch authority. `RSK-0002` remains OPEN and non-blocking before L8.
+- `CR-0005` / `DEC-0052` remains controlling for the pre-L8 rule: all 31 L3 tasks plus `TSK-0187`, `TSK-0326`, and `TSK-0336` remain `NOT_APPLICABLE + PASS` exclusion records; no behavioral/user evidence is inferred. DEC-0054/CR-0007 supersedes the downstream pilot/staging model: first real-user validation remains after `LG-09` PASS but occurs as bounded/ramped **live production validation**, not a separate pilot or staging environment.
+- `LG-06`/`LG-07`/`LG-08`/`LG-09` remain mandatory in order. DEC-0054/CR-0007 creates standing **conditional** authority for evidence-complete automatic gates/live-production activation/public-production GO, but creates no PASS by itself and cannot waive missing evidence or actually applicable legal/privacy/consent/security/platform requirements. `RSK-0002` remains OPEN and non-blocking before L8.
+
+## CR-0007 current authority and execution boundary
+
+- `DEC-0054 / CR-0007` is the current authority for action rights and the active post-LG-09 lifecycle. If older text in this runtime file mentions mandatory pilot/staging, human-only public launch/material-risk acceptance, or human-only account UX, it is historical/superseded where it conflicts with DEC-0054/CR-0007.
+- Objective work inside frozen scope is AI-autonomous by default. `LG-07`, ordinary `LG-08`, `LG-12`, and other specified evidence gates are automatic when every current requirement is proven; `LG-13` is automatic GO only when all prerequisites and time-sensitive checks are current.
+- First real users are live production users after `LG-09` and all actually applicable prerequisites. Pre-release/local/CI/synthetic/device/network/security/privacy/accessibility/performance/recovery/rollback verification remains mandatory; bounded/capped/ramped rollout is a production-safety mechanism, not a separate pilot/staging lifecycle.
+- AI may accept project-defined material residual risk where evidence supports it and no higher actual legal/safety/security/platform/technical prohibition or nondelegable human/professional act applies. No compliance, consent, signature, contract, identity/provider acceptance, or other fact may be fabricated.
+- Retained human authority: named official-market activation; organizational/entity/formalization decisions; new contracts; regulated fees; banking/merchant identity; legal attestations/signatures; material/unbudgeted spend; strategic modify/pivot/pause/stop/transfer/resume; irreversible acts that actually require human authority; material frozen-scope changes.
+- Routine technical scaling inside approved architecture/budget, routine reversible already-budgeted spend, routine incidents/retries/rollback/recovery/remediation, and detailed account/dashboard UX inside DEC-0053 scope are autonomous.
+- Year-1 automatically CONTINUEs only if frozen annual thresholds pass; alternative strategic outcomes remain human.
+- **No task or gate became PASS solely because CR-0007 changed authority.** Re-evaluate any changed acceptance against current evidence. In particular, the post-CR-0006 `TSK-0140` candidate (`955ebc6a4592439c3d2edbedde3671fd910fac7c`) had preparation evidence but was previously waiting for a ceremonial owner review; CR-0007 removes that ceremonial requirement, yet `TSK-0140` remains non-PASS until its revised objective ACC is independently re-evaluated and durably evidenced.
+- Exact next governed work is not persisted here; recompute it from the current WBS, graph, gates, runtime PASS evidence and DEC-0054 action authority.
 
 ## CR-0006 current execution boundary
 
@@ -97,7 +113,7 @@ TSK-0141 may now satisfy its current hard-dependency edges. Successor eligibilit
 - Deterministic verifier run/job `33322945034 / 99288000661`: SUCCESS on self-hosted `adguardvm`; dependency, stale historical assumptions, DEC-0052/0053 rebaseline, all open-item control fields and owner boundaries passed.
 - Historical UPA-009/010/017 are resolved/superseded: bounded optional V1 accounts/dashboard are required while the accountless core remains required, and integrated build no longer waits for pre-product human validation.
 - Seventeen current unresolved items remain controlled. Real-parent behavioral unknowns are deferred to L8 after LG-09, not fabricated or used as L4-L7 blockers.
-- LG-06 remains non-PASS/HUMAN_ONLY; legal/participant/public/payment/launch/advanced-scope fences remain active.
+- LG-06 remains non-PASS until its current objective acceptance is evidenced; DEC-0054 makes the in-scope gate evidence-driven/AUTO rather than HUMAN_ONLY. Retained legal/nondelegable/named-market/formalization/material-commitment/strategic-transition boundaries remain active.
 
 ### Queue status after post-CR-0006 TSK-0138 acceptance
 
