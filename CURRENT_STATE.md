@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-31T17:36:07Z
+**Updated:** 2026-08-31T19:19:09Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -1416,6 +1416,8 @@ Recompute eligibility from current WBS dependencies, relationship graph, runtime
 - Replacement begins with fresh unverified state and inherits no Verified/parent-confirmed state or activity history. Reconfiguration requires new current technical evidence before a stronger protection state.
 - No provider/vendor/security/privacy architecture, persistence schema/storage/retention/backup/authz implementation, legal retention obligation, production deletion/removal execution, build/deployment behavior, TSK-0333, real-user validation, or LG-06 PASS is inferred.
 - `RSK-0002` remains OPEN/non-blocking before L8.
+
+- Corrective dependency-complete revalidation: `TSK_0331_POST_CR0007_DEPENDENCY_COMPLETE_REVALIDATION_EVIDENCE_2026-08-31.md`, blob `3c128d430d2d31998f2e637a292a46ed740464e6`; final run/job `33429887875 / 99612416336`: SUCCESS after correcting a verifier-only Markdown marker assertion. Exact product/browser evidence is unchanged; current WBS contract, TSK-0332 + dependency-complete TSK-0334 predecessor proof, ACC artifact semantics, prior target-browser proof, `git diff --check`, and clean-worktree checks PASS. This corrective evidence governs downstream dependency use of TSK-0331.
 
 ### Queue status after post-CR-0007 TSK-0331 acceptance
 
