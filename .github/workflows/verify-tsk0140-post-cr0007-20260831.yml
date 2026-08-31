@@ -21,6 +21,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$(hostname -s)" = "adguardvm"
+          # Fresh run after correcting the exact Markdown runtime-fence assertion.
           python3 .github/scripts/verify_tsk0140_post_cr0007.py
           git diff --check
           test -z "$(git status --porcelain)"
