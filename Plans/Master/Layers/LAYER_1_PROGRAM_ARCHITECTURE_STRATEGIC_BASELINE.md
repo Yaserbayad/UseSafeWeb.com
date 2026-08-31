@@ -160,8 +160,8 @@ Parent roll-up rules: a parent cannot PASS while mandatory children are TODO/WAI
 | L5 | Architecture, Security, Privacy & Delivery Readiness | Approve production-capable architecture, controls, delivery plan, cost envelope, and implementation evidence model. | LG-07 |
 | L6 | Build & Integration | Implement the smallest approved integrated product, website, DNS service, automation and supporting systems after LG-06/LG-07; pre-product human validation is not a prerequisite under DEC-0052. | LG-08 |
 | L7 | Integrated Verification & Release Readiness | Prove the integrated release meets functional, UX, accessibility, security, privacy, reliability, recovery, and operational acceptance. | LG-09 |
-| L8 | Controlled Integrated-Product Pilot | First active real-user validation stage: operate the fully integrated LG-09-approved product with a bounded cohort and collect value, comprehension, persistence, reliability, supportability and funding evidence. | LG-10 |
-| L9 | Pilot Evaluation & Production Decision | Synthesize pilot evidence and decide proceed, repeat, reduce, pivot, pause, or stop. | LG-11 |
+| L8 | Initial Live Production Validation & Observation | First active real-user validation stage: operate the fully integrated LG-09-approved product with a bounded cohort and collect value, comprehension, persistence, reliability, supportability and funding evidence. | LG-10 |
+| L9 | Initial Production Evidence & Continuation Decision | Synthesize initial production evidence and decide proceed, repeat, reduce, pivot, pause, or stop. | LG-11 |
 | L10 | Production Launch Readiness | Prepare the approved UK production baseline, policies, operations, website, acquisition engine, budget, and staged rollout. | LG-12 |
 | L11 | Production Launch & Stabilization | Launch in controlled stages, verify guardrails, correct high-value defects, and establish a stable operating baseline. | LG-14 |
 | L12 | Year-1 Operations, Improvement & Responsible Growth | Operate, maintain, improve, automate, measure, and grow responsibly through the first full operating year. | LG-15 |

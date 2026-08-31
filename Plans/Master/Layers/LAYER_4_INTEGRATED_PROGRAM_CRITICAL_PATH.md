@@ -12,8 +12,8 @@
 | 5 | L5 - Architecture, Security, Privacy & Delivery Readiness | Approve production-capable architecture, controls, delivery plan, cost envelope, and implementation evidence model. | LG-07 |
 | 6 | L6 - Build & Integration | Implement the smallest approved integrated product, website, DNS service, automation and supporting systems after LG-06/LG-07 without a pre-product human-testing prerequisite. | LG-08 |
 | 7 | L7 - Integrated Verification & Release Readiness | Prove the integrated release meets functional, UX, accessibility, security, privacy, reliability, recovery, and operational acceptance. | LG-09 |
-| 8 | L8 - Controlled Integrated-Product Pilot | First active parent/user/participant validation stage: operate the fully integrated LG-09-approved product with a bounded cohort and collect value, comprehension, persistence, reliability, supportability and funding evidence. | LG-10 |
-| 9 | L9 - Pilot Evaluation & Production Decision | Synthesize pilot evidence and decide proceed, repeat, reduce, pivot, pause, or stop. | LG-11 |
+| 8 | L8 - Initial Live Production Validation & Observation | First active parent/user/participant validation stage: operate the fully integrated LG-09-approved product with a bounded cohort and collect value, comprehension, persistence, reliability, supportability and funding evidence. | LG-10 |
+| 9 | L9 - Initial Production Evidence & Continuation Decision | Synthesize initial production evidence and decide proceed, repeat, reduce, pivot, pause, or stop. | LG-11 |
 | 10 | L10 - Production Launch Readiness | Prepare the approved UK production baseline, policies, operations, website, acquisition engine, budget, and staged rollout. | LG-12 |
 | 11 | L11 - Production Launch & Stabilization | Launch in controlled stages, verify guardrails, correct high-value defects, and establish a stable operating baseline. | LG-14 |
 | 12 | L12 - Year-1 Operations, Improvement & Responsible Growth | Operate, maintain, improve, automate, measure, and grow responsibly through the first full operating year. | LG-15 |
@@ -84,3 +84,6 @@ The complete milestone definitions from source Section 4.9 were normalized to th
 ## 4.11 Pause, repeat, pivot and stop routes
 
 Any gate may return REWORK/REPEAT/REVALIDATE/PIVOT/PAUSE/STOP as applicable. LG-18 is available at every stage. Stop/decommission is a valid terminal transition with user/service/data/payment/vendor/domain/access/legal/communications/asset/evidence obligations; it is not a normal next lifecycle stage.
+### CR-0007 active production-only continuation path
+
+From `LG-09` onward, the active path is **live production**, not a separate pilot or staging lifecycle: integrated production release readiness -> bounded/ramped live production activation -> initial production evidence -> automatic CONTINUE when frozen thresholds pass -> UK public production readiness -> automatic public-production GO -> objective stabilization -> Year-1 operations. Pre-release verification, security/privacy/accessibility/performance tests, clean-server recovery and rollback remain mandatory. Named-market expansion, organizational formalization, contracts/legal identity acts, material unbudgeted commitments and strategic pivot/pause/stop/transfer/resume retain the human boundaries in DEC-0054. Historical pilot/staging language is traceability only and does not control active sequencing.
