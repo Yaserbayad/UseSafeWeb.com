@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-08-31T14:12:00Z
+**Updated:** 2026-08-31T14:22:00Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -1213,3 +1213,23 @@ Do not infer a successor from task numbering. Recompute current eligibility from
 ### Queue status after TSK-0142 acceptance
 
 TSK-0142 may satisfy its outgoing hard-dependency edges. Recompute the current L4 queue from WBS dependencies, relationship graph, runtime evidence, gates/constraints and Action Authority before selecting any successor; do not infer the next task from numbering or prior conversation.
+
+## TSK-0149 current accepted stable state — 2026-08-31
+
+`TSK-0149 — Freeze the distinct public website and product/setup outcomes`: **PASS** under current `ACC-0149 / VER-0149 / EVD-0149`, `DEC-0053/CR-0006` and `DEC-0054/CR-0007` authority.
+
+- Current WBS blob `f3c29b5db8b835ef2c896f61335656ea51d8ba1c`: L4, priority HIGH, hard dependency `TSK-0146`, A3 / `AUTO_ALLOWED`. Its prior `COMPLETED_CANDIDATE/PASS` WBS snapshot was not used as runtime proof because no prior durable TSK-0149 artifact/evidence/runtime record existed.
+- Hard dependency `TSK-0146` is current post-CR-0006 PASS for the dual-mode Version-1 product baseline.
+- Current requirements artifact: `TSK_0149_POST_CR0007_PUBLIC_SITE_PRODUCT_SETUP_OUTCOMES_2026-08-31.md`, version `1.0.0-post-cr0007`, blob `3eb1b90dc9fc3a79be94c7343cd16a9d3093748f`, publication commit `06efdf5e9b1d5ee4366714875b042bd19f31f333`.
+- Analytical acceptance evidence: `TSK_0149_POST_CR0007_PUBLIC_SITE_PRODUCT_SETUP_OUTCOMES_ACCEPTANCE_EVIDENCE_2026-08-31.md`, blob `e55306c70fee60079aedfb42fd6cffbc863936f5`, publication commit `29ae07dca4d8ba247abb2fad44e1c5b3347ce182`.
+- Deterministic verification evidence: `TSK_0149_DETERMINISTIC_VERIFICATION_EVIDENCE_2026-08-31.md`, blob `ea9ffa5bbbfe4e423e9d85bcd2e10020dfdc08da`, publication commit `97c1608e2edeedee4c3b68e4dab06c98c9f6a664`.
+- Independent verifier run/job `33402148107 / 99520837413` on self-hosted `adguardvm`: WBS contract, dependency runtime, current ACC semantics, all 10 deterministic assertions, analytical evidence and no-downstream-PASS inference all PASS; repository diff/clean checks passed.
+- Accepted split: public website owns `discover / understand / trust / decide / start`; product/setup owns `start / configure / verify / understand / recover/manage`; both share one coherent brand/design system.
+- The current split includes optional account sign-in/return/dashboard continuity as product/setup capability while preserving a complete login-free core journey. Public information/viewing cannot manufacture or mutate technical protection state.
+- Mandatory login, payment gating of core value, browsing/query/activity history, child surveillance profiles and unrestricted DNS administration remain excluded.
+- Exact current IA/navigation, implementation, provider/vendor/security architecture, real-user evidence, LG-06 and all later gates retain their own acceptance requirements; no successor PASS is inferred.
+- `RSK-0002` remains OPEN/non-blocking before L8 under current sequencing.
+
+### Queue status after TSK-0149 acceptance
+
+TSK-0149 may now satisfy its outgoing hard-dependency edges. Recompute current L4 eligibility from WBS dependencies, current runtime evidence, graph, gates/constraints and Action Authority before selecting a successor.
