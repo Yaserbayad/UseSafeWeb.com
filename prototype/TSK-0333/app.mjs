@@ -1,317 +1,292 @@
-import { createJourney, transition, stateCopy, SCREEN, EVIDENCE_STATE } from './model.mjs';
+import { createPrototype, transition, stateCopy, SCREEN, EVIDENCE_STATE, INVARIANTS } from './model.mjs';
 
 const app = document.querySelector('#app');
+const main = document.querySelector('#main-content');
 const announcer = document.querySelector('#prototype-announcer');
-const rtlToggle = document.querySelector('[data-global-action="TOGGLE_RTL"]');
-let journey = createJourney();
+let state = createPrototype();
+let initialRender = true;
 
-const eventMarker = (action) => `data-event-key="${action.toLowerCase()}"`;
-const actionButton = (label, action, attrs = '') =>
-  `<button class="sw-button prototype-choice" type="button" data-action="${action}" data-testid="action-${action.toLowerCase().replaceAll('_','-')}" ${eventMarker(action)} ${attrs}>${label}</button>`;
-const secondaryButton = (label, action, attrs = '') =>
-  `<button class="sw-button sw-button--secondary prototype-choice" type="button" data-action="${action}" data-testid="action-${action.toLowerCase().replaceAll('_','-')}" ${eventMarker(action)} ${attrs}>${label}</button>`;
-
-function stateAction(layer, value) {
-  if (layer === 'Phone' && value === EVIDENCE_STATE.ACTION_NEEDED) return secondaryButton('Review phone step', 'REVIEW_NATIVE');
-  if (layer !== 'Internet') return '';
-  if ([EVIDENCE_STATE.ACTION_NEEDED, EVIDENCE_STATE.UNCERTAIN].includes(value)) return secondaryButton('Troubleshoot Internet', 'OPEN_TROUBLESHOOT');
-  if (value === EVIDENCE_STATE.NOT_COVERED) return secondaryButton('Review limitations', 'OPEN_LIMITS');
-  if (value === EVIDENCE_STATE.REMOVED) return actionButton('Set up SafeWeb DNS again', 'RECONFIGURE');
-  if (journey.dnsConfigured) return secondaryButton('Remove SafeWeb DNS', 'REMOVE_DNS');
-  return '';
-}
+const button = (label, action, attrs = '', secondary = false) =>
+  `<button type="button" class="sw-button${secondary ? ' sw-button--secondary' : ''}" data-action="${action}" data-testid="action-${action.toLowerCase().replaceAll('_','-')}" data-event-key="${action.toLowerCase()}" ${attrs}>${label}</button>`;
+const secondary = (label, action, attrs = '') => button(label, action, attrs, true);
+const section = (id, kicker, title, body, actions = '') => `<section class="prototype-screen" data-screen="${id}" data-testid="screen-${id}">
+  <header class="prototype-screen__header"><p class="sw-kicker">${kicker}</p><h1 tabindex="-1">${title}</h1></header>
+  <div class="prototype-content">${body}</div>${actions ? `<div class="prototype-actions">${actions}</div>` : ''}
+</section>`;
+const callout = (title, body) => `<aside class="prototype-callout"><strong>${title}</strong><p>${body}</p></aside>`;
+const privateNotice = () => `<p class="prototype-meta">Optional account continuity only. Core setup, verification, help, recovery and removal remain usable without login.</p>`;
 
 function stateCard(layer, value) {
   const copy = stateCopy(value);
-  const id = layer.toLowerCase();
-  return `<section class="sw-ds-state-item prototype-state-card" data-testid="map-${id}" data-evidence-layer="${id}" data-evidence-state="${value}">
-    <h2>${layer}</h2>
-    <p class="sw-ds-state-item__label" data-testid="map-${id}-label">${copy.label}</p>
-    <p class="sw-ds-state-item__evidence">${copy.supporting}</p>
-    ${stateAction(layer, value)}
-  </section>`;
+  return `<article class="prototype-state-card" data-testid="map-${layer.toLowerCase()}" data-evidence-state="${value}">
+    <h2>${layer}</h2><p class="prototype-state-label">${copy.label}</p><p>${copy.supporting}</p>
+  </article>`;
 }
 
-function home() {
-  return `<section class="sw-ds-screen prototype-screen" data-screen="home" data-testid="screen-home">
-    <div class="sw-ds-screen__header">
-      <p class="sw-kicker">First Phone Safety Setup</p>
-      <h1>Set up clearer guardrails without creating a SafeWeb account.</h1>
-    </div>
-    <div class="sw-ds-public-layout">
-      <div class="sw-ds-long-copy">
-        <p>SafeWeb guides you through three independent layers: the phone’s native safeguard, the supported encrypted-DNS internet path, and zero or one currently approved service safeguard.</p>
-        <div class="sw-callout"><strong>Evidence, not a safety score</strong><p>The Protection Map shows what SafeWeb can verify, what you confirmed, and what is still uncertain or not covered. It never promises complete safety.</p></div>
-      </div>
-      <aside class="sw-card" aria-label="Privacy baseline">
-        <h2>Accountless by default</h2>
-        <p>No SafeWeb login, parent/child identity, browsing history, raw DNS history, payment, or persistent device dashboard is required for this setup.</p>
-      </aside>
-    </div>
-    <div class="prototype-actions">${actionButton('Start setup', 'START')}${secondaryButton('Compatibility & limitations', 'OPEN_LIMITS')}</div>
-  </section>`;
+function renderHome() {
+  return section('home','UseSafeWeb','Set up protection without creating an account',
+    `<p>UseSafeWeb guides a parent through Phone, Internet and supported Services, then shows a truthful Protection Map.</p>
+     ${callout('Core value never requires login','Start setup, verify, understand, troubleshoot, recover and remove UseSafeWeb while signed out. Sign in is optional continuity.')}
+     <div class="prototype-grid"><article><h2>Accountless core</h2><p>No parent or child identity is required for the safety setup journey.</p></article><article><h2>Optional continuity</h2><p>Google sign-in can provide a small device dashboard without turning account presence into technical evidence.</p></article></div>`,
+    button('Start setup','START') + secondary('Sign in with Google','OPEN_ACCOUNT_ENTRY') + secondary('Privacy boundaries','OPEN_DATA_USE'));
 }
 
-function router() {
-  return `<section class="sw-ds-screen prototype-screen" data-screen="router" data-testid="screen-router">
-    <div class="sw-ds-screen__header"><p class="sw-kicker">Setup start</p><h1>Which phone are you setting up?</h1></div>
-    <p>SafeWeb selects the current approved platform path. The parent does not need to choose a DNS protocol.</p>
-    <div class="prototype-actions">
-      ${actionButton('Android 9+ with usable Private DNS control', 'CHOOSE_PLATFORM', 'data-platform="android"')}
-      ${actionButton('iPhone / iOS 14+ with approved DNS profile path', 'CHOOSE_PLATFORM', 'data-platform="iphone"')}
-      ${secondaryButton('Another or managed/blocked device', 'CHOOSE_PLATFORM', 'data-platform="other"')}
-    </div>
-  </section>`;
+function renderRouter() {
+  return section('router','Setup','Which phone are you setting up?',
+    `<p>Choose the current supported device path. UseSafeWeb selects the approved DNS instructions; the parent does not choose a protocol.</p>`,
+    button('Android','CHOOSE_PLATFORM','data-platform="android"') + button('iPhone','CHOOSE_PLATFORM','data-platform="iphone"') + secondary('Another or managed device','CHOOSE_PLATFORM','data-platform="other"'));
 }
 
-function nativeSafeguard() {
-  const platform = journey.platform === 'iphone' ? 'Apple Screen Time / Content & Privacy Restrictions' : 'the current Google/Android family safeguard';
-  return `<section class="sw-ds-screen prototype-screen" data-screen="native" data-testid="screen-native">
-    <div class="sw-ds-screen__header"><p class="sw-kicker">Phone</p><h1>Check the phone’s native safeguard</h1></div>
-    <p>Use ${platform} when it is applicable to this exact device/account context. SafeWeb does not collect platform credentials or silently change these settings.</p>
-    <div class="sw-callout"><strong>Truth rule</strong><p>When you tell SafeWeb this step is complete, the state is <em>You confirmed this is set up</em> — not <em>Verified</em>.</p></div>
-    <div class="prototype-actions">
-      ${actionButton('I confirmed this is set up', 'NATIVE_CONFIRMED')}
-      ${secondaryButton('This still needs attention', 'NATIVE_ACTION_NEEDED')}
-    </div>
-  </section>`;
+function renderNative() {
+  const family = state.platform === 'iphone' ? 'Apple Screen Time / Content & Privacy Restrictions' : 'the current Android family safeguard';
+  return section('native','Phone','Check the phone safeguard',
+    `<p>Review ${family}. UseSafeWeb does not silently change platform controls.</p>${callout('Evidence boundary','Your confirmation becomes “You confirmed this is set up”, never technical “Verified”.')}`,
+    button('I confirmed this is set up','NATIVE_CONFIRMED') + secondary('This still needs attention','NATIVE_ACTION_NEEDED'));
 }
 
-function dnsSetup() {
-  if (journey.platform === 'android') {
-    return `<section class="sw-ds-screen prototype-screen" data-screen="dns" data-testid="screen-dns-android" data-instruction-id="DEV-AND-DNS-INSTALL">
-      <div class="sw-ds-screen__header"><p class="sw-kicker">Internet · Android</p><h1>Set Android Private DNS to SafeWeb</h1></div>
-      <ol class="prototype-steps">
-        <li>Open Android Private DNS using the phone’s current Settings wording or search.</li>
-        <li>Choose the provider-hostname/custom Private DNS option.</li>
-        <li>Enter exactly <code class="sw-ds-tech" data-testid="android-dns-value">dns.usesafeweb.com</code></li>
-        <li>Save using Android’s own control, then return here.</li>
-      </ol>
-      <p>Do not enter <code>https://</code> or <code>:853</code>. SafeWeb cannot silently change system DNS.</p>
-      <div class="prototype-actions">
-        ${actionButton('I completed the Android setting', 'DNS_CONFIGURED')}
-        ${secondaryButton('It was already configured', 'DNS_ALREADY_CONFIGURED')}
-      </div>
-    </section>`;
-  }
-  return `<section class="sw-ds-screen prototype-screen" data-screen="dns" data-testid="screen-dns-iphone" data-instruction-id="DEV-IOS-DNS-INSTALL">
-    <div class="sw-ds-screen__header"><p class="sw-kicker">Internet · iPhone</p><h1>Use the approved SafeWeb DNS profile path</h1></div>
-    <p>The supported design uses the separately verified DNS Settings profile and this exact DoH Server URL:</p>
-    <code class="sw-ds-tech" data-testid="iphone-doh-value">https://dns.usesafeweb.com/dns-query</code>
-    <p>iOS must show and obtain explicit user permission for profile installation. Profile presence alone does not prove the SafeWeb path is active.</p>
-    <div class="prototype-actions">
-      ${actionButton('I completed the approved profile flow', 'DNS_CONFIGURED')}
-      ${secondaryButton('The profile was already present', 'DNS_ALREADY_CONFIGURED')}
-    </div>
-  </section>`;
+function renderDns() {
+  const isAndroid = state.platform === 'android';
+  const instruction = isAndroid
+    ? `<ol><li>Open Android Private DNS.</li><li>Choose the provider-hostname option.</li><li>Enter <code data-testid="android-dns-value">dns.usesafeweb.com</code>.</li><li>Save and return.</li></ol>`
+    : `<p>Use the approved iOS DNS profile flow. The exact DoH Server URL is <code data-testid="iphone-doh-value">https://dns.usesafeweb.com/dns-query</code>.</p>`;
+  return section('dns',`Internet · ${isAndroid ? 'Android' : 'iPhone'}`,isAndroid ? 'Set Android Private DNS' : 'Use the approved DNS profile',
+    `${instruction}<p>Configuration presence alone is not technical verification.</p>`,
+    button('I completed this setting','DNS_CONFIGURED') + secondary('It was already configured','DNS_ALREADY_CONFIGURED'));
 }
 
-function verify() {
-  return `<section class="sw-ds-screen prototype-screen" data-screen="verify" data-testid="screen-verify">
-    <div class="sw-ds-screen__header"><p class="sw-kicker">Internet verification</p><h1>Check what the current evidence actually proves</h1></div>
-    <p>Configuration presence and parent confirmation cannot produce <strong>Verified</strong>. The production implementation must use the approved controlled verifier.</p>
-    <fieldset class="prototype-test-controls" data-testid="verification-fixture">
-      <legend>Internal deterministic outcome fixture</legend>
-      <p class="prototype-meta">These controls exist only to exercise every accepted state. They transmit nothing and are not the production verifier.</p>
-      <div class="prototype-actions">
-        ${actionButton('Qualifying verification succeeds', 'VERIFY_RESULT', 'data-result="verified"')}
-        ${secondaryButton('Known repair is needed', 'VERIFY_RESULT', 'data-result="action-needed"')}
-        ${secondaryButton('Evidence is conflicting or inconclusive', 'VERIFY_RESULT', 'data-result="uncertain"')}
-        ${secondaryButton('This path is not supported', 'VERIFY_RESULT', 'data-result="not-covered"')}
-      </div>
-    </fieldset>
-  </section>`;
+function renderVerify() {
+  return section('verify','Internet verification','Check what current evidence proves',
+    `<p>Only qualifying current technical evidence can produce <strong>Verified</strong>. These prototype controls are deterministic fixtures and send no data.</p>`,
+    button('Verification succeeds','VERIFY_RESULT','data-result="verified"') + secondary('Known repair needed','VERIFY_RESULT','data-result="action-needed"') + secondary('Evidence uncertain','VERIFY_RESULT','data-result="uncertain"') + secondary('Not supported','VERIFY_RESULT','data-result="not-covered"'));
 }
 
-function serviceSafeguard() {
-  return `<section class="sw-ds-screen prototype-screen" data-screen="service" data-testid="screen-service">
-    <div class="sw-ds-screen__header"><p class="sw-kicker">Service</p><h1>Add only a currently approved relevant service safeguard</h1></div>
-    <p>The current catalogue hard-codes no external service. Zero applicable services is a valid completed result; SafeWeb must not infer service use from browsing, DNS, or app history.</p>
-    <div class="prototype-actions">
-      ${actionButton('No approved relevant service applies', 'SERVICE_NONE')}
-      ${secondaryButton('Test future one-approved-service confirmation', 'SERVICE_CONFIRMED')}
-    </div>
-  </section>`;
+function renderService() {
+  return section('service','Services','Add only an approved relevant service safeguard',
+    `<p>Zero applicable services is valid. UseSafeWeb does not infer services from browsing history, activity history or raw DNS data.</p>`,
+    button('No approved service applies','SERVICE_NONE') + secondary('Prototype one approved service','SERVICE_CONFIRMED'));
 }
 
-function protectionMap() {
-  return `<section class="sw-ds-screen prototype-screen" data-screen="map" data-testid="screen-map">
-    <div class="sw-ds-screen__header"><p class="sw-kicker">Protection Map</p><h1>Current evidence, layer by layer</h1></div>
-    <p data-testid="map-no-score">This is an evidence map, not a safety score. Mixed states are a valid completed journey and material gaps stay visible.</p>
-    <div class="sw-ds-state-grid prototype-map" data-layout="three" data-testid="protection-map">
-      ${stateCard('Phone', journey.nativeState)}
-      ${stateCard('Internet', journey.dnsState)}
-      ${stateCard('Service', journey.serviceState)}
-    </div>
-    <div class="prototype-actions">
-      ${secondaryButton('A site or service seems blocked', 'OPEN_FALSE_POSITIVE')}
-      ${secondaryButton('Help with this setup', 'OPEN_HELP')}
-      ${secondaryButton('Review limitations', 'OPEN_LIMITS')}
-    </div>
-    <p class="sw-template-note">There is no extra “success” acknowledgement that hides unresolved gaps, and no seventh completion state.</p>
-  </section>`;
+function renderMap() {
+  const save = state.authStatus === 'signed-in' && !state.device.exists ? button('Save this device explicitly','SAVE_DEVICE_EXPLICIT') : '';
+  return section('map','Protection Map','Current evidence, layer by layer',
+    `<p data-testid="map-no-score">This is an evidence map, not a safety score. One layer never certifies another.</p>
+     <div class="prototype-map">${stateCard('Phone',state.nativeState)}${stateCard('Internet',state.dnsState)}${stateCard('Service',state.serviceState)}</div>
+     ${state.authStatus === 'signed-in' ? privateNotice() : '<p>You can exit here without signing in.</p>'}`,
+    save + secondary('Blocked site or service','OPEN_FALSE_POSITIVE') + secondary('Help','OPEN_HELP') + secondary('Limitations','OPEN_LIMITS') + secondary('Optional account','OPEN_ACCOUNT_ENTRY'));
 }
 
-function troubleshooting() {
-  const copy = stateCopy(journey.dnsState);
-  const retryRelevant = [EVIDENCE_STATE.ACTION_NEEDED, EVIDENCE_STATE.UNCERTAIN].includes(journey.dnsState);
-  return `<section class="sw-ds-screen prototype-screen" data-screen="troubleshoot" data-testid="screen-troubleshoot">
-    <div class="sw-ds-screen__header"><p class="sw-kicker">Troubleshoot Internet</p><h1>${copy.label}</h1></div>
-    <p>${copy.supporting}</p>
-    <div class="sw-card"><h2>Smallest safe next check</h2><p>Check the relevant changed condition: VPN, Private Relay, browser/app secure DNS, managed policy, captive portal, or encrypted-DNS transport availability. Do not weaken employer, school, or device-management controls just to obtain a positive state.</p></div>
-    <div class="prototype-actions">
-      ${retryRelevant && !journey.changedCondition ? actionButton('I changed the relevant condition', 'MARK_CONDITION_CHANGED') : ''}
-      ${retryRelevant && journey.changedCondition ? actionButton('Check again', 'RETRY_AFTER_CHANGE') : ''}
-      ${journey.dnsConfigured ? secondaryButton('Remove SafeWeb DNS', 'REMOVE_DNS') : ''}
-      ${secondaryButton('Back', 'RETURN')}
-    </div>
-  </section>`;
+function renderTroubleshoot() {
+  const canRetry = state.changedCondition;
+  return section('troubleshoot','Troubleshoot','Use one safe changed-condition check',
+    `<p>${stateCopy(state.dnsState).supporting}</p><p>Check only the relevant condition such as VPN, Private Relay, managed policy, captive portal or resolver conflict.</p>`,
+    (!canRetry ? button('I changed the relevant condition','MARK_CONDITION_CHANGED') : button('Check again','RETRY_AFTER_CHANGE')) + (state.dnsConfigured ? secondary('Remove UseSafeWeb DNS','REMOVE_DNS') : '') + secondary('Back','RETURN'));
 }
 
-function falsePositive() {
-  return `<section class="sw-ds-screen prototype-screen" data-screen="false-positive" data-testid="screen-false-positive">
-    <div class="sw-ds-screen__header"><p class="sw-kicker">False positive</p><h1>A legitimate site or service seems blocked</h1></div>
-    <p>A DNS-path <strong>Verified</strong> state means only that qualifying current evidence confirms the intended SafeWeb DNS path. It does not guarantee zero false positives.</p>
-    <div class="sw-card"><h2>Minimal diagnostic boundary</h2><p>A future approved report may use only the single destination/service the parent voluntarily identifies plus the minimum current platform/state/reference context. It must not request browsing history, raw DNS logs, child identity, credentials, or a persistent account.</p></div>
-    <p>Acknowledgement is not evidence and does not upgrade any Protection Map state. This prototype does not invent an arbitrary allowlist or bypass.</p>
-    <div class="prototype-actions">
-      ${journey.dnsConfigured ? secondaryButton('Remove SafeWeb DNS instead', 'REMOVE_DNS') : ''}
-      ${secondaryButton('Back', 'RETURN')}
-    </div>
-  </section>`;
+function renderFalsePositive() {
+  return section('false-positive','Support','A legitimate site or service seems blocked',
+    `<p>A content problem does not automatically change the DNS-path evidence state. A future support route may use only the single destination the parent identifies and minimum context.</p>${callout('Privacy','Do not request browsing history, activity history, raw DNS logs, child profile data, credentials or broad network dumps.')}`,
+    (state.dnsConfigured ? secondary('Remove UseSafeWeb DNS','REMOVE_DNS') : '') + secondary('Back','RETURN'));
 }
 
-function help() {
-  return `<section class="sw-ds-screen prototype-screen" data-screen="help" data-testid="screen-help">
-    <div class="sw-ds-screen__header"><p class="sw-kicker">Help</p><h1>Choose the issue you are trying to solve</h1></div>
-    <p>Ordinary support is self-service. Opening Help does not change any protection state.</p>
-    <div class="prototype-actions">
-      ${[EVIDENCE_STATE.ACTION_NEEDED, EVIDENCE_STATE.UNCERTAIN].includes(journey.dnsState) ? actionButton('Verification or setup is not working', 'OPEN_TROUBLESHOOT') : ''}
-      ${journey.platform && journey.platform !== 'other' ? secondaryButton('A site or service seems blocked', 'OPEN_FALSE_POSITIVE') : ''}
-      ${journey.dnsConfigured ? secondaryButton('Remove SafeWeb DNS', 'REMOVE_DNS') : ''}
-      ${secondaryButton('Compatibility & limitations', 'OPEN_LIMITS')}
-      ${secondaryButton('Back', 'RETURN')}
-    </div>
-    <p class="prototype-meta">Exceptional human escalation, if separately authorized for a material unresolved issue, remains bounded and is not a routine prerequisite for setup success.</p>
-  </section>`;
+function renderHelp() {
+  return section('help','Help','Choose the issue you are solving',
+    `<p>Help is available signed out and never changes protection state by acknowledgement alone.</p>`,
+    secondary('Setup or verification issue','OPEN_TROUBLESHOOT') + secondary('Blocked site or service','OPEN_FALSE_POSITIVE') + secondary('Limitations','OPEN_LIMITS') + secondary('Back','RETURN'));
 }
 
-function limits() {
-  return `<section class="sw-ds-screen prototype-screen" data-screen="limits" data-testid="screen-limits">
-    <div class="sw-ds-screen__header"><p class="sw-kicker">Compatibility & limitations</p><h1>Know what is unsupported or cannot be proven</h1></div>
-    <ul class="prototype-limits">
-      <li>Unsupported device/platform/network tuples stop with <strong>Not covered</strong>; no speculative client workaround is offered.</li>
-      <li>Managed controls, VPNs, Private Relay, browser/app secure DNS, captive portals, and network transport blocks can make status <strong>uncertain</strong>.</li>
-      <li>Parent confirmation, profile presence, and configuration presence are not system verification.</li>
-      <li>One protected layer never compensates for another uncovered layer unless current evidence directly proves it.</li>
-      <li>SafeWeb does not promise complete safety or create an overall safe/unsafe score.</li>
-    </ul>
-    <div class="prototype-actions">
-      ${journey.dnsConfigured ? secondaryButton('Remove SafeWeb DNS', 'REMOVE_DNS') : ''}
-      ${secondaryButton('Back', 'RETURN')}
-    </div>
-  </section>`;
+function renderLimits() {
+  return section('limits','Compatibility & limits','Know what is unsupported or uncertain',
+    `<ul><li>Unsupported paths stop truthfully.</li><li>Managed controls, VPNs and resolver conflicts can make status uncertain.</li><li>Parent confirmation is not technical verification.</li><li>No whole-child safety claim or score is created.</li></ul>`,
+    secondary('Back','RETURN'));
 }
 
-function removal() {
-  const instructions = journey.platform === 'android'
-    ? 'Use the current Android Private DNS settings to leave the custom SafeWeb provider-hostname mode, normally restoring the platform’s normal Automatic policy.'
-    : journey.platform === 'iphone'
-      ? 'Remove the exact SafeWeb DNS profile through the current iOS profile-management route. If the device/profile is management-owned, stop and follow that authority.'
-      : 'Use only the current supported platform removal path.';
-  return `<section class="sw-ds-screen prototype-screen" data-screen="remove" data-testid="screen-remove">
-    <div class="sw-ds-screen__header"><p class="sw-kicker">Removal</p><h1>Remove SafeWeb DNS</h1></div>
-    <p>${instructions}</p>
-    <p>Removal withdraws the active SafeWeb DNS protection claim. Normal DNS afterward is a recovery result, not SafeWeb verification.</p>
-    <div class="prototype-actions">${actionButton('I completed the removal step', 'CONFIRM_REMOVED')}</div>
-  </section>`;
+function renderRemove() {
+  return section('remove','Removal','Remove UseSafeWeb DNS',
+    `<p>Physical protection removal is separate from logout, account deletion, record deletion and revoke/unlink.</p>`,
+    button('I completed physical DNS removal','CONFIRM_REMOVED'));
 }
 
-function recovery() {
-  return `<section class="sw-ds-screen prototype-screen" data-screen="recovery" data-testid="screen-recovery">
-    <div class="sw-ds-screen__header"><p class="sw-kicker">Recovery</p><h1>Check ordinary connectivity separately</h1></div>
-    <p>The SafeWeb Internet state remains <strong>Removed</strong>. A successful ordinary-connectivity check does not restore a protection claim.</p>
-    <div class="prototype-actions">
-      ${actionButton('Ordinary connectivity works', 'RECOVERY_OK')}
-      ${secondaryButton('Set SafeWeb DNS up again', 'RECONFIGURE')}
-    </div>
-  </section>`;
+function renderRecovery() {
+  return section('recovery','Recovery','Check ordinary connectivity after removal',
+    `<p>Connectivity recovery does not restore UseSafeWeb verification. The Internet layer remains Removed until a new setup and qualifying verification occur.</p>`,
+    button('Ordinary connectivity works','RECOVERY_OK') + secondary('Set up again','RECONFIGURE'));
 }
 
-function resetLost() {
-  return `<section class="sw-ds-screen prototype-screen" data-screen="reset-lost" data-testid="screen-reset-lost">
-    <div class="sw-ds-screen__header"><p class="sw-kicker">Transient state lost</p><h1>Start the setup route again</h1></div>
-    <p>This accountless prototype does not pretend it can restore a persistent device journey. Website state was cleared, but this action does not change any DNS or native setting on the phone.</p>
-    <div class="sw-callout"><strong>Important</strong><p>If SafeWeb DNS may still be configured on the device, the new journey must inspect or re-verify it rather than assuming either protection or removal.</p></div>
-    <div class="prototype-actions">${actionButton('Route this phone again', 'START')}</div>
-  </section>`;
+function renderResetLost() {
+  return section('reset-lost','Restart','The transient setup state is unavailable',
+    `<p>UseSafeWeb does not reconstruct an earlier positive state from hidden persistence. Start cleanly.</p>`,button('Start again','START'));
 }
 
-function view() {
-  switch (journey.screen) {
-    case SCREEN.HOME: return home();
-    case SCREEN.ROUTER: return router();
-    case SCREEN.NATIVE: return nativeSafeguard();
-    case SCREEN.DNS: return dnsSetup();
-    case SCREEN.VERIFY: return verify();
-    case SCREEN.SERVICE: return serviceSafeguard();
-    case SCREEN.MAP: return protectionMap();
-    case SCREEN.TROUBLESHOOT: return troubleshooting();
-    case SCREEN.FALSE_POSITIVE: return falsePositive();
-    case SCREEN.HELP: return help();
-    case SCREEN.LIMITS: return limits();
-    case SCREEN.REMOVE: return removal();
-    case SCREEN.RECOVERY: return recovery();
-    case SCREEN.RESET_LOST: return resetLost();
-    default: throw new Error(`No view for ${journey.screen}`);
-  }
+function renderAccountEntry() {
+  return section('account-entry','Optional account','Sign in only if you want continuity',
+    `${privateNotice()}${callout('Google route','The prototype models the planned Google sign-in interaction. It does not implement provider architecture or collect a provider password.')}`,
+    button('Sign in with Google','START_GOOGLE_SIGNIN','data-mode="returning"') + secondary('Prototype first account','START_GOOGLE_SIGNIN','data-mode="new"') + secondary('Continue without account','START'));
 }
 
-function render(announce = true) {
-  app.setAttribute('aria-busy', 'true');
-  app.innerHTML = view();
-  app.setAttribute('aria-busy', 'false');
-  const heading = app.querySelector('h1');
-  if (heading && announce) {
-    heading.tabIndex = -1;
-    heading.focus({ preventScroll: true });
-    announcer.textContent = heading.textContent;
-  }
-  document.body.dataset.screen = journey.screen;
-  document.body.dataset.platform = journey.platform || 'none';
+function renderSignIn() { return renderAccountEntry(); }
+
+function renderProviderPending() {
+  return section('provider-pending','Google sign-in','Resolve the provider result',
+    `<p>Provider/session results affect account access only. They do not create, upgrade or remove physical protection.</p>`,
+    state.providerMode === 'new'
+      ? button('Provider succeeds · new parent','PROVIDER_SUCCESS_NEW') + secondary('Provider unavailable','PROVIDER_ERROR') + secondary('Cancel','PROVIDER_CANCEL')
+      : button('Provider succeeds · returning parent','PROVIDER_SUCCESS_RETURNING') + secondary('Provider unavailable','PROVIDER_ERROR') + secondary('Cancel','PROVIDER_CANCEL'));
+}
+
+function renderFirstSession() {
+  return section('first-session','First session','Create the minimum parent account explicitly',
+    `<p>No saved device is created automatically. No J0/J1 setup state is imported, promoted, linked or extended.</p>${callout('Minimum identity','Provider-bound stable identity and internal account ID only as implementation necessities; email/display image are not required by this interaction contract.')}`,
+    button('Create account','CREATE_ACCOUNT') + secondary('How data is used','OPEN_DATA_USE'));
+}
+
+function renderAccountError() {
+  return section('account-error','Account access','Sign-in is unavailable',
+    `<p>This is an account-only error. Core setup, verification, help, recovery and removal remain available signed out.</p>`,
+    button('Retry Google sign-in','START_GOOGLE_SIGNIN','data-mode="returning"') + secondary('Start setup','START') + secondary('Help','OPEN_HELP'));
+}
+
+function deviceSummary() {
+  if (!state.device.exists) return '<p data-testid="dashboard-empty">No saved devices yet. Saving is optional.</p>';
+  const status = state.device.lastKnown ? 'Earlier result — check again to know current status' : 'No current verification result';
+  return `<article class="prototype-device-card" data-testid="device-card"><h2>${state.device.nickname}</h2><p>${status}</p><p>Saved record presence is not technical verification.</p>${button('Open device','OPEN_DEVICE')}</article>`;
+}
+
+function renderDashboard() {
+  return section('dashboard','Dashboard','Your devices',
+    `${privateNotice()}${deviceSummary()}${callout('No surveillance','No browsing history, activity history, raw DNS logs, child profile, top-sites view or broad DNS administration is available.')}`,
+    button('Add device','ADD_DEVICE') + secondary('Account','OPEN_ACCOUNT') + secondary('Start new setup','START') + secondary('Help','OPEN_HELP'));
+}
+
+function renderDeviceDetail() {
+  return section('device-detail','Saved device',state.device.nickname,
+    `<p>Account ownership and saved-record presence do not establish current protection.</p><div class="prototype-map">${stateCard('Phone',state.nativeState)}${stateCard('Internet',state.dnsState)}${stateCard('Service',state.serviceState)}</div>`,
+    button('Check again','REVERIFY_DEVICE') + secondary('Manage','OPEN_MANAGE') + secondary('Blocked site or service','OPEN_FALSE_POSITIVE') + secondary('Dashboard','OPEN_DASHBOARD'));
+}
+
+function renderDeviceManage() {
+  return section('device-manage','Manage device','Bounded device management',
+    `<p>Each lifecycle action has a narrow consequence. Dashboard data actions do not claim physical protection removal.</p>`,
+    button('Reverify','REVERIFY_DEVICE') + secondary('Reinstall / reconfigure','REINSTALL_DEVICE') + secondary('Replace device','REPLACE_DEVICE') + secondary('Revoke / unlink','REVOKE_DEVICE') + secondary('Delete saved record','DELETE_DEVICE_RECORD') + secondary('Physically remove UseSafeWeb DNS','REMOVE_DNS'));
+}
+
+function renderReauth() {
+  return section('reauth','Session ended','Sign in again to restore account access',
+    `<p>Session expiry does not change physical protection. No destructive action is automatically replayed after reauthentication.</p>`,
+    button('Reauthenticate','REAUTHENTICATE') + secondary('Start setup without account','START'));
+}
+
+function renderAccount() {
+  return section('account','Account','Parent account',
+    `<p>Account access is optional. Logout ends the session only. Account deletion is separate from physical DNS removal and J0/J1 deletion.</p>`,
+    secondary('Data use','OPEN_DATA_USE') + button('Logout','LOGOUT') + secondary('Delete account','OPEN_DELETE_ACCOUNT') + secondary('Dashboard','OPEN_DASHBOARD'));
+}
+
+function renderDataUse() {
+  return section('data-use','Privacy','What this prototype does not collect',
+    `<ul><li>No browsing history or activity history.</li><li>No raw DNS history or raw DNS logs.</li><li>No child profile or child identity.</li><li>No provider password/token.</li><li>No broad DNS administration.</li></ul><p>Anonymous J0/J1 state remains separate from account/device records.</p>`,
+    secondary('Back','RETURN'));
+}
+
+function renderLogoutPending() {
+  return section('logout-pending','Logout','End this account session?',
+    `<p>Logging out does not remove UseSafeWeb from the device and does not alter physical protection evidence.</p>`,
+    button('Confirm logout','CONFIRM_LOGOUT') + secondary('Back to account','OPEN_ACCOUNT'));
+}
+
+function renderDeleteEntry() {
+  return section('delete-entry','Delete account','Delete the parent account?',
+    `<p>Account deletion targets account-domain records defined by the owning deletion contract. It does not claim physical UseSafeWeb removal and does not delete unrelated anonymous J0/J1 state.</p>`,
+    button('Continue to confirmation','CONFIRM_ACCOUNT_DELETE') + secondary('Back to account','OPEN_ACCOUNT'));
+}
+
+const lifecycleCopy = {
+  'replace-device': ['Replace saved device','The replacement starts fresh and inherits no Verified or parent-confirmed protection state.'],
+  'revoke-device': ['Revoke / unlink saved device','This changes the account-side association only; it does not remove physical UseSafeWeb DNS.'],
+  'delete-device-record': ['Delete saved dashboard record','This removes the saved record only; it does not set physical protection to Removed.'],
+  'account-delete': ['Delete account','This deletes account-domain data only after confirmed execution; physical protection and J0/J1 are separate.']
+};
+
+function renderLifecycleConfirm() {
+  const [title,copy] = lifecycleCopy[state.pendingLifecycle] || ['Confirm lifecycle action','Review the consequence before continuing.'];
+  return section('lifecycle-confirm','Confirmation',title,
+    `<p>${copy}</p>${callout('Fail closed','If the result becomes unknown, do not repeat the destructive action. Resolve authoritative state first.')}`,
+    button('Confirm action','CONFIRM_LIFECYCLE') + secondary('Simulate unknown result','SIMULATE_LIFECYCLE_UNKNOWN'));
+}
+
+function renderLifecycleUnknown() {
+  return section('lifecycle-unknown','Unknown result','We could not confirm the destructive result',
+    `<p>No automatic replay is allowed. Resolve authoritative account/device state before deciding whether another mutation is safe.</p>`,
+    button('Resolve as applied','RESOLVE_UNKNOWN','data-result="applied"') + secondary('Resolve as not applied','RESOLVE_UNKNOWN','data-result="not-applied"'));
+}
+
+const renderers = {
+  [SCREEN.HOME]: renderHome, [SCREEN.ROUTER]: renderRouter, [SCREEN.NATIVE]: renderNative, [SCREEN.DNS]: renderDns,
+  [SCREEN.VERIFY]: renderVerify, [SCREEN.SERVICE]: renderService, [SCREEN.MAP]: renderMap, [SCREEN.TROUBLESHOOT]: renderTroubleshoot,
+  [SCREEN.FALSE_POSITIVE]: renderFalsePositive, [SCREEN.HELP]: renderHelp, [SCREEN.LIMITS]: renderLimits, [SCREEN.REMOVE]: renderRemove,
+  [SCREEN.RECOVERY]: renderRecovery, [SCREEN.RESET_LOST]: renderResetLost, [SCREEN.ACCOUNT_ENTRY]: renderAccountEntry,
+  [SCREEN.SIGN_IN]: renderSignIn, [SCREEN.PROVIDER_PENDING]: renderProviderPending, [SCREEN.FIRST_SESSION]: renderFirstSession,
+  [SCREEN.ACCOUNT_ERROR]: renderAccountError, [SCREEN.DASHBOARD]: renderDashboard, [SCREEN.DEVICE_DETAIL]: renderDeviceDetail,
+  [SCREEN.DEVICE_MANAGE]: renderDeviceManage, [SCREEN.REAUTH]: renderReauth, [SCREEN.ACCOUNT]: renderAccount,
+  [SCREEN.DATA_USE]: renderDataUse, [SCREEN.LOGOUT_PENDING]: renderLogoutPending, [SCREEN.DELETE_ENTRY]: renderDeleteEntry,
+  [SCREEN.LIFECYCLE_CONFIRM]: renderLifecycleConfirm, [SCREEN.LIFECYCLE_UNKNOWN]: renderLifecycleUnknown
+};
+
+function render({ focusHeading = true } = {}) {
+  const renderer = renderers[state.screen];
+  if (!renderer) throw new Error(`No renderer for ${state.screen}`);
+  app.innerHTML = renderer();
+  document.body.dataset.screen = state.screen;
+  document.body.dataset.authStatus = state.authStatus;
+  announcer.textContent = `Current screen: ${state.screen}`;
+  if (focusHeading && !initialRender) app.querySelector('h1')?.focus();
+  initialRender = false;
 }
 
 function dispatch(action, payload = {}) {
-  try {
-    journey = transition(journey, action, payload);
-    render();
-  } catch (error) {
-    const alert = document.createElement('div');
-    alert.className = 'sw-callout prototype-error';
-    alert.setAttribute('role', 'alert');
-    alert.textContent = `Prototype transition blocked: ${error.message}`;
-    app.prepend(alert);
-  }
+  state = transition(state, action, payload);
+  render();
 }
 
-function toggleRTL() {
-  const rtl = document.documentElement.dir !== 'rtl';
-  document.documentElement.dir = rtl ? 'rtl' : 'ltr';
-  rtlToggle.setAttribute('aria-pressed', String(rtl));
-  rtlToggle.textContent = rtl ? 'LTR structure' : 'RTL structure';
-  announcer.textContent = rtl ? 'Right-to-left structural preview on' : 'Left-to-right structural preview on';
-}
-
-document.addEventListener('click', event => {
-  const target = event.target.closest('[data-action],[data-global-action]');
+app.addEventListener('click', (event) => {
+  const target = event.target.closest('[data-action]');
   if (!target) return;
-  event.preventDefault();
-  const action = target.dataset.action || target.dataset.globalAction;
-  if (action === 'TOGGLE_RTL') return toggleRTL();
   const payload = {};
   if (target.dataset.platform) payload.platform = target.dataset.platform;
   if (target.dataset.result) payload.result = target.dataset.result;
-  dispatch(action, payload);
+  if (target.dataset.mode) payload.mode = target.dataset.mode;
+  dispatch(target.dataset.action, payload);
 });
 
-render(false);
+document.querySelector('.prototype-topbar').addEventListener('click', (event) => {
+  const target = event.target.closest('[data-global-action]');
+  if (!target) return;
+  const action = target.dataset.globalAction;
+  if (action === 'RESET') { state = createPrototype(); render(); }
+  if (action === 'START_SETUP') { state = createPrototype(); dispatch('START'); }
+  if (action === 'ACCOUNT_ENTRY') { state = transition(state,'OPEN_ACCOUNT_ENTRY'); render(); }
+  if (action === 'DASHBOARD') {
+    if (state.authStatus === 'signed-in') dispatch('OPEN_DASHBOARD');
+    else { state = transition(state,'OPEN_ACCOUNT_ENTRY'); render(); }
+  }
+  if (action === 'TOGGLE_RTL') {
+    const rtl = document.documentElement.dir !== 'rtl';
+    document.documentElement.dir = rtl ? 'rtl' : 'ltr';
+    document.documentElement.lang = rtl ? 'ar' : 'en-GB';
+    target.setAttribute('aria-pressed', String(rtl));
+    announcer.textContent = rtl ? 'Arabic right-to-left layout enabled' : 'English left-to-right layout enabled';
+  }
+});
+
+document.querySelector('#skip-link').addEventListener('click', () => {
+  requestAnimationFrame(() => main.focus());
+});
+
+// Deterministic browser-verification API. No transport and no persistence.
+window.__TSK0333_TEST__ = Object.freeze({
+  getState: () => JSON.parse(JSON.stringify(state)),
+  dispatch: (action,payload={}) => dispatch(action,payload),
+  reset: () => { state=createPrototype(); render(); },
+  invariants: [...INVARIANTS]
+});
+
+render({ focusHeading: false });
