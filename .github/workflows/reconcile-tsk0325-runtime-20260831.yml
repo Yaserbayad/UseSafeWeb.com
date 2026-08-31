@@ -21,6 +21,7 @@ jobs:
           git fetch origin main
           test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
           python3 .github/scripts/reconcile_tsk0325_runtime_20260831.py
+          python3 -c 'from pathlib import Path; p=Path("CURRENT_STATE.md"); p.write_text(p.read_text(encoding="utf-8").rstrip() + "\n", encoding="utf-8")'
           git diff --check
           grep -Fq '## TSK-0325 current accepted stable state — 2026-08-31 — POST-CR-0007' CURRENT_STATE.md
           grep -Fq 'final run/job `33405928577 / 99533392966`: **SUCCESS**' CURRENT_STATE.md
