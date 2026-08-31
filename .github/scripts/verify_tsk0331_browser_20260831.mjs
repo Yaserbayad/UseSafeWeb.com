@@ -95,8 +95,9 @@ req(await page.getByText('Account deleted', { exact: true }).isVisible(), 'delet
 req(await page.getByText('Physical UseSafeWeb protection on devices is unchanged').isVisible(), 'delete-success-protection-neutral');
 req(await page.getByText('unrelated J0/J1 state').isVisible(), 'delete-success-j0j1-separate');
 
-// Mobile / keyboard / accessibility.
-await goto('account');
+// Mobile / keyboard / accessibility: use the true default load, not a synthetic state hash.
+await page.goto(base, { waitUntil: 'networkidle' });
+req((await state()) === 'account', 'default-account-state');
 let overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
 req(!overflow, 'horizontal-overflow-320');
 await page.keyboard.press('Tab');
