@@ -1,32 +1,35 @@
 import csv
 from pathlib import Path
 
-WBS = Path('Plans/Master/WBS/master-wbs.csv')
-with WBS.open(encoding='utf-8-sig', newline='') as f:
+with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='') as f:
     rows = list(csv.DictReader(f))
-
 if not rows:
     raise SystemExit('empty WBS')
-print('WBS_COLUMNS=' + '|'.join(rows[0].keys()))
 
-l4 = [r for r in rows if r.get('Lifecycle_Stage') == 'L4' and r.get('Action_Authority') == 'AUTO_ALLOWED']
-print(f'L4_AUTO_ALLOWED_COUNT={len(l4)}')
-fields = ['Task_ID','Task_Name','Status','Planning_Status','Disposition','Priority','Plan_Priority','Critical_Path','Dependencies','AI_Capability_A0_A4','Action_Authority','Acceptance_ID','Verification_ID','Evidence_ID','Source_Reference']
-for r in l4:
-    vals = [r.get(k,'') for k in fields]
-    print('L4ROW|' + '|'.join(v.replace('\n',' ').replace('|','/') for v in vals))
+matches = [r for r in rows if r.get('Task_ID') == 'TSK-0312']
+if len(matches) != 1:
+    raise SystemExit(f'TSK-0312 row count={len(matches)}')
+r = matches[0]
+for key in r.keys():
+    print('TSK0312_FIELD|' + key + '|' + r.get(key,'').replace('\n',' ').replace('|','/'))
 
-for r in l4:
-    deps = [d.strip() for d in r.get('Dependencies','').replace(';',',').split(',') if d.strip()]
-    if 'TSK-0140' in deps:
-        vals = [r.get(k,'') for k in fields]
-        print('TSK0140_SUCCESSOR|' + '|'.join(v.replace('\n',' ').replace('|','/') for v in vals))
+if r.get('Lifecycle_Stage') != 'L4': raise SystemExit('TSK-0312 not L4')
+if r.get('Dependencies') != 'TSK-0140': raise SystemExit('TSK-0312 dependency mismatch')
+if r.get('Action_Authority') != 'AUTO_ALLOWED': raise SystemExit('TSK-0312 not AUTO_ALLOWED')
+if r.get('Acceptance_ID') != 'ACC-0312': raise SystemExit('TSK-0312 acceptance mismatch')
 
-# Relationship index must contain every L4 candidate and TSK-0140; WBS remains task/dependency authority.
+state = Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+if '## TSK-0140 current accepted stable state — 2026-08-31 — POST-CR-0007' not in state:
+    raise SystemExit('current TSK-0140 PASS section missing')
+if '`TSK-0140 — Issue the post-validation product brief`: **PASS**' not in state:
+    raise SystemExit('current TSK-0140 PASS token missing')
+if '## TSK-0312 current accepted stable state' in state:
+    raise SystemExit('TSK-0312 already has a current accepted runtime section')
+
 rel = Path('Plans/Master/RELATIONSHIP_INDEX.yaml').read_text(encoding='utf-8')
-if 'TSK-0140' not in rel:
-    raise SystemExit('TSK-0140 missing from relationship index')
-missing = [r['Task_ID'] for r in l4 if r['Task_ID'] not in rel]
-if missing:
-    raise SystemExit('L4 AUTO_ALLOWED task(s) missing from relationship index: ' + ','.join(missing))
-print('RELATIONSHIP_INDEX_L4_COVERAGE=PASS')
+for token in ['TSK-0140','TSK-0312']:
+    if token not in rel: raise SystemExit(token + ' missing from relationship index')
+print('TSK0312_PREFLIGHT_STATIC=PASS')
+print('TSK0312_RUNTIME_DEPENDENCY=PASS')
+print('TSK0312_CURRENT_PASS_ABSENT=PASS')
+print('TSK0312_RELATIONSHIP_COVERAGE=PASS')
