@@ -1,0 +1,23 @@
+name: Inspect post-TSK-0142 L4 queue
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/inspect-post-tsk0142-queue-20260831.yml'
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Inspect current dependency front
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(hostname -s)" = "adguardvm"
+          python3 .github/scripts/inspect_post_tsk0142_queue_20260831.py
+          git diff --check
+          test -z "$(git status --porcelain)"
