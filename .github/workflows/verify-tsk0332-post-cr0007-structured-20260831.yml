@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/verify-tsk0332-post-cr0007-structured-20260831.yml'
       - '.github/scripts/verify_tsk0332_post_cr0007_structured_20260831.py'
+      - '.github/scripts/verify_tsk0332_browser_20260831.mjs'
       - 'prototype/TSK-0332/**'
 permissions:
   contents: read
@@ -15,11 +16,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Verify exact current TSK-0332 acceptance structurally
+      - name: Verify exact current TSK-0332 acceptance
         shell: bash
         run: |
           set -euo pipefail
           test "$(hostname -s)" = "adguardvm"
           python3 .github/scripts/verify_tsk0332_post_cr0007_structured_20260831.py
+          node --version
+          python3 -m http.server 8032 --bind 127.0.0.1 >/tmp/tsk0332-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          sleep 1
+          TSK0332_BASE_URL='http://127.0.0.1:8032/prototype/TSK-0332/index.html' node .github/scripts/verify_tsk0332_browser_20260831.mjs
           git diff --check
           test -z "$(git status --porcelain)"
