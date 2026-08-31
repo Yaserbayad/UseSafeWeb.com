@@ -1,0 +1,145 @@
+name: Apply CR-0007 corrected capability binding
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-cr0007-corrected.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Reuse reviewed CR-0007 mutation and correct capability binding
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import csv, collections, hashlib, subprocess
+
+          # Reuse the exact already-reviewed mutation body from the first CR-0007 runner.
+          src=Path('.github/workflows/apply-cr0007-owner-autonomy.yml').read_text(encoding='utf-8')
+          begin="          python3 - <<'PY'\n"
+          start=src.index(begin)+len(begin)
+          end=src.index("\n          PY",start)
+          raw=src[start:end]
+          code='\n'.join((line[10:] if line.startswith('          ') else line) for line in raw.splitlines())
+          exec(compile(code,'<cr0007-reviewed-mutation>','exec'),{})
+
+          # Correct the exact validator-proven defect: the authoritative WBS capability column is AI_Capability_A0_A4.
+          R=Path('Plans/Master'); P=Path('Plans'); wbs=R/'WBS/master-wbs.csv'
+          with wbs.open(encoding='utf-8-sig',newline='') as f:
+              rows=list(csv.DictReader(f)); fields=list(rows[0].keys())
+          by={r['Task_ID']:r for r in rows}
+          auto_ids={
+              'TSK-0140','TSK-0262','TSK-0270','TSK-0273','TSK-0276','TSK-0277','TSK-0278','TSK-0281','TSK-0282',
+              'TSK-0314','TSK-0317','TSK-0320','TSK-0322','TSK-0329','TSK-0331','TSK-0332',
+              'TSK-0412','TSK-0413','TSK-0417','TSK-0420','TSK-0424','TSK-0465'}
+          for tid in auto_ids:
+              by[tid]['AI_Capability_A0_A4']='A4'
+              by[tid]['Action_Authority']='AUTO_ALLOWED'
+          with wbs.open('w',encoding='utf-8-sig',newline='') as f:
+              dw=csv.DictWriter(f,fieldnames=fields,lineterminator='\n'); dw.writeheader(); dw.writerows(rows)
+
+          # Rebuild the derived autonomy projection from the actual canonical columns.
+          caps=collections.Counter(r.get('AI_Capability_A0_A4','') for r in rows)
+          auth=collections.Counter(r.get('Action_Authority','') for r in rows)
+          (R/'Governance/AUTONOMY_POLICY.yaml').write_text(
+              'schema: usesafeweb.autonomy-policy-projection.v1\n'
+              'authority: DERIVED_NON_AUTHORITATIVE\n'
+              'governing_source: Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md\n'
+              'task_authority_source: WBS/master-wbs.csv\n'
+              'governing_loop:\n- UNDERSTAND\n- VERIFY_PREREQUISITES\n- EXECUTE\n- TEST\n- VERIFY\n- RECORD_EVIDENCE\n- UPDATE_STATE\n- CONTINUE\n'
+              'failure_loop:\n- DIAGNOSE\n- CORRECT\n- RETEST\n- REVERIFY\n'
+              'capability_counts:\n'+''.join(f'  {k}: {caps.get(k,0)}\n' for k in ['A0','A1','A2','A3','A4'] if caps.get(k,0))+
+              'action_authority_counts:\n'+''.join(f'  {k}: {auth.get(k,0)}\n' for k in ['AUTO_ALLOWED','HUMAN_APPROVAL_REQUIRED','HUMAN_ONLY'] if auth.get(k,0))+
+              'human_boundary: Nondelegable legal signatures/contracts/identity/consent, named-market activation, strategic pivot/pause/stop/transfer/resume, organizational formalization and material unbudgeted commitments remain human-controlled; DEC-0054 otherwise maximizes evidence-driven autonomy subject to higher authority.\n',encoding='utf-8')
+
+          # Capability correction changes WBS bytes, so rebuild the generated plan and checksum inventory again.
+          subprocess.run(['python3',str(R/'Tools/rebuild_master_plan.py')],check=True)
+          sumfile=P/'SHA256SUMS.txt'; rels=[]
+          for line in sumfile.read_text(encoding='utf-8').splitlines():
+              if line.strip(): rels.append(line.split('  ',1)[1])
+          out=[]
+          for relp in rels:
+              fp=P/relp
+              if not fp.is_file(): raise SystemExit(f'checksum inventory missing {relp}')
+              out.append(hashlib.sha256(fp.read_bytes()).hexdigest()+'  '+relp)
+          sumfile.write_text('\n'.join(out)+'\n',encoding='utf-8')
+          print('CR0007_CAPABILITY_CORRECTION=PASS')
+          print('CR0007_CAPABILITY_COUNTS='+repr(dict(caps)))
+          print('CR0007_AUTHORITY_COUNTS='+repr(dict(auth)))
+          PY
+
+      - name: Full deterministic and semantic verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 Plans/Master/Tools/validate_master_plan.py | tee /tmp/cr0007_validate.txt
+          grep -qx 'VALIDATION PASS' /tmp/cr0007_validate.txt
+          grep -qx 'tasks=641' /tmp/cr0007_validate.txt
+          grep -qx 'dependency_edges=858' /tmp/cr0007_validate.txt
+          grep -qx 'broken_links=0' /tmp/cr0007_validate.txt
+          grep -qx 'generated_missing_task_ids=0' /tmp/cr0007_validate.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          import csv
+          R=Path('Plans/Master')
+          rows=list(csv.DictReader((R/'WBS/master-wbs.csv').open(encoding='utf-8-sig',newline=''))); by={r['Task_ID']:r for r in rows}
+          assert len(rows)==641
+          for tid in ['TSK-0140','TSK-0317','TSK-0329','TSK-0331','TSK-0332','TSK-0412','TSK-0413','TSK-0417','TSK-0420','TSK-0424','TSK-0465']:
+              assert by[tid]['AI_Capability_A0_A4']=='A4', (tid,by[tid]['AI_Capability_A0_A4'])
+              assert by[tid]['Action_Authority']=='AUTO_ALLOWED', (tid,by[tid]['Action_Authority'])
+          d=(R/'Registers/DECISIONS_TRIGGERS.md').read_text(); assert 'DEC-0054' in d
+          e=(R/'Registers/EXCEPTIONS_CHANGE_CONTROLS.md').read_text(); assert 'CR-0007' in e
+          g=(R/'Registers/GATES.md').read_text()
+          for s in ['| LG-09 | Integrated Production Release Readiness |','| LG-13 | UK Public Production Activation |','AUTO-GO','| LG-16 | Localized Market Activation |']:
+              assert s in g, s
+          assert 'Project Owner | G-16' in g
+          l5=(R/'Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md').read_text()
+          assert '5.3.6 Owner autonomy and production-only lifecycle authority' in l5
+          assert 'This governance change **does not itself make any task or gate PASS**' in l5
+          assert '| TSK-0329 |' not in l5[l5.index('### 5.8 '):]
+          man=(R/'MANIFEST.yaml').read_text(); assert 'latest_change: CR-0007' in man
+          ph=(R/'Registers/PHASES.md').read_text()
+          for line in ph.splitlines():
+              if '| L8 |' in line or '| L9 |' in line:
+                  assert 'Pilot' not in line and 'pilot' not in line and 'staging' not in line, line
+          assert 'named-market' in l5 and 'legal attestation' in l5 and 'contracts' in l5
+          print('CR0007_SEMANTIC_AUDIT=PASS')
+          PY
+          git diff --check
+
+      - name: Create evidence and publish validated canonical amendment
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess, csv
+          R=Path('Plans/Master')
+          rows=list(csv.DictReader((R/'WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='')))
+          auto=sum(1 for r in rows if r.get('Action_Authority')=='AUTO_ALLOWED')
+          hpr=sum(1 for r in rows if r.get('Action_Authority')=='HUMAN_APPROVAL_REQUIRED')
+          ho=sum(1 for r in rows if r.get('Action_Authority')=='HUMAN_ONLY')
+          paths=['Plans/Master/WBS/master-wbs.csv','Plans/Master/Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md','Plans/Master/Governance/AUTONOMY_POLICY.yaml','Plans/Master/Registers/DECISIONS_TRIGGERS.md','Plans/Master/Registers/GATES.md','Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md','Plans/Master/Registers/PHASES.md','Plans/Master/Registers/LIFECYCLE_OBLIGATIONS.md','Plans/Master/Layers/LAYER_1_PROGRAM_ARCHITECTURE_STRATEGIC_BASELINE.md','Plans/Master/Layers/LAYER_4_INTEGRATED_PROGRAM_CRITICAL_PATH.md','Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md','Plans/Master/MANIFEST.yaml','Plans/Master/Generated/MASTER_PLAN_FULL.md','Plans/SHA256SUMS.txt']
+          out=['# CR-0007 — Owner autonomy and production-only lifecycle evidence','', '**Date:** 2026-08-31  ','**Authority:** explicit Project Owner answers to all 14 human-authority questions.','', '## Owner decisions recorded','', '1. Detailed account/dashboard UX autonomous inside frozen scope.','2. LG-07 automatic on objective evidence.','3. LG-08 automatic normally; genuinely consequential/nondelegable exception escalates.','4. AI may accept material residual risk autonomously, subject to higher actual law/safety/security/platform/technical reality and nondelegable human acts.','5. Standing conditional authority for first real production users after objective readiness and all actually applicable prerequisites.','6. No mandatory pilot or staging lifecycle/environment; work proceeds to production. Mandatory pre-release verification, recovery and rollback remain. Bounded/ramped production rollout is allowed as production safety.','7. LG-12 automatic.','8. LG-13 automatic GO when prerequisites pass; no additional owner input.','9. LG-14 automatic PASS when stabilization criteria pass; strategic adverse disposition remains human.','10. Routine technical scale automatic; organizational/entity/formalization/contracts/material spend human.','11. AI researches/ranks markets; owner approves each named official market activation.','12. Year-1 automatic CONTINUE when frozen thresholds pass; other strategic outcomes human.','13. Routine reversible already-budgeted operating spend automatic; new contracts/regulated fees/banking-or-merchant identity/legal signatures/material-unbudgeted spend human.','14. Routine incidents/retries/rollback/recovery/reversible remediation automatic; strategic lifecycle transitions and irreversible human-authority acts remain human.','', '## Verification','', '- Full deterministic master-plan validator: PASS.','- Tasks: 641.','- Dependency edges: 858.','- Broken links: 0.','- Generated missing task IDs: 0.','- Semantic audit: PASS.','- Authority change itself creates no task/gate PASS.',f'- Action authority counts after amendment: AUTO_ALLOWED={auto}; HUMAN_APPROVAL_REQUIRED={hpr}; HUMAN_ONLY={ho}.','', '## Changed planning blobs','']
+          for p in paths:
+              sha=subprocess.check_output(['git','hash-object',p],text=True).strip(); out.append(f'- `{p}` -> `{sha}`')
+          out += ['', '## Publication/read-back','', 'Published with the CR-0007 planning mutation. Exact publication commit and workflow run/job are recorded by CURRENT_STATE reconciliation before later governed work relies on the amendment.','']
+          Path('CR_0007_OWNER_AUTONOMY_PRODUCTION_ONLY_EVIDENCE_2026-08-31.md').write_text('\n'.join(out),encoding='utf-8')
+          PY
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add Plans CR_0007_OWNER_AUTONOMY_PRODUCTION_ONLY_EVIDENCE_2026-08-31.md
+          git commit -m "governance: apply CR-0007 owner autonomy and production lifecycle"
+          git push
