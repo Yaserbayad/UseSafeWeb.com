@@ -1,0 +1,84 @@
+name: Trace next governed predecessor after TSK-0498
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/trace-next-governed-predecessor-20260901.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  trace:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Trace highest-priority blocked L5 chain
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv, re
+          from pathlib import Path
+
+          with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='') as f:
+              rows = list(csv.DictReader(f))
+          by_id = {(r.get('Task_ID') or '').strip(): r for r in rows if (r.get('Task_ID') or '').strip()}
+          state = Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          accepted = set(re.findall(r'^## (TSK-\d{4}) current accepted stable state', state, flags=re.M))
+
+          def deps(row):
+              return [x.strip() for x in (row.get('Dependencies') or '').split(';') if x.strip()]
+
+          def show(task_id, depth=0, seen=None):
+              if seen is None: seen=set()
+              if task_id in seen:
+                  print('  '*depth + f'{task_id} CYCLE')
+                  return
+              seen = set(seen); seen.add(task_id)
+              r = by_id[task_id]
+              ds = deps(r)
+              missing = [d for d in ds if d not in accepted]
+              print('  '*depth + f"{task_id} | lifecycle={(r.get('Lifecycle_Stage') or '').strip()} | priority={(r.get('Priority') or '').strip()} | status={(r.get('Planning_Status') or '').strip()} | capability={(r.get('AI_Capability_A0_A4') or '').strip()} | authority={(r.get('Action_Authority') or '').strip()} | deps={';'.join(ds) or '-'} | missing={';'.join(missing) or '-'}")
+              print('  '*depth + f"title={(r.get('Task') or '').strip()}")
+              print('  '*depth + f"acceptance={(r.get('Acceptance_Criteria') or '').strip()}")
+              print('  '*depth + f"gate={(r.get('Gate') or '').strip()} | trigger={(r.get('Trigger') or '').strip()} | preconditions={(r.get('Preconditions') or '').strip()}")
+              print('  '*depth + f"req={(r.get('Requirement_Reference') or '').strip()} | risk={(r.get('Risk_Reference') or '').strip()} | interface={(r.get('Interface_Reference') or '').strip()} | acc={(r.get('Acceptance_ID') or '').strip()} | ver={(r.get('Verification_ID') or '').strip()} | evd={(r.get('Evidence_ID') or '').strip()}")
+              for d in missing:
+                  if d in by_id:
+                      show(d, depth+1, seen)
+                  else:
+                      print('  '*(depth+1) + f'{d} MISSING_FROM_WBS')
+
+          target='TSK-0517'
+          assert target in by_id
+          print(f'SOURCE_HEAD={Path(".git/HEAD").read_text().strip()}')
+          print(f'ACCEPTED_COUNT={len(accepted)}')
+          print(f'TARGET={target}')
+          show(target)
+
+          # Surface dependency-ready executable leaves on this recursive branch.
+          branch=set()
+          def collect(t):
+              if t in branch or t not in by_id: return
+              branch.add(t)
+              for d in deps(by_id[t]):
+                  if d not in accepted: collect(d)
+          collect(target)
+          ready=[]
+          for t in branch:
+              if t in accepted: continue
+              r=by_id[t]
+              planning=(r.get('Planning_Status') or '').strip().upper()
+              if planning in {'DEFERRED','NOT_APPLICABLE','CANCELLED','CANCELED'}: continue
+              if all(d in accepted for d in deps(r)):
+                  ready.append(r)
+          order={'CRITICAL':0,'HIGH':1,'MEDIUM':2,'LOW':3}
+          ready.sort(key=lambda r:(order.get((r.get('Priority') or '').strip().upper(),9), rows.index(r), (r.get('Task_ID') or '')))
+          print('READY_BRANCH_LEAVES=' + str(len(ready)))
+          for r in ready:
+              print(f"READY | {(r.get('Task_ID') or '').strip()} | {(r.get('Priority') or '').strip()} | {(r.get('AI_Capability_A0_A4') or '').strip()} | {(r.get('Action_Authority') or '').strip()} | {(r.get('Task') or '').strip()}")
+          PY
+          git diff --check
+          test -z "$(git status --porcelain --untracked-files=no)"
