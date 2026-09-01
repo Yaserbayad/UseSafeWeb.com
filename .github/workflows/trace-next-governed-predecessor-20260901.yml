@@ -1,4 +1,4 @@
-name: Audit TSK-0313 canonical contract
+name: Derive viable governed frontier after TSK-0313
 
 on:
   push:
@@ -10,62 +10,103 @@ permissions:
   contents: read
 
 jobs:
-  audit:
+  trace:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
-      - name: Audit TSK-0313 WBS, dependencies, and linked registers
+      - name: Select first viable unresolved L5 branch and ready predecessor leaves
         shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
         run: |
           set -euo pipefail
           python3 - <<'PY'
           import csv, re
+          from functools import lru_cache
           from pathlib import Path
 
           with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='') as f:
               rows = list(csv.DictReader(f))
-          row = next(r for r in rows if (r.get('Task_ID') or '').strip() == 'TSK-0313')
-          print('WBS_FIELDS_BEGIN')
-          for key, value in row.items():
-              if (value or '').strip():
-                  print(f'{key}={(value or "").strip()}')
-          print('WBS_FIELDS_END')
-
+          by_id = {(r.get('Task_ID') or '').strip(): r for r in rows if (r.get('Task_ID') or '').strip()}
+          row_index = {(r.get('Task_ID') or '').strip(): i for i, r in enumerate(rows, start=2) if (r.get('Task_ID') or '').strip()}
           state = Path('CURRENT_STATE.md').read_text(encoding='utf-8')
-          accepted = set(re.findall(r'^## (TSK-\d{4})(?:\s*/[^\n#]+)?\s+current accepted stable state\b', state, flags=re.M|re.I))
-          deps = re.findall(r'TSK-\d{4}', row.get('Dependencies') or '')
-          print('DEPENDENCIES=' + ';'.join(deps))
-          for dep in deps:
-              print(f'DEP_{dep}=' + ('CURRENT_PASS' if dep in accepted else 'MISSING_CURRENT_PASS'))
-          print('TSK0313_CURRENT=' + ('PASS' if 'TSK-0313' in accepted else 'NOT_PASS'))
+          accepted = set(re.findall(r'^##\s+(TSK-\d{4})(?:\s*/[^\n#]+)?\s+current accepted stable state\b', state, flags=re.M|re.I))
+          excluded_status = {'DEFERRED','NOT_APPLICABLE','CANCELLED','CANCELED'}
+          priority_rank = {'CRITICAL':0,'HIGH':1,'MEDIUM':2,'LOW':3}
 
-          refs = {
-              'Plans/Master/Registers/REQUIREMENTS.md': ['REQ-0028','REQ-0029','REQ-0035'],
-              'Plans/Master/Registers/CONSTRAINTS.md': ['CON-0010','CON-0017'],
-              'Plans/Master/Registers/RISKS.md': ['RSK-0002'],
-              'Plans/Master/Registers/INTERFACES.md': ['INT-0009','INT-0010'],
-              'Plans/Master/Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md': ['TSK-0313'],
-          }
-          for path, ids in refs.items():
-              lines = Path(path).read_text(encoding='utf-8').splitlines()
-              print(f'REGISTER={path}')
-              for item_id in ids:
-                  matches = [line for line in lines if line.startswith(f'| {item_id} |')]
-                  print(f'ROW_{item_id}_COUNT={len(matches)}')
-                  for line in matches:
-                      print(line)
+          def val(row, name): return (row.get(name) or '').strip()
+          def deps(row): return re.findall(r'TSK-\d{4}', row.get('Dependencies') or '')
+          def excluded(row): return val(row,'Plan_Status').upper() in excluded_status
+          def order(row):
+              tid=val(row,'Task_ID')
+              return (priority_rank.get(val(row,'Priority').upper(),9), row_index.get(tid,99999), tid)
 
-          for artifact in [
-              'TSK_0320_POST_CR0008_PROTECTION_STATE_MODEL_AND_COPY_RULES_2026-09-01.md',
-              'TSK_0144_EXTERNAL_SERVICE_SAFEGUARD_REQUIREMENT_2026-09-01.md',
-              'TSK_0041_POST_CR0008_CURRENT_REQUALIFICATION_AMENDMENT_2026-09-01.md',
-          ]:
-              p = Path(artifact)
-              print(f'ARTIFACT_{artifact}_EXISTS={p.exists()}')
-              if p.exists():
-                  print(f'ARTIFACT_{artifact}_BYTES={p.stat().st_size}')
+          @lru_cache(None)
+          def viable(tid):
+              if tid in accepted: return True
+              row = by_id.get(tid)
+              if row is None or excluded(row): return False
+              return all(viable(d) for d in deps(row))
 
-          print('TSK0313_CONTRACT_AUDIT=PASS')
+          @lru_cache(None)
+          def excluded_blockers(tid):
+              if tid in accepted: return tuple()
+              row=by_id.get(tid)
+              if row is None: return (f'{tid}:MISSING_WBS',)
+              if excluded(row): return (f'{tid}:{val(row,"Plan_Status").upper()}',)
+              out=[]
+              for d in deps(row): out.extend(excluded_blockers(d))
+              return tuple(sorted(set(out)))
+
+          l5 = [r for r in rows if val(r,'Lifecycle_Stage')=='L5' and val(r,'Task_ID') not in accepted and not excluded(r)]
+          l5.sort(key=order)
+          viable_l5=[r for r in l5 if viable(val(r,'Task_ID'))]
+          blocked_l5=[r for r in l5 if not viable(val(r,'Task_ID'))]
+
+          print(f'SOURCE_COMMIT={__import__("os").environ.get("SOURCE_COMMIT","UNKNOWN")}')
+          print(f'ACCEPTED_COUNT={len(accepted)}')
+          print(f'ACTIVE_UNRESOLVED_L5={len(l5)}')
+          print(f'VIABLE_UNRESOLVED_L5={len(viable_l5)}')
+          print(f'EXCLUDED_BLOCKED_L5={len(blocked_l5)}')
+          for r in blocked_l5[:20]:
+              tid=val(r,'Task_ID')
+              print(f'BLOCKED_L5 | {tid} | blockers={";".join(excluded_blockers(tid)) or "none"} | {val(r,"Title")}')
+
+          assert viable_l5, 'NO_VIABLE_UNRESOLVED_L5'
+          target=viable_l5[0]
+          target_id=val(target,'Task_ID')
+          print(f'SELECTED_L5={target_id}')
+          print(f'SELECTED_L5_TITLE={val(target,"Title")}')
+          print(f'SELECTED_L5_PRIORITY={val(target,"Priority")}')
+          print(f'SELECTED_L5_DEPS={";".join(deps(target)) or "none"}')
+
+          branch=set()
+          def collect(tid):
+              if tid in accepted or tid in branch: return
+              row=by_id.get(tid)
+              if row is None or excluded(row): return
+              branch.add(tid)
+              for d in deps(row): collect(d)
+          collect(target_id)
+
+          ready=[]
+          for tid in branch:
+              row=by_id[tid]
+              if all(d in accepted for d in deps(row)):
+                  ready.append(row)
+          ready.sort(key=order)
+          print(f'READY_BRANCH_LEAVES={len(ready)}')
+          for r in ready:
+              tid=val(r,'Task_ID')
+              print(f'READY | {tid} | row={row_index[tid]} | lifecycle={val(r,"Lifecycle_Stage")} | priority={val(r,"Priority")} | capability={val(r,"AI_Capability_A0_A4")} | authority={val(r,"Action_Authority")} | plan={val(r,"Plan_Status")}')
+              print(f'TITLE | {val(r,"Title")}')
+              print(f'DEPS | {val(r,"Dependencies")}')
+              print(f'ACCEPTANCE | {val(r,"Acceptance_Criteria")}')
+              print(f'REFS | req={val(r,"Requirement_Reference")} | risk={val(r,"Risk_Reference")} | interface={val(r,"Interface_Reference")} | acc={val(r,"Acceptance_ID")} | ver={val(r,"Verification_ID")} | evd={val(r,"Evidence_ID")}')
+              print(f'CONTROL | gate={val(r,"Gate")} | trigger={val(r,"Trigger")} | preconditions={val(r,"Preconditions")}')
+
+          assert ready, 'NO_READY_LEAF_ON_SELECTED_VIABLE_BRANCH'
+          print('VIABLE_FRONTIER_TRACE=PASS')
           PY
           python3 Plans/Master/Tools/validate_master_plan.py
           git diff --check
