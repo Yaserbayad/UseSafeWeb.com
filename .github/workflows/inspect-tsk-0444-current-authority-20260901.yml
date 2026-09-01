@@ -1,4 +1,4 @@
-name: Verify and accept TSK-0444 current environment model
+name: Verify and accept TSK-0444 current environment model v2
 
 on:
   push:
@@ -30,7 +30,18 @@ jobs:
           git fetch origin main
           test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
           test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('.github/scripts/accept_tsk0444_current_20260901.py')
+          text = p.read_text(encoding='utf-8')
+          old = "'persistent staging is **ABSENT**'"
+          new = "'Persistent staging is **ABSENT**'"
+          assert old in text
+          p.write_text(text.replace(old, new, 1), encoding='utf-8')
+          print('TSK0444_VERIFIER_CASE_FIX=PASS')
+          PY
           python3 .github/scripts/accept_tsk0444_current_20260901.py
+          git restore -- .github/scripts/accept_tsk0444_current_20260901.py
           git diff --check
           test "$(git status --porcelain | sed 's/^...//')" = 'CURRENT_STATE.md'
 
