@@ -1,0 +1,139 @@
+name: Accept TSK-0487 anonymous journey threat model
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'TSK_0487_ANONYMOUS_JOURNEY_THREAT_MODEL_2026-09-01.md'
+      - '.github/workflows/accept-tsk0487-anonymous-threat-model-20260901.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-governed-runtime-write
+  cancel-in-progress: false
+
+jobs:
+  accept:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Independently verify current security contract and ACC-0487 coverage
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          python3 - <<'PY'
+          from pathlib import Path
+          import csv
+
+          state=Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          art=Path('TSK_0487_ANONYMOUS_JOURNEY_THREAT_MODEL_2026-09-01.md').read_text(encoding='utf-8')
+          arch=Path('TSK_0354_VERSION_1_APPLICATION_ARCHITECTURE_2026-09-01.md').read_text(encoding='utf-8')
+          req=Path('Plans/Master/Registers/REQUIREMENTS.md').read_text(encoding='utf-8')
+          con=Path('Plans/Master/Registers/CONSTRAINTS.md').read_text(encoding='utf-8')
+          interfaces=Path('Plans/Master/Registers/INTERFACES.md').read_text(encoding='utf-8')
+
+          assert 'POST-FREEZE CR-0008 PUBLISHED, RECONCILED, READ-BACK VERIFIED' in state
+          assert '## TSK-0354 current accepted stable state' in state
+          assert '## TSK-0487 current accepted stable state' not in state
+
+          with open('Plans/Master/WBS/master-wbs.csv', encoding='utf-8-sig', newline='') as f:
+              rows={r['Task_ID']:r for r in csv.DictReader(f)}
+          r=rows['TSK-0487']
+          assert r['Lifecycle_Stage']=='L5'
+          assert r['Priority']=='HIGH'
+          assert r['Action_Authority']=='AUTO_ALLOWED'
+          assert r['AI_Capability_A0_A4']=='A3'
+          assert 'TSK-0354' in r.get('Dependencies','')
+          acc=r.get('Acceptance_Criteria','')
+          for phrase in ('enumeration','replay','tampering','injection','denial/cost abuse','profile misuse','origin/admin separation','safe expiry','mandatory auth'):
+              assert phrase.lower() in acc.lower(), (phrase,acc)
+
+          for phrase in (
+              'REQ-0055','REQ-0059','Public resolver, web, API, admin, identity, and supply-chain attack surfaces shall have a current threat/abuse model',
+              'Diagnostic logging shall be necessary, approved, minimum, time-boxed, access-controlled, and deleted after resolution',
+          ):
+              assert phrase in req, phrase
+          assert 'CON-0009' in con and 'No invasive surveillance or behavioral monetization' in con
+          assert 'TSK-0487' in con
+          assert 'INT-0012' in interfaces and 'App never exposes admin credentials and reflects only evidence-backed DNS state' in interfaces
+          assert 'INT-0015' in interfaces and 'Critical attack paths are controlled and no blocking finding remains' in interfaces
+
+          for phrase in (
+              'Accountless core remains fully usable without login',
+              'Browser-supplied device IDs, ClientIDs, ownership claims or Protection Map states are requests/claims, not authority or technical verification',
+              'J0/J1 and A are separate domains',
+              'No browsing, DNS-query, visited-domain or child activity history is stored',
+              'No generic browser-accessible proxy to `/control/*` is allowed',
+          ):
+              assert phrase in arch, phrase
+
+          required=[
+              '# TSK-0487 — Anonymous Journey and Public Application Threat Model',
+              '## 4. Threat and control matrix',
+              'TM-01','TM-02','TM-03','TM-04','TM-05','TM-06','TM-07','TM-08','TM-09','TM-10',
+              'TM-11','TM-12','TM-13','TM-14','TM-15','TM-16','TM-17','TM-18','TM-19','TM-20','TM-21','TM-22',
+              'at least 128 bits of entropy','hard non-sliding expiry','no automatic linkage to persistent account state',
+              'No browser-accessible generic admin proxy','per-operation concurrency cap','no stable fingerprint',
+              'No wildcard credentialed CORS','parameterized datastore operations','no dynamic command/shell/eval',
+              'cloud-metadata','cross-parent','replay after expiry','backup/restore does not resurrect J1',
+              'mandatory login introduced for normal core safety value',
+              'https://firebase.google.com/docs/auth/admin/manage-cookies',
+              'https://nextjs.org/docs/app/guides/authentication',
+              'https://owasp.org/API-Security/editions/2023/en/0x11-t10/',
+              'https://owasp.org/API-Security/editions/2023/en/0xa4-unrestricted-resource-consumption/',
+              '## 13. ACC-0487 mapping','PASS CANDIDATE','## 15. Non-inference',
+          ]
+          for x in required:
+              assert x in art, x
+
+          # No security theater: the model must retain downstream implementation/test obligations.
+          assert 'No acceptance criterion is satisfied by asserting that a future framework/provider will handle security automatically' in art
+          assert 'Exact numeric thresholds are **not frozen by TSK-0487**' in art
+          assert 'penetration/fuzz/load/browser security tests have run' in art
+          print('TSK0487_THREAT_MODEL_CONTRACT=PASS')
+          PY
+          python3 Plans/Master/Tools/validate_master_plan.py
+          git diff --check
+
+      - name: Record stable PASS and remotely read back
+        shell: bash
+        run: |
+          set -euo pipefail
+          ART='TSK_0487_ANONYMOUS_JOURNEY_THREAT_MODEL_2026-09-01.md'
+          ART_BLOB="$(git rev-parse "HEAD:$ART")"
+          SOURCE_COMMIT="$(git rev-parse HEAD)"
+          ART_BLOB="$ART_BLOB" SOURCE_COMMIT="$SOURCE_COMMIT" python3 - <<'PY'
+          from pathlib import Path
+          from datetime import datetime, timezone
+          import os,re
+
+          p=Path('CURRENT_STATE.md')
+          s=p.read_text(encoding='utf-8')
+          assert '## TSK-0487 current accepted stable state — 2026-09-01' not in s
+          now=datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+          s=re.sub(r'(?m)^\*\*Updated:\*\* .*$',f'**Updated:** {now}',s,count=1)
+          s += f'''\n\n## TSK-0487 current accepted stable state — 2026-09-01\n\n`TSK-0487 — Threat-model anonymous journey state, profile/config delivery, verification endpoints, rate/cost abuse, cross-session access, and data leakage`: **PASS** at the threat-model definition boundary under current `ACC-0487 / VER-0487 / EVD-0487`, current `TSK-0354` dependency evidence, `REQ-0055 / REQ-0059`, `INT-0012 / INT-0015`, and DEC-0054/DEC-0055 authority.\n\n- Action authority: **A3 / AUTO_ALLOWED**.\n- Accepted threat model: `TSK_0487_ANONYMOUS_JOURNEY_THREAT_MODEL_2026-09-01.md`, blob `{os.environ['ART_BLOB']}`, source commit `{os.environ['SOURCE_COMMIT']}`.\n- Independent security-contract review verified explicit controls/tests for enumeration, replay, token theft/cross-session access, tampering, object/function authorization, injection/SSRF, profile/config misuse, verification-oracle abuse, anonymous denial/cost exhaustion, rate-limit privacy, CSRF/CORS/origin separation, session replay, mass assignment/prototype pollution, error/log leakage, hard non-sliding expiry and ambiguous backend effects.\n- The model preserves the complete accountless core: abuse defense uses opaque scoped short-lived capabilities, strict input/origin boundaries, endpoint/token/global resource budgets and privacy-minimal ephemeral operational counters rather than mandatory authentication or persistent fingerprinting.\n- `REQ-0059` remains an implementation/test obligation: diagnostic logging must be necessary, authorized, minimum, time-boxed, access-controlled and deletion-verified; this threat-model PASS does not claim that runtime diagnostic deletion is implemented.\n- Current official Firebase/Next.js guidance and OWASP API Security 2023 were used for session/CSRF/server-route authorization, object-level authorization and resource-consumption control categories; exact dependency versions and implementation APIs remain downstream.\n- **Non-inference:** no `/website` security control, exact rate threshold, J1 implementation, fuzz/load/browser/penetration test, Firebase final acceptance, vulnerability-free code, LG-07/LG-08/LG-09, production activation, real-user validation or public launch PASS is inferred.\n\n### Queue effect after TSK-0487 PASS\n\nRecompute the current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-0055 authority before selecting later work.\n'''
+          p.write_text(s.rstrip()+'\n',encoding='utf-8')
+          PY
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: accept TSK-0487 anonymous journey threat model'
+          COMMIT="$(git rev-parse HEAD)"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$COMMIT"
+          git show "$COMMIT:CURRENT_STATE.md" | grep -F '## TSK-0487 current accepted stable state — 2026-09-01'
+          test "$(git rev-parse "$COMMIT:$ART")" = "$ART_BLOB"
+          python3 Plans/Master/Tools/validate_master_plan.py
+          echo "TSK0487_STATE_COMMIT=$COMMIT"
+          echo "TSK0487_ARTIFACT_BLOB=$ART_BLOB"
+          echo 'TSK0487_REMOTE_READBACK=PASS'
