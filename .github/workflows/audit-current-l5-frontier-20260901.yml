@@ -22,6 +22,44 @@ jobs:
         with:
           fetch-depth: 2
 
+      - name: Reconcile TSK-0446 current planning controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv
+          import re
+          from pathlib import Path
+
+          wbs = Path('Plans/Master/WBS/master-wbs.csv')
+          with wbs.open(encoding='utf-8-sig', newline='') as f:
+              rows = list(csv.DictReader(f))
+          row = next((r for r in rows if (r.get('Task_ID') or '').strip() == 'TSK-0446'), None)
+          if row is None:
+              raise SystemExit('TSK0446_RECONCILE_FAIL: WBS row missing')
+
+          wanted = ('lifecycle', 'priority', 'depend', 'capability', 'authority', 'planning',
+                    'gate', 'trigger', 'precondition', 'risk', 'constraint', 'requirement',
+                    'interface', 'acceptance', 'verification', 'evidence', 'task_name',
+                    'task_title', 'title', 'description')
+          print('TSK0446_WBS_RECONCILIATION=BEGIN')
+          for key, value in row.items():
+              if value and any(token in key.lower() for token in wanted):
+                  print(f'{key}={value.strip()}')
+          print('TSK0446_WBS_RECONCILIATION=END')
+
+          rel = Path('Plans/Master/RELATIONSHIP_INDEX.yaml').read_text(encoding='utf-8').splitlines()
+          hits = [i for i, line in enumerate(rel) if 'TSK-0446' in line]
+          print(f'TSK0446_RELATIONSHIP_HITS={len(hits)}')
+          ids = set()
+          for i in hits:
+              lo = max(0, i - 12)
+              hi = min(len(rel), i + 13)
+              for line in rel[lo:hi]:
+                  ids.update(re.findall(r'\b(?:REQ|RSK|INT|CON|ACC|VER|EVD|LG|TSK)-\d{4}\b', line))
+          print('TSK0446_NEARBY_RELATIONSHIP_IDS=' + ','.join(sorted(ids)))
+          PY
+
       - name: Derive current L5 frontier from canonical state
         shell: bash
         env:
