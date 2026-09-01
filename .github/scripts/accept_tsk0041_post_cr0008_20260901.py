@@ -72,20 +72,18 @@ for m in [
 ]: req(m in amend,f'amendment clause missing: {m}')
 for m in ['supported_action_needed','guidance_stale_or_uncertain','parent confirmation must never masquerade as system verification','accountless users receive the complete core routing experience']:
     req(m in t143,f'TSK-0143 current routing marker missing: {m}')
-for m in ['only fresh qualifying technical verification can produce `protected/verified`','configured/parent-confirmed','uncertain/error','removed']:
+for m in ['`protected/verified` requires its own current qualifying technical evidence','A **qualifying positive E1** is the only evidence class that can establish `protected/verified`','configured/parent-confirmed','uncertain/error','removed']:
     req(m in t320,f'TSK-0320 truth marker missing: {m}')
 for m in ['Android Private DNS/DoT hostname','Apple DoH profile/Server-URL','Chrome Secure DNS','Firefox','Private Relay','VPN','captive portal','network change','No DNS questions/domains/URLs/browsing history/child activity/persistent identity linkage']:
     req(m.lower() in t409.lower(),f'TSK-0409 marker missing: {m}')
 print('TSK0041_CURRENT_SEMANTICS=PASS')
 
-# ACC-0041 explicit current clause coverage
 for m in [
  'Endpoint format | PASS candidate','DoH setup | PASS candidate','Filtering verification | PASS candidate','Fail-safe behavior | PASS candidate',
  'Uninstall/removal | PASS candidate','Private Relay/VPN conflicts | PASS candidate','False positives | PASS candidate','No-history constraints | PASS candidate'
 ]: req(m in amend,f'ACC clause disposition missing: {m}')
 print('ACC_0041_CLAUSES=PASS')
 
-# Conservative negative assertions
 for m in [
  'configuration/profile/ClientID/account/dashboard/parent-confirmation/journey-completion evidence cannot substitute',
  'no unsupported combination is silently routed into an app/VPN/browser-specific fallback',
