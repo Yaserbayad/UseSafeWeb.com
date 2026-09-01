@@ -35,7 +35,7 @@ jobs:
           test "$(git rev-parse HEAD:prototype/TSK-0333/model.mjs)" = 'fc25e4b1facc303840311e8ce186612eb8799212'
           test "$(git rev-parse HEAD:prototype/TSK-0333/app.mjs)" = '98659ba74a86d539b89664708bbcb830292486f8'
           test "$(git rev-parse HEAD:prototype/TSK-0333/prototype.css)" = '6f8af459a0b0b1c9ec132657dfcd7ebff43090b8'
-          test "$(git rev-parse HEAD:.github/scripts/verify_tsk0321_post_cr0007_accessibility_browser_20260901.mjs)" = 'bbb1e9b993b962d64cd16b182778f6925feb7b94'
+          test "$(git rev-parse HEAD:.github/scripts/verify_tsk0321_post_cr0007_accessibility_browser_20260901.mjs)" = 'b49b1c0aa81c5667b3059863c5bb5511077811f0'
           echo 'TSK0321_PINNED_CURRENT_INPUTS=PASS'
           node --version
           npm --version
