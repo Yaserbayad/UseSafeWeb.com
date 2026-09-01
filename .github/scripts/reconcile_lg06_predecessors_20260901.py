@@ -21,7 +21,6 @@ def blob(path: str) -> str:
 def path_commit(path: str) -> str:
     return subprocess.check_output(['git', 'log', '-1', '--format=%H', '--', path], text=True).strip()
 
-# Re-run the repository-current bounded verifier before any runtime mutation.
 subprocess.run(['python3', '.github/scripts/verify_lg06_predecessor_requalification_20260901.py'], check=True)
 
 wbs_blob = blob('Plans/Master/WBS/master-wbs.csv')
@@ -120,9 +119,8 @@ The stale post-CR-0006 predecessor evidence identified on the `TSK-0052 / LG-06`
 state = re.sub(r'\*\*Updated:\*\*\s*[^\n]+', f'**Updated:** {now}', state, count=1)
 RUNTIME.write_text(state.rstrip() + appendix + '\n', encoding='utf-8')
 
-# Post-write local assertions.
 new_state = read(RUNTIME)
 for heading in headings:
     assert new_state.count(heading) == 1, heading
-assert 'TSK-0052 / LG-06 remains **non-PASS**' in new_state
+assert '`TSK-0052 / LG-06` remains **non-PASS**' in new_state
 print('LG06_PREDECESSOR_STABLE_RECONCILIATION_READY')
