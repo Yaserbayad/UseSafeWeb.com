@@ -1846,3 +1846,15 @@ Recompute the current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-
 - `ACC-0016` boundary: one authoritative root, all five layers, 16 package modules, L0-L13, authoritative WBS/registers, legacy reconciliation, current-state interface, audits, manifest/relationship graph, and the deterministic non-authoritative full-plan reconstruction are present and validator-consistent.
 - Current post-freeze CR-0006/CR-0007/CR-0008 amendments remain part of the canonical planning system. Historical pre-canonicalization text that said publication was pending is retained only as historical audit context and is not treated as current publication state.
 - **Non-inference:** this reconciliation does not make any successor task, LG-07/LG-08/LG-09, deployment, live-production activation, launch, tracker, or real-user-validation outcome PASS.
+
+## TSK-0007 current accepted stable state — 2026-09-01
+
+`TSK-0007 — Define the canonical AI task-selection, authority, execution, verification, evidence, state-update, recovery, and reconciliation loop`: **PASS** under current `ACC-0007 / VER-0007 / EVD-0007`, current `TSK-0016` dependency proof, and `DEC-0055/CR-0008` authority.
+
+- Action authority: **A3 / AUTO_ALLOWED**.
+- Dependency: `TSK-0016` is current PASS; no other hard dependency exists.
+- Acceptance source commit: `dd65debe94816aff949eed159054966a9703557b`; WBS blob `b27a0c5df2f5636d8ed71051e9e26a68959a2616`; Layer-5 blob `2097d83961affaa69850e41a5ffcd72a660d69cd`.
+- Verification: GitHub Actions run/attempt `33527915089 / 1` plus current master-plan validation. Layer 5 implements canonical-state read, latest-owner authority, eligibility/dependency/gate checks, action authority, bounded execution, acceptance verification, durable evidence, stable TODO/PASS/WAITING/BLOCKED outcome, authorized state write, fetch/read-back comparison, reconciliation, and next-task selection.
+- Hidden-evidence boundary: Layer 5 explicitly states that hidden chain-of-thought is not evidence and requires inspectable durable evidence; referenced interfaces, requirements, constraints and risk IDs are present in their authoritative registers.
+- Runtime reconciliation only: the canonical WBS, graph, planning modules and CR-0008 authority are unchanged.
+- **Non-inference:** no successor, gate, deployment, launch, tracker, or real-user outcome becomes PASS from this reconciliation alone.
