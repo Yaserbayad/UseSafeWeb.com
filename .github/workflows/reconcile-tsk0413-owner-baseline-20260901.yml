@@ -1,5 +1,5 @@
 name: Reconcile TSK-0413 owner privacy baseline
-# trigger: contents-api
+# trigger: authority-assertion-fix
 
 on:
   push:
@@ -45,7 +45,8 @@ jobs:
           assert len(r)==1
           assert 'no-querylog/no-identifiable-statistics settings' in r[0]['Acceptance_Criteria']
           assert 'anonymized aggregate operational statistics with 24-hour retention' in r[0]['Acceptance_Criteria']
-          assert r[0]['Action_Authority']=='AUTO_ALLOWED'
+          assert r[0]['AI_Capability_A0_A4']=='A1'
+          assert r[0]['Action_Authority']=='HUMAN_ONLY'
           r13=[x for x in rows if x['Task_ID']=='TSK-0413']
           assert len(r13)==1 and r13[0]['Execution_State']=='WAITING'
           print('OWNER_BASELINE_RECONCILIATION_ASSERTIONS=PASS')
