@@ -1,54 +1,31 @@
-name: Reconcile verified TSK-0319 current PASS
+name: Verify TSK-0319 current runtime reconciliation
 
 on:
-  push:
-    branches: [main]
-    paths: ['.github/workflows/verify-tsk0319-post-cr0008.yml']
-  pull_request:
-    branches: [main]
-    paths: ['.github/diagnostics/tsk0319-reconcile-pr-trigger.txt']
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  reconcile:
+  verify:
     runs-on: ubuntu-latest
-    concurrency:
-      group: usesafeweb-tsk0319-pr-recovery
-      cancel-in-progress: false
     steps:
       - name: Check out current main
         uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
-          persist-credentials: true
+          persist-credentials: false
 
-      - name: Run deterministic guarded reconciler
+      - name: Verify durable reconciled state
         shell: bash
         run: |
           set -euo pipefail
-          python3 .github/scripts/reconcile_tsk0319_state.py
-          changed="$(git diff --name-only)"
-          if [ -n "$changed" ] && [ "$changed" != 'CURRENT_STATE.md' ]; then
-            echo "Unexpected changed path(s): $changed" >&2
-            exit 1
-          fi
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "b27a0c5df2f5636d8ed71051e9e26a68959a2616"
+          test "$(git hash-object Plans/Master/RELATIONSHIP_INDEX.yaml)" = "c108d2c162bcea2ee4cc01def46d0487a9501032"
+          test "$(git hash-object TSK_0319_POST_CR0008_AUTOMATED_VERIFICATION_TROUBLESHOOTING_RECOVERY_HELP_2026-09-01.md)" = "dec2b556745c635656fa0f18945c63c47120f6ff"
+          test "$(git hash-object TSK_0319_POST_CR0008_INDEPENDENT_VERIFICATION_EVIDENCE_2026-09-01.md)" = "8a797f8257247bc3c557af10fe1d16b37c831077"
+          test "$(git hash-object CURRENT_STATE.md)" = "c4594837623b2462fea250fb360aed8fcabc90f3"
           grep -Fq '## TSK-0485 current accepted stable state' CURRENT_STATE.md
           grep -Fq '## TSK-0319 current accepted stable state — 2026-09-01 — POST-CR-0008 REQUALIFICATION' CURRENT_STATE.md
-
-      - name: Persist reconciled runtime state
-        shell: bash
-        run: |
-          set -euo pipefail
-          if git diff --quiet -- CURRENT_STATE.md; then
-            echo 'CURRENT_STATE_ALREADY_RECONCILED=PASS'
-            exit 0
-          fi
-          test "$(git diff --name-only)" = 'CURRENT_STATE.md'
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add CURRENT_STATE.md
-          git commit -m 'state: accept TSK-0319 post-CR-0008 requalification'
-          git push origin HEAD:main
+          test -z "$(git status --porcelain)"
