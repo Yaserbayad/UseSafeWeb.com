@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   verify:
@@ -26,10 +26,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 2
       - name: Verify current LG-06 predecessor baseline
         run: python3 .github/scripts/verify_lg06_predecessor_requalification_20260901.py
       - name: Repository whitespace check
-        run: git diff --check HEAD^ HEAD || true
+        run: git diff --check HEAD^ HEAD
       - name: Confirm clean checkout after verification
         run: test -z "$(git status --porcelain)"
+      - name: Persist successful verification marker
+        env:
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          cat > TSK_LG06_PREDECESSOR_REQUALIFICATION_AUTOVERIFY_2026-09-01.md <<EOF
+          # LG-06 predecessor requalification — automated verification
+
+          **Disposition:** PASS  
+          **Source commit:** \`${SOURCE_SHA}\`  
+          **GitHub Actions run:** \`${RUN_ID}\` / attempt \`${RUN_ATTEMPT}\`  
+          **Runner:** self-hosted \`adguardvm\`
+
+          The repository-current verifier completed successfully against the current WBS, requirement register, traceability matrix, TSK-0309 dual-mode baseline, exact TSK-0333 source blobs, final TSK-0321 accessibility evidence, post-CR-0006 TSK-0628 operating model, and CR-0006/CR-0007 change authority.
+
+          Verified outcomes: 91 current requirements are represented in the traceability matrix with current source/priority/verification and populated rationale/owner/release/status/task linkage; current TSK-0309 and TSK-0628 ACC wording is present; TSK-0052 is A4/AUTO_ALLOWED; exact integrated-prototype source identity matches the accepted hashes; final accessibility/regression evidence is PASS; dual-mode ordinary support coverage is present; repository whitespace and clean-checkout guards pass.
+
+          This marker proves only the bounded predecessor requalification baseline. It does not by itself mark TSK-0145, TSK-0043, TSK-0309, TSK-0628, TSK-0052/LG-06, or any successor/gate PASS; stable-state reconciliation remains a separate evidence decision.
+          EOF
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add TSK_LG06_PREDECESSOR_REQUALIFICATION_AUTOVERIFY_2026-09-01.md
+          git commit -m 'evidence: verify LG-06 predecessor requalification baseline'
+          git push origin HEAD:main
