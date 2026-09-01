@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-01T12:50:35Z
+**Updated:** 2026-09-01T12:58:45Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -1730,3 +1730,18 @@ Recompute the exact current frontier from WBS/graph/gates/runtime and current au
 ### Queue effect after TSK-0354 PASS
 
 Recompute the current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-0055 authority before selecting the next task.
+
+
+## TSK-0445 current accepted stable state — 2026-09-01
+
+`TSK-0445 — Design the production-grade Bash deployment/recovery script structure, modules, configuration inputs, logging, errors, retries, rollback, and verification hooks`: **PASS** at the design boundary under current `ACC-0445 / VER-0445 / EVD-0445`, current `TSK-0446` dependency evidence, and `DEC-0055 / CR-0008`.
+
+- Current action authority: **A3 / AUTO_ALLOWED**; CR-0008 changed only capability/action-authority metadata for this task and did not weaken ACC-0445.
+- Accepted design: `infrastructure/adguard-server/TSK-0445-DEPLOYMENT-RECOVERY-SCRIPT-DESIGN.md`, blob `5d2cc5730f313813e2ffb4ce8741f5e07d7af27c`, source commit `87d1ad25461ca263ee6c5f07c4f040e7b9893017`.
+- Independent static acceptance verified the WBS authority/dependency/ACC contract, TSK-0446 current privacy/RTO boundary, stale-helper mismatch handling, strict non-interactive/idempotent/secret-safe Bash structure, bounded retry/ambiguity handling, rollback/fail-closed rules, stable verification hooks, and separation of Git code from external config/secrets.
+- Existing `clean-recovery-drill-runtime.sh` and `create-encrypted-config-backup.sh` are not silently promoted into current production recovery because their historical `statistics=false` behavior conflicts with the current TSK-0446/TSK-0413 `1d` anonymized aggregate-statistics baseline; downstream implementation must reconcile/revalidate them before reuse.
+- `RSK-0048` remains OPEN. TSK-0445 proves the design only; no `deploy_or_recover.sh` implementation, ShellCheck/runtime test, clean-server restore, backup/restore result, TLS/firewall/DNS target behavior, measured RTO, production deployment, or later gate PASS is inferred.
+
+### Queue effect after TSK-0445 PASS
+
+Recompute the exact current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-0055 authority before selecting later work.
