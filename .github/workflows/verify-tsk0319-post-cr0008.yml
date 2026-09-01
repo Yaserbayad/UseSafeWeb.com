@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
     paths: ['.github/workflows/verify-tsk0319-post-cr0008.yml']
+  pull_request:
+    branches: [main]
+    paths: ['.github/diagnostics/tsk0319-reconcile-pr-trigger.txt']
 
 permissions:
   contents: write
@@ -12,7 +15,7 @@ jobs:
   reconcile:
     runs-on: ubuntu-latest
     concurrency:
-      group: usesafeweb-tsk0319-one-shot-recovery-gh-hosted
+      group: usesafeweb-tsk0319-pr-recovery
       cancel-in-progress: false
     steps:
       - name: Check out current main
