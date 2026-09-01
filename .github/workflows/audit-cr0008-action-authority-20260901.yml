@@ -1,0 +1,48 @@
+name: Audit CR-0008 action authority
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Plans/Master/Tools/audit_cr0008_action_authority_20260901.py'
+      - '.github/workflows/audit-cr0008-action-authority-20260901.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-governed-runtime-write
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Generate bounded authority audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 Plans/Master/Tools/audit_cr0008_action_authority_20260901.py
+          python3 Plans/Master/Tools/validate_master_plan.py
+          git diff --check
+          test "$(git status --porcelain | sed 's/^...//')" = 'CR_0008_ACTION_AUTHORITY_AUDIT_2026-09-01.md'
+      - name: Persist audit with remote read-back
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CR_0008_ACTION_AUTHORITY_AUDIT_2026-09-01.md
+          git commit -m 'evidence: audit CR-0008 action authority'
+          COMMIT="$(git rev-parse HEAD)"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$COMMIT"
+          git show "origin/main:CR_0008_ACTION_AUTHORITY_AUDIT_2026-09-01.md" | grep -F 'Bounded audit evidence only.'
+          echo "CR0008_AUDIT_COMMIT=$COMMIT"
+          echo 'CR0008_AUDIT_READBACK=PASS'
