@@ -1485,16 +1485,16 @@ Re-evaluate direct successors against this current predecessor proof before trea
 
 `TSK-0327 — Resolve critical usability, trust, and accessibility findings`: **PASS** under current `ACC-0327 / VER-0327 / EVD-0327`, `DEC-0053/CR-0006`, and `DEC-0054/CR-0007`.
 
-- Current WBS blob `f3c29b5db8b835ef2c896f61335656ea51d8ba1c`: L4, HIGH, hard dependency `TSK-0336`, A3 / `AUTO_ALLOWED`. `TSK-0336` remains `NOT_APPLICABLE + PASS` solely as the verified pre-product human-validation exclusion; no behavioral evidence is inferred.
-- Historical 2026-08-29 findings PASS is retained only for unchanged accountless facts. CR-0006 expanded the current surface with optional account/session, saved-device/dashboard and lifecycle states, so the broad historical zero-findings conclusion was independently re-evaluated.
-- Current findings disposition: `prototype/TSK-0327/POST_CR0007_FINDINGS_DISPOSITION.md`, version `2.0.0-post-cr0007`, blob `1836484278e741a041dea172ddc63edf9053ef6a`.
-- Durable current evidence: `TSK_0327_POST_CR0007_CURRENT_FINDINGS_ACCEPTANCE_EVIDENCE_2026-09-01.md`, blob `1f6c1a006a96866d2dcfb6a317081d7379802087`.
-- Deterministic verification run/job `33478481395 / 99762657735`: SUCCESS on self-hosted `adguardvm`; WBS/graph, current predecessor context, exact dual-mode TSK-0333 source/evidence blobs, current findings disposition, current browser retest evidence and PASS fences all passed.
-- Current retest basis is the accepted TSK-0333 integrated browser campaign `33432762152 / 99621849637`, including accountless Android/iPhone, unsupported states, optional account creation, saved device, returning dashboard, device replacement, provider/session errors, logout/account deletion, record deletion, DNS removal/recovery, destructive-result uncertainty, keyboard, RTL/responsive, privacy/no-transport and no-console-error checks.
-- One real current-scope defect discovered in that campaign—configured SafeWeb DNS removal not reachable from the Protection Map—was fixed and passed the materially different removal/recovery rerun. Two later failures were verifier-only and did not weaken product acceptance.
-- No unresolved current critical/high finding remains in the applicable internal/automated L4 review. `TSK-0321` retains its separate HUMAN_ONLY accessibility-review boundary; this PASS does not self-certify it or claim human comprehension before L8.
-- `RSK-0002` remains OPEN/non-blocking before L8. No implementation, architecture/security/privacy, participant, release, market, payment or launch PASS is inferred.
+- Current WBS blob `f3c29b5db8b835ef2c896f61335656ea51d8ba1c`: L4, HIGH, hard dependency `TSK-0336`, A3 / `AUTO_ALLOWED`. `TSK-0336` remains `NOT_APPLICABLE + PASS` only as the verified pre-product human-validation exclusion; no behavioral evidence is inferred.
+- Current findings disposition: `prototype/TSK-0327/POST_CR0007_FINDINGS_DISPOSITION.md`, version `2.1.0-post-cr0007`, blob `00abb274c7397e6fa8ffff3d6e1d407cc5cb9cc3`.
+- Current TSK-0333 predecessor is the corrected SafeWeb-identity PASS at runtime commit `9fd087c7510999e4fafcca29c4a2de862386f768`, with source blobs index `934dc19d00cc9dd32e1ebc20c604373d153d4013`, model `fc25e4b1facc303840311e8ce186612eb8799212`, app `98659ba74a86d539b89664708bbcb830292486f8`, CSS `6f8af459a0b0b1c9ec132657dfcd7ebff43090b8`.
+- Durable post-brand revalidation evidence: `TSK_0327_POST_SAFEWEB_REVALIDATION_EVIDENCE_2026-09-01.md`, blob `ee9a43d63a26e7c852c5b25f4ea21a77841014f3`.
+- Deterministic post-brand run/job `33479274751 / 99765034038`: SUCCESS on self-hosted `adguardvm`; current blobs, WBS contract, corrected predecessor context, v2.1 findings disposition and SafeWeb retest evidence all PASS.
+- Two real current-scope product defects were found and are closed with materially different evidence: (1) configured SafeWeb DNS removal was not reachable from the Protection Map; (2) visible brand rendered as `UseSafeWeb` despite owner-approved `SafeWeb` identity. The full integrated browser suite passed after each final correction. Two other failures were verifier-only diagnostics.
+- No unresolved current critical/high functional, trust/evidence-state, accessibility/responsive, recovery/lifecycle, privacy-boundary or identity-conformance finding remains in the applicable internal/automated L4 review.
+- `TSK-0321` retains its separate HUMAN_ONLY accessibility-review boundary; this PASS does not self-certify that task or claim human comprehension before L8.
+- `RSK-0002` remains OPEN/non-blocking before L8. No downstream architecture, implementation, participant, gate, release, market, payment or launch PASS is inferred.
 
-### Queue status after current TSK-0327 acceptance
+### Queue status after refreshed TSK-0327 acceptance
 
-Recompute successors from current WBS/graph/runtime. In particular, TSK-0322 must be evaluated against current CR-0006 dual-mode product scope rather than relying on its pre-CR-0006 language-policy PASS.
+Recompute TSK-0322 from current product/identity authority. Its historical pre-CR-0006 content policy is not sufficient where it still excludes an account/dashboard product that is now in approved Version-1 scope.
