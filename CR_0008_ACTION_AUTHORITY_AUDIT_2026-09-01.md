@@ -112,3 +112,12 @@
 ## Audit rule
 
 Review every row against DEC-0054/CR-0007 and the owner-approved CR-0008 direction. Reclassify only delegable research, analysis, architecture, design, drafting, coding, testing, objective evidence gates, or ordinary technical work. Preserve human authority for genuinely nondelegable legal signatures/attestations, contracts requiring human acceptance, identity/KYC/credential/consent acts requiring a person, named-market activation, organizational/entity formalization, material/unbudgeted commitments, strategic modify/pivot/pause/stop/transfer/resume, irreversible human-authority acts, and material frozen-scope changes.
+
+## Final CR-0008 disposition
+
+- Converted to `AUTO_ALLOWED`: **75** rows.
+- Retained human-gated: **26** rows.
+- Converted task IDs: `TSK-0009`, `TSK-0010`, `TSK-0049`, `TSK-0051`, `TSK-0053`, `TSK-0055`, `TSK-0067`, `TSK-0069`, `TSK-0070`, `TSK-0071`, `TSK-0072`, `TSK-0148`, `TSK-0150`, `TSK-0151`, `TSK-0152`, `TSK-0153`, `TSK-0154`, `TSK-0155`, `TSK-0156`, `TSK-0191`, `TSK-0221`, `TSK-0232`, `TSK-0233`, `TSK-0234`, `TSK-0236`, `TSK-0254`, `TSK-0255`, `TSK-0266`, `TSK-0267`, `TSK-0268`, `TSK-0272`, `TSK-0301`, `TSK-0308`, `TSK-0318`, `TSK-0319`, `TSK-0321`, `TSK-0330`, `TSK-0334`, `TSK-0335`, `TSK-0342`, `TSK-0354`, `TSK-0392`, `TSK-0410`, `TSK-0411`, `TSK-0425`, `TSK-0444`, `TSK-0445`, `TSK-0464`, `TSK-0466`, `TSK-0468`, `TSK-0469`, `TSK-0471`, `TSK-0472`, `TSK-0473`, `TSK-0474`, `TSK-0481`, `TSK-0502`, `TSK-0508`, `TSK-0509`, `TSK-0539`, `TSK-0547`, `TSK-0548`, `TSK-0550`, `TSK-0553`, `TSK-0554`, `TSK-0560`, `TSK-0562`, `TSK-0590`, `TSK-0596`, `TSK-0600`, `TSK-0601`, `TSK-0604`, `TSK-0605`, `TSK-0609`, `TSK-0621`
+- Retained task IDs: `TSK-0017`, `TSK-0027`, `TSK-0037`, `TSK-0039`, `TSK-0056`, `TSK-0065`, `TSK-0081`, `TSK-0084`, `TSK-0085`, `TSK-0092`, `TSK-0095`, `TSK-0106`, `TSK-0161`, `TSK-0173`, `TSK-0210`, `TSK-0217`, `TSK-0250`, `TSK-0259`, `TSK-0261`, `TSK-0292`, `TSK-0568`, `TSK-0587`, `TSK-0588`, `TSK-0591`, `TSK-0599`, `TSK-0618`
+- WBS scope/title/acceptance/dependencies/gates/plan status: **unchanged by parsed field comparison**.
+- Authority mutation itself creates **no PASS** and supplies **no missing acceptance evidence**.

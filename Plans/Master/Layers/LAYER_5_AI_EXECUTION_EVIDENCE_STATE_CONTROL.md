@@ -90,6 +90,17 @@ No hidden chain-of-thought is evidence. Useful evidence is a source-cited analys
 - AI handles routine incidents, diagnostics, retries, rollback/recovery and reversible remediation autonomously. Strategic pause/pivot/stop/transfer/resume, irreversible human-authority acts and frozen-boundary/material scope changes remain human.
 - This governance change **does not itself make any task or gate PASS**. Existing PASS is preserved only where its evidence still proves unchanged acceptance; changed acceptance must be reverified under current evidence.
 
+### 5.3.7 Owner proportional-evidence and authority-normalization rule (DEC-0055 / CR-0008)
+
+- Preserve SERIAL LIGHT, every current acceptance criterion, evidence integrity, security/privacy controls, deterministic state semantics and canonical write/read-back verification. Efficiency may reduce ceremony, never proof required by the actual acceptance boundary.
+- Use the **minimum durable evidence that actually proves the task**. Prefer an authoritative artifact/source or observed test/result plus its exact version/commit/blob/environment reference and the stable runtime-state update when needed.
+- A separate evidence document, independent verifier, marker/autoverify file, dedicated workflow, or derived audit is **not a default requirement**. Create one only when it materially improves independent proof, risk control, ambiguity resolution, reproducibility/recovery, non-idempotent-effect reconciliation, or a security/privacy/production/high-impact acceptance boundary.
+- Independent verification remains mandatory whenever the acceptance/risk actually requires independence; proportional evidence must never become producer self-certification for security, privacy, recovery, production behavior, consequential effects, or other material high-risk claims.
+- Inside frozen scope, research, analysis, architecture, design, drafting, coding, testing, objective evidence gates, routine reversible deployment/release/rollback/recovery, reporting and ordinary production operations are `AUTO_ALLOWED` when dependencies/gates/preconditions/access are satisfied. `A3` is sufficient for bounded execution plus verified durable evidence; use `A4` where autonomous verification/recovery/state progression is part of the task.
+- Preserve human authority only where the **task itself** still contains a genuinely nondelegable act: actual legal signature/attestation, retained accountable-controller approval, contract/partnership commitment, regulated fee, banking/merchant identity, identity/KYC/consent act requiring a person, named official-market activation, organizational/entity formalization, material/unbudgeted commitment, strategic modify/pivot/pause/stop/transfer/resume, or an irreversible act that actually requires human authority. A human-looking historical label alone is not a boundary.
+- Historical/excluded rows are not retroactively rewritten solely to make counts look cleaner. No authority reclassification creates task/gate `PASS`, supplies missing evidence, changes scope/acceptance/dependencies, or waives legal/safety/security/platform reality.
+- Do not reorganize existing repository artifacts solely for cleanliness. Repository layout work requires separate product/governance value beyond aesthetics.
+
 ### 5.4 Evidence and PASS rules
 
 - Each task has VER-xxxx, EVD-xxxx and ACC-xxxx identifiers.
