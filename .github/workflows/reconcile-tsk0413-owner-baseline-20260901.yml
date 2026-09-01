@@ -1,4 +1,5 @@
 name: Reconcile TSK-0413 owner privacy baseline
+# trigger: contents-api
 
 on:
   push:
