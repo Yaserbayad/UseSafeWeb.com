@@ -1901,3 +1901,17 @@ Recompute the current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-
 - A pre-PASS catalogue-count defect (`eleven` vs actual 12) and the first acceptance workflow's trailing-whitespace failure were corrected before acceptance; neither produced runtime PASS.
 - Runtime acceptance does not alter the WBS, graph, manifest, planning modules or CR-0008 owner-frozen baseline.
 - **Non-inference:** no analytics vendor/implementation/runtime collection, legal/DPIA conclusion, KPI result, downstream gate, build, production activation, launch or real-user outcome becomes PASS from this definition task.
+
+## TSK-0409 current accepted stable state — 2026-09-01 — POST-CR-0008
+
+`TSK-0409 — Freeze supported-device/network verification coverage and explicit unsupported/bypass behavior`: **PASS** under current `ACC-0409 / VER-0409 / EVD-0409`, current `TSK-0408` dependency proof, and CR-0008 authority.
+
+- Action authority: **A3 / AUTO_ALLOWED**.
+- Artifact: `TSK_0409_SUPPORTED_DEVICE_NETWORK_VERIFICATION_BYPASS_MATRIX_2026-09-01.md`, version `1.0.0`, blob `3aa832777276115912e4f3990b30cb541c458f4f`, publication commit `bcccf7599dddd6e1665ba1207cafcadd6afe164d`.
+- Verification source commit: `5b50b48fccddf7c1c654fdeb01d9e932e927c8f3`; GitHub Actions run/attempt `33534393638 / 1`.
+- Acceptance proof: exact WBS metadata/dependency/ACC/VER/EVD, REQ-0042/0043, CON-0002/0003, RSK-0004, INT-0013, current TSK-0408 + TSK-0320 state, matrix completeness, bypass/conflict coverage, truth-state negative assertions, privacy/secret guard, current official-source markers and the full modular-plan validator all passed before runtime mutation.
+- Frozen L4 support mechanisms remain Android Private DNS/DoT hostname and Apple DoH profile/Server-URL from TSK-0408. Chrome/Firefox custom DNS, VPN/app resolvers, Private Relay, captive portals, network changes and unknown combinations are handled conservatively with mandatory reverification or explicit `not_covered` / `uncertain_error` semantics.
+- Configuration/profile/account/ClientID/parent-confirmation evidence never becomes `protected_verified`; only fresh qualifying technical evidence for the effective DNS path may do so.
+- No DNS questions/domains/URLs/browsing history/child activity/persistent identity linkage is required by this contract.
+- Runtime acceptance does not alter WBS, graph, manifest, planning modules, AdGuard, Quad9 dns10/ECS policy or the CR-0008 owner-frozen baseline.
+- **Non-inference:** this L4 PASS does not claim physical-device/runtime acceptance, implementation, LG-07, build, production activation, launch or real-user outcomes.
