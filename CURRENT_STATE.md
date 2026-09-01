@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-01T13:19:56Z
+**Updated:** 2026-09-01T23:03:55Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2078,3 +2078,21 @@ Recompute the current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-
 - Current downstream gaps remain visible: TSK-0356 auth/session architecture, TSK-0232 ownership boundary and TSK-0410 AdGuard adapter are not yet PASS; production observability/runbooks, concrete datastore/backup behavior and `INT-0007` runtime/data-flow reality still require later direct evidence; `RSK-0001` remains OPEN and TSK-0240 remains planning-DEFERRED.
 - Acceptance workflow run `33558048780` verified the exact WBS/dependency/ACC/VER/EVD contract, immutable artifact and verifier blobs, controlling requirement/constraint/risk/interface records, all 30 threat rows, all 10 trust boundaries, required threat categories, High/Critical prevention/detection/recovery/blocking-test completeness, privacy/truth/authority invariants, downstream gaps and non-inference; the full modular validator then passed before this runtime mutation.
 - **Non-inference:** TSK-0485 PASS is threat-model design acceptance only. It does not prove controls are implemented/deployed, penetration/vulnerability testing is clean, `RSK-0007` or `RSK-0001` is closed, provider/datastore/AdGuard runtime behavior is verified, production monitoring is active, real-participant processing/public launch is authorized, or LG-07/LG-08/LG-09/downstream tasks are PASS.
+
+## TSK-0319 current accepted stable state — 2026-09-01 — POST-CR-0008 REQUALIFICATION
+
+`TSK-0319 — Design automated verification, issue-specific troubleshooting, safe reset/reinstall/remove, and point-of-need help`: **PASS** under current `ACC-0319 / VER-0319 / EVD-0319`, `DEC-0053/CR-0006`, `DEC-0054/CR-0007`, and `DEC-0055/CR-0008`.
+
+- WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L4 / HIGH / A3 / `AUTO_ALLOWED` / `PLANNED`; hard dependencies `TSK-0315; TSK-0320`, both strict current PASS.
+- Current artifact `TSK_0319_POST_CR0008_AUTOMATED_VERIFICATION_TROUBLESHOOTING_RECOVERY_HELP_2026-09-01.md`, blob `dec2b556745c635656fa0f18945c63c47120f6ff`, commit `e323852452a4dd7a9163d98b00aca6509202fcb2`.
+- Independent evidence `TSK_0319_POST_CR0008_INDEPENDENT_VERIFICATION_EVIDENCE_2026-09-01.md`, blob `8a797f8257247bc3c557af10fe1d16b37c831077`, commit `050374e470e58d7fbd30bfd85bf60eef32197da4`; run/job `33567214382 / 100053030433`: **SUCCESS**.
+- Verifier proved current WBS/ACC/VER/EVD, predecessor PASS, graph `TSK-0319 -> TSK-0315/TSK-0320`, and downstream `TSK-0628 -> TSK-0319/TSK-0331`.
+- ACC-0319 is satisfied for accountless and optional-account/provider/session/dashboard/device-lifecycle failure, verification, troubleshooting, recovery/removal and point-of-need-help paths, with privacy-safe checks, changed-evidence retries, and no blind replay of ambiguous consequential actions.
+- The pre-CR-0006 accountless-only artifact remains historical for unchanged facts only.
+- This repairs the missing direct-predecessor proof beneath current `TSK-0628`; `TSK-0331` is already current PASS. No new substantive TSK-0628/LG-06 acceptance is invented.
+- **Non-inference:** L4 design PASS only; no implementation, provider integration, production diagnostics, legal/privacy compliance, real-user supportability, build, release, or launch PASS is inferred.
+
+### Queue status after post-CR-0008 TSK-0319 requalification
+
+Recompute HIGH L4/AUTO_ALLOWED eligibility from canonical WBS/graph, strict current PASS evidence, CR-0006 semantic validity, gates, and governing priority rules; never by task number.
+
