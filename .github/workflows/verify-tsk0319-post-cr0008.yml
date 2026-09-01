@@ -1,17 +1,15 @@
-name: Verify TSK-0319 post-CR-0008 current acceptance
+name: Reconcile verified TSK-0319 current PASS
 
 on:
   push:
     branches: [main]
-    paths:
-      - 'TSK_0319_POST_CR0008_AUTOMATED_VERIFICATION_TROUBLESHOOTING_RECOVERY_HELP_2026-09-01.md'
-      - '.github/workflows/verify-tsk0319-post-cr0008.yml'
+    paths: ['.github/workflows/verify-tsk0319-post-cr0008.yml']
 
 permissions:
   contents: write
 
 jobs:
-  verify:
+  reconcile:
     runs-on: [self-hosted, Linux, X64]
     concurrency:
       group: usesafeweb-governance-state-prod
@@ -22,110 +20,59 @@ jobs:
           ref: main
           fetch-depth: 0
           persist-credentials: true
-      - name: Verify canonical contract, dependencies, graph and artifact
+      - name: Reconcile only from independently verified durable evidence
         shell: bash
         run: |
           set -euo pipefail
+          if grep -Eq '^## TSK-0319 .*current accepted stable state' CURRENT_STATE.md; then
+            echo 'TSK0319_STATE_ALREADY_APPLIED=PASS'
+            exit 0
+          fi
+          test "$(git hash-object CURRENT_STATE.md)" = "c9d4735e18752284cc61c4b6a4ad771c752f9685"
           test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "b27a0c5df2f5636d8ed71051e9e26a68959a2616"
           test "$(git hash-object Plans/Master/RELATIONSHIP_INDEX.yaml)" = "c108d2c162bcea2ee4cc01def46d0487a9501032"
           test "$(git hash-object TSK_0319_POST_CR0008_AUTOMATED_VERIFICATION_TROUBLESHOOTING_RECOVERY_HELP_2026-09-01.md)" = "dec2b556745c635656fa0f18945c63c47120f6ff"
+          test "$(git hash-object TSK_0319_POST_CR0008_INDEPENDENT_VERIFICATION_EVIDENCE_2026-09-01.md)" = "8a797f8257247bc3c557af10fe1d16b37c831077"
+          grep -Fq '## TSK-0315 current accepted stable state' CURRENT_STATE.md
+          grep -Fq '## TSK-0320 current accepted stable state' CURRENT_STATE.md
+          grep -Fq '## TSK-0628 current accepted stable state' CURRENT_STATE.md
+          grep -Fq '## TSK-0485 current accepted stable state' CURRENT_STATE.md
+          grep -Fq '**Result:** PASS' TSK_0319_POST_CR0008_INDEPENDENT_VERIFICATION_EVIDENCE_2026-09-01.md
+          grep -Fq '**Workflow run / attempt:** `33567214382 / 1`' TSK_0319_POST_CR0008_INDEPENDENT_VERIFICATION_EVIDENCE_2026-09-01.md
           python3 - <<'PY'
-          import csv, json, re
           from pathlib import Path
-          with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='') as f:
-              rows = list(csv.DictReader(f))
-          row = next((r for r in rows if (r.get('Task_ID') or '').strip() == 'TSK-0319'), None)
-          assert row is not None, 'TSK-0319 row missing'
-          def val(*names):
-              for n in names:
-                  if n in row and row[n] is not None:
-                      return row[n].strip()
-              return ''
-          deps = re.findall(r'TSK-\d{4}', val('Dependencies'))
-          assert val('Lifecycle_Stage') == 'L4'
-          assert val('Priority').upper() == 'HIGH'
-          assert val('AI_Capability_A0_A4') == 'A3'
-          assert val('Action_Authority') == 'AUTO_ALLOWED'
-          assert set(deps) == {'TSK-0315','TSK-0320'}, deps
-          assert val('Acceptance_ID') == 'ACC-0319'
-          assert val('Verification_ID') == 'VER-0319'
-          assert val('Evidence_ID') == 'EVD-0319'
-          planning = val('Plan_Status','Planning_Status','Disposition').upper()
-          assert planning not in {'DEFERRED','NOT_APPLICABLE','CANCELLED','CANCELED'}, planning
+          from datetime import datetime, timezone
+          p=Path('CURRENT_STATE.md')
+          t=p.read_text(encoding='utf-8')
+          now=datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
+          lines=t.splitlines()
+          hits=[i for i,x in enumerate(lines) if x.startswith('**Updated:**')]
+          if len(hits)!=1: raise SystemExit('unexpected Updated field count')
+          lines[hits[0]]=f'**Updated:** {now}'
+          t='\n'.join(lines).rstrip()+'''\n\n## TSK-0319 current accepted stable state — 2026-09-01 — POST-CR-0008 REQUALIFICATION
 
-          state = Path('CURRENT_STATE.md').read_text(encoding='utf-8')
-          accepted = set(re.findall(r'^##\s+(TSK-\d{4})(?:\s*/[^\n#]+)?\s+current accepted stable state\b', state, flags=re.MULTILINE|re.IGNORECASE))
-          assert {'TSK-0315','TSK-0320'} <= accepted
-          assert 'TSK-0319' not in accepted
+`TSK-0319 — Design automated verification, issue-specific troubleshooting, safe reset/reinstall/remove, and point-of-need help`: **PASS** under current `ACC-0319 / VER-0319 / EVD-0319`, `DEC-0053/CR-0006`, `DEC-0054/CR-0007`, and `DEC-0055/CR-0008`.
 
-          graph = Path('Plans/Master/RELATIONSHIP_INDEX.yaml').read_text(encoding='utf-8')
-          def block(tid):
-              m = re.search(rf'(?ms)^  {re.escape(tid)}:\n(.*?)(?=^  TSK-\d{{4}}:|\Z)', graph)
-              assert m, f'graph entity missing {tid}'
-              return m.group(1)
-          assert 'target: TSK-0315' in block('TSK-0319') and 'target: TSK-0320' in block('TSK-0319')
-          assert 'target: TSK-0319' in block('TSK-0628') and 'target: TSK-0331' in block('TSK-0628')
+- Current canonical WBS blob `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L4 / HIGH / A3 / `AUTO_ALLOWED` / `PLANNED`; hard dependencies `TSK-0315; TSK-0320`, both strict current PASS.
+- Current design: `TSK_0319_POST_CR0008_AUTOMATED_VERIFICATION_TROUBLESHOOTING_RECOVERY_HELP_2026-09-01.md`, blob `dec2b556745c635656fa0f18945c63c47120f6ff`, publication commit `e323852452a4dd7a9163d98b00aca6509202fcb2`.
+- Independent evidence: `TSK_0319_POST_CR0008_INDEPENDENT_VERIFICATION_EVIDENCE_2026-09-01.md`, blob `8a797f8257247bc3c557af10fe1d16b37c831077`, commit `050374e470e58d7fbd30bfd85bf60eef32197da4`; run/job `33567214382 / 100053030433`: **SUCCESS**.
+- Verifier proved current WBS/ACC/VER/EVD, predecessor PASS, canonical graph `TSK-0319 -> TSK-0315/TSK-0320`, and downstream `TSK-0628 -> TSK-0319/TSK-0331`.
+- ACC-0319 is satisfied across accountless and optional-account/provider/session/dashboard/device-lifecycle failures: bounded decision trees, privacy-safe checks, changed-evidence retry, no blind replay of ambiguous consequential operations, truthful TSK-0320 protection states, explicit Android/iPhone and account/device recovery/removal, bounded point-of-need help, and exceptional escalation.
+- Historical accountless-only TSK-0319 proof remains historical for unchanged facts only; it is not the current dual-mode acceptance proof.
+- Dependency integrity beneath current `TSK-0628` is restored because both direct predecessors `TSK-0319` and `TSK-0331` now have current proof. No new substantive TSK-0628 or LG-06 acceptance is invented.
+- **Non-inference:** L4 design PASS only; no implementation, provider integration, production diagnostics, legal/privacy compliance, real-user supportability, build, release, or launch PASS is inferred.
 
-          artifact = Path('TSK_0319_POST_CR0008_AUTOMATED_VERIFICATION_TROUBLESHOOTING_RECOVERY_HELP_2026-09-01.md').read_text(encoding='utf-8')
-          required = ['complete accountless core','optional parent-account mode','protected/verified','uncertain/error','removed','CHK-PROVIDER','CHK-SESSION','CHK-OWNERSHIP','Sign-in start/provider return','Session expired','Dashboard unavailable','Add/save/manage device','Device replace, revoke, unlink or record deletion','Account deletion','physical DNS removal','no blind replay','ACC-0319 acceptance mapping','browsing/query/activity history','raw DNS history','accountless-only assumptions','Historical evidence remains traceable']
-          missing = [x for x in required if x not in artifact]
-          assert not missing, missing
-          assert 'no implementation, deployment, gate PASS or public release is inferred' in artifact
+### Queue status after post-CR-0008 TSK-0319 requalification
 
-          Path('/tmp/tsk0319_wbs_row.json').write_text(json.dumps({
-              'Task_ID': val('Task_ID'), 'Lifecycle_Stage': val('Lifecycle_Stage'), 'Priority': val('Priority'),
-              'Dependencies': deps, 'AI_Capability_A0_A4': val('AI_Capability_A0_A4'),
-              'Action_Authority': val('Action_Authority'), 'Acceptance_ID': val('Acceptance_ID'),
-              'Verification_ID': val('Verification_ID'), 'Evidence_ID': val('Evidence_ID'),
-              'Plan_Status': planning, 'Acceptance_Criteria': val('Acceptance_Criteria')
-          }, sort_keys=True, indent=2), encoding='utf-8')
-          print('TSK0319_CURRENT_ACCEPTANCE_VERIFICATION=PASS')
-          print('GRAPH_TSK0319_DEPS=TSK-0315,TSK-0320')
-          print('GRAPH_TSK0628_DEPS_INCLUDE=TSK-0319,TSK-0331')
-          print('PREDECESSOR_CURRENT_PASS=TSK-0315,TSK-0320')
+Recompute the HIGH L4/AUTO_ALLOWED frontier from canonical WBS/graph, strict current PASS evidence, CR-0006 semantic validity, gates, and governing priority rules. Do not select by task number.
+'''
+          p.write_text(t,encoding='utf-8')
           PY
-      - name: Persist immutable verification evidence
-        shell: bash
-        env:
-          RUN_ID: ${{ github.run_id }}
-          RUN_ATTEMPT: ${{ github.run_attempt }}
-          SOURCE_SHA: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-          p='TSK_0319_POST_CR0008_INDEPENDENT_VERIFICATION_EVIDENCE_2026-09-01.md'
-          test ! -e "$p"
-          {
-            echo '# TSK-0319 — Post-CR-0008 Independent Verification Evidence'
-            echo
-            echo '**Result:** PASS'
-            echo '**Task:** TSK-0319'
-            echo '**Acceptance:** ACC-0319 / VER-0319 / EVD-0319'
-            echo "**Source commit:** \`$SOURCE_SHA\`"
-            echo "**Workflow run / attempt:** \`$RUN_ID / $RUN_ATTEMPT\`"
-            echo '**Canonical WBS blob:** `b27a0c5df2f5636d8ed71051e9e26a68959a2616`'
-            echo '**Canonical relationship graph blob:** `c108d2c162bcea2ee4cc01def46d0487a9501032`'
-            echo '**Verified artifact blob:** `dec2b556745c635656fa0f18945c63c47120f6ff`'
-            echo
-            echo '## Verified current contract'
-            echo '```json'
-            cat /tmp/tsk0319_wbs_row.json
-            echo '```'
-            echo
-            echo '## Verification findings'
-            echo '- Current WBS classifies TSK-0319 as L4 / HIGH / A3 / AUTO_ALLOWED and not planning-excluded.'
-            echo '- Exact hard dependencies are TSK-0315 and TSK-0320; both have strict current accepted-stable-state headings.'
-            echo '- Canonical graph confirms TSK-0319 depends on TSK-0315 and TSK-0320.'
-            echo '- Canonical graph confirms TSK-0628 directly depends on TSK-0319 and TSK-0331.'
-            echo '- Artifact contains bounded issue-specific accountless and optional-account/provider/session/dashboard/device-lifecycle troubleshooting/recovery flows.'
-            echo '- Artifact preserves current protection-state truth, changed-evidence retry rule, unknown-result no-replay rule, login-free core removal/recovery, and privacy/security data minimization.'
-            echo '- Artifact distinguishes anonymous-state reset, account/session operations, device-record lifecycle, account deletion and physical DNS removal.'
-            echo '- Artifact contains no implementation/deployment/gate/public-release claim.'
-            echo
-            echo 'This evidence verifies the L4 design acceptance boundary only. It does not prove implementation, production behavior, provider integration, legal/privacy compliance, real-user supportability, or launch readiness.'
-          } > "$p"
           git diff --check
+          grep -Fq '## TSK-0319 current accepted stable state — 2026-09-01 — POST-CR-0008 REQUALIFICATION' CURRENT_STATE.md
+          grep -Fq '## TSK-0485 current accepted stable state' CURRENT_STATE.md
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add "$p"
-          git commit -m 'evidence: verify TSK-0319 post-CR-0008 acceptance'
+          git add CURRENT_STATE.md
+          git commit -m 'state: accept TSK-0319 post-CR-0008 requalification'
           git push
