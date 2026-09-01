@@ -1,1 +1,2 @@
 Read-only canonical HIGH L4 AUTO_ALLOWED frontier audit trigger.
+Retry: discover canonical L4 encoding after schema check.
