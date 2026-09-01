@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-01T09:47:45Z
+**Updated:** 2026-09-01T10:26:49Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -1605,3 +1605,20 @@ The stale post-CR-0006 predecessor evidence identified on the `TSK-0052 / LG-06`
 ### Queue status after LG-06 PASS
 
 Recompute the exact eligible L5 work from current WBS dependencies, relationship graph, gate preconditions, runtime PASS evidence, constraints/interfaces, executor availability and Action Authority. Do not select the next task from task numbering or historical plans.
+
+## TSK-0408 current accepted stable state — 2026-09-01 — POST-CR-0007
+
+`TSK-0408 — Define one coherent UseSafeWeb DNS identity and approved platform-specific endpoint/profile mechanisms`: **PASS** under current `ACC-0408 / VER-0408 / EVD-0408`, `DEC-0053/CR-0006` and `DEC-0054/CR-0007`.
+
+- Action authority: **A3 / AUTO_ALLOWED**.
+- Current revalidation: `TSK_0408_POST_CR0007_REVALIDATION_EVIDENCE_2026-09-01.md`, blob `a6b41ff7462dab630aad9e7640950b0d3467f040`.
+- Independent verification: GitHub Actions run/job `33497169433 / 99821919358` — SUCCESS at verification head `3293a3fcae7e1258eab947bfb4218186b275d75a`.
+- Durable acceptance evidence: `TSK_0408_CURRENT_ACCEPTANCE_EVIDENCE_2026-09-01.md`, blob `0bbf1d934ecd4a7693baf7de56362391e46dcf55`.
+- Current accepted identity remains `UseSafeWeb DNS` / `dns.usesafeweb.com`; Android native Private DNS uses DoT hostname semantics and Apple DoH uses the HTTPS profile Server URL.
+- CR-0007 supersedes the historical mandatory pilot/staging/future-production environment model. Current separation is one production identity plus explicitly non-production local/dev/CI/ephemeral/preview/mock/synthetic/dry-run evidence; no non-production evidence is relabeled as production.
+- Verification/removal/fallback remain truthful and privacy-safe; no browsing/query history, invented FQDN/path/profile/account route, browser-visible `/control` proxy or administrator secret is introduced.
+- **Unlock:** `TSK-0413` may now consume TSK-0408 as its current direct hard-dependency evidence. No TSK-0413 or LG-07 PASS is inherited.
+
+### Queue status after TSK-0408 current PASS
+
+Recompute the L5 frontier from current WBS dependencies, gate/authority, runtime evidence and executor availability. `TSK-0413` remains non-PASS until its complete secret-safe versioned recovery-consumable bundle is constructed and independently verified.
