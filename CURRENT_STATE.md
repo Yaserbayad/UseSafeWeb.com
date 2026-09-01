@@ -1834,3 +1834,15 @@ Recompute the current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-
 - TSK-0413 boundary: DNS production/test/recovery preserves exact Quad9 dns10, ECS off, persistent query/file logging off, client-IP anonymization on, 24-hour anonymized aggregate statistics only, loopback DNS/admin, no browser admin credentials and no browsing/query/activity history.
 - `RSK-0048` remains OPEN/critical; architecture does not fabricate timed clean-server success. Rollback/recovery keeps unsafe partial service disabled/uncertain and retains the approximately 30-minute DNS recovery objective.
 - **Non-inference:** no Azure control-plane provisioning, website/DNS deployment, LG-07/LG-08/LG-09, live-production activation, market launch, payment or real-user validation PASS is inferred.
+
+## TSK-0016 current accepted stable state — 2026-09-01
+
+`TSK-0016 — Build the unified five-layer final Master Planning System candidate`: **PASS** under current `ACC-0016 / VER-0016 / EVD-0016` and current `DEC-0055/CR-0008` authority.
+
+- Action authority: **A3 / AUTO_ALLOWED**.
+- Runtime reconciliation only: the canonical WBS and planning authority are unchanged. The WBS planning snapshot records `COMPLETED_CANDIDATE / PASS`, but current dependency proof is established here only after direct verification against the current CR-0008 repository state.
+- Acceptance source commit: `42846094ea8e7ff1714388eb52ad2249b22de318`; WBS blob `b27a0c5df2f5636d8ed71051e9e26a68959a2616`; manifest blob `18207f31f436b649fbb5c7429a10e90b88746976`; root blob `aac351180be7bb9955f23f8dbee3d97d0ef324ed`; relationship-index blob `c108d2c162bcea2ee4cc01def46d0487a9501032`; validation-report blob `892ef858903b687d14c6fcb4eff7b7b5c2632e57`; generated-reconstruction blob `97eac2aa8ca4445679fcf6cf1fa75ae348b066e4`.
+- Verification: GitHub Actions run/attempt `33527706863 / 1` plus the current deterministic `Plans/Master/Tools/validate_master_plan.py`: 25 assembly modules, 641 tasks, 858 dependency edges, 5,178 relationship entities, 20,472 relationship targets, 0 broken links, and 0 generated missing task IDs.
+- `ACC-0016` boundary: one authoritative root, all five layers, 16 package modules, L0-L13, authoritative WBS/registers, legacy reconciliation, current-state interface, audits, manifest/relationship graph, and the deterministic non-authoritative full-plan reconstruction are present and validator-consistent.
+- Current post-freeze CR-0006/CR-0007/CR-0008 amendments remain part of the canonical planning system. Historical pre-canonicalization text that said publication was pending is retained only as historical audit context and is not treated as current publication state.
+- **Non-inference:** this reconciliation does not make any successor task, LG-07/LG-08/LG-09, deployment, live-production activation, launch, tracker, or real-user-validation outcome PASS.
