@@ -1805,3 +1805,17 @@ Recompute the current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-
 - TSK-0413 boundary: server-only typed AdGuard adapter; AdGuard Home v0.107.79/schema 34; exact Quad9 dns10 DoH; ECS off; persistent query/file logging off; client-IP anonymization on; 24-hour anonymized aggregate statistics only; loopback-only authenticated administration; no browser admin credentials and no browsing/query/activity history.
 - `RSK-0045` remains OPEN as a scope/privacy control. Datastore product/schema, final Firebase vendor/version/terms, CMS/component-library product, exact private cross-VM AdGuard control transport, secret-provider implementation and an actual L6 release remain downstream and are not invented.
 - **Non-inference:** no website implementation/build, LG-07/LG-08, production deployment/activation, launch, payment, or real-user validation PASS is inferred.
+
+## TSK-0411 current accepted stable state — 2026-09-01
+
+`TSK-0411 — Design DNS service topology and client configuration model`: **PASS** under current `ACC-0411 / VER-0411 / EVD-0411`, current `TSK-0235` dependency evidence, current `LG-06` PASS, `DEC-0016`, and `DEC-0055/CR-0008` proportional-evidence authority.
+
+- Action authority: **A3 / AUTO_ALLOWED**.
+- Artifact: `TSK_0411_DNS_SERVICE_TOPOLOGY_CLIENT_CONFIGURATION_MODEL_2026-09-01.md`, version `1.0.0`, blob `8bd206e3832bafc5b8033dddd3e7913a5e01f7b6`, acceptance source commit `e698ce6cfe7f629dd3d320581ce231ed08190257`.
+- Verification: ChatGPT Project Governor network-architecture review plus GitHub Actions run/attempt `33521675742 / 1`; exact WBS/ACC/VER/EVD, TSK-0235/LG-06 current state, frozen TSK-0408/TSK-0413 source blobs, topology/privacy/abuse/truth/removal/region clauses, master-plan validity and prohibited secret material were checked before this mutation.
+- Topology boundary: one canonical `dns.usesafeweb.com` service; initial child-linked DNS remains on the owner-provided Azure West Europe/Netherlands DNS VM; public encrypted DNS is limited to DoH 443 and DoT 853 through the same-host edge; public UDP/TCP 53 and AdGuard admin 3000 remain closed; the web/application VM is outside the ordinary DNS data plane.
+- TSK-0413 boundary: AdGuard Home v0.107.79/schema 34; exact Quad9 dns10 DoH upstream; ECS off; query/file logging off; client-IP anonymization on; 24-hour anonymized aggregate statistics only; official initial filter; empty allowlist; loopback DNS/admin; no browsing/query/activity history.
+- Abuse disposition: the design retains `ratelimit=20`, /24 IPv4 and /56 IPv6 grouping, empty rate-limit whitelist and `refuse_any=true`, adds bounded encrypted-edge controls, and explicitly does not assume DoH forwarded-client-IP mechanics apply to DoT. DoT activation must fail closed until client-aware/equivalent edge controls and multi-client behavior are proven.
+- Verification/removal truth: configuration presence, endpoint health, parent confirmation and ownership are separate from device-path technical verification; no technical `Verified` state is allowed without current deterministic device-path evidence. Removal is distinct from account/device-record/session lifecycle actions.
+- `RSK-0004` remains OPEN/unvalidated; later live persistence evidence and expansion triggers can reopen the design. No US DNS node/market activation is inferred.
+- **Non-inference:** no live DNS implementation/activation, LG-07/LG-08, production deployment, market activation, launch, or real-user persistence PASS is inferred.
