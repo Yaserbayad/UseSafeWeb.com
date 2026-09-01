@@ -21,6 +21,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       - name: Verify current TSK-0408 contract reconciliation
         run: python3 .github/scripts/verify_tsk0408_post_cr0007_20260901.py
       - name: Repository guards
