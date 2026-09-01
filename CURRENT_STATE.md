@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-01T12:03:27Z
+**Updated:** 2026-09-01T12:42:53Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -8,7 +8,13 @@
 
 ## Canonical planning authority
 
-**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0007 PUBLISHED, RECONCILED, READ-BACK VERIFIED.**
+**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0008 PUBLISHED, RECONCILED, READ-BACK VERIFIED.**
+
+- Latest post-freeze change: `CR-0008` / `DEC-0055`, explicit Project Owner authority 2026-09-01: proportional evidence plus full action-authority normalization for correctness/efficiency, with no acceptance/scope/dependency weakening and no repository cleanup requirement.
+- CR-0008 planning publication commit: `9acb09a1d69cca305776b63b9cb041e679da619d`; WBS blob `b27a0c5df2f5636d8ed71051e9e26a68959a2616`; Layer-5 blob `2097d83961affaa69850e41a5ffcd72a660d69cd`.
+- CR-0008 audited all 101 prior `HUMAN_ONLY` / `HUMAN_APPROVAL_REQUIRED` WBS rows. Delegable work was converted to `AUTO_ALLOWED`; genuine nondelegable/historical boundaries were retained exactly as recorded in `CR_0008_ACTION_AUTHORITY_AUDIT_2026-09-01.md`.
+- Proportional-evidence rule: minimum durable proof that actually proves the acceptance boundary; separate evidence/verifier/marker/workflow/audit artifacts only when they materially improve proof, risk control, ambiguity resolution or recovery. Security/privacy/recovery/production/high-impact independence remains where risk/acceptance requires it.
+- **No task or gate became PASS solely because CR-0008 changed authority/evidence form.** Existing PASS is preserved only where current evidence still proves unchanged acceptance.
 
 - Latest post-freeze change: `CR-0007` / `DEC-0054`, explicit Project Owner authority 2026-08-31: **maximize evidence-driven AI autonomy and use a production-only active lifecycle after integrated readiness; no separate mandatory pilot or staging lifecycle/environment.**
 - `CR-0006` / `DEC-0053` remains the controlling underlying Version-1 product-scope decision: optional parent account/lightweight dashboard plus a complete accountless core path.
@@ -1698,3 +1704,12 @@ Recompute the exact current frontier from WBS/graph/gates/runtime and current au
 ### Queue effect after TSK-0518 current PASS
 
 Recompute the exact current frontier from WBS/graph/gates/runtime and current authorities. `TSK-0445` is dependency-satisfied but remains **A1 / HUMAN_ONLY**; do not perform or self-certify it. Continue any higher-valid autonomous L5 work whose current dependencies, gates and authority are independently satisfied; otherwise stop at the exact human boundary.
+
+
+## DEC-0055 / CR-0008 accepted execution-efficiency state — 2026-09-01
+
+- Owner instruction: preserve SERIAL LIGHT, every acceptance criterion, evidence integrity, security/privacy controls and canonical read-back; reduce only non-value ceremony.
+- WBS authority audit covered all 101 prior human-gated rows and was applied only to `AI_Capability_A0_A4` / `Action_Authority`; task scope, acceptance, dependencies, gates and plan status were not changed by CR-0008.
+- True human boundaries remain where the task itself requires a genuinely nondelegable owner/controller/legal/contract/identity/market/formalization/material-commitment/strategic act.
+- Existing repository artifacts are not reorganized solely for cleanliness.
+- Exact next governed work is not persisted here; recompute it from current WBS, graph, gates, runtime PASS evidence and DEC-0054/DEC-0055 authority.
