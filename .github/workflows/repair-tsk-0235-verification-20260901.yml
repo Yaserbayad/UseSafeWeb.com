@@ -1,0 +1,81 @@
+name: Repair TSK-0235 verification source
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/repair-tsk-0235-verification-20260901.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-tsk-0235-repair
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 3
+
+      - name: Repair only demonstrated verification-source defects
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+
+          ART='TSK_0235_SYSTEM_CONTEXT_CONTAINER_INTEGRATION_DIAGRAMS_2026-09-01.md'
+          VER='.github/workflows/verify-accept-tsk-0235-20260901.yml'
+          TMP='TSK_0235_SYSTEM_CONTEXT_CONTAINER_INTEGRATION_DIAGRAMS_2026-09-01.v2.tmp'
+          SELF='.github/workflows/repair-tsk-0235-verification-20260901.yml'
+
+          sed -i 's/[[:space:]]\+$//' "$ART"
+          rm -f "$TMP"
+          NEW_BLOB="$(git hash-object "$ART")"
+          export NEW_BLOB
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p = Path('.github/workflows/verify-accept-tsk-0235-20260901.yml')
+          text = p.read_text(encoding='utf-8')
+          old = 'ecac82c1e020977a50af1d02345091415afba4ce'
+          new = os.environ['NEW_BLOB']
+          if old not in text:
+              raise SystemExit('expected old artifact blob not found in verifier')
+          p.write_text(text.replace(old, new), encoding='utf-8')
+          print('TSK0235_VERIFIER_EXPECTED_BLOB=' + new)
+          PY
+          rm -f "$SELF"
+
+          python3 Plans/Master/Tools/validate_master_plan.py
+          git diff --check
+          test ! -e "$TMP"
+          test ! -e "$SELF"
+          test "$(git hash-object "$ART")" = "$NEW_BLOB"
+          grep -F "$NEW_BLOB" "$VER"
+
+          changed="$(git status --porcelain | sed 's/^...//' | sort)"
+          expected="$(printf '%s\n' "$SELF" "$TMP" "$VER" "$ART" | sort)"
+          test "$changed" = "$expected"
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A "$ART" "$VER" "$TMP" "$SELF"
+          git commit -m 'fix: normalize TSK-0235 verification source'
+          COMMIT="$(git rev-parse HEAD)"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$COMMIT"
+          test "$(git rev-parse "origin/main:$ART")" = "$NEW_BLOB"
+          test -z "$(git show --format= --name-only "$COMMIT" | grep -F "$TMP" || true)" || true
+          git show "origin/main:$VER" | grep -F "$NEW_BLOB"
+          echo "TSK0235_REPAIR_COMMIT=$COMMIT"
+          echo "TSK0235_REPAIR_ARTIFACT_BLOB=$NEW_BLOB"
+          echo 'TSK0235_REPAIR_REMOTE_READBACK=PASS'
