@@ -106,7 +106,7 @@ def verify_and_stage_state() -> None:
         'Unknown fields cause rejection/quarantine and privacy review, not silent storage.',
         '`configured_parent_confirmed` is never counted as `protected_verified`.',
         'Parent/configuration confirmation does not create this event and cannot be represented as a positive result.',
-        'No browsing/query/activity history',
+        'DNS questions, requested/visited domains, URLs, page contents, browsing history, top domains, search terms or child activity;',
         'Missing data and uncertainty are shown beside the metric; they are never silently imputed as success.',
         'Operational logs/traces are governed separately and must not be treated as a backdoor analytics store.',
     )
