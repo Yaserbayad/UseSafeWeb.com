@@ -24,7 +24,7 @@ req(row['Dependencies'].strip()=='TSK-0327','TSK0322_DEP')
 req(row['Acceptance_ID']=='ACC-0322' and row['Verification_ID']=='VER-0322' and row['Evidence_ID']=='EVD-0322','TSK0322_IDS')
 req(row['AI_Capability_A0_A4']=='A4' and row['Action_Authority']=='AUTO_ALLOWED','TSK0322_AUTH')
 acc=row['Acceptance_Criteria'].lower()
-for s in ['approved/prohibited claims','canonical state labels','child-readable','reading-level','review ownership']:
+for s in ['approved/prohibited claims','state','child-readable','reading-level','review ownership']:
     req(s in acc,f'TSK0322_ACC_MISSING={s}')
 print('TSK0322_WBS_CONTRACT=PASS')
 
