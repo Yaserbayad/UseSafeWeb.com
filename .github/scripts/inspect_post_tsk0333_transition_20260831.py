@@ -58,3 +58,12 @@ for p in ROOT.rglob('*'):
     if p.is_file() and ('TSK_0052' in p.name or 'TSK-0052' in p.as_posix()) and not p.as_posix().startswith('.github/'):
         found.append(p.as_posix())
 print('TSK0052_EXISTING_ARTIFACTS='+';'.join(sorted(found)) if found else 'TSK0052_EXISTING_ARTIFACTS=NONE')
+
+# Authority peers for gate-decision tasks, used only to reconcile stale metadata.
+print('GATE_AUTHORITY_PEERS_BEGIN')
+for tid,r in sorted(rows.items()):
+    gate=(r.get('Gate_Reference') or '').strip()
+    title=(r.get('Task_Name') or r.get('Title') or '').strip()
+    if gate in {'LG-06','LG-07','LG-08','LG-09','LG-10','LG-11','LG-12','LG-13','LG-14','LG-15'} or re.search(r'\bLG-(?:0[6-9]|1[0-5])\b', title):
+        print('|'.join([tid,gate,title,r.get('AI_Capability_A0_A4') or '',r.get('Action_Authority') or '',r.get('Plan_Status') or '',r.get('Execution_State') or '']))
+print('GATE_AUTHORITY_PEERS_END')
