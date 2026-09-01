@@ -1,0 +1,1 @@
+Read-only canonical HIGH L4 AUTO_ALLOWED frontier audit trigger.
