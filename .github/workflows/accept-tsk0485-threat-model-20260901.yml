@@ -1,0 +1,94 @@
+name: Accept TSK-0485 threat and abuse model
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/accept-tsk0485-threat-model-20260901.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  verify-accept:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 4
+
+      - name: Verify TSK-0485 acceptance and stage runtime state
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse HEAD:Plans/Master/WBS/master-wbs.csv)" = "b27a0c5df2f5636d8ed71051e9e26a68959a2616"
+          test "$(git rev-parse HEAD:TSK_0485_END_TO_END_THREAT_ABUSE_MODEL_2026-09-01.md)" = "373ac62ba1f244328e7d8e52ae6648d72e5a5ed7"
+          test "$(git rev-parse HEAD:.github/scripts/accept_tsk0485_20260901.py)" = "59c9993b4ac9a33c509c39bc78ba2e2d8ce2208a"
+
+          python3 .github/scripts/accept_tsk0485_20260901.py
+          python3 Plans/Master/Tools/validate_master_plan.py
+
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          p = Path('CURRENT_STATE.md')
+          text = p.read_text(encoding='utf-8')
+          heading = '## TSK-0485 current accepted stable state — 2026-09-01 — POST-CR-0008'
+          assert heading not in text
+          lines = [
+              heading,
+              '',
+              '`TSK-0485 — Perform end-to-end threat and abuse modeling`: **PASS** under current `ACC-0485 / VER-0485 / EVD-0485`, current `TSK-0231` dependency proof, and CR-0008 authority.',
+              '',
+              '- Action authority: **A3 / AUTO_ALLOWED**.',
+              '- Artifact: `TSK_0485_END_TO_END_THREAT_ABUSE_MODEL_2026-09-01.md`, version `1.0.0`, blob `373ac62ba1f244328e7d8e52ae6648d72e5a5ed7`, publication commit `91ee43e8d9a376bb059560b25534fe570615fe5c`.',
+              '- Accepted scope: end-to-end threat/abuse design spans the complete accountless web/setup/protection path plus the active optional parent account/session, minimum parent/device ownership, lightweight dashboard/device-management, server-side AdGuard boundary, encrypted DNS, providers/datastore, operations, CI/CD/supply chain and deletion/recovery surfaces.',
+              '- Threat catalogue contains **30** explicit paths: **13 Critical** and **17 High**. Every row has a prevention plan, privacy-safe detection plan, recovery plan and release-blocking verification. A listed design control remains `CONTROL PLAN DEFINED; IMPLEMENTATION/RETEST REQUIRED` unless separately proven by current downstream evidence.',
+              '- Critical/high release rule: no exploitable active-scope Critical/High path may be released merely because the model exists; applicable implementation plus blocking negative/security/recovery verification must pass under `INT-0015`.',
+              '- Required ACC-0485 categories are explicit: XSS, CSRF, session theft/fixation/replay, account takeover, IDOR/cross-parent access, ClientID/ownership confusion, auth/provider/datastore failures, admin/API abuse, DNS amplification/resource/cost abuse, dependency/supply-chain compromise, CI/CD/secrets compromise, deletion/recovery failure and privacy leakage.',
+              '- Additional current attack paths cover J0/J1 enumeration/replay/tampering, false/stale `protected_verified`, browser/VPN/Private Relay resolver bypass, input injection, endpoint abuse, AI/root authority confusion, stale guidance, concurrency/idempotency, backup/restore, domain/TLS compromise, clickjacking and unsafe error disclosure.',
+              '- Security invariants remain: parent authentication/ownership and `ClientID` never substitute for object authorization or technical protection verification; only fresh qualifying technical evidence can produce `protected_verified`; AdGuard administration remains non-public/server-side; technical privilege never expands WBS Action Authority.',
+              '- Privacy invariant remains: persistent identifiable DNS query/file logging is OFF, identifiable per-client statistics remain OFF/excluded, no browsing/query/activity-history product store is introduced, and anonymous J0/J1 state is not automatically linked to account state.',
+              '- Current downstream gaps remain visible: TSK-0356 auth/session architecture, TSK-0232 ownership boundary and TSK-0410 AdGuard adapter are not yet PASS; production observability/runbooks, concrete datastore/backup behavior and `INT-0007` runtime/data-flow reality still require later direct evidence; `RSK-0001` remains OPEN and TSK-0240 remains planning-DEFERRED.',
+              f'- Acceptance workflow run `{os.environ["RUN_ID"]}` verified the exact WBS/dependency/ACC/VER/EVD contract, immutable artifact and verifier blobs, controlling requirement/constraint/risk/interface records, all 30 threat rows, all 10 trust boundaries, required threat categories, High/Critical prevention/detection/recovery/blocking-test completeness, privacy/truth/authority invariants, downstream gaps and non-inference; the full modular validator then passed before this runtime mutation.',
+              '- **Non-inference:** TSK-0485 PASS is threat-model design acceptance only. It does not prove controls are implemented/deployed, penetration/vulnerability testing is clean, `RSK-0007` or `RSK-0001` is closed, provider/datastore/AdGuard runtime behavior is verified, production monitoring is active, real-participant processing/public launch is authorized, or LG-07/LG-08/LG-09/downstream tasks are PASS.',
+          ]
+          p.write_text(text.rstrip() + '\n\n' + '\n'.join(lines) + '\n', encoding='utf-8')
+          PY
+
+          git diff --check
+          test "$(git status --porcelain | sed 's/^...//')" = 'CURRENT_STATE.md'
+          echo 'ACC_0485=PASS'
+          echo 'VER_0485=PASS'
+          echo 'EVD_0485=PASS'
+          echo 'TSK0485_STATE_CANDIDATE=PASS'
+
+      - name: Persist and independently read back TSK-0485 state
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: accept TSK-0485 threat and abuse model'
+          C="$(git rev-parse HEAD)"
+          B="$(git rev-parse "$C:CURRENT_STATE.md")"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$C"
+          test "$(git rev-parse "origin/main:CURRENT_STATE.md")" = "$B"
+          git show "origin/main:CURRENT_STATE.md" | grep -F '## TSK-0485 current accepted stable state — 2026-09-01 — POST-CR-0008'
+          echo "TSK0485_STATE_COMMIT=$C"
+          echo "TSK0485_STATE_BLOB=$B"
+          echo 'TSK0485_ACCEPTANCE_REMOTE_READBACK=PASS'
