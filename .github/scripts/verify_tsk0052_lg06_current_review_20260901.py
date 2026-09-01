@@ -17,7 +17,6 @@ def row_with_prefix(path: str, prefix: str) -> str:
     assert len(matches)==1, (path,prefix,len(matches))
     return matches[0]
 
-# Canonical task and gate authority.
 wbs='Plans/Master/WBS/master-wbs.csv'
 assert blob(wbs)=='b57104a71ab814d0f67e7fb8b0fd388d1f6aacfa', blob(wbs)
 with open(wbs, newline='', encoding='utf-8-sig') as f:
@@ -25,7 +24,7 @@ with open(wbs, newline='', encoding='utf-8-sig') as f:
 rows52=[r for r in rows if r.get('Task_ID')=='TSK-0052']
 assert len(rows52)==1
 r=rows52[0]
-assert r.get('AI_Capability')=='A4', r.get('AI_Capability')
+assert r.get('AI_Capability_A0_A4')=='A4', r.get('AI_Capability_A0_A4')
 assert r.get('Action_Authority')=='AUTO_ALLOWED', r.get('Action_Authority')
 deps={x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()}
 assert deps=={'TSK-0043','TSK-0321','TSK-0309','TSK-0628'}, deps
@@ -48,7 +47,6 @@ for phrase in ['optional parent account','complete core safety setup/protection 
 for phrase in ['AI may accept project-defined material residual risk','LG-07 is evidence-driven AUTO','higher actual legal/safety/security/platform/technical reality always controls']:
     assert phrase in d54, phrase
 
-# Runtime must show current direct predecessors and supporting changed-scope evidence.
 state=read('CURRENT_STATE.md')
 for heading in [
     '## TSK-0140 current accepted stable state — 2026-08-31 — POST-CR-0007',
@@ -72,7 +70,6 @@ for heading in [
 assert '`TSK-0052 / LG-06` remains **non-PASS**' in state
 assert '## TSK-0052 / LG-06 current accepted stable state' not in state
 
-# Current exact product/browser sources and current final accessibility evidence.
 expected={
     'prototype/TSK-0333/index.html':'934dc19d00cc9dd32e1ebc20c604373d153d4013',
     'prototype/TSK-0333/model.mjs':'fc25e4b1facc303840311e8ce186612eb8799212',
@@ -84,7 +81,6 @@ expected={
 for p,sha in expected.items():
     assert blob(p)==sha,(p,blob(p),sha)
 
-# Still-valid unchanged L4 brand/content/localization authorities are pinned and bridged by current dual-mode consumers.
 unchanged={
     'brand/identity/TSK-0301/README.md':'b8ffd2ed234465a238558a7b94e56274de49696a',
     'brand/system/TSK-0300/tokens.css':'cd7d9a7cd5109e1ff0baa76532495dfd7a27a70f',
@@ -102,7 +98,6 @@ assert '../../brand/system/TSK-0300/tokens.css' in index
 assert '../../brand/system/TSK-0300/components.css' in index
 assert 'SafeWeb' in index and '>UseSafeWeb<' not in index
 
-# Current review must explicitly close every LG-06 category without erasing later risks/obligations.
 review=read('TSK_0052_LG06_CURRENT_DUAL_MODE_FREEZE_REVIEW_2026-09-01.md')
 for phrase in [
     'CANDIDATE PASS — independent verification and stable-state reconciliation required before PASS',
@@ -127,7 +122,6 @@ for phrase in [
 assert review.count('**Satisfied**')>=12
 assert 'prior 2026-08-30 LG-06 readiness conclusion is superseded' in review
 
-# Risk register must preserve the named downstream/open risks rather than silently close them.
 risks=read('Plans/Master/Registers/RISKS.md')
 for prefix in ['| RSK-0002 |','| RSK-0005 |','| RSK-0015 |','| RSK-0017 |','| RSK-0022 |']:
     assert prefix in risks, prefix
