@@ -75,13 +75,12 @@ def main() -> None:
         'Unsupported OS/version',
         'User intentionally removes the approved UseSafeWeb DNS mechanism',
         'https://dns10.quad9.net/dns-query` with ECS disabled',
-        'does **not** prove the future UseSafeWeb implementation or any physical device/runtime test result',
+        'do **not** prove the future UseSafeWeb implementation or any physical device/runtime test result',
         'PASS candidate pending independent deterministic verification',
     )
     for marker in required:
         assert marker in artifact, marker
 
-    # Parse the frozen matrix and prove every data row has explicit status, verification and recovery semantics.
     matrix = artifact.split('## 3. Frozen support and bypass matrix', 1)[1].split('## 4. Deterministic state-transition rules', 1)[0]
     table_rows = [line for line in matrix.splitlines() if line.startswith('| ')]
     assert table_rows and table_rows[0].startswith('| Combination / condition |')
@@ -101,7 +100,6 @@ def main() -> None:
             'not_covered', 'uncertain_error', 'removed', 'recompute state', 'inherit applicable verified state'
         )), cells
 
-    # Explicit negative truth-state checks: configuration/confirmation never becomes protected verification.
     negative_markers = (
         'none may produce `protected_verified`',
         'Profile/configuration presence is not verification.',
@@ -114,7 +112,6 @@ def main() -> None:
     for marker in negative_markers:
         assert marker in artifact, marker
 
-    # Required current official source families are present in the accepted contract.
     source_markers = (
         'support.google.com/android/answer/9654714',
         'support.google.com/chrome/answer/10468685',
@@ -127,7 +124,6 @@ def main() -> None:
     for marker in source_markers:
         assert marker in artifact, marker
 
-    # Privacy/secret safety. Check the contract itself; do not print matched values.
     for marker in ('DNS questions', 'domains', 'URLs', 'browsing history', 'child activity', 'persistent identity linkage'):
         assert marker in artifact
     for pattern in (
