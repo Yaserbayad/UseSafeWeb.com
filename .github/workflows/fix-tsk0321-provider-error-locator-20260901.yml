@@ -1,0 +1,37 @@
+name: Fix TSK-0321 provider-error audit locator
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-tsk0321-provider-error-locator-20260901.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply verifier-only strict-locator correction
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          before_product="$(git rev-parse HEAD:prototype/TSK-0333/index.html):$(git rev-parse HEAD:prototype/TSK-0333/model.mjs):$(git rev-parse HEAD:prototype/TSK-0333/app.mjs):$(git rev-parse HEAD:prototype/TSK-0333/prototype.css)"
+          python3 .github/scripts/fix_tsk0321_provider_error_locator_20260901.py
+          git diff --check
+          changed="$(git diff --name-only | sort)"
+          expected="$(printf '%s\n%s\n' '.github/scripts/verify_tsk0321_post_cr0007_accessibility_browser_20260901.mjs' '.github/workflows/verify-tsk0321-post-cr0007-accessibility-20260901.yml' | sort)"
+          test "$changed" = "$expected"
+          after_product="$(git rev-parse HEAD:prototype/TSK-0333/index.html):$(git rev-parse HEAD:prototype/TSK-0333/model.mjs):$(git rev-parse HEAD:prototype/TSK-0333/app.mjs):$(git rev-parse HEAD:prototype/TSK-0333/prototype.css)"
+          test "$before_product" = "$after_product"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .github/scripts/verify_tsk0321_post_cr0007_accessibility_browser_20260901.mjs .github/workflows/verify-tsk0321-post-cr0007-accessibility-20260901.yml
+          git commit -m 'test: narrow TSK-0321 provider-error fallback locator'
+          git push origin HEAD:main
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$(git rev-parse HEAD)"
+          echo "TSK0321_HARNESS_BLOB=$(git rev-parse HEAD:.github/scripts/verify_tsk0321_post_cr0007_accessibility_browser_20260901.mjs)"
+          echo 'TSK0321_PRODUCT_SOURCE_UNCHANGED=PASS'
