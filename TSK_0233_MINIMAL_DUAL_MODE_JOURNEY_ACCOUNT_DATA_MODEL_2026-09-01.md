@@ -1,6 +1,6 @@
 # TSK-0233 — Minimal Dual-Mode Journey/Account Data Model, Storage, Retention and Deletion Flows
 
-**Version:** 1.0.0  
+**Version:** 1.0.1  
 **Date:** 2026-09-01  
 **Lifecycle:** L5 — Architecture, Technical Design & Delivery Readiness  
 **Task:** TSK-0233 — Design minimal dual-mode journey/account data model, storage, retention, and deletion flows  
@@ -118,16 +118,16 @@ The persistent product store is logical at this task. TSK-0233 defines its minim
 | `platform_family` | REQ-0037; TSK-0230 D16 | Route supported device-management/setup behavior; same conditional status | Parent-owner scoped app/server | While relation active | Delete with device/account | Conditional A-domain backup only |
 | `lifecycle_status` | REQ-0037; TSK-0230 D16 | Coordinate active/revoking/deleting/reconciling state; same conditional status | Server; bounded parent-facing projection | Only current lifecycle state; no history ledger | Delete after final removal/reconciliation | Conditional only while primary record is eligible |
 | `adguard_client_id` | CON-0007; CON-0008; TSK-0230 D17 | Server-side linkage needed to provision/revoke intended DNS client; same conditional status | **Server-side only**; never authorization; not exposed as customer/admin credential | Active configured-device lifecycle only | Revoke/remove/reconcile then delete mapping on device/account removal | Conditional A-domain backup only if required for recoverable current configuration; no query data |
-| `settings_profile_id` | REQ-0041; TSK-0230 D16 | Identify approved curated settings profile, not arbitrary AdGuard policy | Server + parent-owner bounded UI | Current active device relation | Delete with device/account | Conditional A-domain backup only |
-| `settings_version` | REQ-0041; TSK-0230 D16 | Reproduce current curated-setting contract | Server + parent-owner bounded UI | Current active device relation | Delete with device/account | Conditional A-domain backup only |
+| `settings_profile_id` | REQ-0041; TSK-0230 D16 | Identify approved curated settings profile, not arbitrary AdGuard policy; `CONTRACT_CONDITIONAL` or `LI_CONDITIONAL` subject to current basis assessment | Server + parent-owner bounded UI | Current active device relation | Delete with device/account | Conditional A-domain backup only |
+| `settings_version` | REQ-0041; TSK-0230 D16 | Reproduce current curated-setting contract; `CONTRACT_CONDITIONAL` or `LI_CONDITIONAL` subject to current basis assessment | Server + parent-owner bounded UI | Current active device relation | Delete with device/account | Conditional A-domain backup only |
 | `protection_state` | REQ-0030; TSK-0230 D18 | Cache only the latest parent-facing Protection Map state for dashboard continuity; same conditional status | Parent-owner scoped reads; server writes/evaluation | **Latest current record only** while device active; freshness rules must invalidate stale positive state | Delete with device/account; expiry/freshness removes current positive claim | Conditional A-domain backup only; restore never makes state technically verified without fresh evidence |
 | `protection_reason_code` | REQ-0030; TSK-0230 D18 | Explain current bounded truth state without DNS history; same conditional status | Parent-owner scoped | Latest current record only | Delete with device/account/current state | Conditional A-domain backup only |
-| `verifier_version` | REQ-0030; TSK-0230 D18 | Trace which current verifier contract produced a technical result | Parent-owner bounded UI/server | Latest current record only | Delete with device/account/current state | Conditional A-domain backup only |
-| `evaluated_at` | REQ-0030; TSK-0230 D18 | Enforce freshness; not behavioral timeline | Parent-owner scoped | Latest current record only | Delete with device/account/current state | Conditional A-domain backup only |
-| `evidence_fresh_until` | REQ-0030; TSK-0230 D18 | Prevent stale positive protection claim | Server evaluation + parent-owner display | Latest current record only | Delete with device/account/current state | Conditional A-domain backup only; restore must re-evaluate |
-| `row_version` | REQ-0019; reliability necessity | Concurrency/idempotency for device mutations | Server only | While device exists | Delete with device | Conditional only while primary record is eligible |
-| `created_at` | REQ-0019; lifecycle necessity | Minimum lifecycle ordering/reconciliation | Server only | While device exists | Delete with device | Conditional only while primary record is eligible |
-| `updated_at` | REQ-0019; lifecycle necessity | Minimum last-current mutation timestamp; not activity history | Server only | Current device record only | Delete with device | Conditional only while primary record is eligible |
+| `verifier_version` | REQ-0030; TSK-0230 D18 | Trace which current verifier contract produced a technical result; same conditional status | Parent-owner scoped | Latest current record only | Delete with device/account/current state | Conditional A-domain backup only |
+| `evaluated_at` | REQ-0030; TSK-0230 D18 | Enforce freshness; not behavioral timeline; same conditional status | Parent-owner scoped | Latest current record only | Delete with device/account/current state | Conditional A-domain backup only |
+| `evidence_fresh_until` | REQ-0030; TSK-0230 D18 | Prevent stale positive protection claim; same conditional status | Server evaluation + parent-owner display | Latest current record only | Delete with device/account/current state | Conditional A-domain backup only; restore must re-evaluate |
+| `row_version` | REQ-0019; reliability necessity | Concurrency/idempotency for device mutations; same conditional status | Server only | While device exists | Delete with device | Conditional only while primary record is eligible |
+| `created_at` | REQ-0019; lifecycle necessity | Minimum lifecycle ordering/reconciliation; same conditional status | Server only | While device exists | Delete with device | Conditional only while primary record is eligible |
+| `updated_at` | REQ-0019; lifecycle necessity | Minimum last-current mutation timestamp; not activity history; same conditional status | Server only | Current device record only | Delete with device | Conditional only while primary record is eligible |
 
 There is **no** `DeviceHistory`, `DnsQuery`, `Domain`, `VisitedUrl`, `TopDomain`, `ChildActivity`, `BrowsingEvent`, `JourneyToAccount`, `ClientHistory`, unrestricted raw AdGuard configuration, or child-profile table.
 
