@@ -81,12 +81,14 @@ def main() -> None:
     for marker in required:
         assert marker in artifact, marker
 
-    # Parse the frozen matrix and prove every row has explicit status, verification and recovery semantics.
+    # Parse the frozen matrix and prove every data row has explicit status, verification and recovery semantics.
     matrix = artifact.split('## 3. Frozen support and bypass matrix', 1)[1].split('## 4. Deterministic state-transition rules', 1)[0]
-    table_rows = [line for line in matrix.splitlines() if line.startswith('| ')][2:]
-    assert len(table_rows) >= 14, len(table_rows)
+    table_rows = [line for line in matrix.splitlines() if line.startswith('| ')]
+    assert table_rows and table_rows[0].startswith('| Combination / condition |')
+    data_rows = table_rows[1:]
+    assert len(data_rows) == 14, len(data_rows)
     allowed_statuses = {'SUPPORTED-L4', 'CONDITIONAL', 'NOT-COVERED', 'NOT-COVERED or UNCERTAIN/ERROR', 'SUPPORTED removal path'}
-    for line in table_rows:
+    for line in data_rows:
         cells = [c.strip() for c in line.strip('|').split('|')]
         assert len(cells) == 6, cells
         status = cells[1]
