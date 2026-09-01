@@ -1529,3 +1529,15 @@ Revalidate TSK-0323 and TSK-0324 against this current language authority before 
 - The current update only refreshes source/current-scope compatibility. Accountless core remains mandatory; optional account/dashboard continuity does not alter technical verification truth or physical DNS state.
 - Historical 2026-08-29 TSK-0323 evidence remains provenance only and does not outrank this current post-CR-0007 acceptance.
 - Non-inference fence: no public publication, production, payment, market activation, human-validation or launch authority is implied by this PASS.
+
+## TSK-0324 current accepted stable state — 2026-09-01 — POST-CR-0007
+
+- Runtime state: **PASS**.
+- Current WBS contract: L4 / MEDIUM / A3 / `AUTO_ALLOWED`; sole dependency `TSK-0322`; `ACC-0324 / VER-0324 / EVD-0324`.
+- Current normative UI component contract: `prototype/TSK-0324/UI_COMPONENT_RULES.md` version `1.1.0-post-cr0007`, blob `8747acdf6e0e98f91e8327b7225bd954956aaef1`.
+- Current machine projection: `prototype/TSK-0324/COMPONENT_CONTRACT.json`, blob `55bc1d643b6b10ed1dbafce8c0ea3dc7c69f168d`.
+- Current acceptance evidence: `TSK_0324_POST_CR0007_DUAL_MODE_UI_COMPONENT_ACCEPTANCE_EVIDENCE_2026-09-01.md`, blob `dcaec6ee9abb946c93e2707e2ca3e135bb44aeb6`.
+- Deterministic verification: run/job `33484058318 / 99779915675` — SUCCESS; current WBS/dependency, preserved base accessibility contract, dual-mode component rules, contrast/source classification and TSK-0322 alignment all PASS.
+- Shared TSK-0300 token/component sources remain unchanged; current change removes only the stale account/dashboard-navigation prohibition and adds bounded optional-account/session/dashboard/lifecycle accessibility rules.
+- Historical 2026-08-29 TSK-0324 evidence remains provenance only and does not outrank this current post-CR-0007 acceptance.
+- Non-inference fence: this PASS does not self-certify the HUMAN_ONLY TSK-0321 integrated accessibility review or authorize publication, production, participant processing, payment, market activation or launch.
