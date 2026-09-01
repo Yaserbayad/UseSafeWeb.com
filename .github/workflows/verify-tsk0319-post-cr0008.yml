@@ -15,58 +15,38 @@ jobs:
       group: usesafeweb-tsk0319-one-shot-recovery
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out current main
+        uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
           persist-credentials: true
-      - name: Apply only the already independently verified runtime result
+
+      - name: Run deterministic guarded reconciler
         shell: bash
         run: |
           set -euo pipefail
-          if grep -Eq '^## TSK-0319 .*current accepted stable state' CURRENT_STATE.md; then
-            echo 'TSK0319_STATE_ALREADY_APPLIED=PASS'; exit 0
+          python3 .github/scripts/reconcile_tsk0319_state.py
+          changed="$(git diff --name-only)"
+          if [ -n "$changed" ] && [ "$changed" != 'CURRENT_STATE.md' ]; then
+            echo "Unexpected changed path(s): $changed" >&2
+            exit 1
           fi
-          test "$(git hash-object CURRENT_STATE.md)" = "c9d4735e18752284cc61c4b6a4ad771c752f9685"
-          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "b27a0c5df2f5636d8ed71051e9e26a68959a2616"
-          test "$(git hash-object Plans/Master/RELATIONSHIP_INDEX.yaml)" = "c108d2c162bcea2ee4cc01def46d0487a9501032"
-          test "$(git hash-object TSK_0319_POST_CR0008_AUTOMATED_VERIFICATION_TROUBLESHOOTING_RECOVERY_HELP_2026-09-01.md)" = "dec2b556745c635656fa0f18945c63c47120f6ff"
-          test "$(git hash-object TSK_0319_POST_CR0008_INDEPENDENT_VERIFICATION_EVIDENCE_2026-09-01.md)" = "8a797f8257247bc3c557af10fe1d16b37c831077"
-          grep -Fq '## TSK-0315 current accepted stable state' CURRENT_STATE.md
-          grep -Fq '## TSK-0320 current accepted stable state' CURRENT_STATE.md
-          grep -Fq '## TSK-0628 current accepted stable state' CURRENT_STATE.md
-          grep -Fq '## TSK-0485 current accepted stable state' CURRENT_STATE.md
-          grep -Fq '**Result:** PASS' TSK_0319_POST_CR0008_INDEPENDENT_VERIFICATION_EVIDENCE_2026-09-01.md
-          python3 - <<'PY'
-          from pathlib import Path
-          from datetime import datetime, timezone
-          p=Path('CURRENT_STATE.md'); t=p.read_text(encoding='utf-8'); lines=t.splitlines()
-          u=[i for i,x in enumerate(lines) if x.startswith('**Updated:**')]
-          if len(u)!=1: raise SystemExit('unexpected Updated count')
-          lines[u[0]]='**Updated:** '+datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
-          t='\n'.join(lines).rstrip()+'''\n\n## TSK-0319 current accepted stable state — 2026-09-01 — POST-CR-0008 REQUALIFICATION
-
-`TSK-0319 — Design automated verification, issue-specific troubleshooting, safe reset/reinstall/remove, and point-of-need help`: **PASS** under current `ACC-0319 / VER-0319 / EVD-0319`, `DEC-0053/CR-0006`, `DEC-0054/CR-0007`, and `DEC-0055/CR-0008`.
-
-- WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L4 / HIGH / A3 / `AUTO_ALLOWED` / `PLANNED`; hard dependencies `TSK-0315; TSK-0320`, both strict current PASS.
-- Current artifact `TSK_0319_POST_CR0008_AUTOMATED_VERIFICATION_TROUBLESHOOTING_RECOVERY_HELP_2026-09-01.md`, blob `dec2b556745c635656fa0f18945c63c47120f6ff`, commit `e323852452a4dd7a9163d98b00aca6509202fcb2`.
-- Independent evidence `TSK_0319_POST_CR0008_INDEPENDENT_VERIFICATION_EVIDENCE_2026-09-01.md`, blob `8a797f8257247bc3c557af10fe1d16b37c831077`, commit `050374e470e58d7fbd30bfd85bf60eef32197da4`; run/job `33567214382 / 100053030433`: **SUCCESS**.
-- Verifier proved current WBS/ACC/VER/EVD, predecessor PASS, graph `TSK-0319 -> TSK-0315/TSK-0320`, and downstream `TSK-0628 -> TSK-0319/TSK-0331`.
-- ACC-0319 is satisfied for both accountless and optional-account/provider/session/dashboard/device-lifecycle failure, verification, troubleshooting, recovery/removal and point-of-need-help paths, with privacy-safe checks, changed-evidence retries and no blind replay of ambiguous consequential actions.
-- The pre-CR-0006 accountless-only artifact is historical only for unchanged facts.
-- This repairs the missing direct-predecessor proof beneath current `TSK-0628`; `TSK-0331` is already current PASS. No new substantive TSK-0628/LG-06 acceptance is invented.
-- **Non-inference:** L4 design PASS only; no implementation, provider, production, legal/privacy, real-user, build, release or launch PASS is inferred.
-
-### Queue status after post-CR-0008 TSK-0319 requalification
-
-Recompute HIGH L4/AUTO_ALLOWED eligibility from canonical WBS/graph, strict current PASS evidence, CR-0006 semantic validity, gates and governing priority rules; never by task number.
-'''
-          p.write_text(t,encoding='utf-8')
-          PY
-          git diff --check
+          git diff --check -- CURRENT_STATE.md
           grep -Fq '## TSK-0485 current accepted stable state' CURRENT_STATE.md
           grep -Fq '## TSK-0319 current accepted stable state — 2026-09-01 — POST-CR-0008 REQUALIFICATION' CURRENT_STATE.md
-          git config user.name 'github-actions[bot]'; git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Persist reconciled runtime state
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- CURRENT_STATE.md; then
+            echo 'CURRENT_STATE_ALREADY_RECONCILED=PASS'
+            exit 0
+          fi
+          test "$(git diff --name-only)" = 'CURRENT_STATE.md'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add CURRENT_STATE.md
           git commit -m 'state: accept TSK-0319 post-CR-0008 requalification'
-          git push
+          git push origin HEAD:main
