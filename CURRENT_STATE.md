@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-01T23:03:55Z
+**Updated:** 2026-09-01T23:28:44Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2095,4 +2095,25 @@ Recompute the current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-
 ### Queue status after post-CR-0008 TSK-0319 requalification
 
 Recompute HIGH L4/AUTO_ALLOWED eligibility from canonical WBS/graph, strict current PASS evidence, CR-0006 semantic validity, gates, and governing priority rules; never by task number.
+
+## TSK-0318 current accepted stable state — 2026-09-01 — POST-CR-0008 REQUALIFICATION
+
+`TSK-0318 — Design the public website IA and product/setup IA as distinct but connected systems`: **PASS** under current `ACC-0318 / VER-0318 / EVD-0318`, `DEC-0053/CR-0006`, `DEC-0054/CR-0007`, and `DEC-0055/CR-0008`.
+
+- WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L4 / HIGH / A3 / `AUTO_ALLOWED` / `PLANNED`; hard dependency `TSK-0315`, strict current PASS under its post-CR-0007 dual-mode service blueprint.
+- Current artifact `TSK_0318_POST_CR0008_DUAL_MODE_PUBLIC_PRODUCT_SETUP_IA_2026-09-01.md`, version `2.0.0-post-cr0008`, blob `975e2e7a8e85e9408e0bbbc2be226f3fdd012db3`, publication commit `31cbd3af8175dd8c82d9e58828b6cf0ee4a1f168`.
+- Durable acceptance evidence `TSK_0318_POST_CR0008_ACCEPTANCE_EVIDENCE_2026-09-01.md`, blob `dccefe56070dc7e44d07fadee5307531e1140dba`, publication commit `c69b81415a8f39f3b876e276129f9498c0af0573`.
+- Independent read-only verification run/job `33571019275 / 100064770925`: **SUCCESS** on GitHub-hosted Ubuntu 24.04 with `contents: read`. WBS contract, current predecessor, graph references, dual-mode scope, 38 complete page/screen IA rows, SEO/privacy/accessibility, lifecycle-operation separation, scope negatives and successor-impact assertions all PASS.
+- Current IA has 9 public surfaces, 14 accountless operational setup surfaces and 15 optional parent-account/dashboard/device-lifecycle surfaces. Each has one purpose, entry, exit/next action, content owner, explicit index intent, privacy requirement and accessibility requirement.
+- The complete core path remains usable without login. Optional sign-in/session/dashboard/device management is represented without coercion; auth cancellation/failure/provider outage preserves an accountless-capable continuation.
+- J0/J1 anonymous state remains separate from persistent account/device state. No automatic anonymous-to-account linkage/promotion, browsing/query/activity history, child account/profile, raw AdGuard administration/query-log surface, payment gate before core value, or overall safety-score/all-clear route is authorized.
+- Logout, revoke/unlink, dashboard-device-record deletion, account deletion, anonymous-state reset/deletion and physical DNS removal are distinct IA operations and cannot claim one another completed.
+- Historical TSK-0318 evidence remains preserved for compatible facts only; its explicit pre-CR-0006 Login/Dashboard/Account exclusions and no-account/session-navigation clause are superseded for current acceptance.
+- TSK-0229 and TSK-0628 remain current PASS. TSK-0299 and TSK-0316 remain separately reopened current-scope requalification candidates; this PASS does not silently reclassify them.
+- TSK-0310 retains its accepted accountless public-to-setup core evidence for its own current ACC; this TSK-0318 PASS does not claim the historical prototype implements the optional account/dashboard branch. TSK-0311 retains its own localization/externalization acceptance boundary.
+- **Non-inference:** L4 IA design PASS only; no LG-06/gate, architecture, authentication-provider, persistent-schema, implementation, legal/privacy completion, participant, payment, production, publication, market or launch PASS is inferred.
+
+### Queue status after post-CR-0008 TSK-0318 requalification
+
+Recompute the current executable frontier from canonical WBS/graph, strict current PASS evidence, CR-0006/CR-0008 artifact validity, gates, dependency-chain impact, customer value, priority and WBS order. Preserve current TSK-0485 and TSK-0319 accepted states unchanged.
 
