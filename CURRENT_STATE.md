@@ -1956,3 +1956,19 @@ Recompute the current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-
 - Current Version-1 scope remains complete accountless core plus optional parent account/lightweight dashboard/device management, with no browsing/query/activity history, child surveillance profile, persistent personal DNS allowlist or unrestricted DNS administration created by this task.
 - Full modular validator passed before runtime mutation; WBS, graph, manifest, planning modules, AdGuard, Quad9 dns10/ECS policy and CR-0008 planning baseline are unchanged.
 - **Non-inference:** no LG-07, implementation/build, release, production activation, market activation, launch, legal-compliance completion or real-user validation becomes PASS from this requirements requalification.
+
+## TSK-0042 current accepted stable state — 2026-09-01 — POST-CR-0008
+
+`TSK-0042 — Specify user support, exception, recovery, and removal requirements`: **PASS** under current `ACC-0042 / VER-0042 / EVD-0042`, current `TSK-0041` + `TSK-0146` dependency proof, and CR-0008 authority.
+
+- Action authority: **A3 / AUTO_ALLOWED**.
+- Artifact: `TSK_0042_USER_SUPPORT_EXCEPTION_RECOVERY_REMOVAL_REQUIREMENTS_2026-09-01.md`, version `1.0.0-post-CR-0008`, blob `95b2269059e991284e3268f7d2730747b24603a9`, publication commit `e2802e3fff4e73ab2be890ad0f7e719bf36635bc`.
+- Verification source commit: `ff6c0d812cb3b8362879f47abe3b699fbc3d1197`; GitHub Actions run/attempt `33546285507 / 1`.
+- Acceptance proof: exact current WBS/dependencies/ACC/VER/EVD/A3/AUTO_ALLOWED and REQ-0001/0002, CON-0020/0021, RSK-0044, INT-0001/0002; accountless journey recovery; optional account/session/revocation/deletion/recovery; device-configuration lifecycle; dashboard/device ownership; AdGuard/DNS integration; false-positive/unsupported remedies; escalation; data-minimised diagnostics; response expectations; deletion/removal/recovery; support-burden metrics; current six-state truth semantics; TSK-0498 schema-only metrics; secret/privacy guards; and full modular-plan validation all passed before runtime mutation.
+- Support is self-service first/no-routine-human-support for ordinary product paths, with exceptional human escalation only where a valid receiving authority/process exists; no staffing or response SLA is fabricated.
+- False positives require causal confirmation, narrow reversible correction and regression; this task creates no persistent personal DNS allowlist or unrestricted/raw AdGuard administration.
+- Anonymous journey deletion, support-case deletion, account deletion, saved-device deletion, dashboard unlink/revoke, and physical DNS removal remain distinct evidence-backed operations. Account/dashboard state cannot create technical DNS protection or removal evidence.
+- Support-burden metrics use only the current TSK-0498 event vocabulary. Operational `recovery_operation_outcome` remains intentionally non-user-correlated; unsupported metrics are explicitly not computable rather than expanding telemetry.
+- No browsing/query/activity history, child surveillance data, persistent analytics identity, secret, or backdoor DNS-history analytics is authorized.
+- Runtime acceptance does not alter WBS, graph, manifest, AdGuard, Quad9 dns10/ECS policy, or the CR-0008 owner-frozen planning baseline.
+- **Non-inference:** no support implementation/staffing outcome, human response capacity, LG-07, build, deployment, production activation, market activation, launch, legal-compliance completion, or real-user supportability becomes PASS from this L4 requirements task.
