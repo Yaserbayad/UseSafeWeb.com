@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-01T12:58:45Z
+**Updated:** 2026-09-01T13:13:29Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -1745,3 +1745,21 @@ Recompute the current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-
 ### Queue effect after TSK-0445 PASS
 
 Recompute the exact current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-0055 authority before selecting later work.
+
+
+## TSK-0412 current accepted stable state — 2026-09-01
+
+`TSK-0412 — Reverify the supported AdGuard Home version, documented API/configuration behavior, license boundary, privacy defaults, compatibility and rollback constraints`: **PASS** under current `ACC-0412 / VER-0412 / EVD-0412`, current `TSK-0413` dependency evidence, and `DEC-0054/DEC-0055` authority.
+
+- Action authority: **A4 / AUTO_ALLOWED**.
+- Accepted compatibility record: `infrastructure/adguard-server/TSK-0412-ADGUARD-COMPATIBILITY-REVERIFICATION.md`, blob `1fa96f3264a8c6eb28c0b5ee3085fca60399e8e7`, source commit `10eb6e246e3662cc977ea04e44d0d1fe10c72687`.
+- Independent current-source/build verification on GitHub Actions run `33512080028` fetched official AdGuard Home latest release/tag/license/exact v0.107.79 OpenAPI, independently downloaded and SHA-256 verified the Linux amd64 asset, executed the pinned binary version check, verified the project installer pin, and ran the complete TSK-0413 bundle verifier.
+- Current stable target remains **v0.107.79**, release commit `05ba17b282da1c4393d6a4ba4db0cf519194a362`, Linux amd64 SHA-256 `c48f4a43000665484c5ec28177de11a004759b620dae8f77b2aabefc9ef3687f`, config schema `34`: **no version drift and no upgrade is required**.
+- Exact API re-verification preserves server-only basic-authenticated `/control` integration, typed client add/update/delete operations, explicit per-client `ignore_querylog`/`ignore_statistics` privacy handling, and current non-deprecated query-log/statistics config update endpoints.
+- Current privacy bundle remains Quad9 `dns10`, ECS off, client-IP anonymization on, persistent query/file logging off, anonymized aggregate statistics at `1d`, restricted admin, approved filter baseline and no versioned secrets/history.
+- License remains GNU GPL Version 3. Specialist review is triggered before materially different modification/distribution/conveyance/bundling facts; no legal conclusion beyond current source/license/architecture facts is inferred.
+- **Non-inference:** no production upgrade/configuration change, typed-adapter implementation, live target DNS/TLS/privacy/recovery result, clean-server recovery/RTO, later task/gate, production activation or public launch PASS is claimed.
+
+### Queue effect after TSK-0412 PASS
+
+Recompute current L5 eligibility from WBS/graph/gates/runtime and current DEC-0054/DEC-0055 authority before selecting later work.
