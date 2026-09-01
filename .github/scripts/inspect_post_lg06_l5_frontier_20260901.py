@@ -21,7 +21,7 @@ def csv_at(rev):
 pre6=csv_at(CR6+'^'); post6=csv_at(CR6); pre7=csv_at(CR7+'^'); post7=csv_at(CR7)
 
 def deps(tid): return [x.strip() for x in (rows[tid].get('Dependencies') or '').split(';') if x.strip()]
-def current_pass(tid): return bool(re.search(rf'^##+\s+{re.escape(tid)}\s+current accepted stable state\b',runtime,re.M))
+def current_pass(tid): return bool(re.search(rf'^##+\s+{re.escape(tid)}(?:\s+/[^\n]+?)?\s+current accepted stable state\b',runtime,re.M))
 def historical_pass(tid):
     return bool(re.search(rf'^##+\s+{re.escape(tid)}(?:\s+[^\n]*)?accepted stable state\b',runtime,re.M)) or bool(re.search(rf'^##+\s+{re.escape(tid)}\b[^\n]*\n\n`?{re.escape(tid)}[^\n]*\*\*PASS',runtime,re.M))
 def exclusion_pass(tid):
@@ -54,6 +54,7 @@ stage_field=stage_candidates[0][0]
 print('STAGE_FIELD='+stage_field)
 
 assert '## TSK-0052 / LG-06 current accepted stable state — 2026-09-01 — POST-CR-0007' in runtime
+assert current_pass('TSK-0052')
 
 print('DIRECT_SUCCESSORS_OF_TSK0052_BEGIN')
 for r in rows_list:
