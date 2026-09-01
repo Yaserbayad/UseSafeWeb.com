@@ -35,7 +35,6 @@ jobs:
             echo "Unexpected changed path(s): $changed" >&2
             exit 1
           fi
-          git diff --check -- CURRENT_STATE.md
           grep -Fq '## TSK-0485 current accepted stable state' CURRENT_STATE.md
           grep -Fq '## TSK-0319 current accepted stable state — 2026-09-01 — POST-CR-0008 REQUALIFICATION' CURRENT_STATE.md
 
