@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-01T12:42:53Z
+**Updated:** 2026-09-01T12:50:35Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -1713,3 +1713,20 @@ Recompute the exact current frontier from WBS/graph/gates/runtime and current au
 - True human boundaries remain where the task itself requires a genuinely nondelegable owner/controller/legal/contract/identity/market/formalization/material-commitment/strategic act.
 - Existing repository artifacts are not reorganized solely for cleanliness.
 - Exact next governed work is not persisted here; recompute it from current WBS, graph, gates, runtime PASS evidence and DEC-0054/DEC-0055 authority.
+
+
+## TSK-0354 current accepted stable state — 2026-09-01
+
+`TSK-0354 — Design the Version-1 accountless-core plus optional-account application architecture and data boundary`: **PASS** under current `ACC-0354 / VER-0354 / EVD-0354`, `DEC-0053/CR-0006`, `DEC-0054/CR-0007`, and `DEC-0055/CR-0008` authority.
+
+- Current hard dependencies `TSK-0146`, `TSK-0229`, and `TSK-0309` are current durable PASS; current `LG-06` is PASS.
+- Action authority after CR-0008: **A3 / AUTO_ALLOWED**; the CR-0008 amendment changed only capability/action-authority metadata for this task and did not weaken ACC-0354.
+- Accepted architecture: `TSK_0354_VERSION_1_APPLICATION_ARCHITECTURE_2026-09-01.md`, blob `4196c83e95a013c10b5c0a9a13005b97bbe08a59`, source commit `2d243962cd28ca8cf271fa30de953feab2807cc2`.
+- Verification: current WBS/dependencies/ACC contract, canonical product/data/privacy constraints and source-backed Next.js/Firebase server-boundary guidance were reviewed; the architecture satisfies the complete accountless core, optional account/session/minimum ownership persistence, lightweight dashboard/device management, trust/failure/deletion/recovery boundaries, typed server-only AdGuard adapter, and prohibited-history/mandatory-login constraints.
+- Datastore product and exact dependency versions are intentionally not invented by TSK-0354: `/website` does not yet exist, and exact persistent schema/store plus framework/runtime pins remain downstream `TSK-0233 / TSK-0355` work; Firebase-specific vendor/session selection remains `TSK-0356`.
+- `RSK-0045` remains an active scope/privacy control; the architecture keeps accountless core first-class and prohibits surveillance/complex DNS administration.
+- **Non-inference:** no implementation, LG-07/LG-08, production deployment, public launch, or real-user validation PASS is inferred.
+
+### Queue effect after TSK-0354 PASS
+
+Recompute the current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-0055 authority before selecting the next task.
