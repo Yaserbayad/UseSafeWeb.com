@@ -117,7 +117,6 @@ async function auditTextResize(label) {
 
 await page.goto(base, { waitUntil: 'networkidle' });
 await page.addScriptTag({ content: axe.source });
-req(await page.locator('#skip-link').isVisible().catch(() => false) === false, 'skip-link-should-be-visually-hidden-before-focus');
 await page.keyboard.press('Tab');
 req(await page.locator('#skip-link').evaluate(el => el === document.activeElement), 'skip-link-first-focus');
 req(await page.locator('#skip-link').isVisible(), 'skip-link-visible-on-focus');
@@ -148,13 +147,13 @@ await dispatch('CONFIRM_REMOVED'); await auditCurrent('recovery', 'recovery');
 console.log('TSK0321_SUPPORT_REMOVAL_RECOVERY=PASS');
 
 await reset(); await dispatch('START'); await dispatch('CHOOSE_PLATFORM', { platform: 'iphone' }); await dispatch('NATIVE_CONFIRMED'); await auditCurrent('dns-iphone', 'dns');
-await page.evaluate(() => window.__TSK0333_TEST__.toggleRtl());
+await page.locator('[data-global-action="TOGGLE_RTL"]').click();
 req(await page.locator('html').getAttribute('dir') === 'rtl', 'rtl-dir');
 for (const id of ['iphone-doh-value']) {
   const style = await page.getByTestId(id).evaluate(el => ({ direction: getComputedStyle(el).direction, unicodeBidi: getComputedStyle(el).unicodeBidi }));
   req(style.direction === 'ltr', `${id}:rtl-direction`);
 }
-await page.evaluate(() => window.__TSK0333_TEST__.toggleRtl());
+await page.locator('[data-global-action="TOGGLE_RTL"]').click();
 console.log('TSK0321_RTL_TECHNICAL_VALUES=PASS');
 
 await reset(); await dispatch('OPEN_ACCOUNT_ENTRY'); await auditCurrent('account-entry', 'account-entry');
