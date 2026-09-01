@@ -1,4 +1,4 @@
-name: Accept TSK-0409 supported device network matrix
+name: Accept corrected TSK-0409 supported device network matrix
 
 on:
   push:
