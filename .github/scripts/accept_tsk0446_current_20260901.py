@@ -13,7 +13,7 @@ state = STATE.read_text(encoding='utf-8')
 marker = '## TSK-0446 current accepted stable state — 2026-09-01'
 assert marker not in state, 'TSK-0446 already has current PASS state'
 assert '## TSK-0413 current accepted stable state — 2026-09-01' in state
-assert '## TSK-0052 / LG-06 — Product, Brand and Experience Freeze' in state
+assert '## TSK-0052 / LG-06 current accepted stable state — 2026-09-01 — POST-CR-0007' in state
 
 expected_hashes = {
     EVID: '714a5ccf4e7d0dc104ff55c1d87381571ab786f9',
