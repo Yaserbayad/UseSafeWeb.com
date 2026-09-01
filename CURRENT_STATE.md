@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-01T10:26:49Z
+**Updated:** 2026-09-01T11:07:13Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -1638,3 +1638,22 @@ The Project Owner approved `APPROVE TSK-0413 RECOMMENDED PRIVACY-FIRST ADGUARD B
 ### Queue effect
 
 `TSK-0413` remains the current autonomous L5 task and may consume this owner-approved baseline plus current `TSK-0408` PASS evidence to construct and verify its versioned recovery-consumable bundle.
+
+## TSK-0413 current accepted stable state — 2026-09-01
+
+`TSK-0413 — Create the secret-safe versioned AdGuard configuration, filter, allowlist, endpoint, and verification bundle consumed by recovery automation`: **PASS** under current `ACC-0413 / VER-0413 / EVD-0413`, the owner-approved privacy-first `DEC-0016` baseline, current `TSK-0408` dependency evidence and `DEC-0054/CR-0007`.
+
+- Action authority: **A4 / AUTO_ALLOWED**.
+- Bundle: `infrastructure/adguard-server/tsk-0413-bundle-v1/`, version `1.0.0`.
+- Verified candidate head: `8d329051ba900a92ae9d5897022bd2d090ad1c2d`.
+- `bundle.json` Git blob: `f0735e6a508f16de7a9c4510cc2893b972c1786c`; SHA-256 `e51130d22ba22a940fe5be10e423537474bb7ccc6a2a6b3b25596bbe96081bb0`.
+- Independent verification: GitHub Actions run/job `33500597612 / 99832778403` — **SUCCESS**.
+- Durable verification evidence: `TSK_0413_BUNDLE_VERIFICATION_EVIDENCE_2026-09-01.md`, blob `632badd4a8f926cb314aaa8941f029ae4dfc7058`.
+- Compatibility pin: AdGuard Home `v0.107.79`, configuration schema `34`, official tag commit `05ba17b282da1c4393d6a4ba4db0cf519194a362`.
+- Approved desired state encoded: Quad9 dns10 only; ECS off; persistent query/file logging off; exceptional diagnostics capped at 24h/delete; anonymized aggregate statistics at 24h; client-IP anonymization on; official AdGuard DNS filter only initially; empty versioned allowlist; private authenticated admin path; no browsing/query/activity history or versioned secrets.
+- The bundle is secret-safe desired state consumed by recovery automation; it is not a raw server backup. Administrator authentication material and TLS/proxy secrets remain external and must be injected by the governed recovery mechanism.
+- **Non-inference:** no live deployment of the newly approved statistics/filter state, rebuild/restore success, production activation, `TSK-0412`, `TSK-0446` or `LG-07` PASS is claimed.
+
+### Queue effect after TSK-0413 current PASS
+
+Recompute the exact L5 frontier from current WBS dependencies, relationship graph, gate/authority, runtime evidence, constraints/interfaces and executor availability. Direct successors may consume TSK-0413 only where their own current dependencies and acceptance are independently satisfied.
