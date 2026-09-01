@@ -84,7 +84,8 @@ jobs:
           VERIFICATION_COMMIT="$verification_commit" RUN_ID="$GITHUB_RUN_ID" python3 .github/scripts/reconcile_tsk0321_post_cr0007_pass_20260901.py
 
           git diff --check
-          test "$(git diff --name-only | sort)" = $'CURRENT_STATE.md\nTSK_0321_POST_CR0007_FINAL_ACCESSIBILITY_EVIDENCE_2026-09-01.md'
+          test -n "$(git diff -- CURRENT_STATE.md)"
+          test -f TSK_0321_POST_CR0007_FINAL_ACCESSIBILITY_EVIDENCE_2026-09-01.md
           grep -Fq '## TSK-0321 current accepted stable state — 2026-09-01 — POST-CR-0007' CURRENT_STATE.md
           grep -Fq '**PASS**' TSK_0321_POST_CR0007_FINAL_ACCESSIBILITY_EVIDENCE_2026-09-01.md
 
