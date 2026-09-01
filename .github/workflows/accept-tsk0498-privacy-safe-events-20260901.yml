@@ -1,4 +1,4 @@
-name: Accept TSK-0498 privacy-safe event contract
+name: Accept corrected TSK-0498 privacy-safe event contract
 
 on:
   push:
@@ -21,7 +21,7 @@ jobs:
         with:
           fetch-depth: 3
 
-      - name: Correct candidate and verify artifact
+      - name: Verify corrected artifact and stage current state
         shell: bash
         env:
           SOURCE_COMMIT: ${{ github.sha }}
@@ -30,31 +30,10 @@ jobs:
           git fetch origin main
           test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
           test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
-          python3 .github/scripts/accept_tsk0498_20260901.py prepare
-          git diff --check
-          test "$(git status --porcelain | sed 's/^...//')" = 'TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md'
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md
-          git commit -m 'TSK-0498: correct approved event catalogue count'
-          ARTIFACT_COMMIT="$(git rev-parse HEAD)"
-          ARTIFACT_BLOB="$(git rev-parse "$ARTIFACT_COMMIT:TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md")"
-          git push origin HEAD:main
-          git fetch origin main
-          test "$(git rev-parse origin/main)" = "$ARTIFACT_COMMIT"
-          test "$(git rev-parse "origin/main:TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md")" = "$ARTIFACT_BLOB"
-          echo "TSK0498_ARTIFACT_COMMIT=$ARTIFACT_COMMIT" >> "$GITHUB_ENV"
+          ARTIFACT_BLOB="$(git rev-parse "HEAD:TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md")"
+          echo "TSK0498_ARTIFACT_COMMIT=$SOURCE_COMMIT" >> "$GITHUB_ENV"
           echo "TSK0498_ARTIFACT_BLOB=$ARTIFACT_BLOB" >> "$GITHUB_ENV"
-          echo 'TSK0498_ARTIFACT_REMOTE_READBACK=PASS'
-
-      - name: Verify acceptance and stage current state
-        shell: bash
-        run: |
-          set -euo pipefail
-          git fetch origin main
-          test "$(git rev-parse HEAD)" = "$TSK0498_ARTIFACT_COMMIT"
-          test "$(git rev-parse origin/main)" = "$TSK0498_ARTIFACT_COMMIT"
-          python3 .github/scripts/accept_tsk0498_20260901.py verify-state
+          TSK0498_ARTIFACT_COMMIT="$SOURCE_COMMIT" TSK0498_ARTIFACT_BLOB="$ARTIFACT_BLOB" python3 .github/scripts/accept_tsk0498_20260901.py verify-state
           git diff --check
           test "$(git status --porcelain | sed 's/^...//')" = 'CURRENT_STATE.md'
 
@@ -64,6 +43,8 @@ jobs:
           set -euo pipefail
           git fetch origin main
           test "$(git rev-parse origin/main)" = "$TSK0498_ARTIFACT_COMMIT"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add CURRENT_STATE.md
           git commit -m 'state: accept TSK-0498 privacy-safe event contract'
           STATE_COMMIT="$(git rev-parse HEAD)"
