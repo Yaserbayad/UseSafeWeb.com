@@ -1,4 +1,4 @@
-name: Recompute current L5 frontier after TSK-0409
+name: Recompute current L5 frontier after TSK-0517
 
 on:
   push:
