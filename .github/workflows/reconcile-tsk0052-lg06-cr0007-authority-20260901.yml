@@ -17,42 +17,41 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Apply and validate exact authority repair
+      - name: Reconcile from already-published validated planning repair
         shell: bash
         run: |
           set -euo pipefail
           test "$(hostname -s)" = "adguardvm"
           git fetch origin main
           test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
-          python3 .github/scripts/reconcile_tsk0052_lg06_cr0007_authority_20260901.py apply
-          git diff --check
-          mapfile -t changed < <(git status --porcelain | sed 's/^...//' | sort)
-          expected=(
-            'Plans/Master/Generated/MASTER_PLAN_FULL.md'
-            'Plans/Master/Governance/AUTONOMY_POLICY.yaml'
-            'Plans/Master/WBS/master-wbs.csv'
-            'Plans/SHA256SUMS.txt'
-          )
-          mapfile -t expected_sorted < <(printf '%s\n' "${expected[@]}" | sort)
-          test "$(printf '%s\n' "${changed[@]}")" = "$(printf '%s\n' "${expected_sorted[@]}")"
-      - name: Publish validated planning repair
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add Plans/Master/WBS/master-wbs.csv Plans/Master/Governance/AUTONOMY_POLICY.yaml Plans/Master/Generated/MASTER_PLAN_FULL.md Plans/SHA256SUMS.txt
-          git commit -m 'governance: reconcile TSK-0052 LG-06 CR-0007 auto authority'
-          PLAN_COMMIT="$(git rev-parse HEAD)"
+          PLAN_COMMIT='29a12386ed83d1f96be0dff71a231d269dd85530'
+          test "$(git rev-parse "$PLAN_COMMIT:Plans/Master/WBS/master-wbs.csv")" = 'b57104a71ab814d0f67e7fb8b0fd388d1f6aacfa'
+          python3 Plans/Master/Tools/validate_master_plan.py
+          python3 - <<'PY'
+          import csv, subprocess, io
+          raw=subprocess.check_output(['git','show','29a12386ed83d1f96be0dff71a231d269dd85530:Plans/Master/WBS/master-wbs.csv'])
+          rows=list(csv.DictReader(io.StringIO(raw.decode('utf-8-sig'))))
+          r=[x for x in rows if x['Task_ID']=='TSK-0052']
+          assert len(r)==1
+          r=r[0]
+          assert r['AI_Capability_A0_A4']=='A4'
+          assert r['Action_Authority']=='AUTO_ALLOWED'
+          assert r['Dependencies']=='TSK-0043; TSK-0321; TSK-0309; TSK-0628'
+          assert r['Acceptance_ID']=='ACC-0052' and r['Verification_ID']=='VER-0052' and r['Evidence_ID']=='EVD-0052'
+          assert r['Plan_Status']=='PLANNED' and r['Execution_State']=='WAITING'
+          print('PUBLISHED_REPAIR_CONTRACT=PASS')
+          PY
           echo "PLAN_COMMIT=$PLAN_COMMIT" >> "$GITHUB_ENV"
-          git push origin HEAD:main
-          git fetch origin main
-          test "$(git rev-parse origin/main)" = "$PLAN_COMMIT"
       - name: Record durable reconciliation evidence and runtime state
         shell: bash
         run: |
           set -euo pipefail
           python3 .github/scripts/reconcile_tsk0052_lg06_cr0007_authority_20260901.py record
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('CURRENT_STATE.md')
+          p.write_text(p.read_text(encoding='utf-8').rstrip()+'\n',encoding='utf-8')
+          PY
           git diff --check
           mapfile -t changed < <(git status --porcelain | sed 's/^...//' | sort)
           expected=(
@@ -61,6 +60,8 @@ jobs:
           )
           mapfile -t expected_sorted < <(printf '%s\n' "${expected[@]}" | sort)
           test "$(printf '%s\n' "${changed[@]}")" = "$(printf '%s\n' "${expected_sorted[@]}")"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add CURRENT_STATE.md TSK_0052_LG06_CR0007_AUTO_AUTHORITY_RECONCILIATION_EVIDENCE_2026-09-01.md
           git commit -m 'state: record TSK-0052 CR-0007 authority reconciliation'
           STATE_COMMIT="$(git rev-parse HEAD)"
@@ -73,7 +74,6 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git rev-parse origin/main)" = "$STATE_COMMIT"
-          test "$(git show "$PLAN_COMMIT:Plans/Master/WBS/master-wbs.csv" | grep -c 'TSK-0052')" -ge 1
           test -n "$(git rev-parse "$PLAN_COMMIT:Plans/Master/WBS/master-wbs.csv")"
           test -n "$(git rev-parse "$STATE_COMMIT:CURRENT_STATE.md")"
           test -n "$(git rev-parse "$STATE_COMMIT:TSK_0052_LG06_CR0007_AUTO_AUTHORITY_RECONCILIATION_EVIDENCE_2026-09-01.md")"
