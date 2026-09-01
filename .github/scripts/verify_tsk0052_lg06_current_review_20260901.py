@@ -119,7 +119,7 @@ for phrase in [
     'unlock **L5 architecture/security/privacy/delivery readiness work only**',
 ]:
     assert phrase in review, phrase
-assert review.count('**Satisfied**')>=12
+assert review.count('| **Satisfied')>=13
 assert 'prior 2026-08-30 LG-06 readiness conclusion is superseded' in review
 
 risks=read('Plans/Master/Registers/RISKS.md')
