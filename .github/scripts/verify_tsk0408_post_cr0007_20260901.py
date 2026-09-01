@@ -1,5 +1,5 @@
 from __future__ import annotations
-import csv, re
+import csv
 from pathlib import Path
 
 wbs = Path('Plans/Master/WBS/master-wbs.csv').read_text(encoding='utf-8-sig')
@@ -14,8 +14,7 @@ assert r['Verification_ID'] == 'VER-0408'
 assert r['Evidence_ID'] == 'EVD-0408'
 assert r['AI_Capability_A0_A4'] == 'A3'
 assert r['Action_Authority'] == 'AUTO_ALLOWED'
-assert 'no generic provider/client aliases own setup truth' in r['Acceptance_Criteria']
-assert 'no public FQDN/path is invented before the official value exists' in r['Acceptance_Criteria']
+assert r['Acceptance_Criteria'] == 'Hostname/DoH path/profile naming, certificates, verification, removal, fallback, and environment separation are clear; no false universal FQDN workflow.'
 
 assert '| DEC-0053 |' in decisions
 assert '| DEC-0054 |' in decisions
@@ -44,7 +43,6 @@ required = [
 for token in required:
     assert token in new, token
 
-# Reject accidental resurrection of the old lifecycle as current truth.
 assert 'Current environment/evidence contract' in new
 current = new.split('## Current environment/evidence contract',1)[1].split('## ACC-0408 mapping',1)[0]
 assert 'controlled-pilot endpoint' not in current
