@@ -1,0 +1,80 @@
+name: Reconcile TSK-0413 owner privacy baseline
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/scripts/reconcile_tsk0413_owner_baseline_20260901.py'
+      - '.github/workflows/reconcile-tsk0413-owner-baseline-20260901.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-governed-planning-write
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Reconcile exact owner delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          python3 .github/scripts/reconcile_tsk0413_owner_baseline_20260901.py
+          python3 Plans/Master/Tools/rebuild_master_plan.py
+          (cd Plans && find Master -type f -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt)
+          python3 Plans/Master/Tools/validate_master_plan.py
+          git diff --check
+          python3 - <<'PY'
+          import csv
+          from pathlib import Path
+          dec=Path('Plans/Master/Registers/DECISIONS_TRIGGERS.md').read_text(encoding='utf-8')
+          assert 'minimum anonymized aggregate operational statistics may be enabled with 24-hour retention' in dec
+          assert 'persistent raw query history and file query logging are off' in dec
+          with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='') as f:
+              rows=list(csv.DictReader(f))
+          r=[x for x in rows if x['Task_ID']=='TSK-0410']
+          assert len(r)==1
+          assert 'no-querylog/no-identifiable-statistics settings' in r[0]['Acceptance_Criteria']
+          assert 'anonymized aggregate operational statistics with 24-hour retention' in r[0]['Acceptance_Criteria']
+          assert r[0]['Action_Authority']=='AUTO_ALLOWED'
+          r13=[x for x in rows if x['Task_ID']=='TSK-0413']
+          assert len(r13)==1 and r13[0]['Execution_State']=='WAITING'
+          print('OWNER_BASELINE_RECONCILIATION_ASSERTIONS=PASS')
+          PY
+          mapfile -t changed < <(git status --porcelain | sed 's/^...//' | sort)
+          expected=(
+            'CURRENT_STATE.md'
+            'Plans/Master/Generated/MASTER_PLAN_FULL.md'
+            'Plans/Master/Registers/DECISIONS_TRIGGERS.md'
+            'Plans/Master/WBS/master-wbs.csv'
+            'Plans/SHA256SUMS.txt'
+            'TSK_0413_OWNER_PRIVACY_BASELINE_RECONCILIATION_2026-09-01.md'
+          )
+          mapfile -t expected_sorted < <(printf '%s\n' "${expected[@]}" | sort)
+          test "$(printf '%s\n' "${changed[@]}")" = "$(printf '%s\n' "${expected_sorted[@]}")"
+      - name: Commit and read back
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md Plans/Master/Generated/MASTER_PLAN_FULL.md Plans/Master/Registers/DECISIONS_TRIGGERS.md Plans/Master/WBS/master-wbs.csv Plans/SHA256SUMS.txt TSK_0413_OWNER_PRIVACY_BASELINE_RECONCILIATION_2026-09-01.md
+          git commit -m 'plan: reconcile TSK-0413 privacy-first owner baseline'
+          COMMIT="$(git rev-parse HEAD)"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$COMMIT"
+          test -n "$(git rev-parse "$COMMIT:Plans/Master/Registers/DECISIONS_TRIGGERS.md")"
+          test -n "$(git rev-parse "$COMMIT:Plans/Master/WBS/master-wbs.csv")"
+          test -n "$(git rev-parse "$COMMIT:TSK_0413_OWNER_PRIVACY_BASELINE_RECONCILIATION_2026-09-01.md")"
+          python3 Plans/Master/Tools/validate_master_plan.py
+          echo "OWNER_BASELINE_COMMIT=$COMMIT"
+          echo "OWNER_BASELINE_RECONCILIATION_READBACK=PASS"
