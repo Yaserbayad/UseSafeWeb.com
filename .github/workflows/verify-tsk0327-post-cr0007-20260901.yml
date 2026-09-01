@@ -1,0 +1,25 @@
+name: Verify post-CR-0007 TSK-0327 findings disposition
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/scripts/verify_tsk0327_post_cr0007_20260901.py'
+      - '.github/workflows/verify-tsk0327-post-cr0007-20260901.yml'
+      - 'prototype/TSK-0327/POST_CR0007_FINDINGS_DISPOSITION.md'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify current TSK-0327 findings disposition
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(hostname -s)" = "adguardvm"
+          python3 .github/scripts/verify_tsk0327_post_cr0007_20260901.py
+          git diff --check
+          test -z "$(git status --porcelain)"
