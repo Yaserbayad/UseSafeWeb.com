@@ -1444,32 +1444,24 @@ Recompute eligibility from current WBS dependencies, relationship graph, runtime
 ### Queue status after post-CR-0007 TSK-0331 acceptance
 
 Recompute eligibility from current WBS dependencies, relationship graph, runtime evidence, gates/constraints, current changed-scope validity, and Action Authority. No successor or gate inherits PASS from TSK-0331.
-## TSK-0333 current accepted stable state — 2026-08-31 — POST-CR-0007
+## TSK-0333 current accepted stable state — 2026-09-01 — POST-CR-0007
 
 `TSK-0333`: **PASS** under current `ACC-0333 / VER-0333 / EVD-0333`, `DEC-0053/CR-0006`, and `DEC-0054/CR-0007` authority.
 
-- Current WBS blob `f3c29b5db8b835ef2c896f61335656ea51d8ba1c`: L4, MEDIUM, hard dependencies `TSK-0335; TSK-0334; TSK-0146; TSK-0331`, A3 / `AUTO_ALLOWED`; all four direct dependencies are current durable PASS.
-- Current integrated prototype blobs: `index.html` `9395f0e105d20683b5beafa01b02d7b300e79a8d`; `model.mjs` `9b7c239024d8ae24371b687aa39de6fa6b2b62b6`; `app.mjs` `476ea932d95592fabf586f7ba381be0d346117fe`; `prototype.css` `6f8af459a0b0b1c9ec132657dfcd7ebff43090b8`.
-- Analytical acceptance evidence: `TSK_0333_POST_CR0007_INTEGRATED_PROTOTYPE_ACCEPTANCE_EVIDENCE_2026-08-31.md`, blob `4de73da09d637a142fc9968873ffdd755fdb07f3`.
-- Deterministic verification evidence: `TSK_0333_POST_CR0007_DETERMINISTIC_VERIFICATION_EVIDENCE_2026-08-31.md`, blob `d1427b8bdd64772aab82683220af9becaf07f2ac`.
-- Current structured verifier/workflow blobs: `497d709c40632a9bbd7e1f9513c27699e1f2d0f6` / `812ab1dbdead44f7cae4d5c9c1c9e7b653766b27`.
-- Current browser verifier/workflow blobs: `966cb53e01e58155350fc9a904cf71bd1a30c748` / `532b1f6c67516e2e449720f791d91af4ee8fe2bc`.
-- RED run/job `33431633072 / 99618110708` proved the current verifier rejected the historical accountless-only prototype after authority/dependency checks passed.
-- Structured current-scope run/job `33432040521 / 99619466660`: SUCCESS. The final browser workflow reran the structured verifier and all structural markers passed at the accepted head.
-- Browser run/job `33432339619 / 99620437461` found one substantive product defect: configured Protection Map lacked the physical DNS removal action. Product code was corrected; the assertion was not weakened.
-- Browser run/jobs `33432524365 / 99621051328` and `33432645054 / 99621453921` exposed verifier-only selector/literal false negatives after progressively more product scenarios had already passed. Only verifier assertions changed for those diagnostics.
-- Final decisive browser run/job `33432762152 / 99621849637`: **SUCCESS** on self-hosted `adguardvm` with Node `v22.23.2`, npm `10.9.8`, Playwright `1.62.0`, Chrome for Testing / Chromium `151.0.7922.34` in temporary verification-only paths.
-- Final browser evidence passed keyboard/skip-link; accountless Android/iPhone setup; false-positive truth; physical removal/recovery/reconfigure; unsupported state; first-session account creation; explicit saved-device creation; returning dashboard; device replacement; fail-closed unknown destructive result plus record deletion; provider error; session expiry/reauth/logout/account-delete boundaries; RTL/responsive 320/768/1024/1440; privacy/no-transport; zero console/page errors.
-- Accepted current product rule: the complete core start/configure/verify/Protection Map/support/removal/recovery path remains usable without login. Optional Google account/session/dashboard/device continuity never creates technical `Verified`, never auto-imports/promotes J0/J1, and keeps account/data lifecycle separate from physical protection removal.
-- No browsing/query/activity history, child profile, raw DNS logs/history, broad DNS administration, broad per-domain controls or safety score/certification is introduced. The prototype created no browser persistence or external runtime transport during target-browser verification.
-- Historical 2026-08-30 TSK-0333 PASS remains historical evidence only; this current section governs downstream dependency use under the post-CR-0007 scope.
-- No LG-06, L5 architecture/security/privacy/vendor, implementation, production behavior, real-user validation, publication or launch PASS is inferred.
-- `RSK-0002` remains OPEN/non-blocking before L8.
+- Current WBS blob `f3c29b5db8b835ef2c896f61335656ea51d8ba1c`: L4, MEDIUM, hard dependencies `TSK-0335; TSK-0334; TSK-0146; TSK-0331`, A3 / `AUTO_ALLOWED`; all four direct dependencies remain current durable PASS.
+- Corrected current integrated prototype blobs: `index.html` `934dc19d00cc9dd32e1ebc20c604373d153d4013`; `model.mjs` `fc25e4b1facc303840311e8ce186612eb8799212`; `app.mjs` `98659ba74a86d539b89664708bbcb830292486f8`; `prototype.css` unchanged `6f8af459a0b0b1c9ec132657dfcd7ebff43090b8`.
+- The 2026-08-31 integrated prototype behavior/evidence remains valid for unchanged functionality, but its three pre-correction source blobs are superseded. Current identity authority TSK-0301/TSK-0297 requires visible brand `SafeWeb`; capitalized `UseSafeWeb` is prohibited as a wordmark.
+- Bounded identity correction run/job `33478938540 / 99764031711` changed only 23 capitalized visible-name occurrences across index/model/controller; lowercase `dns.usesafeweb.com` and `https://dns.usesafeweb.com/dns-query` remained unchanged and CSS was untouched. Fix commit `e5ce4b6b9e71b9b06226e1a0b74cdd6a688d107b`.
+- Durable correction evidence: `TSK_0333_SAFEWEB_BRAND_REVALIDATION_EVIDENCE_2026-09-01.md`, blob `f3ea3bf41c38050356a6e9e94aa251b07b35c5f3`.
+- Full identity + regression run/job `33479022852 / 99764278062`: SUCCESS on self-hosted `adguardvm`; exact identity authority, pure substitution, endpoint fence, WBS contract and the full integrated Chromium suite all PASS.
+- Full current paths remain covered: accountless setup/verification, Android/iPhone, Protection Map, false positive/help/removal/recovery, optional Google sign-in/account/session/dashboard/device management, destructive lifecycle uncertainty, replacement, provider/session errors, logout/account delete, responsive/mobile/RTL/accessibility and privacy/no-transport boundaries.
+- Core value remains usable without login; browsing/query/activity history, child accounts/profiles and broad/raw DNS administration remain absent. Account/device/dashboard state never establishes technical `Verified`.
+- One earlier real product defect (configured DNS removal unreachable from the Protection Map) and the later visible-brand defect are both closed with materially different passing browser evidence. Verifier-only failures remain diagnostics, not product failures.
+- `RSK-0002` remains OPEN/non-blocking before L8. No architecture, implementation, participant, gate, release, market, payment or launch PASS is inferred.
 
-### Queue status after current TSK-0333 acceptance
+### Queue status after SafeWeb brand revalidation
 
-Recompute eligibility from current WBS dependencies, graph, gates/constraints, runtime evidence and Action Authority. No successor or gate inherits PASS automatically.
-
+Downstream evidence that pins the superseded TSK-0333 source blobs must be revalidated before dependency use. TSK-0327 is therefore revalidated next; TSK-0322/0323/0324/0321 remain downstream of that evidence chain.
 ## TSK-0330 current accepted stable state — 2026-08-31 — POST-CR-0007
 
 `TSK-0330 — Design Phone → Internet → Services setup flows`: **PASS** under current `ACC-0330 / VER-0330 / EVD-0330`, the existing Project Owner approval, `DEC-0053/CR-0006`, and `DEC-0054/CR-0007` authority.
