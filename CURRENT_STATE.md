@@ -1792,3 +1792,16 @@ Recompute the current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-
 - TSK-0413 privacy baseline is explicit throughout: AdGuard Home v0.107.79/schema 34; ECS off; persistent query/file logging off; client-IP anonymization on; only 24-hour anonymized aggregate operational statistics; private loopback admin; no browser admin credentials; no browsing/query/activity history.
 - Deviation/disposition: exact cross-VM private AdGuard-control transport remains intentionally downstream and must preserve loopback-only authenticated administration with no public `/control/*` path.
 - **Non-inference:** no implementation, datastore/Firebase final selection, deployment, LG-07/LG-08, production activation, launch, or real-user validation PASS is inferred.
+
+## TSK-0355 current accepted stable state — 2026-09-01
+
+`TSK-0355 — Validate and record the minimum owner-selected TypeScript + Next.js application architecture`: **PASS** under current `ACC-0355 / VER-0355 / EVD-0355`, current `TSK-0235` dependency evidence, current `LG-06` PASS, and `DEC-0055/CR-0008` proportional-evidence authority.
+
+- Action authority: **A3 / AUTO_ALLOWED**.
+- Artifact: `TSK_0355_MINIMUM_TYPESCRIPT_NEXTJS_APPLICATION_ARCHITECTURE_ADRS_2026-09-01.md`, version `1.0.0`, blob `e9efc3b498040cc7e3cdd42a912359e41250d068`, acceptance source commit `3afc1a8e80ccaed8805d1cd8fdea7f88670de319`.
+- Verification: ChatGPT Project Governor architecture review plus GitHub Actions run/attempt `33520772616 / 1`; exact WBS/ACC/VER/EVD, TSK-0235/LG-06 current state, frozen source blobs, official-source ADR clauses, master-plan validity, no-package version truth, and prohibited secret material were checked before this mutation.
+- Framework/runtime boundary: one `/website` TypeScript + Next.js App Router application, current-reference Next.js 16.3.4 architecture, Node.js runtime with exact supported version pinned at implementation, self-hosted behind a reverse proxy, and a standalone direct-host release/rollback boundary. No installed dependency version is fabricated while `/website/package.json` is absent.
+- Data/auth boundary: J0 browser state plus only optional anonymous bounded J1; separate server-only minimum parent/device persistent domain; optional Google/Firebase identity terminates in a server-validated secure session; core value remains usable without login.
+- TSK-0413 boundary: server-only typed AdGuard adapter; AdGuard Home v0.107.79/schema 34; exact Quad9 dns10 DoH; ECS off; persistent query/file logging off; client-IP anonymization on; 24-hour anonymized aggregate statistics only; loopback-only authenticated administration; no browser admin credentials and no browsing/query/activity history.
+- `RSK-0045` remains OPEN as a scope/privacy control. Datastore product/schema, final Firebase vendor/version/terms, CMS/component-library product, exact private cross-VM AdGuard control transport, secret-provider implementation and an actual L6 release remain downstream and are not invented.
+- **Non-inference:** no website implementation/build, LG-07/LG-08, production deployment/activation, launch, payment, or real-user validation PASS is inferred.
