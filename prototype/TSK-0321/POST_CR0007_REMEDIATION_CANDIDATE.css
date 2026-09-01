@@ -1,0 +1,24 @@
+/* TSK-0321 post-CR-0007 accessibility remediation candidate.
+   HUMAN_ONLY: preparation artifact only; not applied to authoritative TSK-0333 source without owner approval.
+   Purpose: preserve 320px layout at 200% text by allowing nested grid/flex items to shrink and long control text to wrap. */
+
+.prototype-screen > *,
+.prototype-content > *,
+.prototype-grid > *,
+.prototype-map > *,
+.prototype-actions,
+.prototype-actions > *,
+.prototype-topbar__tools > * {
+  min-width: 0;
+}
+
+.prototype-screen,
+.prototype-actions .sw-button,
+.prototype-topbar__tools .sw-button {
+  overflow-wrap: anywhere;
+}
+
+.prototype-actions .sw-button,
+.prototype-topbar__tools .sw-button {
+  max-width: 100%;
+}
