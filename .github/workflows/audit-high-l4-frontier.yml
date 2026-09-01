@@ -1,0 +1,73 @@
+name: Audit HIGH L4 AUTO_ALLOWED frontier
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/diagnostics/high-l4-frontier-trigger.txt']
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out current main authority
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Enumerate canonical HIGH L4 AUTO_ALLOWED candidates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv, json, re
+          from pathlib import Path
+          p=Path('Plans/Master/WBS/master-wbs.csv')
+          with p.open(newline='', encoding='utf-8-sig') as f:
+              r=csv.DictReader(f)
+              headers=r.fieldnames or []
+              print('WBS_HEADERS='+json.dumps(headers, ensure_ascii=False))
+              def norm(s): return re.sub(r'[^a-z0-9]+','',str(s).lower())
+              hmap={norm(h):h for h in headers}
+              level_keys=[h for h in headers if norm(h) in {'level','wbslevel','l'}]
+              if not level_keys:
+                  level_keys=[h for h in headers if 'level' in norm(h)]
+              rows=[]
+              for row in r:
+                  vals=[str(v or '').strip() for v in row.values()]
+                  upper={v.upper() for v in vals}
+                  is_high='HIGH' in upper
+                  is_auto='AUTO_ALLOWED' in upper
+                  is_l4=any(str(row.get(h,'')).strip()=='4' for h in level_keys)
+                  if is_high and is_auto and is_l4:
+                      rows.append(row)
+              print(f'CANDIDATE_COUNT={len(rows)}')
+              ids=[]
+              for row in rows:
+                  tid=next((str(v).strip() for v in row.values() if re.fullmatch(r'TSK-\d{4}', str(v).strip())), '')
+                  if tid: ids.append(tid)
+                  print('CANDIDATE='+json.dumps(row, ensure_ascii=False, sort_keys=True))
+              print('CANDIDATE_IDS='+','.join(ids))
+          graph=Path('Plans/Master/RELATIONSHIP_INDEX.yaml').read_text(encoding='utf-8')
+          runtime=Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          print('GRAPH_BLOB_INPUT_SHA='+__import__('subprocess').check_output(['git','hash-object','Plans/Master/RELATIONSHIP_INDEX.yaml'], text=True).strip())
+          print('WBS_BLOB_INPUT_SHA='+__import__('subprocess').check_output(['git','hash-object','Plans/Master/WBS/master-wbs.csv'], text=True).strip())
+          print('RUNTIME_BLOB_INPUT_SHA='+__import__('subprocess').check_output(['git','hash-object','CURRENT_STATE.md'], text=True).strip())
+          for tid in ids:
+              print(f'---GRAPH_REFS {tid}---')
+              lines=graph.splitlines()
+              for i,line in enumerate(lines):
+                  if tid in line:
+                      lo=max(0,i-3); hi=min(len(lines),i+4)
+                      for j in range(lo,hi): print(f'{j+1}:{lines[j]}')
+              print(f'---RUNTIME_REFS {tid}---')
+              lines=runtime.splitlines()
+              for i,line in enumerate(lines):
+                  if tid in line:
+                      lo=max(0,i-2); hi=min(len(lines),i+8)
+                      for j in range(lo,hi): print(f'{j+1}:{lines[j]}')
+          PY
