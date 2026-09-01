@@ -101,7 +101,7 @@ jobs:
               'Protection evidence is separate from identity.',
               'Deletion operations are truthful and separate.',
               'ClientID is never authorization',
-              'maximum 24h from creation, non-sliding',
+              'Maximum 24h from creation, non-sliding',
               'within 15m',
               '**maximum 13 months**',
               '**maximum 30 days**',
@@ -112,8 +112,6 @@ jobs:
           for marker in required_markers:
               assert marker in artifact, marker
 
-          # Parse the normative inventory table and require every current row to define
-          # every acceptance field plus necessity/rights-safeguards.
           lines = artifact.splitlines()
           header = '| ID | Data element | Domain | Purpose / necessity | Lawful-basis status | Source | Recipient | Retention | Deletion mechanism | Access control | Rights / safeguards | Prohibited use |'
           hi = lines.index(header)
@@ -135,7 +133,6 @@ jobs:
           for r in table_rows:
               status = r[4]
               assert any(tok in status for tok in allowed_status_tokens), (r[0], status)
-              # Source, recipient, retention, deletion and access cannot be vague placeholders.
               for idx in [5,6,7,8,9,11]:
                   assert r[idx] not in {'TBD','UNKNOWN','—','-',''}, (r[0], idx, r[idx])
 
@@ -144,9 +141,6 @@ jobs:
           assert 'Zero' in d27[7]
           assert 'do not create/store' in d27[7]
           assert 'Any product, dashboard, analytics, support, monetisation, profiling or persistent diagnostic use' in d27[11]
-
-          # The artifact must mention forbidden classes only as prohibitions, never as an allowed
-          # current collected inventory row. D27 is the explicit rejection/control row.
           forbidden_classes = ['identifiable DNS/query/domain/URL/browsing/top-domain/child-activity data']
           assert d27[1] == forbidden_classes[0]
           for r in table_rows[:-1]:
@@ -154,11 +148,9 @@ jobs:
 
           assertions = re.findall(r'^([0-9]+)\. ', artifact, flags=re.M)
           assert all(str(i) in assertions for i in range(1,21))
-
-          # Preserve current legal non-inference: this L4 task cannot close current legal readiness.
           assert 'This task does not establish final UK legal/data readiness.' in artifact
           assert 'No final rights/legal-compliance conclusion is made by this L4 NFR' in artifact
-          assert 'does not resolve project-specific legal applicability' in artifact
+          assert 'do not resolve project-specific legal applicability' in artifact
 
           print('TSK0230_WBS_CONTRACT=PASS')
           print('TSK0230_DEPENDENCIES=PASS')
