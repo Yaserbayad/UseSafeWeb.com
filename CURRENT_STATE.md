@@ -1941,3 +1941,18 @@ Recompute the current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-
 - No internal/synthetic review is represented as human behavioral/user validation.
 - Runtime acceptance does not alter WBS, graph, manifest, AdGuard or the CR-0008 owner-frozen planning baseline.
 - **Non-inference:** no implementation, device/runtime verification, LG-07, production activation, launch or real-user outcome becomes PASS from this requirements task.
+
+## TSK-0041 current accepted stable state — 2026-09-01 — POST-CR-0008
+
+`TSK-0041 — Specify baseline DNS-protection activation requirements`: **PASS** under current `ACC-0041 / VER-0041 / EVD-0041`, current `TSK-0143` dependency proof, and CR-0008 authority after bounded current requalification.
+
+- Action authority: **A3 / AUTO_ALLOWED**.
+- Preserved base contract: `TSK_0041_BASELINE_DNS_PROTECTION_ACTIVATION_REQUIREMENTS_2026-08-28.md`, blob `95a5292223f1d2c3c8f79d4c889ad91e917478b2`.
+- Current amendment: `TSK_0041_POST_CR0008_CURRENT_REQUALIFICATION_AMENDMENT_2026-09-01.md`, version `2.0.0-post-CR-0008`, blob `ec453677ab5638a130c67ab54ead4c1c300ba90b`.
+- Current consumed authority: TSK-0143 blob `7eca238090738f282db2b43c7f988a7ff716df19`; TSK-0320 blob `bdc6bacc424669708f410466f3cfd5527f1c2b3c`; TSK-0409 blob `3aa832777276115912e4f3990b30cb541c458f4f`; accepted TSK-0408 endpoint/mechanism blob `52860ce167fc8a31962cd412772e428d280c8184`.
+- Verification source commit: `ff7bf61523128fe8e59123ac187667a67c3da5e9`; GitHub Actions run/attempt `33544978984 / 1`.
+- Requalification disposition: base endpoint/filtering/fail-safe/removal/false-positive/no-history requirements are preserved; static OS-minimum support claims, old Private-Relay DNS overclaim, historical accountless-only/CR-0003 lifecycle wording, and old TSK-0409/TSK-0320 pointers are superseded by the current amendment.
+- Current truth rule: configuration/profile/ClientID/account/dashboard/parent confirmation cannot create `protected_verified`; only fresh qualifying technical evidence for the effective DNS/filtering path can. Unknown/stale/conflicting browser/VPN/Private-Relay/app/network paths fail closed to `uncertain_error` or `not_covered` under current TSK-0409/TSK-0143 semantics.
+- Current Version-1 scope remains complete accountless core plus optional parent account/lightweight dashboard/device management, with no browsing/query/activity history, child surveillance profile, persistent personal DNS allowlist or unrestricted DNS administration created by this task.
+- Full modular validator passed before runtime mutation; WBS, graph, manifest, planning modules, AdGuard, Quad9 dns10/ECS policy and CR-0008 planning baseline are unchanged.
+- **Non-inference:** no LG-07, implementation/build, release, production activation, market activation, launch, legal-compliance completion or real-user validation becomes PASS from this requirements requalification.
