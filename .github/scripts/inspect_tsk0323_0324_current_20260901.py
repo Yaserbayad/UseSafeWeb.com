@@ -37,7 +37,7 @@ def graph_block(task_id: str):
     end=graph.find('\n  TSK-', start+len(key))
     return graph[start:end if end >= 0 else len(graph)]
 
-for tid in ['TSK-0323','TSK-0324']:
+for tid in ['TSK-0322','TSK-0323','TSK-0324']:
     row=by_id.get(tid)
     if not row:
         raise SystemExit(f'MISSING_{tid}')
@@ -53,7 +53,7 @@ for tid in ['TSK-0323','TSK-0324']:
     print(f'{tid}_GRAPH_BLOCK_END')
 
 print('RELATED_FILES_BEGIN')
-needles=('0323','0324','ACCESSIBILITY','CONTENT','DESIGN')
+needles=('0322','0323','0324','ACCESSIBILITY','CONTENT','DESIGN')
 for p in sorted(root.rglob('*')):
     if not p.is_file() or '.git' in p.parts:
         continue
