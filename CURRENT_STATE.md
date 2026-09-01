@@ -1517,3 +1517,15 @@ Recompute TSK-0322 from current product/identity authority. Its historical pre-C
 ### Queue status after current TSK-0322 acceptance
 
 Revalidate TSK-0323 and TSK-0324 against this current language authority before allowing TSK-0321 dependency use.
+
+## TSK-0323 current accepted stable state — 2026-09-01 — POST-CR-0007
+
+- Runtime state: **PASS**.
+- Current WBS contract: L4 / MEDIUM / A3 / `AUTO_ALLOWED`; sole dependency `TSK-0322`; `ACC-0323 / VER-0323 / EVD-0323`.
+- Current catalogue: `content/TSK-0323/DEVICE_SERVICE_INSTRUCTION_CATALOGUE.md` version `1.0.1-post-cr0007`, blob `f848372f7820ed9455fe80668e761bec741423ae`.
+- Current machine catalogue: `content/TSK-0323/CATALOGUE.json`, blob `79753cc4916d38ed8d2f0ed6d01890e62df3fb04`.
+- Current acceptance evidence: `TSK_0323_POST_CR0007_CURRENT_REVALIDATION_EVIDENCE_2026-09-01.md`, blob `da2905815860f4586e24a53c1417008940103d92`.
+- Deterministic verification: run/job `33483472503 / 99778062685` — SUCCESS; 12/12 instruction-record semantics unchanged, current dependency/scope/language-policy checks PASS.
+- The current update only refreshes source/current-scope compatibility. Accountless core remains mandatory; optional account/dashboard continuity does not alter technical verification truth or physical DNS state.
+- Historical 2026-08-29 TSK-0323 evidence remains provenance only and does not outrank this current post-CR-0007 acceptance.
+- Non-inference fence: no public publication, production, payment, market activation, human-validation or launch authority is implied by this PASS.
