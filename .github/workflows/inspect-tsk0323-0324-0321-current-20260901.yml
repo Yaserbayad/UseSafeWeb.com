@@ -1,0 +1,24 @@
+name: Inspect current TSK-0323 TSK-0324 TSK-0321 authority
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/scripts/inspect_tsk0323_0324_0321_current_20260901.py'
+      - '.github/workflows/inspect-tsk0323-0324-0321-current-20260901.yml'
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: [self-hosted, adguardvm]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Inspect current authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(hostname -s)" = "adguardvm"
+          python3 .github/scripts/inspect_tsk0323_0324_0321_current_20260901.py
+          git diff --check
+          test -z "$(git status --porcelain)"
