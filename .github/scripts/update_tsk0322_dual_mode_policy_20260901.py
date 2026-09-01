@@ -35,6 +35,10 @@ repls={
 for old,new in repls.items():
     req(old in text,f'TSK0322_EXPECTED_GUIDE_TEXT_MISSING={old[:80]}')
     text=text.replace(old,new,1)
+# Changed metadata lines inherited Markdown hard-break spaces from the old file; normalize only those changed lines.
+text=text.replace('**Version:** 2.0.0-post-cr0007  \n','**Version:** 2.0.0-post-cr0007\n')
+text=text.replace('**Action authority:** A4 / AUTO_ALLOWED  \n','**Action authority:** A4 / AUTO_ALLOWED\n')
+text=text.replace('**Current sequencing:** DEC-0053 / CR-0006 + DEC-0054 / CR-0007; DEC-0052 / CR-0005 remains the pre-L8 no-human-evidence rule  \n','**Current sequencing:** DEC-0053 / CR-0006 + DEC-0054 / CR-0007; DEC-0052 / CR-0005 remains the pre-L8 no-human-evidence rule\n')
 req('no claim implies an account/dashboard/activity-history product exists in the current baseline' not in text,'TSK0322_STALE_QA_REMAINS')
 for s in ['2.0.0-post-cr0007','optional parent account/session','optional parent account can provide continuity','A saved device or signed-in account does not by itself mean protection is Verified','automatic J0/J1','unknown destructive results','visible brand/product identity: **`SafeWeb`**']:
     req(s in text,f'TSK0322_GUIDE_CURRENT_SCOPE_MISSING={s}')
