@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-01T13:13:29Z
+**Updated:** 2026-09-01T13:19:56Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -1763,3 +1763,20 @@ Recompute the exact current L5 frontier from WBS/graph/gates/runtime and DEC-005
 ### Queue effect after TSK-0412 PASS
 
 Recompute current L5 eligibility from WBS/graph/gates/runtime and current DEC-0054/DEC-0055 authority before selecting later work.
+
+
+## TSK-0487 current accepted stable state — 2026-09-01
+
+`TSK-0487 — Threat-model anonymous journey state, profile/config delivery, verification endpoints, rate/cost abuse, cross-session access, and data leakage`: **PASS** at the threat-model definition boundary under current `ACC-0487 / VER-0487 / EVD-0487`, current `TSK-0354` dependency evidence, `REQ-0055 / REQ-0059`, `INT-0012 / INT-0015`, and DEC-0054/DEC-0055 authority.
+
+- Action authority: **A3 / AUTO_ALLOWED**.
+- Accepted threat model: `TSK_0487_ANONYMOUS_JOURNEY_THREAT_MODEL_2026-09-01.md`, blob `daa96693e96bbcc749681b1f0264858d90b51244`, source commit `ea1dceb68f78300c02718df2b36e68545636cc04`.
+- Independent security-contract review verified explicit controls/tests for enumeration, replay, token theft/cross-session access, tampering, object/function authorization, injection/SSRF, profile/config misuse, verification-oracle abuse, anonymous denial/cost exhaustion, rate-limit privacy, CSRF/CORS/origin separation, session replay, mass assignment/prototype pollution, error/log leakage, hard non-sliding expiry and ambiguous backend effects.
+- The model preserves the complete accountless core: abuse defense uses opaque scoped short-lived capabilities, strict input/origin boundaries, endpoint/token/global resource budgets and privacy-minimal ephemeral operational counters rather than mandatory authentication or persistent fingerprinting.
+- `REQ-0059` remains an implementation/test obligation: diagnostic logging must be necessary, authorized, minimum, time-boxed, access-controlled and deletion-verified; this threat-model PASS does not claim that runtime diagnostic deletion is implemented.
+- Current official Firebase/Next.js guidance and OWASP API Security 2023 were used for session/CSRF/server-route authorization, object-level authorization and resource-consumption control categories; exact dependency versions and implementation APIs remain downstream.
+- **Non-inference:** no `/website` security control, exact rate threshold, J1 implementation, fuzz/load/browser/penetration test, Firebase final acceptance, vulnerability-free code, LG-07/LG-08/LG-09, production activation, real-user validation or public launch PASS is inferred.
+
+### Queue effect after TSK-0487 PASS
+
+Recompute the current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-0055 authority before selecting later work.
