@@ -1,0 +1,95 @@
+name: Verify TSK-0321 post-CR-0007 remediation candidate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-tsk0321-post-cr0007-remediation-candidate-20260901.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.2'
+      - name: Verify candidate without authoritative product mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(hostname -s)" = 'adguardvm'
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          test "$(git rev-parse HEAD:Plans/Master/WBS/master-wbs.csv)" = 'f3c29b5db8b835ef2c896f61335656ea51d8ba1c'
+          test "$(git rev-parse HEAD:prototype/TSK-0333/index.html)" = '934dc19d00cc9dd32e1ebc20c604373d153d4013'
+          test "$(git rev-parse HEAD:prototype/TSK-0333/model.mjs)" = 'fc25e4b1facc303840311e8ce186612eb8799212'
+          test "$(git rev-parse HEAD:prototype/TSK-0333/app.mjs)" = '98659ba74a86d539b89664708bbcb830292486f8'
+          original_css='6f8af459a0b0b1c9ec132657dfcd7ebff43090b8'
+          test "$(git rev-parse HEAD:prototype/TSK-0333/prototype.css)" = "$original_css"
+          test "$(git rev-parse HEAD:prototype/TSK-0321/POST_CR0007_REMEDIATION_CANDIDATE.css)" = 'eb5242880974a936121f362df0d960746a596795'
+          test "$(git rev-parse HEAD:.github/scripts/verify_tsk0321_post_cr0007_accessibility_browser_20260901.mjs)" = 'b49b1c0aa81c5667b3059863c5bb5511077811f0'
+          echo 'TSK0321_CANDIDATE_PINNED_INPUTS=PASS'
+
+          original_file="$RUNNER_TEMP/tsk0321-original-prototype.css"
+          cp prototype/TSK-0333/prototype.css "$original_file"
+          printf '\n' >> prototype/TSK-0333/prototype.css
+          cat prototype/TSK-0321/POST_CR0007_REMEDIATION_CANDIDATE.css >> prototype/TSK-0333/prototype.css
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          original = Path(os.environ['RUNNER_TEMP']) / 'tsk0321-original-prototype.css'
+          current = Path('prototype/TSK-0333/prototype.css')
+          candidate = Path('prototype/TSK-0321/POST_CR0007_REMEDIATION_CANDIDATE.css')
+          expected = original.read_text(encoding='utf-8') + '\n' + candidate.read_text(encoding='utf-8')
+          if current.read_text(encoding='utf-8') != expected:
+              raise SystemExit('TSK0321_CANDIDATE_OVERLAY_IDENTITY=FAIL')
+          print('TSK0321_CANDIDATE_OVERLAY_IDENTITY=PASS')
+          PY
+
+          runtime_dir="$RUNNER_TEMP/tsk0321-candidate-runtime"
+          rm -rf "$runtime_dir"
+          mkdir -p "$runtime_dir"
+          npm install --prefix "$runtime_dir" --no-save --no-package-lock playwright@1.62.0 axe-core@4.10.3
+          playwright_module="$runtime_dir/node_modules/playwright"
+          axe_module="$runtime_dir/node_modules/axe-core"
+          PLAYWRIGHT_BROWSERS_PATH="$runtime_dir/browsers" "$runtime_dir/node_modules/.bin/playwright" install chromium
+
+          python3 -m http.server 8033 --bind 127.0.0.1 >/tmp/tsk0321-candidate-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 20); do
+            if curl -fsS 'http://127.0.0.1:8033/prototype/TSK-0333/index.html' >/dev/null; then break; fi
+            sleep 0.25
+          done
+          curl -fsS 'http://127.0.0.1:8033/prototype/TSK-0333/index.html' >/dev/null
+
+          env_common=(
+            TSK0321_BASE_URL='http://127.0.0.1:8033/prototype/TSK-0333/index.html'
+            TSK0321_PLAYWRIGHT_MODULE="$playwright_module"
+            PLAYWRIGHT_BROWSERS_PATH="$runtime_dir/browsers"
+          )
+          env "${env_common[@]}" node .github/scripts/verify_tsk0321_200pct_candidate_20260901.mjs
+          echo 'TSK0321_CANDIDATE_FOCUSED_GREEN=PASS'
+
+          TSK0333_BASE_URL='http://127.0.0.1:8033/prototype/TSK-0333/index.html' \
+          TSK0333_PLAYWRIGHT_MODULE="$playwright_module" \
+          PLAYWRIGHT_BROWSERS_PATH="$runtime_dir/browsers" \
+          node .github/scripts/verify_tsk0333_post_cr0007_browser_20260831.mjs
+          echo 'TSK0333_CANDIDATE_REGRESSION=PASS'
+
+          TSK0321_BASE_URL='http://127.0.0.1:8033/prototype/TSK-0333/index.html' \
+          TSK0321_PLAYWRIGHT_MODULE="$playwright_module" \
+          TSK0321_AXE_MODULE="$axe_module" \
+          PLAYWRIGHT_BROWSERS_PATH="$runtime_dir/browsers" \
+          node .github/scripts/verify_tsk0321_post_cr0007_accessibility_browser_20260901.mjs
+          echo 'TSK0321_CANDIDATE_FULL_ACCESSIBILITY=PASS'
+
+          test "$(git rev-parse HEAD:prototype/TSK-0333/prototype.css)" = "$original_css"
+          test "$(git diff --name-only)" = 'prototype/TSK-0333/prototype.css'
+          echo 'TSK0321_AUTHORITATIVE_PRODUCT_NOT_MUTATED=PASS'
