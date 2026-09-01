@@ -1,4 +1,4 @@
-name: Accept TSK-0517 integrated test plan
+name: Accept corrected TSK-0517 integrated test plan
 
 on:
   push:
