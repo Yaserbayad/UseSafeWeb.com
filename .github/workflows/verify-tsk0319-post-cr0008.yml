@@ -1,0 +1,117 @@
+name: Verify TSK-0319 post-CR-0008 current acceptance
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'TSK_0319_POST_CR0008_AUTOMATED_VERIFICATION_TROUBLESHOOTING_RECOVERY_HELP_2026-09-01.md'
+      - '.github/workflows/verify-tsk0319-post-cr0008.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify canonical contract, dependencies, graph and artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "b27a0c5df2f5636d8ed71051e9e26a68959a2616"
+          test "$(git hash-object Plans/Master/RELATIONSHIP_INDEX.yaml)" = "c108d2c162bcea2ee4cc01def46d0487a9501032"
+          test "$(git hash-object TSK_0319_POST_CR0008_AUTOMATED_VERIFICATION_TROUBLESHOOTING_RECOVERY_HELP_2026-09-01.md)" = "dec2b556745c635656fa0f18945c63c47120f6ff"
+          python3 - <<'PY'
+          import csv, json, re
+          from pathlib import Path
+
+          wbs = Path('Plans/Master/WBS/master-wbs.csv')
+          graph = Path('Plans/Master/RELATIONSHIP_INDEX.yaml').read_text(encoding='utf-8')
+          state = Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          artifact = Path('TSK_0319_POST_CR0008_AUTOMATED_VERIFICATION_TROUBLESHOOTING_RECOVERY_HELP_2026-09-01.md').read_text(encoding='utf-8')
+
+          with wbs.open(encoding='utf-8-sig', newline='') as f:
+              rows = list(csv.DictReader(f))
+          row = next((r for r in rows if (r.get('Task_ID') or '').strip() == 'TSK-0319'), None)
+          assert row is not None, 'TSK-0319 row missing'
+
+          def val(*names):
+              for n in names:
+                  if n in row and row[n] is not None:
+                      return row[n].strip()
+              return ''
+
+          deps = re.findall(r'TSK-\d{4}', val('Dependencies'))
+          assert val('Lifecycle_Stage') == 'L4', val('Lifecycle_Stage')
+          assert val('Priority').upper() == 'HIGH', val('Priority')
+          assert val('AI_Capability_A0_A4') == 'A3', val('AI_Capability_A0_A4')
+          assert val('Action_Authority') == 'AUTO_ALLOWED', val('Action_Authority')
+          assert set(deps) == {'TSK-0315', 'TSK-0320'}, deps
+          assert val('Acceptance_ID') == 'ACC-0319', val('Acceptance_ID')
+          assert val('Verification_ID') == 'VER-0319', val('Verification_ID')
+          assert val('Evidence_ID') == 'EVD-0319', val('Evidence_ID')
+          planning = val('Plan_Status', 'Planning_Status', 'Disposition').upper()
+          assert planning not in {'DEFERRED','NOT_APPLICABLE','CANCELLED','CANCELED'}, planning
+
+          accepted = set(re.findall(
+              r'^##\s+(TSK-\d{4})(?:\s*/[^\n#]+)?\s+current accepted stable state\b',
+              state, flags=re.MULTILINE | re.IGNORECASE))
+          assert {'TSK-0315','TSK-0320'} <= accepted, sorted({'TSK-0315','TSK-0320'} - accepted)
+          assert 'TSK-0319' not in accepted, 'TSK-0319 unexpectedly already current PASS before requalification'
+
+          def entity_block(tid):
+              m = re.search(rf'(?ms)^  {re.escape(tid)}:\n(.*?)(?=^  TSK-\d{{4}}:|\Z)', graph)
+              assert m, f'graph entity missing: {tid}'
+              return m.group(1)
+
+          b319 = entity_block('TSK-0319')
+          assert 'target: TSK-0315' in b319 and 'target: TSK-0320' in b319, 'TSK-0319 graph dependencies mismatch'
+          b628 = entity_block('TSK-0628')
+          assert 'target: TSK-0319' in b628 and 'target: TSK-0331' in b628, 'TSK-0628 graph dependencies mismatch'
+
+          required = [
+              'complete accountless core', 'optional parent-account mode',
+              'protected/verified', 'uncertain/error', 'removed',
+              'CHK-PROVIDER', 'CHK-SESSION', 'CHK-OWNERSHIP',
+              'Sign-in start/provider return', 'Session expired', 'Dashboard unavailable',
+              'Add/save/manage device', 'Device replace, revoke, unlink or record deletion',
+              'Account deletion', 'physical DNS removal',
+              'no blind replay', 'ACC-0319 acceptance mapping',
+              'browsing/query/activity history', 'raw DNS history',
+              'Historical evidence remains traceable'
+          ]
+          missing = [x for x in required if x not in artifact]
+          assert not missing, f'artifact semantic markers missing: {missing}'
+          assert 'accountless-only assumptions' in artifact
+          assert 'no implementation, deployment, gate PASS or public release is inferred' in artifact
+
+          print('TSK0319_CURRENT_ACCEPTANCE_VERIFICATION=PASS')
+          print('WBS_ROW=' + json.dumps({
+              'Task_ID': val('Task_ID'),
+              'Lifecycle_Stage': val('Lifecycle_Stage'),
+              'Priority': val('Priority'),
+              'Dependencies': deps,
+              'AI_Capability_A0_A4': val('AI_Capability_A0_A4'),
+              'Action_Authority': val('Action_Authority'),
+              'Acceptance_ID': val('Acceptance_ID'),
+              'Verification_ID': val('Verification_ID'),
+              'Evidence_ID': val('Evidence_ID'),
+              'Plan_Status': planning,
+              'Acceptance_Criteria': val('Acceptance_Criteria')
+          }, sort_keys=True))
+          print('GRAPH_TSK0319_DEPS=TSK-0315,TSK-0320')
+          print('GRAPH_TSK0628_DEPS_INCLUDE=TSK-0319,TSK-0331')
+          print('PREDECESSOR_CURRENT_PASS=TSK-0315,TSK-0320')
+          print('ARTIFACT_BLOB=dec2b556745c635656fa0f18945c63c47120f6ff')
+          PY
+      - name: Repository consistency
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          test -z "$(git status --porcelain)"
