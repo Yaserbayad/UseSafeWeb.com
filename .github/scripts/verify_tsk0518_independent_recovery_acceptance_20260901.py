@@ -151,9 +151,9 @@ ids = [int(i) for i, _ in rows]
 if ids != list(range(1, 21)):
     fail(f'RA matrix must contain exactly RA-01..RA-20 in order, got {ids}')
 for i, rest in rows:
-    cells = [c.strip() for c in rest.split('|')]
-    if len(cells) < 4:
-        fail(f'RA-{i} incomplete matrix row')
+    cells = [c.strip() for c in rest.strip().strip('|').split('|')]
+    if len(cells) != 4:
+        fail(f'RA-{i} must have exactly four cells after ID, got {len(cells)}')
     evidence_class = cells[-2]
     severity = cells[-1]
     if not any(k in evidence_class for k in ['DT', 'IR', 'DO']):
