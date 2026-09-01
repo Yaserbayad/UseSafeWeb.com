@@ -1928,3 +1928,16 @@ Recompute the current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-
 - Non-production/synthetic results remain non-production evidence and cannot be relabelled as production/live-user evidence.
 - Runtime acceptance does not alter WBS, graph, manifest, planning modules or the CR-0008 owner-frozen baseline.
 - **Non-inference:** this PASS freezes the acceptance-test definition only; it does not claim those downstream browser/device/network/runtime tests executed, any release passed, production was activated, or real-user outcomes exist.
+
+## TSK-0143 current accepted stable state — 2026-09-01 — POST-CR-0008
+
+`TSK-0143 — Specify native-device safeguard routing requirements`: **PASS** under current `ACC-0143 / VER-0143 / EVD-0143`, current `TSK-0146` dependency proof and CR-0008 authority.
+
+- Action authority: **A3 / AUTO_ALLOWED**.
+- Artifact: `TSK_0143_NATIVE_DEVICE_SAFEGUARD_ROUTING_REQUIREMENTS_2026-09-01.md`, version `1.0.0`, blob `7eca238090738f282db2b43c7f988a7ff716df19`, publication commit `3e10db0f6549a24349fafeef24fb30db8dd282cc`.
+- Verification source commit: `a316d1b700bd6ccc8655e924cbac30eaf647c7ef`; GitHub Actions run/attempt `33535969106 / 1`.
+- Acceptance proof: exact WBS/dependency/ACC/VER/EVD/authority; REQ-0007/0008; CON-0001/0002; RSK-0002; INT-0003/0004; supported/already-configured/parent-confirmed/unsupported/stale/verification-limited routing semantics; truth-state negative assertions; secret guard; and full modular validator passed before runtime mutation.
+- Parent/configuration confirmation never becomes technical `protected_verified`; unsupported/stale paths fail closed to truthful lower states. Accountless core remains complete without login.
+- No internal/synthetic review is represented as human behavioral/user validation.
+- Runtime acceptance does not alter WBS, graph, manifest, AdGuard or the CR-0008 owner-frozen planning baseline.
+- **Non-inference:** no implementation, device/runtime verification, LG-07, production activation, launch or real-user outcome becomes PASS from this requirements task.
