@@ -129,7 +129,6 @@ jobs:
             "'basicAuth':", "'scheme': 'basic'",
           ):
               assert phrase in s, phrase
-          # Exact tagged API still carries deprecated older config methods; new integration must use current PUT endpoints.
           q=s.index("'/querylog/config/update':")
           st=s.index("'/stats/config/update':")
           assert "'put':" in s[q:q+1800].lower()
@@ -142,8 +141,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          grep -F "ADGUARD_VERSION='v0.107.79'" infrastructure/adguard-server/install-adguard.sh
-          grep -F "ADGUARD_TARBALL_SHA256='c48f4a43000665484c5ec28177de11a004759b620dae8f77b2aabefc9ef3687f'" infrastructure/adguard-server/install-adguard.sh
+          grep -F 'ADGUARD_VERSION="v0.107.79"' infrastructure/adguard-server/install-adguard.sh
+          grep -F 'EXPECTED_SHA256="c48f4a43000665484c5ec28177de11a004759b620dae8f77b2aabefc9ef3687f"' infrastructure/adguard-server/install-adguard.sh
           python3 infrastructure/adguard-server/tsk-0413-bundle-v1/verify_bundle.py | tee /tmp/bundle-verify.txt
           grep -F 'TSK_0413_BUNDLE_VERIFY=PASS' /tmp/bundle-verify.txt
           grep -F 'adguard_home_version=v0.107.79' /tmp/bundle-verify.txt
