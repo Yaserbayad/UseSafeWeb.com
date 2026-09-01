@@ -20,7 +20,7 @@ text=path.read_text(encoding='utf-8')
 heading='## TSK-0323 current accepted stable state — 2026-09-01 — POST-CR-0007'
 req(heading not in text,'TSK0323_CURRENT_SECTION_ALREADY_EXISTS')
 req('## TSK-0322 current accepted stable state — 2026-09-01 — POST-CR-0007' in text,'TSK0323_CURRENT_DEPENDENCY_MISSING')
-section=f'''\n\n{heading}
+section=f'''{heading}
 
 - Runtime state: **PASS**.
 - Current WBS contract: L4 / MEDIUM / A3 / `AUTO_ALLOWED`; sole dependency `TSK-0322`; `ACC-0323 / VER-0323 / EVD-0323`.
@@ -30,7 +30,6 @@ section=f'''\n\n{heading}
 - Deterministic verification: run/job `33483472503 / 99778062685` — SUCCESS; 12/12 instruction-record semantics unchanged, current dependency/scope/language-policy checks PASS.
 - The current update only refreshes source/current-scope compatibility. Accountless core remains mandatory; optional account/dashboard continuity does not alter technical verification truth or physical DNS state.
 - Historical 2026-08-29 TSK-0323 evidence remains provenance only and does not outrank this current post-CR-0007 acceptance.
-- Non-inference fence: no public publication, production, payment, market activation, human-validation or launch authority is implied by this PASS.
-'''
-path.write_text(text.rstrip()+section+'\n',encoding='utf-8')
+- Non-inference fence: no public publication, production, payment, market activation, human-validation or launch authority is implied by this PASS.'''
+path.write_text(text.rstrip()+'\n\n'+section.rstrip()+'\n',encoding='utf-8')
 print('TSK0323_PASS_RUNTIME_PRECONDITIONS=PASS')
