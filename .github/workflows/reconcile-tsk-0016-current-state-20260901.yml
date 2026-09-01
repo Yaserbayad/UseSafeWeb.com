@@ -1,0 +1,180 @@
+name: Reconcile TSK-0016 current modular planning state
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-tsk-0016-current-state-20260901.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-tsk-0016-current-reconciliation
+  cancel-in-progress: false
+
+jobs:
+  verify-reconcile:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: Verify current TSK-0016 acceptance and construct runtime state
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          python3 - <<'PY'
+          from pathlib import Path
+          import csv
+          import os
+          import subprocess
+
+          root = Path('.')
+          wbs_path = root / 'Plans/Master/WBS/master-wbs.csv'
+          state_path = root / 'CURRENT_STATE.md'
+          source_commit = os.environ['SOURCE_COMMIT']
+          run_id = os.environ.get('GITHUB_RUN_ID', 'UNKNOWN')
+          run_attempt = os.environ.get('GITHUB_RUN_ATTEMPT', '1')
+
+          def git_hash(path: str) -> str:
+              return subprocess.check_output(['git', 'hash-object', path], text=True).strip()
+
+          with wbs_path.open(encoding='utf-8-sig', newline='') as f:
+              rows = list(csv.DictReader(f))
+          row = next(r for r in rows if (r.get('Task_ID') or '').strip() == 'TSK-0016')
+
+          expected = {
+              'Lifecycle_Stage': 'L2',
+              'Plan_Status': 'COMPLETED_CANDIDATE',
+              'Execution_State': 'PASS',
+              'Priority': 'CRITICAL',
+              'Critical_Path': 'YES',
+              'Dependencies': '',
+              'Acceptance_ID': 'ACC-0016',
+              'Verification_ID': 'VER-0016',
+              'Evidence_ID': 'EVD-0016',
+              'AI_Capability_A0_A4': 'A3',
+              'Action_Authority': 'AUTO_ALLOWED',
+          }
+          for field, value in expected.items():
+              actual = (row.get(field) or '').strip()
+              assert actual == value, f'{field}: {actual!r} != {value!r}'
+
+          expected_acc = (
+              'The planning system contains one authoritative root, all five layers, 16 packages, '
+              'L0-L13, complete authoritative WBS/registers, legacy reconciliation, current-state '
+              'interface, audits, manifest/relationship graph, and one deterministic non-authoritative '
+              'full-plan reconstruction.'
+          )
+          assert (row.get('Acceptance_Criteria') or '').strip() == expected_acc
+
+          required_paths = [
+              'Plans/Master/MASTER_PLAN.md',
+              'Plans/Master/MANIFEST.yaml',
+              'Plans/Master/Layers/LAYER_1_PROGRAM_ARCHITECTURE_STRATEGIC_BASELINE.md',
+              'Plans/Master/Layers/LAYER_2_PACKAGE_CHARTERS.md',
+              'Plans/Master/Layers/LAYER_3_COMPLETE_PACKAGE_MASTER_PLANS.md',
+              'Plans/Master/Layers/LAYER_4_INTEGRATED_PROGRAM_CRITICAL_PATH.md',
+              'Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md',
+              'Plans/Master/WBS/master-wbs.csv',
+              'Plans/Master/RELATIONSHIP_INDEX.yaml',
+              'Plans/Master/Registers/LEGACY_RECONCILIATION.md',
+              'Plans/Master/Governance/CURRENT_STATE_INTERFACE.md',
+              'Plans/Master/Governance/SOURCE_PLAN_FREEZE_AUDIT.md',
+              'Plans/Master/VALIDATION_REPORT.md',
+              'Plans/Master/Generated/MASTER_PLAN_FULL.md',
+          ]
+          for rel in required_paths:
+              assert Path(rel).is_file(), f'missing required planning-system path: {rel}'
+
+          package_files = sorted(Path('Plans/Master/Packages').glob('PKG-*.md'))
+          assert len(package_files) == 16, f'package module count={len(package_files)}'
+
+          expected_hashes = {
+              'Plans/Master/WBS/master-wbs.csv': 'b27a0c5df2f5636d8ed71051e9e26a68959a2616',
+              'Plans/Master/MANIFEST.yaml': '18207f31f436b649fbb5c7429a10e90b88746976',
+              'Plans/Master/MASTER_PLAN.md': 'aac351180be7bb9955f23f8dbee3d97d0ef324ed',
+              'Plans/Master/RELATIONSHIP_INDEX.yaml': 'c108d2c162bcea2ee4cc01def46d0487a9501032',
+              'Plans/Master/VALIDATION_REPORT.md': '892ef858903b687d14c6fcb4eff7b7b5c2632e57',
+              'Plans/Master/Generated/MASTER_PLAN_FULL.md': '97eac2aa8ca4445679fcf6cf1fa75ae348b066e4',
+          }
+          for rel, expected_hash in expected_hashes.items():
+              actual_hash = git_hash(rel)
+              assert actual_hash == expected_hash, f'{rel}: {actual_hash} != {expected_hash}'
+
+          state = state_path.read_text(encoding='utf-8')
+          assert 'ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0008 PUBLISHED, RECONCILED, READ-BACK VERIFIED.' in state
+          assert '`CR-0008` / `DEC-0055`' in state
+          assert 'WBS blob `b27a0c5df2f5636d8ed71051e9e26a68959a2616`' in state
+          heading = '## TSK-0016 current accepted stable state — 2026-09-01'
+          assert heading not in state, 'TSK-0016 current state already exists; reconcile instead of duplicating'
+
+          validation = subprocess.run(
+              ['python3', 'Plans/Master/Tools/validate_master_plan.py'],
+              text=True,
+              capture_output=True,
+              check=True,
+          )
+          print(validation.stdout, end='')
+          combined = validation.stdout + validation.stderr
+          for marker in (
+              'VALIDATION PASS',
+              'assembly_modules=25',
+              'tasks=641',
+              'dependency_edges=858',
+              'relationship_entities=5178',
+              'relationship_targets=20472',
+              'broken_links=0',
+              'generated_missing_task_ids=0',
+          ):
+              assert marker in combined, f'validator marker missing: {marker}'
+
+          section = f'''{heading}
+
+          `TSK-0016 — Build the unified five-layer final Master Planning System candidate`: **PASS** under current `ACC-0016 / VER-0016 / EVD-0016` and current `DEC-0055/CR-0008` authority.
+
+          - Action authority: **A3 / AUTO_ALLOWED**.
+          - Runtime reconciliation only: the canonical WBS and planning authority are unchanged. The WBS planning snapshot records `COMPLETED_CANDIDATE / PASS`, but current dependency proof is established here only after direct verification against the current CR-0008 repository state.
+          - Acceptance source commit: `{source_commit}`; WBS blob `b27a0c5df2f5636d8ed71051e9e26a68959a2616`; manifest blob `18207f31f436b649fbb5c7429a10e90b88746976`; root blob `aac351180be7bb9955f23f8dbee3d97d0ef324ed`; relationship-index blob `c108d2c162bcea2ee4cc01def46d0487a9501032`; validation-report blob `892ef858903b687d14c6fcb4eff7b7b5c2632e57`; generated-reconstruction blob `97eac2aa8ca4445679fcf6cf1fa75ae348b066e4`.
+          - Verification: GitHub Actions run/attempt `{run_id} / {run_attempt}` plus the current deterministic `Plans/Master/Tools/validate_master_plan.py`: 25 assembly modules, 641 tasks, 858 dependency edges, 5,178 relationship entities, 20,472 relationship targets, 0 broken links, and 0 generated missing task IDs.
+          - `ACC-0016` boundary: one authoritative root, all five layers, 16 package modules, L0-L13, authoritative WBS/registers, legacy reconciliation, current-state interface, audits, manifest/relationship graph, and the deterministic non-authoritative full-plan reconstruction are present and validator-consistent.
+          - Current post-freeze CR-0006/CR-0007/CR-0008 amendments remain part of the canonical planning system. Historical pre-canonicalization text that said publication was pending is retained only as historical audit context and is not treated as current publication state.
+          - **Non-inference:** this reconciliation does not make any successor task, LG-07/LG-08/LG-09, deployment, live-production activation, launch, tracker, or real-user-validation outcome PASS.
+          '''
+          section = '\n'.join(line.strip() for line in section.strip().splitlines())
+          state_path.write_text(state.rstrip() + '\n\n' + section + '\n', encoding='utf-8')
+          print('TSK0016_CURRENT_ACCEPTANCE=PASS')
+          print('TSK0016_STATE_CANDIDATE=PASS')
+          PY
+          git diff --check
+          test "$(git status --porcelain | sed 's/^...//')" = 'CURRENT_STATE.md'
+
+      - name: Persist only CURRENT_STATE and verify remote read-back
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: accept TSK-0016 current modular planning system'
+          STATE_COMMIT="$(git rev-parse HEAD)"
+          STATE_BLOB="$(git rev-parse "$STATE_COMMIT:CURRENT_STATE.md")"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$STATE_COMMIT"
+          test "$(git rev-parse "origin/main:CURRENT_STATE.md")" = "$STATE_BLOB"
+          git show "origin/main:CURRENT_STATE.md" | grep -F '## TSK-0016 current accepted stable state — 2026-09-01'
+          echo "TSK0016_STATE_COMMIT=$STATE_COMMIT"
+          echo "TSK0016_STATE_BLOB=$STATE_BLOB"
+          echo 'TSK0016_ACCEPTANCE_REMOTE_READBACK=PASS'
