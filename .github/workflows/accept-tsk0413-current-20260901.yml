@@ -1,0 +1,76 @@
+name: Accept TSK-0413 current recovery bundle
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/scripts/accept_tsk0413_current_20260901.py'
+      - '.github/workflows/accept-tsk0413-current-20260901.yml'
+
+permissions:
+  contents: write
+  checks: read
+
+env:
+  VERIFIED_CHECK_RUN_ID: '99832778403'
+  VERIFIED_HEAD: '8d329051ba900a92ae9d5897022bd2d090ad1c2d'
+
+concurrency:
+  group: usesafeweb-governed-runtime-write
+  cancel-in-progress: false
+
+jobs:
+  accept:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Reverify current evidence and source state
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          python3 .github/scripts/verify_tsk0413_bundle_20260901.py
+          python3 - <<'PY'
+          import json, os, urllib.request
+          rid=os.environ['VERIFIED_CHECK_RUN_ID']
+          req=urllib.request.Request(
+              f'https://api.github.com/repos/Yaserbayad/UseSafeWeb.com/check-runs/{rid}',
+              headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','User-Agent':'UseSafeWeb-TSK-0413-acceptor'})
+          with urllib.request.urlopen(req,timeout=20) as r: d=json.load(r)
+          assert d['status']=='completed' and d['conclusion']=='success', d
+          assert d['head_sha']==os.environ['VERIFIED_HEAD'], d['head_sha']
+          print('INDEPENDENT_CHECK_RUN=PASS')
+          PY
+          test "$(git hash-object TSK_0413_BUNDLE_VERIFICATION_EVIDENCE_2026-09-01.md)" = '632badd4a8f926cb314aaa8941f029ae4dfc7058'
+          test "$(git hash-object infrastructure/adguard-server/tsk-0413-bundle-v1/bundle.json)" = 'f0735e6a508f16de7a9c4510cc2893b972c1786c'
+      - name: Construct bounded PASS mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/accept_tsk0413_current_20260901.py
+          git diff --check
+          test "$(git status --porcelain | sed 's/^...//')" = 'CURRENT_STATE.md'
+          grep -F '## TSK-0413 current accepted stable state — 2026-09-01' CURRENT_STATE.md
+          grep -F 'no live deployment of the newly approved statistics/filter state' CURRENT_STATE.md
+      - name: Commit push and remote read-back
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: accept TSK-0413 current recovery bundle'
+          COMMIT="$(git rev-parse HEAD)"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$COMMIT"
+          git show "$COMMIT:CURRENT_STATE.md" | grep -F '## TSK-0413 current accepted stable state — 2026-09-01'
+          test "$(git rev-parse "$COMMIT:TSK_0413_BUNDLE_VERIFICATION_EVIDENCE_2026-09-01.md")" = '632badd4a8f926cb314aaa8941f029ae4dfc7058'
+          test "$(git rev-parse "$COMMIT:infrastructure/adguard-server/tsk-0413-bundle-v1/bundle.json")" = 'f0735e6a508f16de7a9c4510cc2893b972c1786c'
+          echo "TSK_0413_ACCEPTANCE_COMMIT=$COMMIT"
+          echo 'TSK_0413_REMOTE_READBACK=PASS'
