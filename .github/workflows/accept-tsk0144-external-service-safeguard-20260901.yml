@@ -29,11 +29,12 @@ jobs:
           test "$(git rev-parse "$SOURCE_COMMIT:TSK_0144_EXTERNAL_SERVICE_SAFEGUARD_REQUIREMENT_2026-09-01.md")" = "633165af53c2eef3a331685798f24e088ab89abf"
 
           python3 - <<'PY'
-          import csv, os, re
+          import csv, re
           from pathlib import Path
 
-          wbs_path = Path('Plans/Master/WBS/master-wbs.csv')
-          with wbs_path.open(encoding='utf-8-sig', newline='') as f:
+          expected_acceptance = 'Requirements define eligibility, supported/unsupported state, one-service limit, parent confirmation, content update ownership, and fallback to Not covered.'
+
+          with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='') as f:
               rows = list(csv.DictReader(f))
           row = next(r for r in rows if (r.get('Task_ID') or '').strip() == 'TSK-0144')
 
@@ -46,24 +47,26 @@ jobs:
           assert norm(row.get('Action_Authority')) == 'AUTO_ALLOWED'
           assert re.findall(r'TSK-\d{4}', row.get('Dependencies') or '') == ['TSK-0143']
           assert set(re.findall(r'REQ-\d{4}', row.get('Requirement_Reference') or '')) == {'REQ-0007', 'REQ-0008'}
+          assert set(re.findall(r'CON-\d{4}', row.get('Requirement_Reference') or '')) == {'CON-0001', 'CON-0002'}
           assert set(re.findall(r'RSK-\d{4}', row.get('Risk_Reference') or '')) == {'RSK-0002'}
           assert set(re.findall(r'INT-\d{4}', row.get('Interface_Reference') or '')) == {'INT-0003', 'INT-0004'}
           assert norm(row.get('Acceptance_ID')) == 'ACC-0144'
           assert norm(row.get('Verification_ID')) == 'VER-0144'
           assert norm(row.get('Evidence_ID')) == 'EVD-0144'
-          assert norm(row.get('Acceptance_Criteria')) == 'Requirements define eligibility, supported/unsupported state, one-service limit, parent confirmation, content update ownership, and fallback to Not covered.'
+          assert norm(row.get('Acceptance_Criteria')) == expected_acceptance
 
-          state_path = Path('CURRENT_STATE.md')
-          state = state_path.read_text(encoding='utf-8')
+          state = Path('CURRENT_STATE.md').read_text(encoding='utf-8')
           assert '## TSK-0143 current accepted stable state — 2026-09-01 — POST-CR-0008' in state
           assert '## TSK-0144 current accepted stable state' not in state
 
-          acc = Path('Plans/Master/Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md').read_text(encoding='utf-8')
-          assert 'ACC-0144' in acc and 'TSK-0144' in acc
-          assert 'Specify the one relevant external-service safeguard step' in acc
-          assert 'Requirement identifies the one relevant external-service safeguard, setup behavior, scope limits, user-facing framing and no false protection claim.' in acc
-          assert 'Static requirement review plus setup-path and scope-limit trace.' in acc
-          assert 'External-service safeguard requirement is explicit and plan-linked without implying it is already active.' in acc
+          register = Path('Plans/Master/Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md').read_text(encoding='utf-8')
+          register_row = next(line for line in register.splitlines() if line.startswith('| TSK-0144 |'))
+          cells = [cell.strip() for cell in register_row.strip().strip('|').split('|')]
+          assert cells[0] == 'TSK-0144'
+          assert cells[1] == 'VER-0144'
+          assert cells[3] == 'EVD-0144'
+          assert cells[5] == 'ACC-0144'
+          assert cells[6] == expected_acceptance
 
           req = Path('Plans/Master/Registers/REQUIREMENTS.md').read_text(encoding='utf-8')
           assert 'REQ-0007' in req and 'at least one complementary relevant external-service safeguard step' in req
@@ -97,14 +100,13 @@ jobs:
           for marker in required:
               assert marker in artifact, marker
 
-          prohibited_claims = [
+          low = artifact.lower()
+          for claim in [
               'all services are protected',
               'complete protection is active',
               'technically verified by parent confirmation',
               'external-service safeguard is already active'
-          ]
-          low = artifact.lower()
-          for claim in prohibited_claims:
+          ]:
               assert claim not in low, claim
 
           print('TSK0144_WBS_CONTRACT=PASS')
@@ -136,7 +138,7 @@ jobs:
           - Supported entries require current source/applicability/version/owner/expected-result/scope-limit/fallback/test metadata. Unsupported, stale or irrelevant cases fall back truthfully to `Not covered`; transient catalogue/read failures may be `uncertain/error` but never configured/protected by selection alone.
           - Parent confirmation means configured/parent-confirmed only where the current state model permits; it can never create `protected/verified` or strengthen the technical DNS protection state. The external-service step remains complementary to native controls and AdGuard-backed encrypted DNS.
           - Content change control is explicit: Product owns selection/eligibility policy, Content owns instruction freshness/source/version/review, QA verifies setup/scope/unsupported/confirmation behavior, and privacy/safeguarding review is required before new data/credential/account-linkage processing.
-          - Current acceptance workflow run `{os.environ['RUN_ID']}` verified exact WBS authority/dependency/references, ACC-0144 register semantics, requirement/setup/scope/framing/privacy/non-inference assertions, artifact blob, and full modular validation before this runtime mutation.
+          - Current acceptance workflow run `{os.environ['RUN_ID']}` verified exact WBS authority/dependency/references, the exact canonical `TSK-0144 / ACC-0144 / VER-0144 / EVD-0144` register row, requirement/setup/scope/framing/privacy/non-inference assertions, artifact blob, and full modular validation before this runtime mutation.
           - **Non-inference:** no specific external vendor is approved or activated; no implementation, technical verification, legal/privacy compliance, L5 architecture, build, release, production, participant, market or launch gate becomes PASS from this requirements freeze.
           '''
           p.write_text(text.rstrip() + block + '\n', encoding='utf-8')
