@@ -166,7 +166,7 @@ console.log('TSK0321_NEW_ACCOUNT_STATES=PASS');
 
 await reset(); await dispatch('OPEN_ACCOUNT_ENTRY'); await dispatch('START_GOOGLE_SIGNIN', { mode: 'returning' }); await auditCurrent('provider-pending-returning', 'provider-pending');
 await dispatch('PROVIDER_ERROR'); await auditCurrent('account-error', 'account-error');
-req(await page.getByRole('button', { name: 'Start setup' }).isVisible(), 'account-error-core-fallback');
+req(await page.getByTestId('action-start').isVisible(), 'account-error-core-fallback');
 await dispatch('START'); req((await currentState()).screen === 'router', 'account-error-fallback-routes-core');
 console.log('TSK0321_PROVIDER_ERROR_FALLBACK=PASS');
 
