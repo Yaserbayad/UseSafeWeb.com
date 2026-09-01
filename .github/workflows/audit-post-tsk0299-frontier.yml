@@ -1,0 +1,128 @@
+name: Audit post-TSK-0299 frontier
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/diagnostics/post-tsk0299-frontier-trigger.txt']
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out current main authority
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Prove current TSK-0301 versus TSK-0316 frontier
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv,re,subprocess
+          from pathlib import Path
+
+          def blob(p): return subprocess.check_output(['git','hash-object',str(p)],text=True).strip()
+          wbs=Path('Plans/Master/WBS/master-wbs.csv')
+          graph=Path('Plans/Master/RELATIONSHIP_INDEX.yaml')
+          runtime=Path('CURRENT_STATE.md')
+          assert blob(wbs)=='b27a0c5df2f5636d8ed71051e9e26a68959a2616'
+          assert blob(graph)=='c108d2c162bcea2ee4cc01def46d0487a9501032'
+          assert blob(runtime)=='dbe82497b0bfe5a699c446ca8b343568c7ca456f'
+          with wbs.open(newline='',encoding='utf-8-sig') as f: rows=list(csv.DictReader(f))
+          byid={r['Task_ID']:r for r in rows if r.get('Task_ID')}
+          for tid in ['TSK-0298','TSK-0299','TSK-0302','TSK-0301','TSK-0300','TSK-0316','TSK-0317','TSK-0315']:
+              r=byid[tid]
+              print('ROW|{}|stage={}|priority={}|plan={}|exec={}|cap={}|authority={}|deps={}|acc={}|ver={}|evd={}|title={}'.format(tid,r.get('Lifecycle_Stage',''),r.get('Priority',''),r.get('Plan_Status',''),r.get('Execution_State',''),r.get('AI_Capability_A0_A4',''),r.get('Action_Authority',''),r.get('Dependencies',''),r.get('Acceptance_ID',''),r.get('Verification_ID',''),r.get('Evidence_ID',''),r.get('Title','')))
+
+          rt=runtime.read_text(encoding='utf-8')
+          for h in ['### TSK-0302 accepted stable state','### TSK-0301 accepted stable state','## TSK-0299 current accepted stable state — 2026-09-01 — POST-CR-0008 CORRECTED OWNER-IDENTITY BINDING','## TSK-0315 current accepted stable state','## TSK-0485 current accepted stable state','## TSK-0318 current accepted stable state','## TSK-0319 current accepted stable state']:
+              print('RUNTIME|{}|{}'.format(h,'YES' if h in rt else 'NO'))
+
+          files=subprocess.check_output(['git','ls-files'],text=True).splitlines()
+          for token in ['0302','0301','0316']:
+              for f in sorted(x for x in files if token in x):
+                  print('FILE|{}|{}|{}'.format(token,f,blob(Path(f))))
+
+          concept=Path('brand/concepts/TSK-0302/README.md')
+          identity=Path('brand/identity/TSK-0301/README.md')
+          approval=Path('TSK_0301_OWNER_IDENTITY_APPROVAL_2026-08-29.md')
+          corrected=Path('TSK_0299_POST_CR0008_OWNER_IDENTITY_BINDING_CORRECTION_2026-09-01.md')
+          assert blob(concept)=='59c01476f22147f5567c4d10fd0a0c122056ae23'
+          assert blob(identity)=='b8ffd2ed234465a238558a7b94e56274de49696a'
+          assert blob(approval)=='66f4b545c03571649a8baa4c0fe3d1df564b5949'
+          assert blob(corrected)=='6b4ac6020391a2f6e291f83c50f27a7583215f3b'
+          c=concept.read_text(encoding='utf-8')
+          i=identity.read_text(encoding='utf-8')
+          a=approval.read_text(encoding='utf-8')
+          corr=corrected.read_text(encoding='utf-8')
+
+          # TSK-0302 current substantive acceptance remains unchanged by CR-0006/0008.
+          for s in ['three','editable','scalable','Non-surveillance','No complete-safety visual claim','RSK-0002` remains OPEN']:
+              assert s in c, f'TSK0302 substantive acceptance missing: {s}'
+          assert 'The directions inherit:' in c and '`TSK-0298`' in c and '`TSK-0299`' in c
+          assert 'No direction is called parent-preferred, trustworthy to parents, behaviorally validated, legally approved, launch-ready or implementation-ready' in c
+          # Stale old action-authority prose is procedural only; current WBS governs authority and is AUTO_ALLOWED.
+          assert byid['TSK-0302']['Dependencies'].strip()=='TSK-0298'
+          assert byid['TSK-0302']['Acceptance_Criteria'].startswith('Small set')
+          print('TSK0302_CURRENT_SUBSTANTIVE_VALIDITY=PASS')
+
+          # TSK-0301 identity remains substantively compatible and is the exact higher-authority identity TSK-0299 was corrected to.
+          for s in ['The visible product/brand name is exactly **SafeWeb**.','do not render `UseSafeWeb`','Cross-surface reuse','Multilingual / RTL use','RSK-0002` remains OPEN']:
+              assert s in i, f'TSK0301 identity substantive acceptance missing: {s}'
+          assert '**Decision:** APPROVED' in a and '**Brand name:** `SafeWeb`' in a
+          assert 'TSK-0301 owner-approved identity is preserved rather than reselected or overwritten' in corr
+          assert '**Visible product/brand name:** `SafeWeb`' in corr
+          assert byid['TSK-0301']['Dependencies'].strip()=='TSK-0302; TSK-0299'
+          print('TSK0301_SUBSTANTIVE_IDENTITY_VALIDITY=PASS')
+          print('TSK0301_CURRENT_DIRECT_PREDECESSORS=TSK-0302,TSK-0299')
+          print('TSK0301_TSK0299_PREDECESSOR_NEWER_THAN_HISTORICAL_ACCEPTANCE=YES')
+          print('TSK0301_REVALIDATION_NEEDED_FOR_CURRENT_DIRECT_PREDECESSOR_PROOF=YES')
+          print('TSK0301_OWNER_RESELECTION_NEEDED=NO')
+
+          # Locate and inspect TSK-0316 artifacts for the known CR-0006 contradiction.
+          f316=[Path(x) for x in files if '0316' in x and x.endswith(('.md','.txt'))]
+          hits=[]
+          for p in f316:
+              text=p.read_text(encoding='utf-8',errors='replace')
+              markers=[]
+              for s in ['No account','accountless','login','account','dashboard','Sign in','device management','optional account']:
+                  if s.lower() in text.lower(): markers.append(s)
+              if markers:
+                  hits.append((str(p),markers))
+                  print('TSK0316_MARKERS|{}|{}'.format(p,','.join(markers)))
+          assert hits, 'no TSK-0316 artifact semantics found'
+          assert byid['TSK-0316']['Dependencies'].strip()=='TSK-0315'
+          assert '## TSK-0315 current accepted stable state' in rt
+          print('TSK0316_CURRENT_PREDECESSOR=PASS')
+          print('TSK0316_CR0006_REQUALIFICATION_OPEN=YES')
+
+          # Reverse dependency cones from the two open candidates.
+          def deps(r): return [x.strip() for x in re.split(r'[;,]',r.get('Dependencies','')) if x.strip().startswith('TSK-')]
+          rev={tid:[] for tid in byid}
+          for r in rows:
+              for d in deps(r): rev.setdefault(d,[]).append(r['Task_ID'])
+          for root in ['TSK-0301','TSK-0316']:
+              seen={root}; q=[root]
+              while q:
+                  x=q.pop(0)
+                  for y in rev.get(x,[]):
+                      if y not in seen: seen.add(y); q.append(y)
+              desc=sorted(seen-{root})
+              print('DESC|{}|count={}|ids={}'.format(root,len(desc),','.join(desc)))
+              print('DIRECT_SUCCESSORS|{}|{}'.format(root,','.join(rev.get(root,[]))))
+
+          # Selection-relevant gates: both are L4/HIGH/AUTO_ALLOWED with current hard inputs; no owner action required for revalidation.
+          assert byid['TSK-0301']['Lifecycle_Stage']=='L4' and byid['TSK-0301']['Priority']=='HIGH' and byid['TSK-0301']['Action_Authority']=='AUTO_ALLOWED'
+          assert byid['TSK-0316']['Lifecycle_Stage']=='L4' and byid['TSK-0316']['Priority']=='HIGH' and byid['TSK-0316']['Action_Authority']=='AUTO_ALLOWED'
+          print('FRONTIER_CANDIDATE|TSK-0301|OPEN_DEPENDENCY_COMPLETE_REVALIDATION|owner_action=NONE')
+          print('FRONTIER_CANDIDATE|TSK-0316|OPEN_CR0006_FRICTION_REQUALIFICATION|owner_action=NONE')
+          print('WBS_BLOB='+blob(wbs))
+          print('GRAPH_BLOB='+blob(graph))
+          print('RUNTIME_BLOB='+blob(runtime))
+          print('HEAD='+subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip())
+          PY
