@@ -1,4 +1,4 @@
-name: Recompute current L5 frontier after TSK-0238
+name: Recompute current L5 frontier after TSK-0485
 
 on:
   push:
@@ -13,7 +13,7 @@ jobs:
   audit:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
           fetch-depth: 2
       - name: Recompute current L5 frontier
