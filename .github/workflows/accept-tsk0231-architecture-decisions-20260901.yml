@@ -1,0 +1,89 @@
+name: Accept TSK-0231 architecture decisions
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/accept-tsk0231-architecture-decisions-20260901.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  verify-accept:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 4
+
+      - name: Verify TSK-0231 acceptance and stage runtime state
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse HEAD:Plans/Master/WBS/master-wbs.csv)" = "b27a0c5df2f5636d8ed71051e9e26a68959a2616"
+          test "$(git rev-parse HEAD:TSK_0231_ARCHITECTURE_DECISIONS_AND_REJECTED_ALTERNATIVES_2026-09-01.md)" = "9479f19f44a94fe37671ea38e4ec96c170687181"
+
+          python3 .github/scripts/accept_tsk0231_20260901.py
+          python3 Plans/Master/Tools/validate_master_plan.py
+
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          p = Path('CURRENT_STATE.md')
+          text = p.read_text(encoding='utf-8')
+          heading = '## TSK-0231 current accepted stable state — 2026-09-01 — POST-CR-0008'
+          assert heading not in text
+          lines = [
+              heading,
+              '',
+              '`TSK-0231 — Record architecture decisions and rejected alternatives`: **PASS** under current `ACC-0231 / VER-0231 / EVD-0231`, current `TSK-0355` + `TSK-0411` + `TSK-0233` + `TSK-0444` + `TSK-0354` dependency proof, and CR-0008 authority.',
+              '',
+              '- Action authority: **A3 / AUTO_ALLOWED**.',
+              '- Artifact: `TSK_0231_ARCHITECTURE_DECISIONS_AND_REJECTED_ALTERNATIVES_2026-09-01.md`, version `1.0.0`, blob `9479f19f44a94fe37671ea38e4ec96c170687181`, publication commit `a649bff74020ad025d76596ebfc53e26ce48553f`.',
+              '- Accepted decision record: exactly 10 material ADRs, each with context, options, decision, rationale, rejected alternatives, consequences, evidence, owner, review trigger and requirement/risk links. The artifact is a derivative consolidation/index only; it is not a second mutable decision register, WBS, runtime store or checkpoint and creates no new owner decision.',
+              '- Architecture retained from current authority: one TypeScript + Next.js `/website` application; complete accountless core plus optional parent account/dashboard; J0/J1/AUTH/A separation with no J1-to-account linkage; minimum persistent ownership state with datastore product deferred pending evidence; `dns.usesafeweb.com` encrypted DNS topology; server-only typed/allowlisted AdGuard control with ClientID never authorization; no browsing/query/domain history; PROD plus CI/ephemeral with no mandatory persistent staging; separate owner web/app and DNS VMs with direct-host baseline.',
+              '- Rejected/deferred alternatives remain explicit: mandatory login, anonymous-to-account stitching, browsing/top-domain history, ClientID authorization, public AdGuard administration/arbitrary control passthrough, initial public plain DNS, public DoT before its controls are proven, mandatory microservices/Kubernetes/container orchestration, mandatory staging/separate pilot lifecycle, and premature datastore/backup-retention/final-legal conclusions.',
+              '- `RSK-0001` remains OPEN. `REQ-0018/REQ-0019`, `CON-0007/CON-0008`, `INT-0006/INT-0007` remain controlling; actual runtime/config/schema/log/cache/recipient/backup/deletion facts must still be inspected before release and no unsupported legal conclusion is inferred.',
+              f'- Acceptance workflow run `{os.environ["RUN_ID"]}` verified the exact WBS contract/dependencies/ACC/VER/EVD and linked controls, immutable artifact blob, all 10 ADRs and all required fields/rejected-alternative/privacy/non-inference markers, then passed the full modular validator before this runtime mutation.',
+              '- **Non-inference:** no implementation, datastore/auth vendor acceptance, production backup approval, code/build/deployment, LG-07/LG-08/LG-09, participant activation, production processing authority, market activation, public launch or downstream task becomes PASS from this ADR consolidation.',
+          ]
+          p.write_text(text.rstrip() + '\n\n' + '\n'.join(lines) + '\n', encoding='utf-8')
+          PY
+
+          git diff --check
+          test "$(git status --porcelain | sed 's/^...//')" = 'CURRENT_STATE.md'
+          echo 'ACC_0231=PASS'
+          echo 'VER_0231=PASS'
+          echo 'EVD_0231=PASS'
+          echo 'TSK0231_STATE_CANDIDATE=PASS'
+
+      - name: Persist and independently read back TSK-0231 state
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: accept TSK-0231 architecture decisions'
+          C="$(git rev-parse HEAD)"
+          B="$(git rev-parse "$C:CURRENT_STATE.md")"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$C"
+          test "$(git rev-parse "origin/main:CURRENT_STATE.md")" = "$B"
+          git show "origin/main:CURRENT_STATE.md" | grep -F '## TSK-0231 current accepted stable state — 2026-09-01 — POST-CR-0008'
+          echo "TSK0231_STATE_COMMIT=$C"
+          echo "TSK0231_STATE_BLOB=$B"
+          echo 'TSK0231_ACCEPTANCE_REMOTE_READBACK=PASS'
