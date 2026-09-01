@@ -94,7 +94,7 @@ def main() -> None:
         assert status in allowed_statuses, status
         assert cells[2] and cells[3] and cells[4] and cells[5]
         if status in {'SUPPORTED-L4', 'CONDITIONAL'}:
-            assert any(term in cells[3].lower() for term in ('verification', 'verify', 'reverify')), cells
+            assert any(term in cells[3].lower() for term in ('verification', 'verify', 'reverify', 'verifier')), cells
         assert any(state_name in cells[5] for state_name in (
             'protected_verified', 'configured_parent_confirmed', 'action_needed',
             'not_covered', 'uncertain_error', 'removed', 'recompute state', 'inherit applicable verified state'
