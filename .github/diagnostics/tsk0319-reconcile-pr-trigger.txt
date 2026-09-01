@@ -1,2 +1,3 @@
 TSK-0319 deterministic state-reconciliation PR canary.
 Purpose: make the GitHub Actions execution boundary observable without changing project authority or runtime semantics.
+Retry: wrapper whitespace false-positive removed after run 33569210141.
