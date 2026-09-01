@@ -1,0 +1,230 @@
+name: Accept TSK-0230 privacy data NFRs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/accept-tsk0230-privacy-data-nfrs-20260901.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  verify-accept:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 3
+
+      - name: Verify TSK-0230 acceptance and stage runtime state
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse HEAD:Plans/Master/WBS/master-wbs.csv)" = "b27a0c5df2f5636d8ed71051e9e26a68959a2616"
+          test "$(git rev-parse HEAD:TSK_0230_PRIVACY_DATA_MINIMISATION_RETENTION_DELETION_NFRS_2026-09-01.md)" = "9cd41bcc83769d795ef212b65e2e32c8119c7e48"
+
+          python3 - <<'PY'
+          import csv, re
+          from pathlib import Path
+
+          expected = ('Each data element has purpose, lawful basis, source, recipient, retention, deletion mechanism, access control, and prohibited use; '
+                      'identifiable browsing history remains excluded.')
+
+          with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='') as f:
+              rows = list(csv.DictReader(f))
+          row = next(r for r in rows if (r.get('Task_ID') or '').strip() == 'TSK-0230')
+          norm = lambda v: (v or '').strip()
+          assert norm(row.get('Title')) == 'Define privacy, data-minimisation, retention, and deletion NFRs'
+          assert norm(row.get('Lifecycle_Stage')) == 'L4'
+          assert norm(row.get('Priority')) == 'MEDIUM'
+          assert norm(row.get('AI_Capability_A0_A4')) == 'A3'
+          assert norm(row.get('Action_Authority')) == 'AUTO_ALLOWED'
+          assert norm(row.get('Plan_Status')) == 'PLANNED'
+          assert re.findall(r'TSK-\d{4}', row.get('Dependencies') or '') == ['TSK-0313','TSK-0042']
+          assert set(re.findall(r'REQ-\d{4}', row.get('Requirement_Reference') or '')) == {'REQ-0018','REQ-0019'}
+          assert set(re.findall(r'CON-\d{4}', row.get('Requirement_Reference') or '')) == {'CON-0007','CON-0008'}
+          assert set(re.findall(r'RSK-\d{4}', row.get('Risk_Reference') or '')) == {'RSK-0001'}
+          assert set(re.findall(r'INT-\d{4}', row.get('Interface_Reference') or '')) == {'INT-0006','INT-0007'}
+          assert norm(row.get('Acceptance_ID')) == 'ACC-0230'
+          assert norm(row.get('Verification_ID')) == 'VER-0230'
+          assert norm(row.get('Evidence_ID')) == 'EVD-0230'
+          assert norm(row.get('Acceptance_Criteria')) == expected
+
+          state = Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          for dep in ['TSK-0313','TSK-0042']:
+              assert re.search(rf'^##\s+{dep}(?:\s*/[^\n#]+)?\s+current accepted stable state\b', state, flags=re.M|re.I), dep
+          assert not re.search(r'^##\s+TSK-0230(?:\s*/[^\n#]+)?\s+current accepted stable state\b', state, flags=re.M|re.I)
+
+          register = Path('Plans/Master/Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md').read_text(encoding='utf-8')
+          rr = next(line for line in register.splitlines() if line.startswith('| TSK-0230 |'))
+          cells = [c.strip() for c in rr.strip().strip('|').split('|')]
+          assert cells[0] == 'TSK-0230'
+          assert cells[1] == 'VER-0230'
+          assert cells[3] == 'EVD-0230'
+          assert cells[5] == 'ACC-0230'
+          assert cells[6] == expected
+
+          linked = {
+              'Plans/Master/Registers/REQUIREMENTS.md': ['REQ-0018','REQ-0019'],
+              'Plans/Master/Registers/CONSTRAINTS.md': ['CON-0007','CON-0008'],
+              'Plans/Master/Registers/RISKS.md': ['RSK-0001'],
+              'Plans/Master/Registers/INTERFACES.md': ['INT-0006','INT-0007'],
+          }
+          for path, ids in linked.items():
+              lines = Path(path).read_text(encoding='utf-8').splitlines()
+              for item_id in ids:
+                  matches = [line for line in lines if line.startswith(f'| {item_id} |')]
+                  assert len(matches) == 1, (path, item_id, len(matches))
+
+          artifact = Path('TSK_0230_PRIVACY_DATA_MINIMISATION_RETENTION_DELETION_NFRS_2026-09-01.md').read_text(encoding='utf-8')
+          required_markers = [
+              '**Fail-closed rule:**',
+              '`BLOCKED_NO_VALID_BASIS_OR_CONTRACT`',
+              '`PROHIBITED`',
+              '`LI_CONDITIONAL`',
+              '`CONTRACT_CONDITIONAL`',
+              '`LEGAL_OBLIGATION_CONDITIONAL`',
+              '`NOT_PERSONAL_OR_SYNTHETIC`',
+              'RSK-0001` remains OPEN',
+              'REQ-0018 continues to prohibit activation of a real England participant',
+              '**No identifiable browsing history.**',
+              'Persistent query/file logging stays off.',
+              'Identifiable per-client statistics stay off/excluded.',
+              'Accountless and optional-account state are separate domains.',
+              'Protection evidence is separate from identity.',
+              'Deletion operations are truthful and separate.',
+              'ClientID is never authorization',
+              'maximum 24h from creation, non-sliding',
+              'within 15m',
+              '**maximum 13 months**',
+              '**maximum 30 days**',
+              'J1 is excluded from durable backups by default',
+              'INT-0007',
+              'ACC-0230 / VER-0230 / EVD-0230',
+          ]
+          for marker in required_markers:
+              assert marker in artifact, marker
+
+          # Parse the normative inventory table and require every current row to define
+          # every acceptance field plus necessity/rights-safeguards.
+          lines = artifact.splitlines()
+          header = '| ID | Data element | Domain | Purpose / necessity | Lawful-basis status | Source | Recipient | Retention | Deletion mechanism | Access control | Rights / safeguards | Prohibited use |'
+          hi = lines.index(header)
+          table_rows = []
+          for line in lines[hi+2:]:
+              if not line.startswith('| D'):
+                  break
+              cells = [c.strip() for c in line.strip().strip('|').split('|')]
+              assert len(cells) == 12, (cells[0] if cells else '?', len(cells))
+              assert all(cells), cells[0]
+              table_rows.append(cells)
+          assert len(table_rows) == 27, len(table_rows)
+          assert [r[0] for r in table_rows] == [f'D{i:02d}' for i in range(1,28)]
+
+          allowed_status_tokens = {
+              'LI_CONDITIONAL', 'CONTRACT_CONDITIONAL', 'LEGAL_OBLIGATION_CONDITIONAL',
+              'NOT_PERSONAL_OR_SYNTHETIC', 'BLOCKED', 'PROHIBITED'
+          }
+          for r in table_rows:
+              status = r[4]
+              assert any(tok in status for tok in allowed_status_tokens), (r[0], status)
+              # Source, recipient, retention, deletion and access cannot be vague placeholders.
+              for idx in [5,6,7,8,9,11]:
+                  assert r[idx] not in {'TBD','UNKNOWN','—','-',''}, (r[0], idx, r[idx])
+
+          d27 = next(r for r in table_rows if r[0] == 'D27')
+          assert d27[4] == 'PROHIBITED'
+          assert 'Zero' in d27[7]
+          assert 'do not create/store' in d27[7]
+          assert 'Any product, dashboard, analytics, support, monetisation, profiling or persistent diagnostic use' in d27[11]
+
+          # The artifact must mention forbidden classes only as prohibitions, never as an allowed
+          # current collected inventory row. D27 is the explicit rejection/control row.
+          forbidden_classes = ['identifiable DNS/query/domain/URL/browsing/top-domain/child-activity data']
+          assert d27[1] == forbidden_classes[0]
+          for r in table_rows[:-1]:
+              assert r[1] != forbidden_classes[0]
+
+          assertions = re.findall(r'^([0-9]+)\. ', artifact, flags=re.M)
+          assert all(str(i) in assertions for i in range(1,21))
+
+          # Preserve current legal non-inference: this L4 task cannot close current legal readiness.
+          assert 'This task does not establish final UK legal/data readiness.' in artifact
+          assert 'No final rights/legal-compliance conclusion is made by this L4 NFR' in artifact
+          assert 'does not resolve project-specific legal applicability' in artifact
+
+          print('TSK0230_WBS_CONTRACT=PASS')
+          print('TSK0230_DEPENDENCIES=PASS')
+          print('TSK0230_ACC_REGISTER=PASS')
+          print('TSK0230_LINKED_REGISTERS=PASS')
+          print('TSK0230_INVENTORY_ROWS=27')
+          print('TSK0230_EIGHT_FIELD_COMPLETENESS=PASS')
+          print('TSK0230_LAWFUL_BASIS_FAIL_CLOSED=PASS')
+          print('TSK0230_RETENTION_DELETION=PASS')
+          print('TSK0230_NO_BROWSING_HISTORY=PASS')
+          print('TSK0230_DOMAIN_SEPARATION=PASS')
+          print('TSK0230_RSK0001_NONINFERENCE=PASS')
+          PY
+
+          python3 Plans/Master/Tools/validate_master_plan.py
+
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p = Path('CURRENT_STATE.md')
+          text = p.read_text(encoding='utf-8')
+          lines = [
+              '## TSK-0230 current accepted stable state — 2026-09-01 — POST-CR-0008',
+              '',
+              '`TSK-0230 — Define privacy, data-minimisation, retention, and deletion NFRs`: **PASS** under current `ACC-0230 / VER-0230 / EVD-0230`, current `TSK-0313` + `TSK-0042` dependency proof, and CR-0008 authority.',
+              '',
+              '- Action authority: **A3 / AUTO_ALLOWED**.',
+              '- Artifact: `TSK_0230_PRIVACY_DATA_MINIMISATION_RETENTION_DELETION_NFRS_2026-09-01.md`, version `1.0.0-post-CR-0008`, blob `9cd41bcc83769d795ef212b65e2e32c8119c7e48`, publication commit `b01c46046c31fa0d61a4fe9bceeed2a6d6839d6c`.',
+              '- Accepted NFR: every current authorised data element/class has explicit purpose/necessity, lawful-basis status, source, recipient, retention, deletion mechanism, access control, rights/safeguards and prohibited use; missing/unsupported basis or contract fails closed rather than being guessed into compliance.',
+              '- Identifiable DNS/query/domain/URL/browsing/top-domain/child-activity history remains prohibited; persistent identifiable query/file logging remains off and identifiable per-client statistics remain off/excluded unless a separately current justified exception is authorised.',
+              '- Anonymous J0/J1, optional parent account/session, parent-owned device, support/diagnostics, DNS control-plane, telemetry and backup domains remain purpose-separated; sign-in cannot extend J1 or silently join anonymous history into an account.',
+              '- Current frozen retention carried forward: J1 and raw accountless event linkage max 24h; J1 early deletion synchronous or within 15m; TSK-0498 non-linkable product aggregates max 13 months; synthetic reliability raw max 30 days and aggregates max 13 months. These are product-contract maxima, not claimed legal mandates.',
+              '- Account deletion, saved-device deletion/unlink/revoke, AdGuard reconciliation and physical DNS/profile removal are distinct truthful operations. Account/device ownership, ClientID, parent confirmation or cached state never substitutes for technical protection verification.',
+              '- `RSK-0001` remains OPEN: this L4 NFR does not establish final UK legal/data readiness, close Article-27/ICO/LIA/DPIA questions, authorize real England participant processing, or certify production legal compliance. `INT-0007` still requires actual runtime/config/log/schema/backup inspection before release.',
+              f'- Acceptance workflow run `{os.environ["RUN_ID"]}` verified the exact WBS/dependencies/ACC/VER/EVD and linked registers, all 27 inventory rows and required fields, fail-closed lawful-basis semantics, retention/deletion/privacy/domain-separation invariants, RSK-0001 non-inference and the full modular validator before this runtime mutation.',
+              '- **Non-inference:** no persistent account schema, datastore, runtime deletion implementation, processor/DPA/transfer conclusion, final lawful-basis approval, browser/device runtime test, human validation, build, deployment, participant activation, market activation, launch or downstream task/gate becomes PASS from this L4 NFR freeze.',
+          ]
+          p.write_text(text.rstrip() + '\n\n' + '\n'.join(lines) + '\n', encoding='utf-8')
+          PY
+
+          git diff --check
+          test "$(git status --porcelain | sed 's/^...//')" = 'CURRENT_STATE.md'
+          echo 'ACC_0230=PASS'
+          echo 'VER_0230=PASS'
+          echo 'EVD_0230=PASS'
+          echo 'TSK0230_STATE_CANDIDATE=PASS'
+
+      - name: Persist and independently read back TSK-0230 state
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: accept TSK-0230 privacy data NFRs'
+          C="$(git rev-parse HEAD)"
+          B="$(git rev-parse "$C:CURRENT_STATE.md")"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$C"
+          test "$(git rev-parse "origin/main:CURRENT_STATE.md")" = "$B"
+          git show "origin/main:CURRENT_STATE.md" | grep -F '## TSK-0230 current accepted stable state — 2026-09-01 — POST-CR-0008'
+          echo "TSK0230_STATE_COMMIT=$C"
+          echo "TSK0230_STATE_BLOB=$B"
+          echo 'TSK0230_ACCEPTANCE_REMOTE_READBACK=PASS'
