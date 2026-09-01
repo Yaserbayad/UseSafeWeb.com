@@ -1780,3 +1780,15 @@ Recompute current L5 eligibility from WBS/graph/gates/runtime and current DEC-00
 ### Queue effect after TSK-0487 PASS
 
 Recompute the current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-0055 authority before selecting later work.
+
+## TSK-0235 current accepted stable state — 2026-09-01
+
+`TSK-0235 — Create system context, container, and integration diagrams`: **PASS** under current `ACC-0235 / VER-0235 / EVD-0235`, current `TSK-0043` dependency evidence, current `LG-06` PASS, and `DEC-0055/CR-0008` proportional-evidence authority.
+
+- Action authority: **A3 / AUTO_ALLOWED**.
+- Artifact: `TSK_0235_SYSTEM_CONTEXT_CONTAINER_INTEGRATION_DIAGRAMS_2026-09-01.md`, version `1.0.0`, blob `ecac82c1e020977a50af1d02345091415afba4ce`, acceptance source commit `ffdd33b3e835a9563ea31c842e5ae8740f3a9cbf`.
+- Verification: GitHub Actions run/attempt `33518579659 / 1` by `github-actions[bot]`; current WBS authority/dependency/ACC, current TSK-0043/LG-06 state, exact accepted TSK-0354 and TSK-0413 source blobs, every ACC-0235 diagram element, prohibited secret material and master-plan validity were checked before this mutation.
+- Proven scope: public site; accountless setup application; optional Google/Firebase identity/session; minimum parent/device ownership store; lightweight dashboard/device management; DNS activation/verification; private AdGuard administration boundary; direct encrypted DNS data plane; exact Quad9 dns10; Azure/West-Europe DNS region boundary; trust boundaries and excluded processors.
+- TSK-0413 privacy baseline is explicit throughout: AdGuard Home v0.107.79/schema 34; ECS off; persistent query/file logging off; client-IP anonymization on; only 24-hour anonymized aggregate operational statistics; private loopback admin; no browser admin credentials; no browsing/query/activity history.
+- Deviation/disposition: exact cross-VM private AdGuard-control transport remains intentionally downstream and must preserve loopback-only authenticated administration with no public `/control/*` path.
+- **Non-inference:** no implementation, datastore/Firebase final selection, deployment, LG-07/LG-08, production activation, launch, or real-user validation PASS is inferred.
