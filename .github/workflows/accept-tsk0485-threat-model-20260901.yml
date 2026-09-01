@@ -29,7 +29,7 @@ jobs:
           test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
           test "$(git rev-parse HEAD:Plans/Master/WBS/master-wbs.csv)" = "b27a0c5df2f5636d8ed71051e9e26a68959a2616"
           test "$(git rev-parse HEAD:TSK_0485_END_TO_END_THREAT_ABUSE_MODEL_2026-09-01.md)" = "373ac62ba1f244328e7d8e52ae6648d72e5a5ed7"
-          test "$(git rev-parse HEAD:.github/scripts/accept_tsk0485_20260901.py)" = "59c9993b4ac9a33c509c39bc78ba2e2d8ce2208a"
+          test "$(git rev-parse HEAD:.github/scripts/accept_tsk0485_20260901.py)" = "a31d560922f00fd87056f3e1e075af6efac24e53"
 
           python3 .github/scripts/accept_tsk0485_20260901.py
           python3 Plans/Master/Tools/validate_master_plan.py
