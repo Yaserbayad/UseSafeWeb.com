@@ -3,7 +3,7 @@
 **Task:** TSK-0498 — Define only decision-linked accountless journey, protection-state, self-service, reliability, channel, and cost events  
 **Acceptance:** ACC-0498 / VER-0498 / EVD-0498  
 **Lifecycle:** L5 — Architecture, Security, Privacy & Operations  
-**Version:** 1.0.0  
+**Version:** 1.0.1
 **Date:** 2026-09-01  
 **Status:** CURRENT L5 MEASUREMENT CONTRACT CANDIDATE; implementation and downstream PASS are not inferred  
 **Authority:** current owner-frozen CR-0008 modular planning system; current TSK-0229 accountless/no-linkage model; current TSK-0320 protection-state model; REQ-0060/0061/0062; CON-0007/0008/0009; RSK-0049; INT-0016.  
@@ -204,7 +204,7 @@ Monthly data-minimisation review must identify unused events/fields/aggregates. 
 
 A compliant implementation/test suite must prove at least:
 
-1. Only the eleven event names in this contract are accepted.
+1. Only the twelve event names in this contract are accepted.
 2. Unknown fields/events are rejected before durable storage.
 3. No approved schema contains domain/URL/DNS-query/child-activity fields.
 4. No approved schema contains account/person/device persistent identity or an account join key.
