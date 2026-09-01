@@ -1,0 +1,84 @@
+name: Verify TSK-0518 independent recovery acceptance plan
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'TSK_0518_INDEPENDENT_RECOVERY_ACCEPTANCE_PLAN_2026-09-01.md'
+      - '.github/scripts/verify_tsk0518_independent_recovery_acceptance_20260901.py'
+      - '.github/workflows/verify-tsk0518-independent-recovery-acceptance-20260901.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-governed-tsk0518-verification
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: Independently inspect acceptance plan and current recovery authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/verify_tsk0518_independent_recovery_acceptance_20260901.py
+          python3 Plans/Master/Tools/validate_master_plan.py
+          git diff --check HEAD^ HEAD
+          test -z "$(git status --porcelain)"
+
+      - name: Persist independent verification marker
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+
+          MARKER='TSK_0518_INDEPENDENT_RECOVERY_ACCEPTANCE_AUTOVERIFY_2026-09-01.md'
+          cat > "$MARKER" <<EOF
+          # TSK-0518 independent recovery acceptance plan — automated verification marker — 2026-09-01
+
+          - Source commit: \`$SOURCE_COMMIT\`
+          - GitHub Actions run: \`${GITHUB_RUN_ID}\`
+          - Attempt: \`${GITHUB_RUN_ATTEMPT}\`
+          - Workflow: \`${GITHUB_WORKFLOW}\`
+          - Runner OS: \`${RUNNER_OS}\`
+          - Result: **PASS**
+
+          Verified outcomes:
+
+          - current WBS identifies TSK-0518 as L5 / CRITICAL / A3 / AUTO_ALLOWED with sole hard dependency TSK-0446 and exact ACC-0518/VER-0518/EVD-0518 bindings;
+          - current runtime and exact EVD-0446 prove the TSK-0446 predecessor is current PASS and LG-06 unlocks L5;
+          - current TSK-0446 contract, TSK-0446 evidence, and TSK-0413 bundle hashes match the accepted versions and the TSK-0413 self-verifier passes;
+          - current REQ-0065/REQ-0066, RSK-0050, CON-0023/CON-0029, INT-0017/INT-0025 and DEC-0016 controls are present;
+          - the plan explicitly prevents producer-only, local-only, artifact-only, and hidden-reasoning self-certification;
+          - the plan maps exactly RA-01 through RA-20 to independent evidence classes and severity/blocking rules;
+          - EB/S1/S2 blocking semantics prevent incomplete or critical/high evidence from becoming PASS;
+          - the approved TSK-0413 privacy baseline is preserved: query/file logging off, identifiable client history/statistics excluded, client-IP anonymization on, ECS off, and only minimum anonymized aggregate operational statistics at 1d;
+          - the approximately-30-minute recovery target requires later independent target timing and receives no invented tolerance or inferred PASS;
+          - downstream recovery tasks are listed as potential evidence producers only and are not marked PASS or made new dependencies;
+          - master-plan structural validation and git diff checks passed.
+
+          This marker verifies TSK-0518's **acceptance plan** only. It does not prove a clean-server recovery, target RTO, production deployment, downstream task PASS, or LG-07 PASS.
+          EOF
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$MARKER"
+          git commit -m 'evidence: verify TSK-0518 independent recovery acceptance plan'
+          MARKER_COMMIT="$(git rev-parse HEAD)"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$MARKER_COMMIT"
+          test -n "$(git rev-parse "$MARKER_COMMIT:$MARKER")"
+          echo "TSK_0518_SOURCE_COMMIT=$SOURCE_COMMIT"
+          echo "TSK_0518_MARKER_COMMIT=$MARKER_COMMIT"
+          echo 'TSK_0518_MARKER_READBACK=PASS'
