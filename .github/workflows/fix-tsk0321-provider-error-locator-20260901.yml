@@ -22,14 +22,12 @@ jobs:
           before_product="$(git rev-parse HEAD:prototype/TSK-0333/index.html):$(git rev-parse HEAD:prototype/TSK-0333/model.mjs):$(git rev-parse HEAD:prototype/TSK-0333/app.mjs):$(git rev-parse HEAD:prototype/TSK-0333/prototype.css)"
           python3 .github/scripts/fix_tsk0321_provider_error_locator_20260901.py
           git diff --check
-          changed="$(git diff --name-only | sort)"
-          expected="$(printf '%s\n%s\n' '.github/scripts/verify_tsk0321_post_cr0007_accessibility_browser_20260901.mjs' '.github/workflows/verify-tsk0321-post-cr0007-accessibility-20260901.yml' | sort)"
-          test "$changed" = "$expected"
+          test "$(git diff --name-only)" = '.github/scripts/verify_tsk0321_post_cr0007_accessibility_browser_20260901.mjs'
           after_product="$(git rev-parse HEAD:prototype/TSK-0333/index.html):$(git rev-parse HEAD:prototype/TSK-0333/model.mjs):$(git rev-parse HEAD:prototype/TSK-0333/app.mjs):$(git rev-parse HEAD:prototype/TSK-0333/prototype.css)"
           test "$before_product" = "$after_product"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add .github/scripts/verify_tsk0321_post_cr0007_accessibility_browser_20260901.mjs .github/workflows/verify-tsk0321-post-cr0007-accessibility-20260901.yml
+          git add .github/scripts/verify_tsk0321_post_cr0007_accessibility_browser_20260901.mjs
           git commit -m 'test: narrow TSK-0321 provider-error fallback locator'
           git push origin HEAD:main
           test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$(git rev-parse HEAD)"
