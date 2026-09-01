@@ -1,0 +1,62 @@
+name: Inspect current TSK-0355 authority
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/inspect-tsk-0355-current-authority-20260901.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Print exact TSK-0355 contract and mapped controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv
+          from pathlib import Path
+          with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='') as f:
+              rows = list(csv.DictReader(f))
+          row = next(r for r in rows if (r.get('Task_ID') or '').strip() == 'TSK-0355')
+          print('TSK0355_ROW_BEGIN')
+          for k,v in row.items():
+              if (v or '').strip():
+                  print(f'{k}={(v or "").strip()}')
+          print('TSK0355_ROW_END')
+          state = Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          for heading in ('## TSK-0235 current accepted stable state', '## TSK-0052 / LG-06 current accepted stable state'):
+              assert heading in state, heading
+          assert (row.get('Action_Authority') or '').strip() == 'AUTO_ALLOWED'
+          assert (row.get('Dependencies') or '').strip() == 'TSK-0235'
+          print('TSK0355_DEP_GATE_AUTH=PASS')
+          PY
+          python3 - <<'PY'
+          from pathlib import Path
+          files = {
+            'ACCEPTANCE':'Plans/Master/Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md',
+            'RISKS':'Plans/Master/Registers/RISKS.md',
+            'REQUIREMENTS':'Plans/Master/Registers/REQUIREMENTS.md',
+            'CONSTRAINTS':'Plans/Master/Registers/CONSTRAINTS.md',
+            'INTERFACES':'Plans/Master/Registers/INTERFACES.md',
+            'GATES':'Plans/Master/Registers/GATES.md',
+            'DECISIONS':'Plans/Master/Registers/DECISIONS_TRIGGERS.md',
+          }
+          needles = ('ACC-0355','VER-0355','EVD-0355','RSK-0045','REQ-0036','REQ-0037','REQ-0039','CON-0010','CON-0011','INT-0011','INT-0012','TSK-0355','LG-06','DEC-0053','DEC-0054','DEC-0055')
+          for label,path in files.items():
+              p=Path(path)
+              if not p.exists():
+                  print(f'{label}|MISSING_FILE|{path}')
+                  continue
+              print(f'{label}_MATCHES_BEGIN')
+              for i,line in enumerate(p.read_text(encoding='utf-8').splitlines(),1):
+                  if any(n in line for n in needles):
+                      print(f'{label}|{i}|{line}')
+              print(f'{label}_MATCHES_END')
+          PY
+          python3 Plans/Master/Tools/validate_master_plan.py
