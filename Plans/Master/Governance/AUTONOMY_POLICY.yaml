@@ -17,12 +17,12 @@ failure_loop:
 - RETEST
 - REVERIFY
 capability_counts:
-  A1: 53
+  A1: 52
   A2: 49
   A3: 481
-  A4: 58
+  A4: 59
 action_authority_counts:
-  AUTO_ALLOWED: 539
+  AUTO_ALLOWED: 540
   HUMAN_APPROVAL_REQUIRED: 49
-  HUMAN_ONLY: 53
+  HUMAN_ONLY: 52
 human_boundary: Nondelegable legal signatures/contracts/identity/consent, named-market activation, strategic pivot/pause/stop/transfer/resume, organizational formalization and material unbudgeted commitments remain human-controlled; DEC-0054 otherwise maximizes evidence-driven autonomy subject to higher authority.
