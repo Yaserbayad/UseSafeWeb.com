@@ -1622,3 +1622,19 @@ Recompute the exact eligible L5 work from current WBS dependencies, relationship
 ### Queue status after TSK-0408 current PASS
 
 Recompute the L5 frontier from current WBS dependencies, gate/authority, runtime evidence and executor availability. `TSK-0413` remains non-PASS until its complete secret-safe versioned recovery-consumable bundle is constructed and independently verified.
+
+## TSK-0413 owner-approved privacy-first AdGuard baseline — 2026-09-01
+
+The Project Owner approved `APPROVE TSK-0413 RECOMMENDED PRIVACY-FIRST ADGUARD BASELINE`. The owning DNS privacy decision (`DEC-0016`) and the stale future `TSK-0410` no-statistics shorthand are reconciled to the approved privacy-first semantics.
+
+- Default persistent raw/file query logging remains off.
+- Exceptional operational query diagnostics are capped at 24 hours and deleted.
+- Only minimum anonymized aggregate operational statistics may be enabled, with 24-hour retention; identifiable per-client statistics/history remain excluded.
+- Client-IP anonymization and ECS-off remain mandatory.
+- Initial filtering uses only the official AdGuard DNS filter; exceptions are minimal/central/reversible.
+- AdGuard administration remains private/authenticated; credentials and secret material stay outside Git.
+- This reconciliation does **not** mark `TSK-0413`, `TSK-0410`, `LG-07`, deployment, or production activation PASS.
+
+### Queue effect
+
+`TSK-0413` remains the current autonomous L5 task and may consume this owner-approved baseline plus current `TSK-0408` PASS evidence to construct and verify its versioned recovery-consumable bundle.
