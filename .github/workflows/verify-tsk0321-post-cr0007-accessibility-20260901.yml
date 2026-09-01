@@ -67,9 +67,23 @@ jobs:
 
           TSK0321_BASE_URL='http://127.0.0.1:8033/prototype/TSK-0333/index.html' \
           TSK0321_PLAYWRIGHT_MODULE="$playwright_module" \
+          PLAYWRIGHT_BROWSERS_PATH="$runtime_dir/browsers" \
+          node .github/scripts/verify_tsk0321_200pct_candidate_20260901.mjs
+          echo 'TSK0321_AUTHORITATIVE_FOCUSED_200PCT=PASS'
+
+          python3 .github/scripts/prepare_tsk0333_safeweb_browser_verifier_20260901.py
+          TSK0333_BASE_URL='http://127.0.0.1:8033/prototype/TSK-0333/index.html' \
+          TSK0333_PLAYWRIGHT_MODULE="$playwright_module" \
+          PLAYWRIGHT_BROWSERS_PATH="$runtime_dir/browsers" \
+          node "$RUNNER_TEMP/tsk0333-safeweb-browser.mjs"
+          echo 'TSK0333_AUTHORITATIVE_REGRESSION=PASS'
+
+          TSK0321_BASE_URL='http://127.0.0.1:8033/prototype/TSK-0333/index.html' \
+          TSK0321_PLAYWRIGHT_MODULE="$playwright_module" \
           TSK0321_AXE_MODULE="$axe_module" \
           PLAYWRIGHT_BROWSERS_PATH="$runtime_dir/browsers" \
           node .github/scripts/verify_tsk0321_post_cr0007_accessibility_browser_20260901.mjs
+          echo 'TSK0321_AUTHORITATIVE_FULL_ACCESSIBILITY=PASS'
 
           test "$before_index" = "$(git rev-parse HEAD:prototype/TSK-0333/index.html)"
           test "$before_model" = "$(git rev-parse HEAD:prototype/TSK-0333/model.mjs)"
