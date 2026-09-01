@@ -1,0 +1,1 @@
+Guarded TSK-0318 CURRENT_STATE reconciliation trigger.
