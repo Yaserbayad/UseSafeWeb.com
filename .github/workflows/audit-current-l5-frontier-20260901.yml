@@ -1,0 +1,59 @@
+name: Audit current L5 governed frontier
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/scripts/audit_current_l5_frontier_20260901.py'
+      - '.github/workflows/audit-current-l5-frontier-20260901.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-governed-l5-frontier-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: Derive current L5 frontier from canonical state
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/audit_current_l5_frontier_20260901.py
+          python3 Plans/Master/Tools/validate_master_plan.py
+          git diff --check HEAD^ HEAD
+          test "$(git status --porcelain | sed 's/^...//')" = 'CURRENT_L5_FRONTIER_AUDIT_2026-09-01.md'
+
+      - name: Persist derived audit with remote read-back
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          AUDIT='CURRENT_L5_FRONTIER_AUDIT_2026-09-01.md'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$AUDIT"
+          git commit -m 'evidence: audit current L5 governed frontier'
+          COMMIT="$(git rev-parse HEAD)"
+          BLOB="$(git rev-parse "$COMMIT:$AUDIT")"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$COMMIT"
+          test "$(git rev-parse "origin/main:$AUDIT")" = "$BLOB"
+          git show "origin/main:$AUDIT" | grep -F '**Derived audit only — not a mutable state store, WBS, checkpoint, task claim, or PASS decision.**'
+          echo "FRONTIER_AUDIT_COMMIT=$COMMIT"
+          echo "FRONTIER_AUDIT_BLOB=$BLOB"
+          echo 'FRONTIER_AUDIT_REMOTE_READBACK=PASS'
