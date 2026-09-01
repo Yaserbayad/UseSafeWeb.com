@@ -1,0 +1,29 @@
+name: Verify TSK-0408 post-CR0007 revalidation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'TSK_0408_POST_CR0007_REVALIDATION_EVIDENCE_2026-09-01.md'
+      - '.github/scripts/verify_tsk0408_post_cr0007_20260901.py'
+      - '.github/workflows/verify-tsk0408-post-cr0007-20260901.yml'
+      - 'Plans/Master/WBS/master-wbs.csv'
+      - 'Plans/Master/Registers/DECISIONS_TRIGGERS.md'
+      - 'TSK_0408_USESAFEWEB_DNS_IDENTITY_PLATFORM_ENDPOINT_PROFILE_CONTRACT_2026-08-28.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify current TSK-0408 contract reconciliation
+        run: python3 .github/scripts/verify_tsk0408_post_cr0007_20260901.py
+      - name: Repository guards
+        run: |
+          git diff --check HEAD^ HEAD
+          test -z "$(git status --porcelain)"
