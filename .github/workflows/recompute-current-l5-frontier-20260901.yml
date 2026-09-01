@@ -1,0 +1,28 @@
+name: Recompute current L5 frontier after TSK-0235
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/recompute-current-l5-frontier-20260901.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+      - name: Recompute current L5 frontier
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/audit_current_l5_frontier_20260901.py
+          cat CURRENT_L5_FRONTIER_AUDIT_2026-09-01.md
+          git diff --check
+          test -z "$(git status --porcelain --untracked-files=no)"
