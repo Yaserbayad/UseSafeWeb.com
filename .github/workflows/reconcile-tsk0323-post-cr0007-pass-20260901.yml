@@ -3,6 +3,7 @@ on:
   push:
     branches: [main]
     paths:
+      - '.github/scripts/reconcile_tsk0323_post_cr0007_pass_20260901.py'
       - '.github/workflows/reconcile-tsk0323-post-cr0007-pass-20260901.yml'
 permissions:
   contents: write
