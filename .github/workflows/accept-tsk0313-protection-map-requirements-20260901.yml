@@ -1,0 +1,218 @@
+name: Accept TSK-0313 Protection Map requirements
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/accept-tsk0313-protection-map-requirements-20260901.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  verify-accept:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 3
+
+      - name: Verify TSK-0313 acceptance and stage runtime state
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse HEAD:Plans/Master/WBS/master-wbs.csv)" = "b27a0c5df2f5636d8ed71051e9e26a68959a2616"
+          test "$(git rev-parse HEAD:TSK_0313_PROTECTION_MAP_STATE_AND_EVIDENCE_REQUIREMENTS_2026-09-01.md)" = "c0afad3fb8b92fde4be613417917e0190c56fd09"
+
+          python3 - <<'PY'
+          import csv, re
+          from pathlib import Path
+
+          expected = ('Every Protection Map state has entry/evidence rules, parent-facing copy, transition rules, unsupported behavior, persistence scope and testable examples. '
+                      'Parent-confirmed and system-verified states are never conflated. Anonymous journey state and optional parent-owned device state are explicitly separated; '
+                      'account ownership never substitutes for technical verification and no browsing/query/activity history is stored.')
+
+          with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='') as f:
+              rows = list(csv.DictReader(f))
+          row = next(r for r in rows if (r.get('Task_ID') or '').strip() == 'TSK-0313')
+          norm = lambda v: (v or '').strip()
+          assert norm(row.get('Lifecycle_Stage')) == 'L4'
+          assert norm(row.get('Priority')) == 'MEDIUM'
+          assert norm(row.get('AI_Capability_A0_A4')) == 'A3'
+          assert norm(row.get('Action_Authority')) == 'AUTO_ALLOWED'
+          assert norm(row.get('Plan_Status')) == 'PLANNED'
+          assert re.findall(r'TSK-\d{4}', row.get('Dependencies') or '') == ['TSK-0041','TSK-0144','TSK-0146']
+          assert set(re.findall(r'REQ-\d{4}', row.get('Requirement_Reference') or '')) == {'REQ-0028','REQ-0029','REQ-0035'}
+          assert set(re.findall(r'CON-\d{4}', row.get('Requirement_Reference') or '')) == {'CON-0010','CON-0017'}
+          assert set(re.findall(r'INT-\d{4}', row.get('Interface_Reference') or '')) == {'INT-0009','INT-0010'}
+          assert set(re.findall(r'RSK-\d{4}', row.get('Risk_Reference') or '')) == {'RSK-0002'}
+          assert norm(row.get('Acceptance_ID')) == 'ACC-0313'
+          assert norm(row.get('Verification_ID')) == 'VER-0313'
+          assert norm(row.get('Evidence_ID')) == 'EVD-0313'
+          assert norm(row.get('Acceptance_Criteria')) == expected
+
+          state = Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          for dep in ['TSK-0041','TSK-0144','TSK-0146']:
+              assert re.search(rf'^## {dep}(?:\s*/[^\n#]+)?\s+current accepted stable state\b', state, flags=re.M|re.I), dep
+          assert '## TSK-0313 current accepted stable state' not in state
+
+          register = Path('Plans/Master/Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md').read_text(encoding='utf-8')
+          rr = next(line for line in register.splitlines() if line.startswith('| TSK-0313 |'))
+          cells = [c.strip() for c in rr.strip().strip('|').split('|')]
+          assert cells[0] == 'TSK-0313'
+          assert cells[1] == 'VER-0313'
+          assert cells[3] == 'EVD-0313'
+          assert cells[5] == 'ACC-0313'
+          assert cells[6] == expected
+
+          linked = {
+              'Plans/Master/Registers/REQUIREMENTS.md': ['REQ-0028','REQ-0029','REQ-0035'],
+              'Plans/Master/Registers/CONSTRAINTS.md': ['CON-0010','CON-0017'],
+              'Plans/Master/Registers/RISKS.md': ['RSK-0002'],
+              'Plans/Master/Registers/INTERFACES.md': ['INT-0009','INT-0010'],
+          }
+          for path, ids in linked.items():
+              lines = Path(path).read_text(encoding='utf-8').splitlines()
+              for item_id in ids:
+                  matches = [line for line in lines if line.startswith(f'| {item_id} |')]
+                  assert len(matches) == 1, (path, item_id, len(matches))
+
+          artifact = Path('TSK_0313_PROTECTION_MAP_STATE_AND_EVIDENCE_REQUIREMENTS_2026-09-01.md').read_text(encoding='utf-8')
+          state_ids = [
+              '### S1 — `protected/verified`',
+              '### S2 — `configured/parent-confirmed`',
+              '### S3 — `action-needed`',
+              '### S4 — `not-covered`',
+              '### S5 — `uncertain/error`',
+              '### S6 — `removed`',
+          ]
+          for marker in state_ids:
+              assert artifact.count(marker) == 1, marker
+
+          sections = re.split(r'(?=### S[1-6] — )', artifact)
+          sections = [s for s in sections if re.match(r'### S[1-6] — ', s)]
+          assert len(sections) == 6
+          for section in sections:
+              for marker in ['**Entry rule**','**Evidence rule**','**Parent-facing copy**','**Transitions**','**Unsupported behavior**','**Persistence scope**','**Representative deterministic example**']:
+                  assert marker in section, (section[:40], marker)
+              for locale in ['| en |','| tr |','| ar |']:
+                  assert locale in section, (section[:40], locale)
+
+          required = [
+              'Only fresh qualifying technical evidence from an approved verifier may produce `protected/verified`.',
+              'Parent identity, ownership, dashboard presence, device registration, profile presence, installer success, and explicit parent confirmation may support S2 but may never promote to S1.',
+              '**Hard separation invariant:** no browsing/query/activity history is stored in either domain to derive, preserve, or upgrade Protection Map state.',
+              'Ownership authorizes access; it is never technical protection evidence.',
+              'Must not be automatically joined, promoted, or copied into a parent account/device record merely because the parent later signs in.',
+              'Sign-in must not extend evidence freshness or strengthen any Protection Map state.',
+              'stable instruction/catalogue ID;',
+              'source checked/reviewed date;',
+              'review triggers.',
+              'Arabic renders RTL;',
+              'Technical language availability does not imply official localized market/legal/support activation; LG-16 remains separate.',
+              'These are internal specification tests, not human/user validation.',
+              'PM-20',
+              'REQ-0028', 'REQ-0029', 'REQ-0035', 'CON-0010', 'CON-0017', 'INT-0009', 'INT-0010', 'RSK-0002',
+              'ACC-0313', 'VER-0313', 'EVD-0313'
+          ]
+          for marker in required:
+              assert marker in artifact, marker
+
+          for n in range(1,21):
+              assert f'PM-{n:02d}' in artifact, n
+
+          forbidden = [
+              'parent confirmation establishes technical verification',
+              'account ownership establishes technical verification',
+              'all protection is verified',
+              'fully protected',
+              'browsing history is stored',
+              'user validation passed',
+          ]
+          low = artifact.lower()
+          for phrase in forbidden:
+              assert phrase not in low, phrase
+
+          assert 'Protection verified' in artifact
+          assert 'Setup confirmed' in artifact
+          assert 'Protection has not yet been technically verified.' in artifact
+          assert 'Koruma henüz teknik olarak doğrulanmadı.' in artifact
+          assert 'لم يتم التحقق تقنيًا من الحماية بعد.' in artifact
+          assert 'Not covered' in artifact
+          assert 'Protection status could not be verified' in artifact
+          assert '| ar | تمت الإزالة |' in artifact
+
+          print('TSK0313_WBS_CONTRACT=PASS')
+          print('TSK0313_DEPENDENCIES=PASS')
+          print('TSK0313_ACC_REGISTER=PASS')
+          print('TSK0313_LINKED_REGISTERS=PASS')
+          print('TSK0313_SIX_STATE_COMPLETENESS=PASS')
+          print('TSK0313_COPY_I18N_RTL=PASS')
+          print('TSK0313_TRANSITIONS_UNSUPPORTED_PERSISTENCE=PASS')
+          print('TSK0313_ACCOUNTLESS_ACCOUNT_SEPARATION=PASS')
+          print('TSK0313_SOURCE_CURRENCY=PASS')
+          print('TSK0313_REPRESENTATIVE_TESTS=PASS')
+          print('TSK0313_PRIVACY_TRUTH_NONINFERENCE=PASS')
+          PY
+
+          python3 Plans/Master/Tools/validate_master_plan.py
+
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p = Path('CURRENT_STATE.md')
+          text = p.read_text(encoding='utf-8')
+          lines = [
+              '## TSK-0313 current accepted stable state — 2026-09-01 — POST-CR-0008',
+              '',
+              '`TSK-0313 — Specify Protection Map state and evidence requirements`: **PASS** under current `ACC-0313 / VER-0313 / EVD-0313`, current `TSK-0041` + `TSK-0144` + `TSK-0146` dependency proof, and CR-0008 authority.',
+              '',
+              '- Action authority: **A3 / AUTO_ALLOWED**.',
+              '- Artifact: `TSK_0313_PROTECTION_MAP_STATE_AND_EVIDENCE_REQUIREMENTS_2026-09-01.md`, version `1.0.0-post-CR-0008`, blob `c0afad3fb8b92fde4be613417917e0190c56fd09`, publication commit `42761e3d2a624841f300cbddca9cdb362cef931e`.',
+              '- Accepted requirement: every Protection Map item resolves to exactly one of six evidence-derived states with explicit entry/evidence/transition/unsupported/persistence rules and deterministic examples; only fresh qualifying technical evidence can produce `protected/verified`.',
+              '- Parent/configuration confirmation, account ownership, dashboard/device registration, profile/ClientID presence, journey completion or stored prior state can never substitute for technical verification.',
+              '- Parent-facing EN/TR/AR copy is frozen for all six states, Arabic RTL and accessibility semantics are explicit, and localization may not strengthen evidence claims or imply market activation.',
+              '- Anonymous journey state and optional persistent parent-owned device state are separate domains; sign-in/ownership authorizes access only, cannot extend freshness or strengthen state, and no browsing/query/activity history is stored.',
+              '- Platform/service instructions, support determinations and verifier/remediation behavior require versioned source-backed catalogue metadata, ownership and review triggers; stale/indeterminate source state fails closed to truthful lower states.',
+              '- Twenty deterministic representative cases define state/copy/transition/privacy behavior. They are internal specification evidence only and are not human/user validation under RSK-0002.',
+              f'- Acceptance workflow run `{os.environ["RUN_ID"]}` verified exact WBS/dependencies/ACC/VER/EVD and linked registers, six-state completeness, EN/TR/AR + RTL semantics, persistence separation, source currency, representative tests, privacy/truth/non-inference, and the full modular validator before this runtime mutation.',
+              '- **Non-inference:** no verifier/datastore implementation, browser/device runtime test, legal/privacy-compliance conclusion, behavioral/user validation, L5 architecture, build, deployment, production activation, market activation, launch or downstream gate/task becomes PASS from this L4 requirement freeze.',
+          ]
+          p.write_text(text.rstrip() + '\n\n' + '\n'.join(lines) + '\n', encoding='utf-8')
+          PY
+
+          git diff --check
+          test "$(git status --porcelain | sed 's/^...//')" = 'CURRENT_STATE.md'
+          echo 'ACC_0313=PASS'
+          echo 'VER_0313=PASS'
+          echo 'EVD_0313=PASS'
+          echo 'TSK0313_STATE_CANDIDATE=PASS'
+
+      - name: Persist and independently read back TSK-0313 state
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: accept TSK-0313 Protection Map requirements'
+          C="$(git rev-parse HEAD)"
+          B="$(git rev-parse "$C:CURRENT_STATE.md")"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$C"
+          test "$(git rev-parse "origin/main:CURRENT_STATE.md")" = "$B"
+          git show "origin/main:CURRENT_STATE.md" | grep -F '## TSK-0313 current accepted stable state — 2026-09-01 — POST-CR-0008'
+          echo "TSK0313_STATE_COMMIT=$C"
+          echo "TSK0313_STATE_BLOB=$B"
+          echo 'TSK0313_ACCEPTANCE_REMOTE_READBACK=PASS'
