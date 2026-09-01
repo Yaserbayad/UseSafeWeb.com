@@ -1,0 +1,135 @@
+name: Accept TSK-0445 recovery script design
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infrastructure/adguard-server/TSK-0445-DEPLOYMENT-RECOVERY-SCRIPT-DESIGN.md'
+      - '.github/workflows/accept-tsk0445-recovery-design-20260901.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-governed-runtime-write
+  cancel-in-progress: false
+
+jobs:
+  accept:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Independently verify current authority and ACC-0445 design
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          python3 - <<'PY'
+          from pathlib import Path
+          import csv
+
+          state = Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          art = Path('infrastructure/adguard-server/TSK-0445-DEPLOYMENT-RECOVERY-SCRIPT-DESIGN.md').read_text(encoding='utf-8')
+          scope = Path('infrastructure/adguard-server/TSK-0446-RECOVERY-SCOPE-CONTRACT.md').read_text(encoding='utf-8')
+          drill = Path('infrastructure/adguard-server/clean-recovery-drill-runtime.sh').read_text(encoding='utf-8')
+          backup = Path('infrastructure/adguard-server/create-encrypted-config-backup.sh').read_text(encoding='utf-8')
+
+          assert 'POST-FREEZE CR-0008 PUBLISHED, RECONCILED, READ-BACK VERIFIED' in state
+          assert '## TSK-0446 current accepted stable state' in state
+          assert '## TSK-0445 current accepted stable state' not in state
+          assert 'operational statistics: only minimum anonymized aggregate statistics, enabled with **24-hour / `1d` retention**' in scope
+          assert "s.get('enabled') is False" in drill
+          assert "statistics.get('enabled') is False" in backup
+
+          with open('Plans/Master/WBS/master-wbs.csv', encoding='utf-8-sig', newline='') as f:
+              rows = {r['Task_ID']: r for r in csv.DictReader(f)}
+          r = rows['TSK-0445']
+          assert r['Lifecycle_Stage'] == 'L5'
+          assert r['Priority'] == 'CRITICAL'
+          assert r['Action_Authority'] == 'AUTO_ALLOWED'
+          assert r['AI_Capability_A0_A4'] == 'A3'
+          assert 'TSK-0446' in r.get('Dependencies','')
+          acc = r.get('Acceptance_Criteria','')
+          for phrase in ('minimal','auditable','non-interactive','idempotent','shellcheck-compatible','secret-safe','immutable code','environment secrets/config'):
+              assert phrase.lower() in acc.lower(), (phrase, acc)
+
+          required = [
+              '# TSK-0445 — Production-grade Bash deployment/recovery script design',
+              '`infrastructure/adguard-server/deploy_or_recover.sh`',
+              '/etc/usesafeweb/recovery.env',
+              '/etc/usesafeweb/secrets/',
+              'deploy_or_recover.sh --check',
+              'deploy_or_recover.sh --apply',
+              'deploy_or_recover.sh --verify',
+              'deploy_or_recover.sh --remove',
+              'parsed as data, never sourced as shell code',
+              'set -Eeuo pipefail',
+              'umask 077',
+              'Do not use `eval`',
+              'no blind retry',
+              'flock',
+              'rollback',
+              'uncertain',
+              'shellcheck',
+              'https://dns10.quad9.net/dns-query',
+              '24-hour / `1d` retention',
+              'clean-recovery-drill-runtime.sh',
+              'create-encrypted-config-backup.sh',
+              'TSK-0518 RA-01…RA-20',
+              'The approximate 30-minute target is a later measured acceptance criterion',
+              'This design does **not** prove:',
+          ]
+          for x in required:
+              assert x in art, x
+
+          # The design must explicitly prevent stale helper state from becoming current authority.
+          assert 'must **not call those helpers as authoritative recovery steps until their relevant behavior is updated/revalidated**' in art
+          assert 'No function accepts arbitrary shell fragments.' in art
+          assert 'Secret **values are never accepted as CLI arguments**' in art
+          assert 'A verified already-compliant host is a successful no-op.' in art
+          assert 'Actual QA must still execute against the exact clean target and prove the behavior independently.' in art
+          assert 'RSK-0048 is closed' in art  # appears only in non-inference section
+          print('TSK0445_DESIGN_CONTRACT=PASS')
+          PY
+          python3 Plans/Master/Tools/validate_master_plan.py
+          git diff --check
+
+      - name: Record stable PASS and remotely read back
+        shell: bash
+        run: |
+          set -euo pipefail
+          ART='infrastructure/adguard-server/TSK-0445-DEPLOYMENT-RECOVERY-SCRIPT-DESIGN.md'
+          ART_BLOB="$(git rev-parse "HEAD:$ART")"
+          SOURCE_COMMIT="$(git rev-parse HEAD)"
+          ART_BLOB="$ART_BLOB" SOURCE_COMMIT="$SOURCE_COMMIT" python3 - <<'PY'
+          from pathlib import Path
+          from datetime import datetime, timezone
+          import os, re
+
+          p=Path('CURRENT_STATE.md')
+          s=p.read_text(encoding='utf-8')
+          assert '## TSK-0445 current accepted stable state — 2026-09-01' not in s
+          now=datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+          s=re.sub(r'(?m)^\*\*Updated:\*\* .*$', f'**Updated:** {now}', s, count=1)
+          s += f'''\n\n## TSK-0445 current accepted stable state — 2026-09-01\n\n`TSK-0445 — Design the production-grade Bash deployment/recovery script structure, modules, configuration inputs, logging, errors, retries, rollback, and verification hooks`: **PASS** at the design boundary under current `ACC-0445 / VER-0445 / EVD-0445`, current `TSK-0446` dependency evidence, and `DEC-0055 / CR-0008`.\n\n- Current action authority: **A3 / AUTO_ALLOWED**; CR-0008 changed only capability/action-authority metadata for this task and did not weaken ACC-0445.\n- Accepted design: `infrastructure/adguard-server/TSK-0445-DEPLOYMENT-RECOVERY-SCRIPT-DESIGN.md`, blob `{os.environ['ART_BLOB']}`, source commit `{os.environ['SOURCE_COMMIT']}`.\n- Independent static acceptance verified the WBS authority/dependency/ACC contract, TSK-0446 current privacy/RTO boundary, stale-helper mismatch handling, strict non-interactive/idempotent/secret-safe Bash structure, bounded retry/ambiguity handling, rollback/fail-closed rules, stable verification hooks, and separation of Git code from external config/secrets.\n- Existing `clean-recovery-drill-runtime.sh` and `create-encrypted-config-backup.sh` are not silently promoted into current production recovery because their historical `statistics=false` behavior conflicts with the current TSK-0446/TSK-0413 `1d` anonymized aggregate-statistics baseline; downstream implementation must reconcile/revalidate them before reuse.\n- `RSK-0048` remains OPEN. TSK-0445 proves the design only; no `deploy_or_recover.sh` implementation, ShellCheck/runtime test, clean-server restore, backup/restore result, TLS/firewall/DNS target behavior, measured RTO, production deployment, or later gate PASS is inferred.\n\n### Queue effect after TSK-0445 PASS\n\nRecompute the exact current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-0055 authority before selecting later work.\n'''
+          p.write_text(s.rstrip()+'\n', encoding='utf-8')
+          PY
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: accept TSK-0445 recovery script design'
+          COMMIT="$(git rev-parse HEAD)"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$COMMIT"
+          git show "$COMMIT:CURRENT_STATE.md" | grep -F '## TSK-0445 current accepted stable state — 2026-09-01'
+          test "$(git rev-parse "$COMMIT:$ART")" = "$ART_BLOB"
+          python3 Plans/Master/Tools/validate_master_plan.py
+          echo "TSK0445_STATE_COMMIT=$COMMIT"
+          echo "TSK0445_ARTIFACT_BLOB=$ART_BLOB"
+          echo 'TSK0445_REMOTE_READBACK=PASS'
