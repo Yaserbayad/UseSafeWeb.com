@@ -1972,3 +1972,17 @@ Recompute the current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-
 - No browsing/query/activity history, child surveillance data, persistent analytics identity, secret, or backdoor DNS-history analytics is authorized.
 - Runtime acceptance does not alter WBS, graph, manifest, AdGuard, Quad9 dns10/ECS policy, or the CR-0008 owner-frozen planning baseline.
 - **Non-inference:** no support implementation/staffing outcome, human response capacity, LG-07, build, deployment, production activation, market activation, launch, legal-compliance completion, or real-user supportability becomes PASS from this L4 requirements task.
+
+## TSK-0144 current accepted stable state — 2026-09-01 — POST-CR-0008
+
+`TSK-0144 — Specify the one relevant external-service safeguard step`: **PASS** under current `ACC-0144 / VER-0144 / EVD-0144`, current `TSK-0143` dependency proof, and CR-0008 authority.
+
+- Action authority: **A3 / AUTO_ALLOWED**.
+- Artifact: `TSK_0144_EXTERNAL_SERVICE_SAFEGUARD_REQUIREMENT_2026-09-01.md`, version `1.0.0-post-CR-0008`, blob `633165af53c2eef3a331685798f24e088ab89abf`, publication commit `c5238c07474ec713c6917ad50ee721cbd20cff54`.
+- Accepted requirement: at most one parent-selected relevant external-service safeguard step per setup journey, from a current approved versioned catalogue; the layer remains modular/service-agnostic rather than freezing a permanent vendor or becoming an app catalogue.
+- Eligibility is explicit-parent/context plus current catalogue support only; no app scanning, browsing/query/activity history, DNS-history inference, device surveillance or hidden service detection is authorized.
+- Unsupported, stale or irrelevant cases fall back truthfully to `Not covered`; transient catalogue/read failures may be `uncertain/error` but never configured/protected by selection alone.
+- Parent confirmation may mean configured/parent-confirmed only where the current state model permits; it can never create `protected/verified` or strengthen the technical DNS protection state.
+- Product owns selection/eligibility policy; Content owns instruction freshness/source/version/review; QA verifies setup/scope/unsupported/confirmation behavior; privacy/safeguarding review is required before new data/credential/account-linkage processing.
+- Acceptance workflow run `33548192727` verified exact WBS authority/dependency/references, canonical ACC/VER/EVD row, every referenced current register target, artifact semantics, and full modular validation before this runtime mutation.
+- **Non-inference:** no specific external vendor is approved or activated; no implementation, technical verification, legal/privacy compliance, L5 architecture, build, release, production, participant, market or launch gate becomes PASS from this requirements freeze.
