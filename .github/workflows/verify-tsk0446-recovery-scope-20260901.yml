@@ -1,0 +1,82 @@
+name: Verify TSK-0446 recovery scope contract
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infrastructure/adguard-server/TSK-0446-RECOVERY-SCOPE-CONTRACT.md'
+      - '.github/scripts/verify_tsk0446_recovery_scope_20260901.py'
+      - '.github/workflows/verify-tsk0446-recovery-scope-20260901.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-governed-tsk0446-verification
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: Verify recovery contract and predecessor binding
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/verify_tsk0446_recovery_scope_20260901.py
+          python3 Plans/Master/Tools/validate_master_plan.py
+          git diff --check HEAD^ HEAD
+          test -z "$(git status --porcelain)"
+
+      - name: Persist independent verification marker
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+
+          MARKER='TSK_0446_RECOVERY_SCOPE_CONTRACT_AUTOVERIFY_2026-09-01.md'
+          cat > "$MARKER" <<EOF
+          # TSK-0446 recovery scope contract — automated verification marker — 2026-09-01
+
+          - Source commit: \`$SOURCE_COMMIT\`
+          - GitHub Actions run: \`${GITHUB_RUN_ID}\`
+          - Attempt: \`${GITHUB_RUN_ATTEMPT}\`
+          - Workflow: \`${GITHUB_WORKFLOW}\`
+          - Runner OS: \`${RUNNER_OS}\`
+          - Result: **PASS**
+
+          Verified outcomes:
+
+          - current WBS binds TSK-0446 to L5, CRITICAL, A3/AUTO_ALLOWED, sole hard dependency TSK-0413, and current ACC-0446 wording;
+          - current runtime/evidence prove the accepted TSK-0413 predecessor and current LG-06 entry gate;
+          - the exact TSK-0413 bundle self-verifies and remains pinned to AdGuard Home v0.107.79/schema 34;
+          - the contract covers host/packages, AdGuard, configuration, network/firewall, DNS endpoint, TLS, filter, security, privacy, startup, verification and health;
+          - the owner-approved DEC-0016 semantics are preserved: query/file logging off, identifiable history excluded, client-IP anonymization on, ECS off, and only minimum anonymized aggregate statistics with 24-hour retention;
+          - the older BACKUP_SCOPE_POLICY.md statistics=false live preflight is explicitly treated as historical and cannot override the current desired state;
+          - the approximately 30-minute RTO has an exact measurement boundary and required downstream evidence;
+          - TSK-0446 makes no claim that an actual clean-server timed recovery drill has already occurred;
+          - master-plan structural validation and git diff checks passed.
+
+          This marker verifies the recovery **contract**, not target-environment restoration, production activation, or LG-07 PASS.
+          EOF
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$MARKER"
+          git commit -m 'evidence: verify TSK-0446 recovery scope contract'
+          MARKER_COMMIT="$(git rev-parse HEAD)"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$MARKER_COMMIT"
+          test -n "$(git rev-parse "$MARKER_COMMIT:$MARKER")"
+          echo "TSK_0446_SOURCE_COMMIT=$SOURCE_COMMIT"
+          echo "TSK_0446_MARKER_COMMIT=$MARKER_COMMIT"
+          echo 'TSK_0446_MARKER_READBACK=PASS'
