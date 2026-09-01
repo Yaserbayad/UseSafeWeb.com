@@ -1,4 +1,4 @@
-name: Recompute current L5 frontier after TSK-0235
+name: Recompute current L5 frontier after TSK-0355
 
 on:
   push:
@@ -24,5 +24,6 @@ jobs:
           set -euo pipefail
           python3 .github/scripts/audit_current_l5_frontier_20260901.py
           cat CURRENT_L5_FRONTIER_AUDIT_2026-09-01.md
+          git restore -- CURRENT_L5_FRONTIER_AUDIT_2026-09-01.md
           git diff --check
           test -z "$(git status --porcelain --untracked-files=no)"
