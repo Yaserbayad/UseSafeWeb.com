@@ -67,21 +67,18 @@ def main() -> None:
         assert marker in artifact, marker
 
     suites = {'TS-GOV','TS-NOAUTH','TS-ACCOUNT','TS-DNS','TS-STATE','TS-UX','TS-A11Y','TS-PRIV','TS-SEC','TS-PERF','TS-FAIL','TS-REC','TS-OPS'}
-    found_suites = set(re.findall(r'\| (TS-[A-Z]+) \|', artifact))
+    found_suites = set(re.findall(r'\| (TS-[A-Z0-9]+) \|', artifact))
     assert suites <= found_suites, suites - found_suites
 
-    # Every required integrated class is explicit.
     for marker in ('functional', 'browser/device/network', 'UX', 'accessibility', 'security/privacy', 'performance', 'failure/recovery', 'rollback', 'environment-specific'):
         assert marker.lower() in artifact.lower(), marker
 
-    # All 14 TSK-0409 matrix cases are represented by distinct rows; DNS-01..DNS-16 account for combined happy/config/negative cases.
     dns_section = artifact.split('## 6. TSK-0409 device/network coverage — all 14 matrix cases',1)[1].split('## 7. TSK-0320 state and transition coverage',1)[0]
     dns_rows = [line for line in dns_section.splitlines() if line.startswith('| ')][1:]
     assert len(dns_rows) == 14, len(dns_rows)
     for required_case in ('Chrome custom', 'app-specific DoH/DoT', 'VPN/DNS-changing', 'Private Relay', 'Firefox own', 'Captive portal', 'Wi-Fi/cellular', 'Unsupported OS/version', 'Intentional removal'):
         assert required_case.lower() in dns_section.lower(), required_case
 
-    # All six states and transition IDs ST-01..ST-12 are present.
     states = ('protected_verified','configured_parent_confirmed','action_needed','not_covered','uncertain_error','removed')
     for s in states:
         assert f'`{s}`' in artifact, s
@@ -90,15 +87,12 @@ def main() -> None:
     for marker in ('cannot masquerade as technical verification', 'parent/configuration confirmation', 'account/device deletion or parent report alone cannot prove DNS removal'):
         assert marker.lower() in artifact.lower(), marker
 
-    # Accountless and optional-account boundaries plus failure classes.
     for marker in ('NA-01','NA-06','AC-01','AC-07','mandatory login','cross-parent','IDOR','AdGuard','Quad9/upstream failure','session revoked mid-operation','post-recovery verification'):
         assert marker.lower() in artifact.lower(), marker
 
-    # Requirement-family coverage + deterministic zero-missing expansion rule.
     for marker in ('`REQ-0001`–`REQ-0006`','`REQ-0007`–`REQ-0012`','`REQ-0013`–`REQ-0017`','`REQ-0042` onward','`REQ-0060`–`REQ-0064`','`REQ-0065`–`REQ-0066`','Zero missing applicable requirements is required'):
         assert marker in artifact, marker
 
-    # Privacy/secret guard.
     for marker in ('DNS question/domain/URL history', 'messages, contacts, photos, location', 'reserved documentation names such as `example.com`'):
         assert marker in artifact, marker
     for pattern in (r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----', r'ghp_[A-Za-z0-9]{30,}', r'github_pat_[A-Za-z0-9_]{40,}', r'AKIA[0-9A-Z]{16}'):
