@@ -35,7 +35,7 @@ jobs:
           grep -F '## TSK-0043 current accepted stable state — 2026-09-01 — POST-CR-0006/0007' CURRENT_STATE.md
           grep -F '## TSK-0309 current accepted stable state — 2026-09-01 — POST-CR-0006/0007' CURRENT_STATE.md
           grep -F '## TSK-0628 current accepted stable state — 2026-09-01 — POST-CR-0006/0007' CURRENT_STATE.md
-          grep -F 'TSK-0052 / LG-06 remains **non-PASS**' CURRENT_STATE.md
+          grep -F '`TSK-0052 / LG-06` remains **non-PASS**' CURRENT_STATE.md
           test -s TSK_LG06_PREDECESSOR_CURRENT_REQUALIFICATION_EVIDENCE_2026-09-01.md
       - name: Commit with stale-write guard
         env:
@@ -64,6 +64,6 @@ jobs:
           git show origin/main:CURRENT_STATE.md | grep -F '## TSK-0043 current accepted stable state — 2026-09-01 — POST-CR-0006/0007'
           git show origin/main:CURRENT_STATE.md | grep -F '## TSK-0309 current accepted stable state — 2026-09-01 — POST-CR-0006/0007'
           git show origin/main:CURRENT_STATE.md | grep -F '## TSK-0628 current accepted stable state — 2026-09-01 — POST-CR-0006/0007'
-          git show origin/main:CURRENT_STATE.md | grep -F 'TSK-0052 / LG-06 remains **non-PASS**'
+          git show origin/main:CURRENT_STATE.md | grep -F '`TSK-0052 / LG-06` remains **non-PASS**'
           git show origin/main:TSK_LG06_PREDECESSOR_CURRENT_REQUALIFICATION_EVIDENCE_2026-09-01.md | grep -F '**Verification run/job:** `33492766097 / 99807875248` — SUCCESS.'
           echo "REMOTE_HEAD=$(git rev-parse origin/main)"
