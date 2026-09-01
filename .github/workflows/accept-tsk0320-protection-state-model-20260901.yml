@@ -1,0 +1,194 @@
+name: Accept TSK-0320 current protection-state model
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/accept-tsk0320-protection-state-model-20260901.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-tsk-0320-acceptance
+  cancel-in-progress: false
+
+jobs:
+  verify-accept:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: Verify ACC-0320 / VER-0320 / EVD-0320
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          python3 - <<'PY'
+          from pathlib import Path
+          import csv
+          import os
+          import re
+          import subprocess
+
+          source_commit = os.environ['SOURCE_COMMIT']
+          run_id = os.environ.get('GITHUB_RUN_ID', 'UNKNOWN')
+          run_attempt = os.environ.get('GITHUB_RUN_ATTEMPT', '1')
+          artifact_path = Path('TSK_0320_POST_CR0008_PROTECTION_STATE_MODEL_AND_COPY_RULES_2026-09-01.md')
+          state_path = Path('CURRENT_STATE.md')
+          wbs_path = Path('Plans/Master/WBS/master-wbs.csv')
+
+          def git_hash(path: str) -> str:
+              return subprocess.check_output(['git', 'hash-object', path], text=True).strip()
+
+          expected_blobs = {
+              'TSK_0320_POST_CR0008_PROTECTION_STATE_MODEL_AND_COPY_RULES_2026-09-01.md': 'bdc6bacc424669708f410466f3cfd5527f1c2b3c',
+              'Plans/Master/WBS/master-wbs.csv': 'b27a0c5df2f5636d8ed71051e9e26a68959a2616',
+              'Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md': '2097d83961affaa69850e41a5ffcd72a660d69cd',
+          }
+          for rel, expected in expected_blobs.items():
+              actual = git_hash(rel)
+              assert actual == expected, f'{rel}: {actual} != {expected}'
+
+          with wbs_path.open(encoding='utf-8-sig', newline='') as f:
+              rows = list(csv.DictReader(f))
+          row = next(r for r in rows if (r.get('Task_ID') or '').strip() == 'TSK-0320')
+          assert (row.get('Lifecycle_Stage') or '').strip() == 'L4'
+          assert (row.get('Dependencies') or '').strip() == 'TSK-0315'
+          assert (row.get('Acceptance_ID') or '').strip() == 'ACC-0320'
+          assert (row.get('Verification_ID') or '').strip() == 'VER-0320'
+          assert (row.get('Evidence_ID') or '').strip() == 'EVD-0320'
+          assert (row.get('AI_Capability_A0_A4') or '').strip() == 'A4'
+          assert (row.get('Action_Authority') or '').strip() == 'AUTO_ALLOWED'
+          expected_acc = ('Protected/verified, configured/parent-confirmed, action-needed, not-covered, '
+                          'uncertain/error, and removed states have exact evidence and transition rules; '
+                          'no confirmation masquerades as verification.')
+          assert (row.get('Acceptance_Criteria') or '').strip() == expected_acc
+
+          state = state_path.read_text(encoding='utf-8')
+          assert 'ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0008 PUBLISHED, RECONCILED, READ-BACK VERIFIED.' in state
+          assert '## TSK-0315 current accepted stable state — 2026-08-31 — POST-CR-0007' in state
+          heading = '## TSK-0320 current accepted stable state — 2026-09-01 — POST-CR-0008'
+          assert heading not in state
+
+          artifact = artifact_path.read_text(encoding='utf-8')
+          markers = [
+              '**Version:** 2.0.0-post-CR-0008',
+              '### E1 — Technical verification evidence',
+              'A **qualifying positive E1** is the only evidence class that can establish `protected/verified`.',
+              '**`qualifies_as_technical_verification = false`**',
+              '### S1 — `protected/verified`',
+              '### S2 — `configured/parent-confirmed`',
+              '### S3 — `action-needed`',
+              '### S4 — `not-covered`',
+              '### S5 — `uncertain/error`',
+              '### S6 — `removed`',
+              '**Mandatory supporting copy:** `Protection has not yet been technically verified.`',
+              '**Any state → S1:** permitted **only** after new/current qualifying positive E1.',
+              'Accountless journey state and optional persistent parent/device ownership state are separate domains.',
+              'An old stored `protected/verified` value is not itself E1',
+              'Parent confirmation alone never yields S1.',
+              'Account ownership or dashboard/device registration alone never yields S1.',
+              'S6 cannot return to S1 from account/device persistence or parent confirmation',
+              'No browsing/query/activity history is stored to support any Protection Map state.',
+              '**TSK-0320 result: PASS candidate pending independent verification, GitHub read-back, master-plan validation, and durable runtime reconciliation.**',
+          ]
+          for marker in markers:
+              assert marker in artifact, f'missing artifact marker: {marker}'
+
+          # Every state must define evidence and copy; every non-verified state is barred from optimistic promotion.
+          for state_id in ('S1', 'S2', 'S3', 'S4', 'S5', 'S6'):
+              assert f'### {state_id} —' in artifact
+          assert artifact.count('→ S1') >= 7
+          assert 'No E2/account/device/configuration event can perform this transition.' in artifact
+          assert 'profile/provider presence, ClientID existence, endpoint health, successful provisioning, account/device ownership, and parent confirmation are not sufficient for S1' in artifact
+
+          # High-confidence literal-secret guard: report category only, never matched material.
+          forbidden = {
+              'private_key_material': re.compile(r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----'),
+              'github_classic_pat': re.compile(r'ghp_[A-Za-z0-9]{30,}'),
+              'github_fine_grained_pat': re.compile(r'github_pat_[A-Za-z0-9_]{40,}'),
+              'aws_access_key': re.compile(r'AKIA[0-9A-Z]{16}'),
+          }
+          for label, pattern in forbidden.items():
+              assert not pattern.search(artifact), f'forbidden literal secret category detected: {label}'
+          print('TSK0320_LITERAL_SECRET_GUARD=PASS')
+
+          # Governing requirement and adjacent acceptance semantics must still exist in current authority.
+          requirements = Path('Plans/Master/Registers/REQUIREMENTS.md').read_text(encoding='utf-8')
+          acceptance = Path('Plans/Master/Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md').read_text(encoding='utf-8')
+          decisions = Path('Plans/Master/Registers/DECISIONS_TRIGGERS.md').read_text(encoding='utf-8')
+          for marker in ('REQ-0028', 'REQ-0029', 'REQ-0030', 'REQ-0031'):
+              assert marker in requirements
+          for marker in ('TSK-0313', 'TSK-0315', 'TSK-0320', 'ACC-0320', 'TSK-0335', 'TSK-0371', 'TSK-0376', 'TSK-0390'):
+              assert marker in acceptance
+          for marker in ('DEC-0053', 'DEC-0054', 'DEC-0055'):
+              assert marker in decisions
+
+          validation = subprocess.run(
+              ['python3', 'Plans/Master/Tools/validate_master_plan.py'],
+              text=True, capture_output=True, check=True,
+          )
+          print(validation.stdout, end='')
+          combined = validation.stdout + validation.stderr
+          for marker in (
+              'VALIDATION PASS', 'assembly_modules=25', 'tasks=641', 'dependency_edges=858',
+              'relationship_entities=5178', 'relationship_targets=20472', 'broken_links=0',
+              'generated_missing_task_ids=0',
+          ):
+              assert marker in combined, f'validator marker missing: {marker}'
+
+          artifact_blob = git_hash(str(artifact_path))
+          section = f'''{heading}
+
+          `TSK-0320 — Freeze the protection-state model and copy rules`: **PASS** under current `ACC-0320 / VER-0320 / EVD-0320`, current `TSK-0315` dependency proof, and `DEC-0055/CR-0008` authority.
+
+          - Action authority: **A4 / AUTO_ALLOWED**.
+          - Current artifact: `TSK_0320_POST_CR0008_PROTECTION_STATE_MODEL_AND_COPY_RULES_2026-09-01.md`, version `2.0.0-post-CR-0008`, blob `{artifact_blob}`, acceptance source commit `{source_commit}`.
+          - Canonical sources: WBS blob `b27a0c5df2f5636d8ed71051e9e26a68959a2616`; Layer-5 blob `2097d83961affaa69850e41a5ffcd72a660d69cd`; historical 2026-08-28 TSK-0320 contract is superseded for current acceptance only where the CR-0006/CR-0007/CR-0008 dual-mode context changed.
+          - Verification: GitHub Actions run/attempt `{run_id} / {run_attempt}`; exact current WBS dependency/authority/ACC, current TSK-0315 PASS, CR-0008 marker, governing requirements/adjacent truth-state contracts, six-state evidence/copy/transition semantics, negative anti-promotion assertions, literal-secret guard and full master-plan validator were checked before runtime mutation.
+          - Frozen truth rule: only fresh qualifying technical verification can produce `protected/verified`; configuration/profile/ClientID presence, parent confirmation, account ownership, dashboard/device registration, stored state or journey completion can never substitute for that evidence.
+          - States are evidence-derived and scoped: `protected/verified`, `configured/parent-confirmed`, `action-needed`, `not-covered`, `uncertain/error`, `removed`; stale/conflicting/unavailable evidence fails closed, removal withdraws protection claims, and re-entry from removed requires explicit new setup plus independent technical verification before S1.
+          - Accountless journey state remains separate from optional persistent parent/device ownership state; sign-in/resume/persistence cannot strengthen evidence; no browsing/query/activity history or secret is used for the state model.
+          - Copy is truth-bounded: S2 explicitly says protection has not yet been technically verified; uncertainty/not-covered/removal remain visible; no complete-safety or surveillance claim is permitted.
+          - Runtime/state acceptance does not alter the WBS, graph, manifest, planning modules or CR-0008 owner-frozen baseline.
+          - **Non-inference:** no verifier implementation, platform support, datastore/schema, build, deployment, legal/privacy compliance, human comprehension, downstream task/gate, production activation or launch becomes PASS from this L4 definition task.
+          '''
+          section = '\n'.join(line.strip() for line in section.strip().splitlines())
+          state_path.write_text(state.rstrip() + '\n\n' + section + '\n', encoding='utf-8')
+          print('ACC_0320=PASS')
+          print('VER_0320=PASS')
+          print('EVD_0320=PASS')
+          print('TSK0320_STATE_CANDIDATE=PASS')
+          PY
+          git diff --check
+          test "$(git status --porcelain | sed 's/^...//')" = 'CURRENT_STATE.md'
+
+      - name: Persist CURRENT_STATE and verify exact remote read-back
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: accept current TSK-0320 protection-state model'
+          STATE_COMMIT="$(git rev-parse HEAD)"
+          STATE_BLOB="$(git rev-parse "$STATE_COMMIT:CURRENT_STATE.md")"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$STATE_COMMIT"
+          test "$(git rev-parse "origin/main:CURRENT_STATE.md")" = "$STATE_BLOB"
+          git show "origin/main:CURRENT_STATE.md" | grep -F '## TSK-0320 current accepted stable state — 2026-09-01 — POST-CR-0008'
+          echo "TSK0320_STATE_COMMIT=$STATE_COMMIT"
+          echo "TSK0320_STATE_BLOB=$STATE_BLOB"
+          echo 'TSK0320_ACCEPTANCE_REMOTE_READBACK=PASS'
