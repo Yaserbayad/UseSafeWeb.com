@@ -1,0 +1,33 @@
+name: Update TSK-0323 post-CR-0007 compatibility
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/update-tsk0323-post-cr0007-compatibility-20260901.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply bounded current-scope update
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          python3 .github/scripts/update_tsk0323_post_cr0007_compatibility_20260901.py
+          git diff --check
+          test -n "$(git status --porcelain content/TSK-0323/DEVICE_SERVICE_INSTRUCTION_CATALOGUE.md content/TSK-0323/CATALOGUE.json)"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add content/TSK-0323/DEVICE_SERVICE_INSTRUCTION_CATALOGUE.md content/TSK-0323/CATALOGUE.json
+          git commit -m 'content: align TSK-0323 with current dual-mode scope'
+          git push origin HEAD:main
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$(git rev-parse HEAD)"
+          echo "TSK0323_UPDATE_COMMIT=$(git rev-parse HEAD)"
+          echo "TSK0323_MD_BLOB=$(git rev-parse HEAD:content/TSK-0323/DEVICE_SERVICE_INSTRUCTION_CATALOGUE.md)"
+          echo "TSK0323_JSON_BLOB=$(git rev-parse HEAD:content/TSK-0323/CATALOGUE.json)"
