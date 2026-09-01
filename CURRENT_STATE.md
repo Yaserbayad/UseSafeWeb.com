@@ -1915,3 +1915,16 @@ Recompute the current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-
 - No DNS questions/domains/URLs/browsing history/child activity/persistent identity linkage is required by this contract.
 - Runtime acceptance does not alter WBS, graph, manifest, planning modules, AdGuard, Quad9 dns10/ECS policy or the CR-0008 owner-frozen baseline.
 - **Non-inference:** this L4 PASS does not claim physical-device/runtime acceptance, implementation, LG-07, build, production activation, launch or real-user outcomes.
+
+## TSK-0517 current accepted stable state — 2026-09-01 — POST-CR-0008
+
+`TSK-0517 — Define cross-browser/device/network functional, failure, privacy, accessibility, performance, recovery/removal, and no-auth tests`: **PASS** under current `ACC-0517 / VER-0517 / EVD-0517`, current `TSK-0354` + `TSK-0409` dependency proof, and CR-0008 authority.
+
+- Action authority: **A3 / AUTO_ALLOWED**.
+- Artifact: `TSK_0517_CROSS_BROWSER_DEVICE_NETWORK_ACCEPTANCE_TEST_PLAN_2026-09-01.md`, version `1.0.0`, blob `a3da0c1c6fe6d5ae12dfaf37e7f9606202848df5`, publication commit `8b1305f3bd31e9e7955ab97e77c3ab17f643ec30`.
+- Verification source commit: `8ff147982d9e5ae10be70d65271bb346b18f8cdd`; GitHub Actions run/attempt `33535410478 / 1`.
+- Acceptance proof: exact WBS/ACC/VER/EVD/dependencies/authority; REQ-0065/0066; CON-0023/0029; RSK-0050; INT-0017; all integrated test classes; all 14 TSK-0409 cases; all six TSK-0320 states and ST-01..ST-12; accountless/no-auth and optional-account negative boundaries; exact dated environment/version references; privacy-safe synthetic-fixture rule; secret guard; and full modular validator all passed before runtime mutation.
+- Dated reference environments include iOS/iPadOS 26.6.1, Safari 26.6.1, Firefox 155, Chromium/Chrome 153.0.8010.24 reference, Android 16 stable and ubuntu-24.04 CI; actual execution must record exact installed full versions and may not use floating `latest` as evidence.
+- Non-production/synthetic results remain non-production evidence and cannot be relabelled as production/live-user evidence.
+- Runtime acceptance does not alter WBS, graph, manifest, planning modules or the CR-0008 owner-frozen baseline.
+- **Non-inference:** this PASS freezes the acceptance-test definition only; it does not claim those downstream browser/device/network/runtime tests executed, any release passed, production was activated, or real-user outcomes exist.
