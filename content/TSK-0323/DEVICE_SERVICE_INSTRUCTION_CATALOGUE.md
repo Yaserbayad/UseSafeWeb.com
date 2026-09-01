@@ -1,11 +1,11 @@
 # TSK-0323 — Versioned Device and Service Instruction Catalogue
 
-**Version:** 1.0.0  
+**Version:** 1.0.1-post-cr0007
 **Status:** internal L4 implementation-facing content contract  
 **Owner:** Content  
 **Action authority:** A3 / AUTO_ALLOWED  
-**Current sequencing:** DEC-0052 / CR-0005  
-**Last source review:** 2026-08-29  
+**Current sequencing:** DEC-0053 / CR-0006 + DEC-0054 / CR-0007; DEC-0052 / CR-0005 remains the pre-L8 human-evidence rule
+**Last source review:** 2026-09-01
 **Publication authority:** none
 
 ## 1. Purpose and authority
@@ -16,20 +16,21 @@ TSK-0307 remains predecessor/source evidence; this TSK-0323 catalogue is the cur
 
 Visible product identity is **SafeWeb**. `UseSafeWeb.com` remains the domain/project/technical identifier. Technical endpoint strings remain exact: Android `dns.usesafeweb.com`; iPhone DoH `https://dns.usesafeweb.com/dns-query`.
 
-DEC-0052 / CR-0005 applies: no pre-product parent/user/participant evidence is claimed or required. Technical/source/device/browser/accessibility verification remains mandatory through L7; real-user validation begins only at the controlled L8 integrated-product pilot.
+Current Version 1 is dual-mode under DEC-0053 / CR-0006: the complete setup, verification, help, recovery, and removal core remains usable without login, while optional parent account/session, minimum saved-device ownership persistence, and lightweight dashboard/device management may exist on separate product surfaces. This device/service catalogue does not make account state part of instruction applicability unless a platform-owned prerequisite explicitly requires an external platform account. Account, session, saved-device, or dashboard presence never establishes S1 `Verified`. DEC-0052 / CR-0005 still applies to human evidence: no pre-L8 parent/user/participant evidence is claimed or required; technical/source/device/browser/accessibility verification remains mandatory through L7.
 
 ## 2. Catalogue-wide rules
 
 1. **Applicability is exact.** Platform/device/version/network/account/management conditions are part of the instruction, not optional notes.
 2. **Unsupported means stop.** Never improvise another DNS client, VPN, account workaround, service, or platform path to make a journey look complete.
 3. **Verification truth is preserved.** Configuration presence or parent confirmation never becomes S1 `Verified`; use S2/S3/S4/S5/S6 exactly as owned by TSK-0320/0322.
-4. **Accountless by default.** SafeWeb never collects Apple/Google/provider credentials, child browsing/DNS history, or a persistent child/device profile for these instructions.
+4. **Accountless core is preserved.** These instructions never require SafeWeb sign-in for core setup, verification, help, recovery, or removal. SafeWeb never collects Apple/Google/provider credentials, child browsing/DNS history, or child identity/profile data for these instructions. Optional parent-account/session or saved-device metadata on separately approved product surfaces does not alter instruction applicability or verification truth.
 5. **OS/security authority remains external.** SafeWeb may route, explain, copy values, deliver an already-approved profile artifact, and run approved checks; OS/profile/account/security authorization remains with the user/platform.
 6. **Review is event-driven.** A source/platform/service/endpoint/support/state/security/privacy contradiction immediately sets the affected record to `REVIEW_REQUIRED`; stale positive instructions do not remain active.
 7. **Localization cannot strengthen claims.** English is semantic baseline; Turkish/Arabic/RTL variants bind to the same instruction ID/version and evidence strength. `SafeWeb` and technical endpoints remain LTR/untranslated.
 8. **No named external service is currently hard-coded.** The service layer supports zero or one service only when a separately current approved named-service instruction exists. Until then, the correct service outcome is skip/Not covered/uncertain.
+9. **Optional SafeWeb account/dashboard state is non-authoritative for technical protection.** Sign-in, session, ownership, saved-device, or dashboard presence may support continuity only; it never upgrades S2/S3/S4/S5/S6 to S1, never changes a physical DNS state by itself, and never makes logout/account deletion equivalent to DNS removal.
 
-## 3. Current external source set rechecked 2026-08-29
+## 3. Current external source set rechecked 2026-09-01
 
 | Source ID | First-party source | Current fact relied upon |
 | --- | --- | --- |
