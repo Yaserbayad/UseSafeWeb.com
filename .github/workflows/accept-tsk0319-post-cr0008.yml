@@ -1,3 +1,4 @@
+# Retrigger after initial workflow-registration window; state/hash guards make this idempotent.
 name: Accept TSK-0319 post-CR-0008 current PASS
 
 on:
