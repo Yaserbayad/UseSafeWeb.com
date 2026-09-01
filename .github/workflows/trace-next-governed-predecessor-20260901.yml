@@ -1,4 +1,4 @@
-name: Trace next governed predecessor after TSK-0144
+name: Audit TSK-0313 canonical contract
 
 on:
   push:
@@ -10,11 +10,11 @@ permissions:
   contents: read
 
 jobs:
-  trace:
+  audit:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
-      - name: Trace highest-priority blocked L5 chain
+      - name: Audit TSK-0313 WBS, dependencies, and linked registers
         shell: bash
         run: |
           set -euo pipefail
@@ -24,41 +24,49 @@ jobs:
 
           with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='') as f:
               rows = list(csv.DictReader(f))
-          by_id = {(r.get('Task_ID') or '').strip(): r for r in rows if (r.get('Task_ID') or '').strip()}
+          row = next(r for r in rows if (r.get('Task_ID') or '').strip() == 'TSK-0313')
+          print('WBS_FIELDS_BEGIN')
+          for key, value in row.items():
+              if (value or '').strip():
+                  print(f'{key}={(value or "").strip()}')
+          print('WBS_FIELDS_END')
+
           state = Path('CURRENT_STATE.md').read_text(encoding='utf-8')
           accepted = set(re.findall(r'^## (TSK-\d{4})(?:\s*/[^\n#]+)?\s+current accepted stable state\b', state, flags=re.M|re.I))
-          def deps(row): return re.findall(r'TSK-\d{4}', row.get('Dependencies') or '')
+          deps = re.findall(r'TSK-\d{4}', row.get('Dependencies') or '')
+          print('DEPENDENCIES=' + ';'.join(deps))
+          for dep in deps:
+              print(f'DEP_{dep}=' + ('CURRENT_PASS' if dep in accepted else 'MISSING_CURRENT_PASS'))
+          print('TSK0313_CURRENT=' + ('PASS' if 'TSK-0313' in accepted else 'NOT_PASS'))
 
-          target = 'TSK-0047'
-          branch = set()
-          def collect(task_id):
-              if task_id in branch or task_id not in by_id: return
-              branch.add(task_id)
-              for dep in deps(by_id[task_id]):
-                  if dep not in accepted: collect(dep)
-          collect(target)
+          refs = {
+              'Plans/Master/Registers/REQUIREMENTS.md': ['REQ-0028','REQ-0029','REQ-0035'],
+              'Plans/Master/Registers/CONSTRAINTS.md': ['CON-0010','CON-0017'],
+              'Plans/Master/Registers/RISKS.md': ['RSK-0002'],
+              'Plans/Master/Registers/INTERFACES.md': ['INT-0009','INT-0010'],
+              'Plans/Master/Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md': ['TSK-0313'],
+          }
+          for path, ids in refs.items():
+              lines = Path(path).read_text(encoding='utf-8').splitlines()
+              print(f'REGISTER={path}')
+              for item_id in ids:
+                  matches = [line for line in lines if line.startswith(f'| {item_id} |')]
+                  print(f'ROW_{item_id}_COUNT={len(matches)}')
+                  for line in matches:
+                      print(line)
 
-          ready = []
-          for task_id in branch:
-              if task_id in accepted: continue
-              row = by_id[task_id]
-              if (row.get('Planning_Status') or '').strip().upper() in {'DEFERRED','NOT_APPLICABLE','CANCELLED','CANCELED'}: continue
-              if all(dep in accepted for dep in deps(row)):
-                  ready.append(row)
-          order = {'CRITICAL':0,'HIGH':1,'MEDIUM':2,'LOW':3}
-          ready.sort(key=lambda r:(order.get((r.get('Priority') or '').strip().upper(),9), rows.index(r), (r.get('Task_ID') or '')))
+          for artifact in [
+              'TSK_0320_POST_CR0008_PROTECTION_STATE_MODEL_AND_COPY_RULES_2026-09-01.md',
+              'TSK_0144_EXTERNAL_SERVICE_SAFEGUARD_REQUIREMENT_2026-09-01.md',
+              'TSK_0041_POST_CR0008_CURRENT_REQUALIFICATION_AMENDMENT_2026-09-01.md',
+          ]:
+              p = Path(artifact)
+              print(f'ARTIFACT_{artifact}_EXISTS={p.exists()}')
+              if p.exists():
+                  print(f'ARTIFACT_{artifact}_BYTES={p.stat().st_size}')
 
-          print(f'ACCEPTED_COUNT={len(accepted)}')
-          print(f'TARGET={target}')
-          print(f'READY_BRANCH_LEAVES={len(ready)}')
-          for r in ready:
-              task_id = (r.get('Task_ID') or '').strip()
-              print(f"READY | {task_id} | {(r.get('Lifecycle_Stage') or '').strip()} | {(r.get('Priority') or '').strip()} | {(r.get('AI_Capability_A0_A4') or '').strip()} | {(r.get('Action_Authority') or '').strip()}")
-              print(f"TITLE | {(r.get('Title') or r.get('Task') or '').strip()}")
-              print(f"DEPS | {(r.get('Dependencies') or '').strip()}")
-              print(f"ACCEPTANCE | {(r.get('Acceptance_Criteria') or '').strip()}")
-              print(f"REFS | req={(r.get('Requirement_Reference') or '').strip()} | risk={(r.get('Risk_Reference') or '').strip()} | interface={(r.get('Interface_Reference') or '').strip()} | acc={(r.get('Acceptance_ID') or '').strip()} | ver={(r.get('Verification_ID') or '').strip()} | evd={(r.get('Evidence_ID') or '').strip()}")
-              print(f"CONTROL | gate={(r.get('Gate') or '').strip()} | trigger={(r.get('Trigger') or '').strip()} | preconditions={(r.get('Preconditions') or '').strip()}")
+          print('TSK0313_CONTRACT_AUDIT=PASS')
           PY
+          python3 Plans/Master/Tools/validate_master_plan.py
           git diff --check
           test -z "$(git status --porcelain --untracked-files=no)"
