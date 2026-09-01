@@ -28,7 +28,7 @@ jobs:
           test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
           test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
           test "$(git rev-parse HEAD:Plans/Master/WBS/master-wbs.csv)" = "b27a0c5df2f5636d8ed71051e9e26a68959a2616"
-          test "$(git rev-parse HEAD:TSK_0230_PRIVACY_DATA_MINIMISATION_RETENTION_DELETION_NFRS_2026-09-01.md)" = "9cd41bcc83769d795ef212b65e2e32c8119c7e48"
+          test "$(git rev-parse HEAD:TSK_0230_PRIVACY_DATA_MINIMISATION_RETENTION_DELETION_NFRS_2026-09-01.md)" = "eda85b062a3a7ba29544de35a8a813c9790092f2"
 
           python3 - <<'PY'
           import csv, re
@@ -85,6 +85,7 @@ jobs:
 
           artifact = Path('TSK_0230_PRIVACY_DATA_MINIMISATION_RETENTION_DELETION_NFRS_2026-09-01.md').read_text(encoding='utf-8')
           required_markers = [
+              '**Version:** 1.0.1-post-CR-0008',
               '**Fail-closed rule:**',
               '`BLOCKED_NO_VALID_BASIS_OR_CONTRACT`',
               '`PROHIBITED`',
@@ -136,12 +137,19 @@ jobs:
               for idx in [5,6,7,8,9,11]:
                   assert r[idx] not in {'TBD','UNKNOWN','—','-',''}, (r[0], idx, r[idx])
 
+          d26 = next(r for r in table_rows if r[0] == 'D26')
+          assert 'LI_CONDITIONAL' in d26[4]
+          assert 'CONTRACT_CONDITIONAL' in d26[4]
+          assert 'LEGAL_OBLIGATION_CONDITIONAL' in d26[4]
+          assert 'NOT_PERSONAL_OR_SYNTHETIC' in d26[4]
+          assert 'J1 is excluded by default' in d26[4]
+
           d27 = next(r for r in table_rows if r[0] == 'D27')
           assert d27[4] == 'PROHIBITED'
           assert 'Zero' in d27[7]
           assert 'do not create/store' in d27[7]
           assert 'Any product, dashboard, analytics, support, monetisation, profiling or persistent diagnostic use' in d27[11]
-          forbidden_classes = ['identifiable DNS/query/domain/URL/browsing/top-domain/child-activity data']
+          forbidden_classes = ['Identifiable DNS/query/domain/URL/browsing/top-domain/child-activity data']
           assert d27[1] == forbidden_classes[0]
           for r in table_rows[:-1]:
               assert r[1] != forbidden_classes[0]
@@ -159,6 +167,7 @@ jobs:
           print('TSK0230_INVENTORY_ROWS=27')
           print('TSK0230_EIGHT_FIELD_COMPLETENESS=PASS')
           print('TSK0230_LAWFUL_BASIS_FAIL_CLOSED=PASS')
+          print('TSK0230_BACKUP_BASIS_STATUS=PASS')
           print('TSK0230_RETENTION_DELETION=PASS')
           print('TSK0230_NO_BROWSING_HISTORY=PASS')
           print('TSK0230_DOMAIN_SEPARATION=PASS')
@@ -178,14 +187,14 @@ jobs:
               '`TSK-0230 — Define privacy, data-minimisation, retention, and deletion NFRs`: **PASS** under current `ACC-0230 / VER-0230 / EVD-0230`, current `TSK-0313` + `TSK-0042` dependency proof, and CR-0008 authority.',
               '',
               '- Action authority: **A3 / AUTO_ALLOWED**.',
-              '- Artifact: `TSK_0230_PRIVACY_DATA_MINIMISATION_RETENTION_DELETION_NFRS_2026-09-01.md`, version `1.0.0-post-CR-0008`, blob `9cd41bcc83769d795ef212b65e2e32c8119c7e48`, publication commit `b01c46046c31fa0d61a4fe9bceeed2a6d6839d6c`.',
+              '- Artifact: `TSK_0230_PRIVACY_DATA_MINIMISATION_RETENTION_DELETION_NFRS_2026-09-01.md`, version `1.0.1-post-CR-0008`, blob `eda85b062a3a7ba29544de35a8a813c9790092f2`, publication commit `ba43a489602a2441574c608c26e6fb9f67009dc6`.',
               '- Accepted NFR: every current authorised data element/class has explicit purpose/necessity, lawful-basis status, source, recipient, retention, deletion mechanism, access control, rights/safeguards and prohibited use; missing/unsupported basis or contract fails closed rather than being guessed into compliance.',
               '- Identifiable DNS/query/domain/URL/browsing/top-domain/child-activity history remains prohibited; persistent identifiable query/file logging remains off and identifiable per-client statistics remain off/excluded unless a separately current justified exception is authorised.',
               '- Anonymous J0/J1, optional parent account/session, parent-owned device, support/diagnostics, DNS control-plane, telemetry and backup domains remain purpose-separated; sign-in cannot extend J1 or silently join anonymous history into an account.',
               '- Current frozen retention carried forward: J1 and raw accountless event linkage max 24h; J1 early deletion synchronous or within 15m; TSK-0498 non-linkable product aggregates max 13 months; synthetic reliability raw max 30 days and aggregates max 13 months. These are product-contract maxima, not claimed legal mandates.',
               '- Account deletion, saved-device deletion/unlink/revoke, AdGuard reconciliation and physical DNS/profile removal are distinct truthful operations. Account/device ownership, ClientID, parent confirmation or cached state never substitutes for technical protection verification.',
               '- `RSK-0001` remains OPEN: this L4 NFR does not establish final UK legal/data readiness, close Article-27/ICO/LIA/DPIA questions, authorize real England participant processing, or certify production legal compliance. `INT-0007` still requires actual runtime/config/log/schema/backup inspection before release.',
-              f'- Acceptance workflow run `{os.environ["RUN_ID"]}` verified the exact WBS/dependencies/ACC/VER/EVD and linked registers, all 27 inventory rows and required fields, fail-closed lawful-basis semantics, retention/deletion/privacy/domain-separation invariants, RSK-0001 non-inference and the full modular validator before this runtime mutation.',
+              f'- Acceptance workflow run `{os.environ["RUN_ID"]}` verified the exact WBS/dependencies/ACC/VER/EVD and linked registers, all 27 inventory rows and required fields, fail-closed lawful-basis semantics including backup-basis inheritance, retention/deletion/privacy/domain-separation invariants, RSK-0001 non-inference and the full modular validator before this runtime mutation.',
               '- **Non-inference:** no persistent account schema, datastore, runtime deletion implementation, processor/DPA/transfer conclusion, final lawful-basis approval, browser/device runtime test, human validation, build, deployment, participant activation, market activation, launch or downstream task/gate becomes PASS from this L4 NFR freeze.',
           ]
           p.write_text(text.rstrip() + '\n\n' + '\n'.join(lines) + '\n', encoding='utf-8')
