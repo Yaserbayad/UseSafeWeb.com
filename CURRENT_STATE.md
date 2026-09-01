@@ -1871,3 +1871,18 @@ Recompute the current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-
 - Evidence contains no credential value. The literal-secret guard reports category-only failure and never emits matched material.
 - Runtime/state acceptance does not alter the WBS, graph, manifest, planning modules or CR-0008 baseline.
 - **Non-inference:** no live host credential, root path, Azure/Firebase/AdGuard/GitHub token scope, deployment, security test, release gate, launch or real-user activation is claimed PASS by this definition task.
+
+## TSK-0320 current accepted stable state — 2026-09-01 — POST-CR-0008
+
+`TSK-0320 — Freeze the protection-state model and copy rules`: **PASS** under current `ACC-0320 / VER-0320 / EVD-0320`, current `TSK-0315` dependency proof, and `DEC-0055/CR-0008` authority.
+
+- Action authority: **A4 / AUTO_ALLOWED**.
+- Current artifact: `TSK_0320_POST_CR0008_PROTECTION_STATE_MODEL_AND_COPY_RULES_2026-09-01.md`, version `2.0.0-post-CR-0008`, blob `bdc6bacc424669708f410466f3cfd5527f1c2b3c`, acceptance source commit `3e6be6aea4a8d8675e1e565ef07d94b9a105c66c`.
+- Canonical sources: WBS blob `b27a0c5df2f5636d8ed71051e9e26a68959a2616`; Layer-5 blob `2097d83961affaa69850e41a5ffcd72a660d69cd`; historical 2026-08-28 TSK-0320 contract is superseded for current acceptance only where the CR-0006/CR-0007/CR-0008 dual-mode context changed.
+- Verification: GitHub Actions run/attempt `33531622530 / 1`; exact current WBS dependency/authority/ACC, current TSK-0315 PASS, CR-0008 marker, governing requirements/adjacent truth-state contracts, six-state evidence/copy/transition semantics, negative anti-promotion assertions, literal-secret guard and full master-plan validator were checked before runtime mutation.
+- Frozen truth rule: only fresh qualifying technical verification can produce `protected/verified`; configuration/profile/ClientID presence, parent confirmation, account ownership, dashboard/device registration, stored state or journey completion can never substitute for that evidence.
+- States are evidence-derived and scoped: `protected/verified`, `configured/parent-confirmed`, `action-needed`, `not-covered`, `uncertain/error`, `removed`; stale/conflicting/unavailable evidence fails closed, removal withdraws protection claims, and re-entry from removed requires explicit new setup plus independent technical verification before S1.
+- Accountless journey state remains separate from optional persistent parent/device ownership state; sign-in/resume/persistence cannot strengthen evidence; no browsing/query/activity history or secret is used for the state model.
+- Copy is truth-bounded: S2 explicitly says protection has not yet been technically verified; uncertainty/not-covered/removal remain visible; no complete-safety or surveillance claim is permitted.
+- Runtime/state acceptance does not alter the WBS, graph, manifest, planning modules or CR-0008 owner-frozen baseline.
+- **Non-inference:** no verifier implementation, platform support, datastore/schema, build, deployment, legal/privacy compliance, human comprehension, downstream task/gate, production activation or launch becomes PASS from this L4 definition task.
