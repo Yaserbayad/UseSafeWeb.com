@@ -1,0 +1,238 @@
+name: Accept TSK-0498 privacy-safe event contract
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/accept-tsk0498-privacy-safe-events-20260901.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-tsk-0498-acceptance
+  cancel-in-progress: false
+
+jobs:
+  verify-accept:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 3
+
+      - name: Correct pre-acceptance catalogue count and persist artifact
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p = Path('TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md')
+          s = p.read_text(encoding='utf-8')
+          assert '**Version:** 1.0.0' in s
+          assert 'Only the eleven event names in this contract are accepted.' in s
+          names = re.findall(r'^#### `([a-z0-9_]+)`$', s, flags=re.M)
+          assert len(names) == 12, names
+          assert len(set(names)) == 12
+          s = s.replace('**Version:** 1.0.0', '**Version:** 1.0.1', 1)
+          s = s.replace('Only the eleven event names in this contract are accepted.', 'Only the twelve event names in this contract are accepted.', 1)
+          p.write_text(s, encoding='utf-8')
+          print('TSK0498_PREACCEPT_CORRECTION=PASS')
+          print('TSK0498_APPROVED_EVENT_COUNT=12')
+          PY
+          git diff --check
+          test "$(git status --porcelain | sed 's/^...//')" = 'TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md
+          git commit -m 'TSK-0498: correct approved event catalogue count'
+          ARTIFACT_COMMIT="$(git rev-parse HEAD)"
+          ARTIFACT_BLOB="$(git rev-parse "$ARTIFACT_COMMIT:TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md")"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$ARTIFACT_COMMIT"
+          test "$(git rev-parse "origin/main:TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md")" = "$ARTIFACT_BLOB"
+          echo "TSK0498_ARTIFACT_COMMIT=$ARTIFACT_COMMIT" >> "$GITHUB_ENV"
+          echo "TSK0498_ARTIFACT_BLOB=$ARTIFACT_BLOB" >> "$GITHUB_ENV"
+          echo "TSK0498_ARTIFACT_REMOTE_READBACK=PASS"
+
+      - name: Verify ACC-0498 / VER-0498 / EVD-0498
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$TSK0498_ARTIFACT_COMMIT"
+          test "$(git rev-parse origin/main)" = "$TSK0498_ARTIFACT_COMMIT"
+          python3 - <<'PY'
+          from pathlib import Path
+          import csv
+          import os
+          import re
+          import subprocess
+
+          artifact_path = Path('TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md')
+          state_path = Path('CURRENT_STATE.md')
+          wbs_path = Path('Plans/Master/WBS/master-wbs.csv')
+          artifact_commit = os.environ['TSK0498_ARTIFACT_COMMIT']
+          artifact_blob = os.environ['TSK0498_ARTIFACT_BLOB']
+          run_id = os.environ.get('GITHUB_RUN_ID', 'UNKNOWN')
+          run_attempt = os.environ.get('GITHUB_RUN_ATTEMPT', '1')
+
+          def git_hash(path: str) -> str:
+              return subprocess.check_output(['git', 'hash-object', path], text=True).strip()
+
+          assert git_hash(str(artifact_path)) == artifact_blob
+          assert git_hash('Plans/Master/WBS/master-wbs.csv') == 'b27a0c5df2f5636d8ed71051e9e26a68959a2616'
+          assert git_hash('Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md') == '2097d83961affaa69850e41a5ffcd72a660d69cd'
+
+          with wbs_path.open(encoding='utf-8-sig', newline='') as f:
+              rows = list(csv.DictReader(f))
+          row = next(r for r in rows if (r.get('Task_ID') or '').strip() == 'TSK-0498')
+          assert (row.get('Lifecycle_Stage') or '').strip() == 'L5'
+          deps = {(x.strip()) for x in (row.get('Dependencies') or '').split(';') if x.strip()}
+          assert deps == {'TSK-0229', 'TSK-0320'}, deps
+          assert (row.get('Priority') or '').strip() == 'HIGH'
+          assert (row.get('Acceptance_ID') or '').strip() == 'ACC-0498'
+          assert (row.get('Verification_ID') or '').strip() == 'VER-0498'
+          assert (row.get('Evidence_ID') or '').strip() == 'EVD-0498'
+          assert (row.get('AI_Capability_A0_A4') or '').strip() == 'A3'
+          assert (row.get('Action_Authority') or '').strip() == 'AUTO_ALLOWED'
+          assert (row.get('Risk_Reference') or '').strip() == 'RSK-0049'
+          assert (row.get('Interface_Reference') or '').strip() == 'INT-0016'
+          reqs = {(x.strip()) for x in (row.get('Requirement_Reference') or '').split(';') if x.strip()}
+          assert reqs == {'REQ-0060','REQ-0061','REQ-0062','CON-0007','CON-0008','CON-0009'}, reqs
+          expected_acc = ('Every event has purpose/fields/retention/owner/denominator; no domains, browsing, child activity, '
+                          'addictive engagement, or persistent identity linkage exists.')
+          assert (row.get('Acceptance_Criteria') or '').strip() == expected_acc
+
+          state = state_path.read_text(encoding='utf-8')
+          assert 'ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0008 PUBLISHED, RECONCILED, READ-BACK VERIFIED.' in state
+          assert '## TSK-0229 current accepted stable state — 2026-08-30 — POST-CR-0006' in state
+          assert '## TSK-0320 current accepted stable state — 2026-09-01 — POST-CR-0008' in state
+          heading = '## TSK-0498 current accepted stable state — 2026-09-01 — POST-CR-0008'
+          assert heading not in state
+
+          artifact = artifact_path.read_text(encoding='utf-8')
+          assert '**Version:** 1.0.1' in artifact
+          expected_events = [
+              'journey_started','journey_step_entered','journey_step_outcome','journey_completed',
+              'protection_state_evaluated','protection_verification_outcome',
+              'self_service_opened','self_service_outcome',
+              'synthetic_service_probe_result','recovery_operation_outcome',
+              'channel_entry','cost_period_recorded',
+          ]
+          found = re.findall(r'^#### `([a-z0-9_]+)`$', artifact, flags=re.M)
+          assert found == expected_events, found
+          assert 'Only the twelve event names in this contract are accepted.' in artifact
+
+          # Every approved event section proves purpose, fields, retention, owner and denominator.
+          for i, name in enumerate(expected_events):
+              start = artifact.index(f'#### `{name}`')
+              end = artifact.index(f'#### `{expected_events[i+1]}`') if i + 1 < len(expected_events) else artifact.index('## 6. Explicitly prohibited events and fields')
+              section = artifact[start:end]
+              for marker in ('- **Purpose:**','- **Event fields:**','- **Retention:**','- **Owner:**','- **Denominator:**'):
+                  assert marker in section, f'{name} missing {marker}'
+
+          markers = [
+              '**Persistent identity linkage is prohibited.**',
+              'maximum life and raw retention **24 hours**',
+              'Sign-in cannot extend this lifetime.',
+              'No event accepts arbitrary extra properties.',
+              'Unknown fields cause rejection/quarantine and privacy review, not silent storage.',
+              'No analytics identifier survives the accountless journey TTL.',
+              'configured_parent_confirmed',
+              '`configured_parent_confirmed` is never counted as `protected_verified`.',
+              'Parent/configuration confirmation does not create this event and cannot be represented as a positive result.',
+              'The source may be linked to journey completion only within the same 24-hour `journey_session_id`; that linkage is destroyed at aggregation.',
+              'this event is never joined to a person/session/device/account.',
+              'No browsing/query/activity history',
+              'Missing data and uncertainty are shown beside the metric; they are never silently imputed as success.',
+              'Operational logs/traces are governed separately and must not be treated as a backdoor analytics store.',
+              '**TSK-0498 result: PASS candidate pending independent verification, GitHub read-back, full master-plan validation and durable runtime reconciliation.**',
+          ]
+          for marker in markers:
+              assert marker in artifact, f'missing invariant: {marker}'
+
+          prohibited_event_names = {'dns_query','domain_visited','top_domain','child_activity'}
+          assert not (set(found) & prohibited_event_names)
+          assert 'addictive engagement metric' not in '\n'.join(f'#### `{n}`' for n in found)
+
+          # High-confidence literal-secret guard; never print matched values.
+          forbidden = {
+              'private_key_material': re.compile(r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----'),
+              'github_classic_pat': re.compile(r'ghp_[A-Za-z0-9]{30,}'),
+              'github_fine_grained_pat': re.compile(r'github_pat_[A-Za-z0-9_]{40,}'),
+              'aws_access_key': re.compile(r'AKIA[0-9A-Z]{16}'),
+          }
+          for label, pattern in forbidden.items():
+              assert not pattern.search(artifact), f'forbidden literal secret category detected: {label}'
+          print('TSK0498_LITERAL_SECRET_GUARD=PASS')
+
+          requirements = Path('Plans/Master/Registers/REQUIREMENTS.md').read_text(encoding='utf-8')
+          constraints = Path('Plans/Master/Registers/CONSTRAINTS.md').read_text(encoding='utf-8')
+          risks = Path('Plans/Master/Registers/RISKS.md').read_text(encoding='utf-8')
+          interfaces = Path('Plans/Master/Registers/INTERFACES.md').read_text(encoding='utf-8')
+          for marker in ('REQ-0060','REQ-0061','REQ-0062'):
+              assert marker in requirements
+          for marker in ('CON-0007','CON-0008','CON-0009'):
+              assert marker in constraints
+          assert 'RSK-0049' in risks
+          assert 'INT-0016' in interfaces
+
+          validation = subprocess.run(['python3','Plans/Master/Tools/validate_master_plan.py'], text=True, capture_output=True, check=True)
+          print(validation.stdout, end='')
+          combined = validation.stdout + validation.stderr
+          for marker in ('VALIDATION PASS','assembly_modules=25','tasks=641','dependency_edges=858','relationship_entities=5178','relationship_targets=20472','broken_links=0','generated_missing_task_ids=0'):
+              assert marker in combined, f'validator marker missing: {marker}'
+
+          section = f'''{heading}
+
+          `TSK-0498 — Define only decision-linked accountless journey, protection-state, self-service, reliability, channel, and cost events`: **PASS** under current `ACC-0498 / VER-0498 / EVD-0498`, current `TSK-0229` + `TSK-0320` dependency proof, and `DEC-0055/CR-0008` authority.
+
+          - Action authority: **A3 / AUTO_ALLOWED**.
+          - Artifact: `TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md`, version `1.0.1`, blob `{artifact_blob}`, acceptance source commit `{artifact_commit}`.
+          - Verification: GitHub Actions run/attempt `{run_id} / {run_attempt}`; exact WBS/ACC/VER/EVD/dependencies/authority, REQ-0060/0061/0062, CON-0007/0008/0009, RSK-0049, INT-0016, exact 12-event allowlist, per-event purpose/fields/retention/owner/denominator completeness, anti-identity/browsing/child/addictive-event boundaries, TSK-0320 truth-state separation, literal-secret guard and full master-plan validator were checked before runtime mutation.
+          - Approved catalogue: accountless journey start/step/completion; protection-state evaluation and technical verification outcome; self-service open/outcome; synthetic service probes and governed recovery outcomes; privacy-minimal channel entry; aggregate period cost input.
+          - Raw accountless correlation is random first-party session-only, maximum 24 hours and never joined to optional account/device identity; sign-in cannot extend it. Retained product aggregates are non-linkable; synthetic reliability is user-independent.
+          - No DNS question/domain/URL/browsing/top-domain/child activity/free-text support content/persistent user-device-account analytics ID/addictive engagement event is approved. Unknown events/fields fail schema acceptance.
+          - Every consuming KPI must name source/formula/numerator/denominator/window/release-or-cohort/owner/guardrail/decision action; missing data and reproduction failure remain explicit and can invalidate affected decision evidence.
+          - The pre-acceptance catalogue-count defect (`eleven` vs actual 12 approved events) was detected before PASS, corrected to version 1.0.1, committed and remotely read back before this verification.
+          - Runtime acceptance does not alter WBS, graph, manifest, planning modules or the CR-0008 owner-frozen baseline.
+          - **Non-inference:** no analytics implementation/vendor, runtime collection, DPIA/legal conclusion, KPI result, gate, build, production activation, launch or real-user outcome becomes PASS from this definition task.
+          '''
+          section = '\n'.join(line.strip() for line in section.strip().splitlines())
+          state_path.write_text(state.rstrip() + '\n\n' + section + '\n', encoding='utf-8')
+          print('ACC_0498=PASS')
+          print('VER_0498=PASS')
+          print('EVD_0498=PASS')
+          print('TSK0498_STATE_CANDIDATE=PASS')
+          PY
+          git diff --check
+          test "$(git status --porcelain | sed 's/^...//')" = 'CURRENT_STATE.md'
+
+      - name: Persist CURRENT_STATE and verify exact remote read-back
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$TSK0498_ARTIFACT_COMMIT"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: accept TSK-0498 privacy-safe event contract'
+          STATE_COMMIT="$(git rev-parse HEAD)"
+          STATE_BLOB="$(git rev-parse "$STATE_COMMIT:CURRENT_STATE.md")"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$STATE_COMMIT"
+          test "$(git rev-parse "origin/main:CURRENT_STATE.md")" = "$STATE_BLOB"
+          git show "origin/main:CURRENT_STATE.md" | grep -F '## TSK-0498 current accepted stable state — 2026-09-01 — POST-CR-0008'
+          echo "TSK0498_STATE_COMMIT=$STATE_COMMIT"
+          echo "TSK0498_STATE_BLOB=$STATE_BLOB"
+          echo 'TSK0498_ACCEPTANCE_REMOTE_READBACK=PASS'
