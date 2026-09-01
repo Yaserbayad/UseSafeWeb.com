@@ -3,7 +3,7 @@
 **Task:** `TSK-0043`  
 **Acceptance:** `ACC-0043`  
 **Authority:** `DEC-0053 / CR-0006`, `DEC-0054 / CR-0007`  
-**Date:** 2026-09-01  
+**Review/control date:** 2026-09-01  
 **Disposition:** candidate current review pending independent verification/stable-state reconciliation.
 
 ## Sources reviewed
@@ -29,13 +29,13 @@ Current canonical requirements/WBS and change authority were reviewed together w
 
 ## Noncritical items
 
-1. **NCF-0043-01 — legacy `G-04` wording.** Where ACC-0043 retains legacy `G-04`, resolve it through the current canonical gate mapping rather than treating it as a second gate authority. Owner: planning/governance authority. Due: whenever affected gate text is next materially amended.
-2. **NCF-0043-02 — historical pre-CR-0006 artifacts.** Historical accountless-only artifacts may remain for provenance but must not be used as current acceptance where CR-0006 changed scope. Owner: task/evidence verifier. Due: at each affected successor/gate evaluation; current TSK-0309 and TSK-0628 requalification explicitly addresses this.
+1. **NCF-0043-01 — legacy `G-04` wording.** Owner: planning/governance authority. **Control date: 2026-09-01.** Current disposition: legacy `G-04` is resolved through the canonical current gate mapping and is not a second gate authority. **Recheck trigger:** whenever affected gate text is next materially amended.
+2. **NCF-0043-02 — historical pre-CR-0006 artifacts.** Owner: task/evidence verifier. **Control date: 2026-09-01.** Current disposition: historical accountless-only artifacts remain provenance only and cannot satisfy changed CR-0006 acceptance. **Recheck trigger:** each affected successor/gate evaluation; current TSK-0309 and TSK-0628 requalification explicitly addresses this.
 
-Neither item changes product scope or creates a critical contradiction.
+Neither item changes product scope or creates a critical contradiction. Both have a named owner, dated control disposition, and deterministic recheck trigger.
 
 ## Review outcome
 
-Current review identifies **0 unresolved critical requirement conflicts**. Remaining noncritical interpretation items have explicit owners and deterministic gate/change-relative due conditions. Current requirements do not contradict the frozen dual-mode Version-1 scope, privacy-minimisation boundary, accountless-core guarantee, current gate/action authority, or the integrated-product-first sequencing rule.
+Current review identifies **0 unresolved critical requirement conflicts**. Remaining noncritical interpretation items have explicit owners, dated dispositions and deterministic gate/change-relative recheck triggers. Current requirements do not contradict the frozen dual-mode Version-1 scope, privacy-minimisation boundary, accountless-core guarantee, current gate/action authority, or the integrated-product-first sequencing rule.
 
 This review does not itself make TSK-0043 or LG-06 PASS and does not infer provider/privacy/security architecture, implementation, real-user validation, legal completion, release, production activation, publication, payment or launch.

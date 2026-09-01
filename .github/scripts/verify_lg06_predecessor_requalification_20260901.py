@@ -7,7 +7,7 @@ def git_blob(path): return subprocess.check_output(['git','hash-object',path],te
 def md_rows(text,prefix): return [[c.strip() for c in l.strip().strip('|').split('|')] for l in text.splitlines() if l.startswith(prefix)]
 with open('Plans/Master/WBS/master-wbs.csv',newline='',encoding='utf-8-sig') as f: rows=list(csv.DictReader(f))
 def task_row(t):
-    m=[r for r in rows if t in r.values()]; assert len(m)==1,(t,len(m)); return m[0]
+    m=[r for r in rows if r.get('Task_ID')==t]; assert len(m)==1,(t,len(m)); return m[0]
 def flat(r): return ' | '.join(str(v) for v in r.values() if v is not None)
 for t in ['TSK-0145','TSK-0043','TSK-0309','TSK-0628','TSK-0052']: print('TASK',t,flat(task_row(t)))
 r=flat(task_row('TSK-0309')); assert all(x in r for x in ['revised dual-mode prototype','optional parent account','lightweight dashboard','deletion/recovery'])
@@ -31,8 +31,9 @@ support=read('TSK_0628_POST_CR0006_NO_ROUTINE_HUMAN_SUPPORT_OPERATING_MODEL_2026
 for x in ['Sign-in / provider return','Session expiry / revocation / logout','Dashboard access','Add / save / manage device','Device replacement / revoke / record deletion','Account deletion','Removal / recovery','human escalation is exceptional','without making routine human support a dependency','account presence/device ownership never creates `Verified` protection state']: assert x in support
 print('TSK0628_DUAL_MODE_SUPPORT_MODEL PASS')
 review=read('TSK_0043_POST_CR0006_CROSS_FUNCTIONAL_REQUIREMENTS_REVIEW_2026-09-01.md')
-for x in ['0 unresolved critical requirement conflicts','Accountless core vs optional account','Anonymous state vs persistent account','Account/device ownership vs protection truth','Account deletion vs DNS/device removal','Accessibility vs responsive/account expansion','Self-service vs account lifecycle','NCF-0043-01','NCF-0043-02']: assert x in review
+for x in ['0 unresolved critical requirement conflicts','Accountless core vs optional account','Anonymous state vs persistent account','Account/device ownership vs protection truth','Account deletion vs DNS/device removal','Accessibility vs responsive/account expansion','Self-service vs account lifecycle','NCF-0043-01','NCF-0043-02','Control date: 2026-09-01','dated dispositions','current gate/action authority']: assert x in review
 assert review.count('| None |')>=12
+assert review.count('Owner:')>=2 and review.count('Recheck trigger:')>=2
 print('TSK0043_CONFLICT_REVIEW PASS')
 changes=read('Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md'); assert '| CR-0006 |' in changes and '| CR-0007 |' in changes and 'ACTIVATED_V1_SCOPE' in changes
 print('CURRENT_CHANGE_AUTHORITY PASS'); print('LG06_PREDECESSOR_REQUALIFICATION_BASELINE PASS')
