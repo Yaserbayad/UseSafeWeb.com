@@ -1,0 +1,30 @@
+name: Fix TSK-0324 WCAG review date
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-tsk0324-wcag-review-date-20260901.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Normalize current review date
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          python3 .github/scripts/fix_tsk0324_wcag_review_date_20260901.py
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add prototype/TSK-0324/UI_COMPONENT_RULES.md
+          git commit -m 'design: normalize TSK-0324 WCAG review date'
+          git push origin HEAD:main
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$(git rev-parse HEAD)"
+          echo "TSK0324_MD_BLOB=$(git rev-parse HEAD:prototype/TSK-0324/UI_COMPONENT_RULES.md)"
