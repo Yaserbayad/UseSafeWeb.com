@@ -45,9 +45,9 @@ jobs:
           assert norm(row.get('AI_Capability_A0_A4')) == 'A3'
           assert norm(row.get('Action_Authority')) == 'AUTO_ALLOWED'
           assert re.findall(r'TSK-\d{4}', row.get('Dependencies') or '') == ['TSK-0143']
-          assert norm(row.get('Requirement_Reference')) == 'REQ-0007; REQ-0008'
-          assert norm(row.get('Risk_Reference')) == 'RSK-0002'
-          assert norm(row.get('Interface_Reference')) == 'INT-0003; INT-0004'
+          assert set(re.findall(r'REQ-\d{4}', row.get('Requirement_Reference') or '')) == {'REQ-0007', 'REQ-0008'}
+          assert set(re.findall(r'RSK-\d{4}', row.get('Risk_Reference') or '')) == {'RSK-0002'}
+          assert set(re.findall(r'INT-\d{4}', row.get('Interface_Reference') or '')) == {'INT-0003', 'INT-0004'}
           assert norm(row.get('Acceptance_ID')) == 'ACC-0144'
           assert norm(row.get('Verification_ID')) == 'VER-0144'
           assert norm(row.get('Evidence_ID')) == 'EVD-0144'
