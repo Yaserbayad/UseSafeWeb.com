@@ -14,11 +14,11 @@ export const EVIDENCE_STATE = Object.freeze({
 
 export const STATE_COPY = Object.freeze({
   [EVIDENCE_STATE.VERIFIED]: { label: 'Verified', supporting: 'Current qualifying technical evidence confirms this layer for the current context.' },
-  [EVIDENCE_STATE.PARENT_CONFIRMED]: { label: 'You confirmed this is set up', supporting: 'UseSafeWeb has not independently verified this setting.' },
+  [EVIDENCE_STATE.PARENT_CONFIRMED]: { label: 'You confirmed this is set up', supporting: 'SafeWeb has not independently verified this setting.' },
   [EVIDENCE_STATE.ACTION_NEEDED]: { label: 'Action needed', supporting: 'A known supported step still needs attention.' },
-  [EVIDENCE_STATE.NOT_COVERED]: { label: 'Not covered', supporting: 'UseSafeWeb does not cover this in the current supported setup.' },
+  [EVIDENCE_STATE.NOT_COVERED]: { label: 'Not covered', supporting: 'SafeWeb does not cover this in the current supported setup.' },
   [EVIDENCE_STATE.UNCERTAIN]: { label: 'Status uncertain', supporting: 'Current evidence is incomplete or conflicting; do not rely on an earlier positive result.' },
-  [EVIDENCE_STATE.REMOVED]: { label: 'Removed', supporting: 'Owning removal evidence shows this UseSafeWeb protection layer is no longer active.' }
+  [EVIDENCE_STATE.REMOVED]: { label: 'Removed', supporting: 'Owning removal evidence shows this SafeWeb protection layer is no longer active.' }
 });
 
 export const INVARIANTS = Object.freeze([
