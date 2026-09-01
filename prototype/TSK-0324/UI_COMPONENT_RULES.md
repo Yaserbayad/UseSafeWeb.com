@@ -108,7 +108,7 @@ TSK-0300 tokens remain authoritative. Accepted current contrast evidence from TS
 - off-white on deep green ≈ 10.6:1;
 - maroon on deep green ≈ 1.3:1 and therefore **must not** carry small/normal/critical content or focus/state meaning.
 
-Current WCAG 2.2 AA source baseline reviewed 2026-08-29:
+Current WCAG 2.2 AA source baseline reviewed 2026-09-01:
 
 - normal text: at least 4.5:1;
 - large text: at least 3:1;
