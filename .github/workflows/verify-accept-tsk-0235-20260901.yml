@@ -1,0 +1,177 @@
+name: Verify and accept TSK-0235 architecture diagrams
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'TSK_0235_SYSTEM_CONTEXT_CONTAINER_INTEGRATION_DIAGRAMS_2026-09-01.md'
+      - '.github/workflows/verify-accept-tsk-0235-20260901.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-tsk-0235-acceptance
+  cancel-in-progress: false
+
+jobs:
+  verify-accept:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 3
+
+      - name: Verify current task authority and dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv
+          from pathlib import Path
+
+          with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='') as f:
+              rows = list(csv.DictReader(f))
+          row = next((r for r in rows if (r.get('Task_ID') or '').strip() == 'TSK-0235'), None)
+          assert row is not None, 'TSK-0235 WBS row missing'
+          assert (row.get('Lifecycle_Stage') or '').strip() == 'L5'
+          assert (row.get('Dependencies') or '').strip() == 'TSK-0043'
+          assert (row.get('AI_Capability_A0_A4') or '').strip() == 'A3'
+          assert (row.get('Action_Authority') or '').strip() == 'AUTO_ALLOWED'
+          assert (row.get('Acceptance_ID') or '').strip() == 'ACC-0235'
+          acc = (row.get('Acceptance_Criteria') or '').strip()
+          for phrase in (
+              'public site', 'accountless setup application', 'Google/Firebase',
+              'parent/device ownership store', 'lightweight dashboard',
+              'DNS activation/verification', 'private AdGuard administration path',
+              'direct encrypted DNS data plane', 'Quad9', 'trust boundaries',
+              'excluded processors', 'never receives AdGuard administrative credentials',
+              'no browsing/activity history path'):
+              assert phrase.lower() in acc.lower(), f'ACC-0235 missing expected phrase: {phrase}'
+
+          state = Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          assert '## TSK-0043 current accepted stable state' in state
+          assert '## TSK-0052 / LG-06 current accepted stable state' in state
+          print('TSK0235_AUTHORITY_DEPENDENCY=PASS')
+          print('TSK0235_ACC=' + acc)
+          PY
+
+      - name: Verify frozen architecture and TSK-0413 privacy sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object TSK_0354_VERSION_1_APPLICATION_ARCHITECTURE_2026-09-01.md)" = '4196c83e95a013c10b5c0a9a13005b97bbe08a59'
+          test "$(git hash-object infrastructure/adguard-server/tsk-0413-bundle-v1/README.md)" = '5a162a87dd2761ff5a0da587fa660549309a1404'
+          test "$(git hash-object infrastructure/adguard-server/tsk-0413-bundle-v1/AdGuardHome.public-fragment.yaml)" = '867ef7162c739106fa42af151cda145f6d16888e'
+          grep -F 'AdGuard Home `v0.107.79`, configuration schema `34`.' infrastructure/adguard-server/tsk-0413-bundle-v1/README.md
+          grep -F 'https://dns10.quad9.net/dns-query' infrastructure/adguard-server/tsk-0413-bundle-v1/README.md
+          grep -F 'Persistent query/file logging disabled by default.' infrastructure/adguard-server/tsk-0413-bundle-v1/README.md
+          grep -F 'Minimum anonymized aggregate statistics enabled with 24-hour retention' infrastructure/adguard-server/tsk-0413-bundle-v1/README.md
+          grep -F 'Client-IP anonymization enabled.' infrastructure/adguard-server/tsk-0413-bundle-v1/README.md
+          grep -F '127.0.0.1:3000' infrastructure/adguard-server/tsk-0413-bundle-v1/README.md
+          grep -F 'Accountless core remains fully usable without login.' TSK_0354_VERSION_1_APPLICATION_ARCHITECTURE_2026-09-01.md
+          grep -F 'No browser code receives AdGuard administrative credentials.' TSK_0354_VERSION_1_APPLICATION_ARCHITECTURE_2026-09-01.md
+          echo 'TSK0235_FROZEN_SOURCES=PASS'
+
+      - name: Inspect diagram artifact against ACC-0235
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('TSK_0235_SYSTEM_CONTEXT_CONTAINER_INTEGRATION_DIAGRAMS_2026-09-01.md')
+          text = p.read_text(encoding='utf-8')
+          required = [
+              'UseSafeWeb public site + accountless setup application',
+              'Optional Google / Firebase identity and session',
+              'Minimum parent/device ownership store',
+              'Lightweight dashboard / device management',
+              'DNS activation + verification interface',
+              'Private AdGuard administration',
+              'direct encrypted DNS data plane',
+              'https://dns10.quad9.net/dns-query',
+              'West Europe / Netherlands',
+              'Trust-boundary obligations',
+              'Explicitly excluded processors, paths, and expansions',
+              'browser code never receives AdGuard administrative credentials',
+              'no browsing/query/activity history path exists',
+              'AdGuard Home `v0.107.79`, schema `34`',
+              'ECS: **OFF**',
+              'persistent query logging and query file logging: **OFF**',
+              'minimum anonymized aggregate operational statistics: **ON with 24-hour retention**',
+              'client-IP anonymization: **ON**',
+              '127.0.0.1:3000',
+              'parent/device ownership never creates a technical `Verified` protection state',
+              'exact mechanism deliberately downstream',
+              'no public arbitrary `/control/*` proxy',
+          ]
+          missing = [x for x in required if x not in text]
+          assert not missing, 'diagram missing: ' + '; '.join(missing)
+          assert text.count('```mermaid') >= 4, 'expected at least four Mermaid views'
+          assert '-----BEGIN PRIVATE KEY-----' not in text
+          assert '-----BEGIN CERTIFICATE-----' not in text
+          assert 'ACC-0235 verification trace' in text
+          assert text.count('| PASS |') >= 14, 'ACC trace is incomplete'
+          print('TSK0235_DIAGRAM_INSPECTION=PASS')
+          PY
+
+      - name: Validate master plan and source diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 Plans/Master/Tools/validate_master_plan.py
+          git diff --check HEAD~2 HEAD
+          test "$(git hash-object TSK_0235_SYSTEM_CONTEXT_CONTAINER_INTEGRATION_DIAGRAMS_2026-09-01.md)" = 'ecac82c1e020977a50af1d02345091415afba4ce'
+          test -z "$(git status --porcelain)"
+
+      - name: Persist TSK-0235 current PASS with guarded remote read-back
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          ARTIFACT='TSK_0235_SYSTEM_CONTEXT_CONTAINER_INTEGRATION_DIAGRAMS_2026-09-01.md'
+          ARTIFACT_BLOB="$(git hash-object "$ARTIFACT")"
+          test "$ARTIFACT_BLOB" = 'ecac82c1e020977a50af1d02345091415afba4ce'
+          export ARTIFACT_BLOB SOURCE_COMMIT RUN_ID RUN_ATTEMPT
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          p = Path('CURRENT_STATE.md')
+          text = p.read_text(encoding='utf-8')
+          heading = '## TSK-0235 current accepted stable state — 2026-09-01'
+          if heading in text:
+              print('TSK0235_STATE_ALREADY_PRESENT=PASS')
+          else:
+              section = f'''\n\n{heading}\n\n`TSK-0235 — Create system context, container, and integration diagrams`: **PASS** under current `ACC-0235 / VER-0235 / EVD-0235`, current `TSK-0043` dependency evidence, current `LG-06` PASS, and `DEC-0055/CR-0008` proportional-evidence authority.\n\n- Action authority: **A3 / AUTO_ALLOWED**.\n- Artifact: `TSK_0235_SYSTEM_CONTEXT_CONTAINER_INTEGRATION_DIAGRAMS_2026-09-01.md`, version `1.0.0`, blob `{os.environ['ARTIFACT_BLOB']}`, acceptance source commit `{os.environ['SOURCE_COMMIT']}`.\n- Verification: GitHub Actions run/attempt `{os.environ['RUN_ID']} / {os.environ['RUN_ATTEMPT']}` by `github-actions[bot]`; current WBS authority/dependency, ACC-0235 wording, frozen TSK-0354 architecture blob, TSK-0413 bundle source blobs, all required diagram elements, prohibited secret material, master-plan validation and source diff were checked before this state mutation.\n- Proven scope: public site; complete accountless setup application; optional Google/Firebase identity/session; minimum parent/device ownership store; lightweight dashboard/device management; DNS activation/verification; private AdGuard administration boundary; direct encrypted DNS data plane; exact Quad9 dns10 upstream; Azure/West-Europe DNS region boundary; trust boundaries and excluded processors.\n- TSK-0413 privacy baseline is explicit throughout: AdGuard Home v0.107.79/schema 34; ECS off; persistent query/file logging off; client-IP anonymization on; only 24-hour anonymized aggregate operational statistics; private loopback admin; no browser admin credentials; no browsing/query/activity history.\n- Deviation/disposition: the exact cross-VM private AdGuard-control transport remains intentionally downstream. It must preserve the loopback-only authenticated admin baseline and cannot be replaced by a public `/control/*` path. This does not weaken ACC-0235 because the logical private administration path and constraints are explicit.\n- **Non-inference:** no implementation, datastore/Firebase final selection, deployment, LG-07/LG-08, production activation, launch, or real-user validation PASS is inferred.\n'''
+              p.write_text(text.rstrip() + section + '\n', encoding='utf-8')
+              print('TSK0235_STATE_APPEND=PASS')
+          PY
+          git diff --check
+          changed="$(git status --porcelain | sed 's/^...//')"
+          if [ -n "$changed" ]; then
+            test "$changed" = 'CURRENT_STATE.md'
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add CURRENT_STATE.md
+            git commit -m 'state: accept TSK-0235 current architecture diagrams'
+            STATE_COMMIT="$(git rev-parse HEAD)"
+            STATE_BLOB="$(git rev-parse "$STATE_COMMIT:CURRENT_STATE.md")"
+            git push origin HEAD:main
+            git fetch origin main
+            test "$(git rev-parse origin/main)" = "$STATE_COMMIT"
+            test "$(git rev-parse "origin/main:CURRENT_STATE.md")" = "$STATE_BLOB"
+            git show "origin/main:CURRENT_STATE.md" | grep -F '## TSK-0235 current accepted stable state — 2026-09-01'
+            git show "origin/main:CURRENT_STATE.md" | grep -F 'TSK-0235 — Create system context, container, and integration diagrams`: **PASS**'
+            echo "TSK0235_STATE_COMMIT=$STATE_COMMIT"
+            echo "TSK0235_STATE_BLOB=$STATE_BLOB"
+          else
+            STATE_COMMIT="$(git rev-parse origin/main)"
+          fi
+          echo 'TSK0235_ACCEPTANCE_REMOTE_READBACK=PASS'
