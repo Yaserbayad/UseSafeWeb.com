@@ -1,0 +1,199 @@
+name: Verify TSK-0299 post-CR-0008 acceptance
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/diagnostics/tsk0299-verify-trigger.txt']
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out current main authority
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify TSK-0299 current acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv, re, subprocess
+          from pathlib import Path
+
+          paths={
+            'artifact': Path('TSK_0299_POST_CR0008_DUAL_MODE_VERBAL_SYSTEM_2026-09-01.md'),
+            'old': Path('TSK_0299_PROVISIONAL_VERBAL_SYSTEM_2026-08-29.md'),
+            'dep': Path('TSK_0298_EVIDENCE_GROUNDED_BRAND_STRATEGY_2026-08-29.md'),
+            'ia': Path('TSK_0318_POST_CR0008_DUAL_MODE_PUBLIC_PRODUCT_SETUP_IA_2026-09-01.md'),
+            'help': Path('TSK_0319_POST_CR0008_AUTOMATED_VERIFICATION_TROUBLESHOOTING_RECOVERY_HELP_2026-09-01.md'),
+            'statecopy': Path('TSK_0320_POST_CR0008_PROTECTION_STATE_MODEL_AND_COPY_RULES_2026-09-01.md'),
+            'wbs': Path('Plans/Master/WBS/master-wbs.csv'),
+            'graph': Path('Plans/Master/RELATIONSHIP_INDEX.yaml'),
+            'runtime': Path('CURRENT_STATE.md'),
+          }
+          expected={
+            'artifact':'ff30500b933b9ecc92325659d49ea4e671d296d2',
+            'old':'a4ff2314ff02c407249e8b5d4d6b9600b89403b3',
+            'dep':'73d8587ef9bb37d92b44f102d5a33545b416c44b',
+            'ia':'975e2e7a8e85e9408e0bbbc2be226f3fdd012db3',
+            'help':'dec2b556745c635656fa0f18945c63c47120f6ff',
+            'statecopy':'bdc6bacc424669708f410466f3cfd5527f1c2b3c',
+            'wbs':'b27a0c5df2f5636d8ed71051e9e26a68959a2616',
+            'graph':'c108d2c162bcea2ee4cc01def46d0487a9501032',
+            'runtime':'d427e03dfe343187c17fe4383cd3893084a599d3',
+          }
+          def blob(p): return subprocess.check_output(['git','hash-object',str(p)], text=True).strip()
+          for k,p in paths.items():
+              assert p.exists(), f'missing {k}: {p}'
+              actual=blob(p)
+              assert actual==expected[k], f'{k} hash mismatch: {actual} != {expected[k]}'
+
+          with paths['wbs'].open(newline='', encoding='utf-8-sig') as f:
+              rows=list(csv.DictReader(f))
+          byid={r['Task_ID']:r for r in rows if r.get('Task_ID')}
+          row=byid['TSK-0299']
+          assert row['Lifecycle_Stage']=='L4'
+          assert row['Priority']=='HIGH'
+          assert row['AI_Capability_A0_A4']=='A3'
+          assert row['Action_Authority']=='AUTO_ALLOWED'
+          assert row['Dependencies'].strip()=='TSK-0298'
+          assert row['Acceptance_ID']=='ACC-0299'
+          assert row['Verification_ID']=='VER-0299'
+          assert row['Evidence_ID']=='EVD-0299'
+          acc=row['Acceptance_Criteria']
+          for s in ['plain-language','child-aware','non-alarmist','non-technical','current approved claims/non-surveillance constraints','reusable across surfaces/locales','human comprehension validation occurs only after integrated-product readiness in L8','no pre-product human validation or deferred legal completion is implied']:
+              assert s in acc, f'WBS acceptance missing: {s}'
+
+          rt=paths['runtime'].read_text(encoding='utf-8')
+          for h in ['## TSK-0298 accepted stable state','## TSK-0485 current accepted stable state','## TSK-0318 current accepted stable state','## TSK-0319 current accepted stable state','## TSK-0320 current accepted stable state']:
+              assert h in rt, f'missing current runtime dependency/support anchor: {h}'
+          assert 'TSK-0299 and TSK-0316 remain separately reopened current-scope requalification candidates' in rt
+
+          art=paths['artifact'].read_text(encoding='utf-8')
+          required=[
+            'This artifact supersedes the **account-exclusion-dependent and stale protection-state wording**',
+            'complete **accountless core**',
+            '**optional parent account**',
+            'Accountless core stays first-class',
+            'Optional account is continuity, not stronger protection',
+            'Anonymous and persistent state stay separate',
+            'No browsing/query/activity history',
+            'No broad DNS administration',
+            'English, Turkish and Arabic/RTL',
+            '`RSK-0002` remains OPEN',
+            'representative-parent comprehension/usability validation occurs only after integrated-product readiness in L8',
+            'does not establish deferred legal/privacy completion',
+          ]
+          for s in required: assert s in art, f'missing current semantic: {s}'
+
+          # Current TSK-0320 copy contract must be reproduced exactly, not historical labels.
+          statecopy=paths['statecopy'].read_text(encoding='utf-8')
+          current_copy=[
+            'Protection verified',
+            'UseSafeWeb verified this protection step for this setup.',
+            'Setup confirmed',
+            'Protection has not yet been technically verified.',
+            'Action needed',
+            'Not covered',
+            'UseSafeWeb does not cover this on your current setup.',
+            'Protection status could not be verified',
+            'Retry verification or follow the troubleshooting steps before relying on this protection.',
+            'Removed',
+            'This setup is no longer enrolled through UseSafeWeb.',
+            'Setup complete. Review what UseSafeWeb verified, what you confirmed, what needs action, and what is not covered.',
+          ]
+          for s in current_copy:
+              assert s in statecopy, f'upstream TSK-0320 missing expected copy: {s}'
+              assert s in art, f'TSK-0299 missing current TSK-0320 copy: {s}'
+          assert '**Primary label:** `Verified`' not in art
+          assert '**Primary label:** `You confirmed this is set up`' not in art
+
+          # Dual-mode trust language and no false account/protection coupling.
+          account_semantics=[
+            'You can complete the core setup without a UseSafeWeb account.',
+            'Signing in is optional and adds account continuity and bounded device management.',
+            'You can continue without signing in.',
+            'Signing in does not automatically import this anonymous setup into your account.',
+            'A saved device record is not proof that protection is currently active.',
+            'The dashboard does not provide browsing, DNS-query or child-activity history.',
+            'Sign in to manage devices',
+            'Continue without account',
+            'Finish without account',
+          ]
+          for s in account_semantics: assert s in art, f'missing dual-mode account semantic: {s}'
+
+          lifecycle=[
+            ('Start over','This resets the current web setup journey. It does not remove UseSafeWeb DNS from the phone.'),
+            ('Log out','This ends this account session. It does not change the phone'),
+            ('Unlink / revoke device management','This removes the account'),
+            ('Delete device record','This deletes the saved dashboard record. It does not remove UseSafeWeb DNS from the phone.'),
+            ('Delete account','This deletes governed account/device-ownership data under the account lifecycle. It does not by itself remove UseSafeWeb DNS from a phone.'),
+            ('Remove UseSafeWeb DNS','This removes the supported UseSafeWeb DNS configuration from this phone.'),
+          ]
+          for a,b in lifecycle:
+              assert a in art and b in art, f'missing lifecycle distinction: {a}'
+          assert "We couldn't confirm that change" in art
+          assert 'Check the current account or device state before trying again.' in art
+
+          # Cross-surface reuse: require all current surface classes and a complete 10-row matrix.
+          surface_ids=['Public home/how-it-works','Compatibility/limits','Accountless setup','Protection Map','Core completion','Sign-in/auth','Dashboard','Device detail','Help/troubleshooting','Status/outage','Privacy/account settings']
+          for s in surface_ids: assert f'| {s} |' in art, f'missing surface row: {s}'
+          matrix_rows=[ln for ln in art.splitlines() if any(ln.startswith('| '+s+' |') for s in surface_ids)]
+          assert len(matrix_rows)==len(surface_ids), (len(matrix_rows),len(surface_ids))
+          for ln in matrix_rows:
+              cells=[c.strip() for c in ln.strip().strip('|').split('|')]
+              assert len(cells)==4 and all(cells), f'incomplete surface row: {ln}'
+
+          # Localization must carry stable current semantics across all required languages/RTL.
+          assert 'English, Turkish and Arabic' in art and 'RTL' in art
+          loc_keys=re.findall(r'^- `([a-z0-9_.]+)`$', art, flags=re.MULTILINE)
+          assert len(loc_keys)>=20, len(loc_keys)
+          for s in ['evidence actor','evidence strength','uncertainty','optionality','object scope','destructive consequence','no automatic accountless-to-account linkage implication','no market-activation implication']:
+              assert s in art, f'missing localization invariant: {s}'
+
+          # Prohibited claims/scope drift must remain explicit.
+          prohibited=[
+            'Complete protection','100% safe online','monitor browsing','track your child','Protection verified`/`Protected` from account ownership','We collect nothing','GDPR certified','Parents love it','Your child is in danger unless','24/7 support team','Sign in to activate protection','Activity dashboard','Browsing dashboard','Deleting your account removes UseSafeWeb from all phones',
+          ]
+          for s in prohibited: assert s in art, f'missing prohibited expression: {s}'
+
+          # Current IA/help contracts referenced by the artifact must actually contain the matched semantics.
+          ia=paths['ia'].read_text(encoding='utf-8')
+          for s in ['Finish without account','Continue without account','Sign in to manage devices','no automatic import of an existing J0/J1 journey','Dashboard presence is not protection proof']:
+              assert s in ia, f'upstream IA missing: {s}'
+          helptext=paths['help'].read_text(encoding='utf-8')
+          for s in ['Accountless core remains available throughout.','no blind replay','Physical DNS status remains independent of persistent record success.','Account deletion is distinct from anonymous-state deletion']:
+              assert s in helptext, f'upstream help contract missing: {s}'
+
+          # Direct successor/dependency integrity.
+          graph=paths['graph'].read_text(encoding='utf-8')
+          for tid in ['TSK-0299','TSK-0301','TSK-0302']:
+              assert tid in graph, f'missing graph reference: {tid}'
+          assert byid['TSK-0301']['Dependencies'].strip()=='TSK-0302; TSK-0299'
+          assert 'no successor becomes PASS merely because this candidate exists' in art
+
+          subprocess.check_call(['git','diff','--check'])
+          print('TSK0299_WBS_CONTRACT=PASS')
+          print('TSK0299_CURRENT_DEPENDENCY=PASS')
+          print('TSK0299_DUAL_MODE_SCOPE=PASS')
+          print('TSK0299_PLAIN_CHILD_AWARE_NONALARMIST=PASS')
+          print('TSK0299_CURRENT_STATE_COPY=PASS')
+          print('TSK0299_ACCOUNT_TRUST_LANGUAGE=PASS')
+          print('TSK0299_LIFECYCLE_SEPARATION=PASS')
+          print('TSK0299_CROSS_SURFACE_REUSE=PASS')
+          print('TSK0299_LOCALIZATION_RTL=PASS')
+          print('TSK0299_CLAIMS_NONSURVEILLANCE=PASS')
+          print('TSK0299_BEHAVIORAL_LEGAL_NONINFERENCE=PASS')
+          print('TSK0299_SUCCESSOR_INTEGRITY=PASS')
+          print('TSK0485_PRESERVED_INPUT=PASS')
+          print('TSK0318_PRESERVED_INPUT=PASS')
+          print('TSK0319_PRESERVED_INPUT=PASS')
+          print('TSK0299_ACCEPTANCE=PASS')
+          for k,p in paths.items(): print(k.upper()+'_BLOB='+blob(p))
+          PY
