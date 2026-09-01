@@ -3,6 +3,7 @@ on:
   push:
     branches: [main]
     paths:
+      - '.github/scripts/verify_tsk0323_post_cr0007_compatibility_20260901.py'
       - '.github/workflows/verify-tsk0323-post-cr0007-compatibility-20260901.yml'
 permissions:
   contents: read
