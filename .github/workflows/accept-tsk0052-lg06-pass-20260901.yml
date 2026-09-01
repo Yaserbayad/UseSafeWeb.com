@@ -1,0 +1,67 @@
+name: Accept current TSK-0052 LG-06 PASS 2026-09-01
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/accept-tsk0052-lg06-pass-20260901.yml'
+      - '.github/scripts/accept_tsk0052_lg06_pass_20260901.py'
+      - 'TSK_0052_LG06_CURRENT_EVIDENCE_AUTOVERIFY_2026-09-01.md'
+  workflow_dispatch:
+
+concurrency:
+  group: tsk0052-lg06-stable-pass
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  accept:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Re-run complete current LG-06 verifier
+        run: python3 .github/scripts/verify_tsk0052_lg06_current_review_20260901.py
+      - name: Construct stable LG-06 PASS
+        run: python3 .github/scripts/accept_tsk0052_lg06_pass_20260901.py
+      - name: Validate bounded mutation
+        run: |
+          git diff --check
+          grep -F '## TSK-0052 / LG-06 current accepted stable state — 2026-09-01 — POST-CR-0007' CURRENT_STATE.md
+          grep -F '`TSK-0052 / LG-06 — Product, Brand and Experience Freeze`: **PASS**' CURRENT_STATE.md
+          grep -F '**Disposition:** **PASS**' TSK_0052_LG06_CURRENT_ACCEPTANCE_EVIDENCE_2026-09-01.md
+          grep -F 'L5 / LG-07 architecture, security, privacy and delivery-readiness work only' TSK_0052_LG06_CURRENT_ACCEPTANCE_EVIDENCE_2026-09-01.md
+          grep -F 'No LG-07, build, implementation, production, payment, publication, market or launch PASS is inherited.' CURRENT_STATE.md
+      - name: Commit with material stale-write guard
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md TSK_0052_LG06_CURRENT_ACCEPTANCE_EVIDENCE_2026-09-01.md
+          git commit -m 'state: accept TSK-0052 LG-06 current freeze'
+          git fetch origin main
+          if [ "$(git rev-parse origin/main)" != "${SOURCE_SHA}" ]; then
+            changed="$(git diff --name-only "${SOURCE_SHA}"..origin/main)"
+            bad="$(printf '%s\n' "${changed}" | grep -Ev '^(TSK_LG06_PREDECESSOR_REQUALIFICATION_AUTOVERIFY_2026-09-01\.md)?$' || true)"
+            if [ -n "${bad}" ]; then
+              echo 'Material authority/evidence changed after LG-06 PASS checkout:'
+              printf '%s\n' "${bad}"
+              exit 1
+            fi
+            git rebase origin/main
+          fi
+          git push origin HEAD:main
+      - name: Remote read-back and PASS fence check
+        run: |
+          git fetch origin main
+          git show origin/main:CURRENT_STATE.md | grep -F '## TSK-0052 / LG-06 current accepted stable state — 2026-09-01 — POST-CR-0007'
+          git show origin/main:CURRENT_STATE.md | grep -F '`TSK-0052 / LG-06 — Product, Brand and Experience Freeze`: **PASS**'
+          git show origin/main:CURRENT_STATE.md | grep -F 'No LG-07, build, implementation, production, payment, publication, market or launch PASS is inherited.'
+          git show origin/main:TSK_0052_LG06_CURRENT_ACCEPTANCE_EVIDENCE_2026-09-01.md | grep -F '**Disposition:** **PASS**'
+          git show origin/main:TSK_0052_LG06_CURRENT_ACCEPTANCE_EVIDENCE_2026-09-01.md | grep -F 'LG-06 PASS unlocks **L5 / LG-07 architecture, security, privacy and delivery-readiness work only**'
+          echo "REMOTE_HEAD=$(git rev-parse origin/main)"
