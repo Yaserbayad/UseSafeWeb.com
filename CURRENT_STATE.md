@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-01T23:41:12Z
+**Updated:** 2026-09-01T23:48:14Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2117,25 +2117,27 @@ Recompute HIGH L4/AUTO_ALLOWED eligibility from canonical WBS/graph, strict curr
 
 Recompute the current executable frontier from canonical WBS/graph, strict current PASS evidence, CR-0006/CR-0008 artifact validity, gates, dependency-chain impact, customer value, priority and WBS order. Preserve current TSK-0485 and TSK-0319 accepted states unchanged.
 
-## TSK-0299 current accepted stable state — 2026-09-01 — POST-CR-0008 REQUALIFICATION
+## TSK-0299 current accepted stable state — 2026-09-01 — POST-CR-0008 CORRECTED OWNER-IDENTITY BINDING
 
-`TSK-0299 — Define tone, voice, terminology, trust language, protection-state language, and communication examples`: **PASS** under current `ACC-0299 / VER-0299 / EVD-0299`, `DEC-0052/CR-0005`, `DEC-0053/CR-0006`, `DEC-0054/CR-0007`, and `DEC-0055/CR-0008`.
+`TSK-0299 — Define tone, voice, terminology, trust language, protection-state language, and communication examples`: **PASS** under current `ACC-0299 / VER-0299 / EVD-0299`, Project Owner identity authority, `DEC-0052/CR-0005`, `DEC-0053/CR-0006`, `DEC-0054/CR-0007`, and `DEC-0055/CR-0008`.
 
 - WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L4 / HIGH / A3 / `AUTO_ALLOWED` / `PLANNED`; hard dependency `TSK-0298`, current accepted PASS.
-- Current artifact `TSK_0299_POST_CR0008_DUAL_MODE_VERBAL_SYSTEM_2026-09-01.md`, version `2.0.0-post-cr0008`, blob `ff30500b933b9ecc92325659d49ea4e671d296d2`, publication commit `284a566c9ff282e35bc2500f1060a0869262bb37`.
-- Durable acceptance evidence `TSK_0299_POST_CR0008_ACCEPTANCE_EVIDENCE_2026-09-01.md`, blob `63190056e7e20a8adb3968a4b503788b8ed02cec`, publication commit `c2d057159c02c63716b29fbdee50abc8ca8073b0`.
-- Independent read-only verification workflow `.github/workflows/verify-tsk0299-post-cr0008.yml`, blob `fb3d23d300c6154d95f23ae4d8275ddb22f969b8`; run/job `33571984135 / 100067714979`: **SUCCESS** on GitHub-hosted Ubuntu 24.04 with `contents: read`.
-- ACC-0299 is satisfied for current plain-language, child-aware, calm/non-alarmist, non-technical-by-default parent-facing voice; current approved claims/non-surveillance controls; and reusable public/product/account/dashboard/help/status/localized semantics.
-- CR-0006 repair is explicit: the complete accountless core stays first-class while optional sign-in/session/dashboard/device management is described as bounded continuity, never a core-value gate or stronger-protection signal.
-- Current TSK-0320 S1–S6 copy is preserved exactly: account ownership, dashboard/device registration, configuration presence or parent confirmation never substitute for qualifying technical verification.
-- Anonymous J0/J1 state is not automatically linked, promoted, imported or extended by sign-in. No browsing/query/activity history, child account/profile or broad DNS administration is introduced.
-- Start-over, logout, unlink/revoke, device-record deletion, account deletion and physical UseSafeWeb DNS removal have distinct consequence language; ambiguous consequential results require reconciliation rather than blind replay.
-- English/Turkish/Arabic plus RTL semantics preserve evidence strength, actor, optionality, scope, uncertainty and destructive-operation object meaning; language availability does not activate a market.
-- `RSK-0002` remains OPEN. Under DEC-0052/CR-0005, representative-parent comprehension validation begins only in the authorized L8 integrated-product stage; no pre-L8 human-validation or deferred legal/privacy completion is claimed.
-- TSK-0301 remains independently dependent on both `TSK-0302` and current TSK-0299. No successor/gate becomes PASS from this state update.
-- **Non-inference:** L4 verbal-system design PASS only; no implementation/build, provider acceptance, legal/privacy completion, public publication, participant activation, payment, named-market activation, LG-06, production behavior or launch PASS is inferred.
+- Base complete verbal system `TSK_0299_POST_CR0008_DUAL_MODE_VERBAL_SYSTEM_2026-09-01.md`, blob `ff30500b933b9ecc92325659d49ea4e671d296d2`, publication commit `284a566c9ff282e35bc2500f1060a0869262bb37`.
+- Binding owner-identity correction `TSK_0299_POST_CR0008_OWNER_IDENTITY_BINDING_CORRECTION_2026-09-01.md`, blob `6b4ac6020391a2f6e291f83c50f27a7583215f3b`, publication commit `af5331eedb61f2acd4a180da7a638d6d08caf45a`.
+- Current owner authority `TSK_0301_OWNER_IDENTITY_APPROVAL_2026-08-29.md`, blob `66f4b545c03571649a8baa4c0fe3d1df564b5949`: visible brand is exactly `SafeWeb`; `UseSafeWeb.com` is project/domain/repository identity; the `Use` prefix is not reusable as visible brand copy/logo text.
+- Corrected durable acceptance evidence `TSK_0299_POST_CR0008_CORRECTED_ACCEPTANCE_EVIDENCE_2026-09-01.md`, blob `9d48add06fee14aef76f82a876a61cc88ce59440`, publication commit `86ed9762e3c44885529939d001ed8b2dbec4e29a`.
+- Corrected independent read-only verification `.github/workflows/verify-tsk0299-owner-identity-correction-v2.yml`, blob `8f039c55ed6c61f790cae958f3b40a9b0d0321f4`; run/job `33572423991 / 100069047010`: **SUCCESS** with `contents: read`.
+- Current visible product/brand copy uses `SafeWeb`; generic parent-facing DNS feature/CTA copy uses `SafeWeb DNS`; exact `UseSafeWeb.com`/hostnames/URLs remain literal only where they are actual technical identifiers.
+- Current TSK-0320 S1–S6 evidence and transition semantics remain unchanged; this correction changes only the higher-authority visible brand token in parent-facing examples, never evidence strength or protection truth.
+- The complete accountless core remains first-class. Optional sign-in/session/dashboard/device management is bounded continuity, never mandatory for core value or a stronger-protection signal. No J0/J1 auto-link/import/promotion/TTL extension is authorized.
+- No browsing/query/activity history, child account/profile or broad DNS administration is introduced. Dashboard/device ownership remains non-verifying context.
+- Start over, logout, unlink/revoke, device-record deletion, account deletion and physical SafeWeb DNS removal remain distinct operations; ambiguous consequential results require reconciliation before retry.
+- English/Turkish/Arabic+RTL semantics preserve evidence strength, actor, optionality, scope and destructive-operation object meaning; language availability does not activate a market.
+- `RSK-0002` remains OPEN; representative-parent comprehension validation remains L8-only. No deferred legal/privacy completion is inferred.
+- TSK-0301 remains independently dependent on both `TSK-0302` and current TSK-0299; the owner-approved identity itself is preserved and not reselected here.
+- The first-pass TSK-0299 state commit `dcbe2c272afa690d4feb088ff2b94d411da56a38` and evidence remain diagnostic/historical for compatible facts only; they are superseded by this corrected current binding.
+- **Non-inference:** L4 verbal-system design PASS only; no implementation/build, provider acceptance, legal/privacy completion, publication, payment, participant/market activation, LG-06, production behavior or launch PASS is inferred.
 
-### Queue status after post-CR-0008 TSK-0299 requalification
+### Queue status after corrected post-CR-0008 TSK-0299 acceptance
 
-Recompute the current executable frontier from canonical WBS/graph, strict current PASS and CR-0006/CR-0008 artifact validity. In particular, independently resolve current TSK-0302 validity before treating TSK-0301 as dependency-complete, and compare that chain against reopened TSK-0316 under the governing priority rules. Preserve TSK-0485 and synchronized TSK-0318/TSK-0319 accepted states unchanged.
-
+Recompute current eligibility from canonical WBS/graph, current semantic PASS validity and gates. Verify TSK-0302/TSK-0301 current dependency validity and compare any open brand-chain requalification against reopened TSK-0316 under governing selection rules. Preserve current TSK-0485 and synchronized TSK-0318/TSK-0319 sections unchanged.
