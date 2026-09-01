@@ -121,20 +121,20 @@ jobs:
           from pathlib import Path
           s=Path('/tmp/openapi.yaml').read_text(encoding='utf-8')
           for phrase in (
-            "'/clients/add':", "operationId: clientsAdd",
-            "'/clients/update':", "operationId: clientsUpdate",
-            "'/clients/delete':", "operationId: clientsDelete",
-            'ignore_querylog:', 'ignore_statistics:', 'anonymize_client_ip:',
+            "'/clients/add':", "'operationId': 'clientsAdd'",
+            "'/clients/update':", "'operationId': 'clientsUpdate'",
+            "'/clients/delete':", "'operationId': 'clientsDelete'",
+            "'ignore_querylog':", "'ignore_statistics':", "'anonymize_client_ip':",
             "'/querylog/config/update':", "'/stats/config/update':",
-            'BasicAuth:',
+            "'BasicAuth':",
           ):
               assert phrase in s, phrase
           # Exact tagged API still carries deprecated older config methods; new integration must use current PUT endpoints.
           q=s.index("'/querylog/config/update':")
           st=s.index("'/stats/config/update':")
-          assert 'put:' in s[q:q+1800].lower()
-          assert 'put:' in s[st:st+1800].lower()
-          assert 'deprecated: true' in s, 'expected deprecated legacy API marker absent'
+          assert "'put':" in s[q:q+1800].lower()
+          assert "'put':" in s[st:st+1800].lower()
+          assert "'deprecated': true" in s, 'expected deprecated legacy API marker absent'
           print('EXACT_OPENAPI_CONTRACT=PASS')
           PY
 
