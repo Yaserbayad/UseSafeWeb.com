@@ -1,0 +1,92 @@
+name: Accept TSK-0238 lean operating model
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/accept-tsk0238-lean-operations-20260901.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  verify-accept:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 4
+
+      - name: Verify TSK-0238 acceptance and stage runtime state
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse HEAD:Plans/Master/WBS/master-wbs.csv)" = "b27a0c5df2f5636d8ed71051e9e26a68959a2616"
+          test "$(git rev-parse HEAD:TSK_0238_LEAN_OPERATIONAL_OWNERSHIP_ONCALL_ESCALATION_MODEL_2026-09-01.md)" = "069d015435f4a0d45a1b3326f7e2d210712b4cb1"
+
+          python3 .github/scripts/accept_tsk0238_20260901.py
+          python3 Plans/Master/Tools/validate_master_plan.py
+
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          p = Path('CURRENT_STATE.md')
+          text = p.read_text(encoding='utf-8')
+          heading = '## TSK-0238 current accepted stable state — 2026-09-01 — POST-CR-0008'
+          assert heading not in text
+          lines = [
+              heading,
+              '',
+              '`TSK-0238 — Define lean operational ownership and on-call/escalation model`: **PASS** under current `ACC-0238 / VER-0238 / EVD-0238`, current `TSK-0231` dependency proof, and CR-0008 authority.',
+              '',
+              '- Action authority: **A3 / AUTO_ALLOWED**.',
+              '- Artifact: `TSK_0238_LEAN_OPERATIONAL_OWNERSHIP_ONCALL_ESCALATION_MODEL_2026-09-01.md`, version `1.0.0`, blob `069d015435f4a0d45a1b3326f7e2d210712b4cb1`, publication commit `f7af3221ce852d5da2c9008609139e5e93c40c87`.',
+              '- Accepted lean ownership model: SRE / Operations is the primary operational duty owner, normally executed through authorized AI Governor/automation for permitted routine work; Project Owner is the backup operational coordinator at real authority/contradiction boundaries. No independently verified second human delegate exists for Project-Owner-only acts, and AI is not a substitute for that authority.',
+              '- Routine design cadence covers event-driven health/alerts, post-change/incident verification, daily active-ramp/material-incident review, weekly readiness/operations review, monthly cost/capacity/vendor/privacy/support review, and quarterly/triggered recovery/on-call/access/coverage review. These are design cadences, not a public SLA or proof of implemented monitoring.',
+              '- Incident escalation is severity-based: SEV-1 critical control/safety/security/privacy/broad-availability failures contain first and block affected release/activation until verified; SEV-2 major degradation uses bounded reversible remediation/reconciliation; SEV-3 routine issues remain automation/self-service/product-loop work. Serious incidents do not make every safe technical recovery step human-only.',
+              '- Retained human/owner-controlled boundaries remain named official-market activation, organizational/formalization decisions, new contracts/material commitments, regulated fees, banking/merchant identity, nondelegable legal attestations/signatures, material/unbudgeted spend, strategic modify/pivot/pause/stop/transfer/resume, actual irreversible human acts, material frozen-scope changes, and the owner-managed Azure control-plane boundary.',
+              '- Explicit coverage gaps remain: no second human delegate for nondelegable owner acts; no 24/7 staffed support promise; downstream observability/runbooks are not yet implemented/rehearsed; TSK-0485 threat modeling is not yet PASS; `RSK-0001` remains OPEN; `INT-0007` runtime/data-flow reality remains unverified; concrete datastore/runtime choice remains downstream.',
+              '- Additional staffing/service triggers are evidence-based review triggers only: human-authority continuity, support load, incident load, specialist security/privacy need, availability/recovery failure, capacity/operations pressure, justified managed-service value, coverage-hours risk, and the 500-active-user organizational/commercial review. None automatically authorizes hiring, contracting, purchasing, expansion or legal action.',
+              '- Privacy boundary remains unchanged: persistent identifiable query/file logging is OFF and identifiable per-client statistics remain OFF/excluded; routine operations cannot create browsing/domain history.',
+              f'- Acceptance workflow run `{os.environ["RUN_ID"]}` verified the exact WBS contract/dependency/ACC/VER/EVD and linked controls, immutable artifact blob, primary/backup ownership, cadence, escalation, human-only boundaries, coverage gaps, nine staffing/service review triggers, privacy/legal fences and non-inference, then passed the full modular validator before this runtime mutation.',
+              '- **Non-inference:** no staffing, employment, contract, procurement, production monitoring, 24/7 coverage, vendor acceptance, legal readiness, real-participant processing, public launch, implementation, LG-07/LG-08/LG-09 or downstream task becomes PASS from this operating-model acceptance.',
+          ]
+          p.write_text(text.rstrip() + '\n\n' + '\n'.join(lines) + '\n', encoding='utf-8')
+          PY
+
+          git diff --check
+          test "$(git status --porcelain | sed 's/^...//')" = 'CURRENT_STATE.md'
+          echo 'ACC_0238=PASS'
+          echo 'VER_0238=PASS'
+          echo 'EVD_0238=PASS'
+          echo 'TSK0238_STATE_CANDIDATE=PASS'
+
+      - name: Persist and independently read back TSK-0238 state
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: accept TSK-0238 lean operating model'
+          C="$(git rev-parse HEAD)"
+          B="$(git rev-parse "$C:CURRENT_STATE.md")"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$C"
+          test "$(git rev-parse "origin/main:CURRENT_STATE.md")" = "$B"
+          git show "origin/main:CURRENT_STATE.md" | grep -F '## TSK-0238 current accepted stable state — 2026-09-01 — POST-CR-0008'
+          echo "TSK0238_STATE_COMMIT=$C"
+          echo "TSK0238_STATE_BLOB=$B"
+          echo 'TSK0238_ACCEPTANCE_REMOTE_READBACK=PASS'
