@@ -1,0 +1,35 @@
+name: Verify LG-06 predecessor requalification 2026-09-01
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-lg06-predecessor-requalification-20260901.yml'
+      - '.github/scripts/verify_lg06_predecessor_requalification_20260901.py'
+      - 'prototype/TSK-0309/**'
+      - 'TSK_0628_POST_CR0006_NO_ROUTINE_HUMAN_SUPPORT_OPERATING_MODEL_2026-09-01.md'
+      - 'TSK_0145_REQUIREMENT_TO_EVIDENCE_TRACEABILITY_2026-08-28.md'
+      - 'TSK_0321_POST_CR0007_FINAL_ACCESSIBILITY_EVIDENCE_2026-09-01.md'
+      - 'prototype/TSK-0333/**'
+      - 'Plans/Master/Registers/REQUIREMENTS.md'
+      - 'Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md'
+      - 'Plans/Master/WBS/master-wbs.csv'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: [self-hosted, adguardvm]
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Verify current LG-06 predecessor baseline
+        run: python3 .github/scripts/verify_lg06_predecessor_requalification_20260901.py
+      - name: Repository whitespace check
+        run: git diff --check HEAD^ HEAD || true
+      - name: Confirm clean checkout after verification
+        run: test -z "$(git status --porcelain)"
