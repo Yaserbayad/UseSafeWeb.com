@@ -100,11 +100,9 @@ required_markers = [
 for marker in required_markers:
     assert marker in artifact, marker
 
-# Required trust boundaries are explicit.
 for tb in ['TB-WEB', 'TB-ANON', 'TB-AUTH', 'TB-OWN', 'TB-ADG', 'TB-DNS', 'TB-OPS', 'TB-CI', 'TB-EXT', 'TB-REC']:
     assert f'**{tb}:**' in artifact, tb
 
-# Parse the canonical threat catalogue rows.
 threat_rows = []
 for line in artifact.splitlines():
     if re.match(r'^\| TM-\d{2} \|', line):
@@ -138,7 +136,6 @@ for c in threat_rows:
 assert critical > 0 and high > 0
 assert critical + high == len(threat_rows)
 
-# Exact ACC category coverage, with dedicated threat rows/phrases.
 category_checks = {
     'xss': ['TM-01', 'XSS'],
     'csrf': ['TM-02', 'CSRF'],
@@ -148,7 +145,7 @@ category_checks = {
     'clientid_ownership': ['TM-06', '`ClientID`'],
     'auth_provider_failure': ['TM-07', 'Authentication-provider outage'],
     'datastore_failure': ['TM-08', 'Datastore timeout/partial write'],
-    'admin_api_abuse': ['TM-09', 'arbitrary `/control/*`'],
+    'admin_api_abuse': ['TM-09', 'generic `/control/*` proxy'],
     'dns_amplification': ['TM-10', 'DNS resolver abuse/amplification/resource/cost exhaustion'],
     'dependency_supply_chain': ['TM-12', 'Malicious/compromised dependency'],
     'cicd_secrets': ['TM-13', 'Workflow injection'],
@@ -159,7 +156,6 @@ for name, markers in category_checks.items():
     for marker in markers:
         assert marker in artifact, (name, marker)
 
-# Additional end-to-end invariants that prevent false-safety and authority failures.
 for marker in [
     'TM-17', 'J0/J1 identifier enumeration',
     'TM-18', 'Forged/tampered configuration',
@@ -175,7 +171,6 @@ for marker in [
 ]:
     assert marker in artifact, marker
 
-# The design must surface non-PASS downstream prerequisites rather than self-certify them.
 for marker in [
     '`TSK-0356` authentication/server-session architecture is not yet PASS',
     '`TSK-0232` parent/device ownership authorization model is not yet PASS',
@@ -186,7 +181,6 @@ for marker in [
 ]:
     assert marker in artifact, marker
 
-# Supporting standards are pinned by explicit source names/URLs, without being treated as project authority.
 for url in [
     'https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html',
     'https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html',
