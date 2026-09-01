@@ -1,7 +1,7 @@
 {
-  "schema": "usesafeweb.product-language-policy.v1",
+  "schema": "usesafeweb.product-language-policy.v2",
   "task_id": "TSK-0322",
-  "version": "1.0.0",
+  "version": "2.0.0-post-cr0007",
   "status": "internal_l4",
   "owner": "Content",
   "visible_brand": "SafeWeb",
@@ -35,12 +35,36 @@
     "preserve_evidence_strength": true
   },
   "states": [
-    {"id": "S1", "label": "Verified", "evidence": "current_qualifying_technical_evidence"},
-    {"id": "S2", "label": "You confirmed this is set up", "evidence": "parent_confirmation_not_system_verification"},
-    {"id": "S3", "label": "Action needed", "evidence": "applicable_incomplete_or_known_repair"},
-    {"id": "S4", "label": "Not covered", "evidence": "unsupported_out_of_scope_or_no_approved_safeguard"},
-    {"id": "S5", "label": "Status uncertain", "evidence": "conflicting_inconclusive_stale_or_unavailable_evidence"},
-    {"id": "S6", "label": "Removed", "evidence": "configuration_or_safeguard_no_longer_active"}
+    {
+      "id": "S1",
+      "label": "Verified",
+      "evidence": "current_qualifying_technical_evidence"
+    },
+    {
+      "id": "S2",
+      "label": "You confirmed this is set up",
+      "evidence": "parent_confirmation_not_system_verification"
+    },
+    {
+      "id": "S3",
+      "label": "Action needed",
+      "evidence": "applicable_incomplete_or_known_repair"
+    },
+    {
+      "id": "S4",
+      "label": "Not covered",
+      "evidence": "unsupported_out_of_scope_or_no_approved_safeguard"
+    },
+    {
+      "id": "S5",
+      "label": "Status uncertain",
+      "evidence": "conflicting_inconclusive_stale_or_unavailable_evidence"
+    },
+    {
+      "id": "S6",
+      "label": "Removed",
+      "evidence": "configuration_or_safeguard_no_longer_active"
+    }
   ],
   "truth_invariants": [
     "parent_confirmation_never_equals_verified",
@@ -49,18 +73,26 @@
     "removal_withdraws_active_protection_claim",
     "journey_completion_does_not_imply_overall_protection",
     "critical_state_meaning_is_not_color_only",
-    "protection_map_is_not_a_safety_score"
+    "protection_map_is_not_a_safety_score",
+    "account_or_saved_device_presence_never_equals_verified",
+    "provider_or_session_failure_never_rewrites_physical_protection_truth",
+    "logout_account_delete_record_delete_revoke_unlink_and_physical_dns_removal_are_distinct",
+    "unknown_destructive_result_never_implies_success_or_automatic_replay"
   ],
   "approved_claims": [
     "SafeWeb helps you set up sensible first-phone safeguards.",
     "SafeWeb brings the phone, internet baseline, and one relevant service safeguard into one clear setup path.",
     "SafeWeb shows what it verified, what you confirmed, what needs attention, and what is not covered.",
-    "You do not need a SafeWeb account for the current setup journey.",
     "SafeWeb is designed to minimize identity and journey data.",
     "SafeWeb is not a child browsing or activity monitoring product.",
     "You can remove the supported SafeWeb DNS configuration and follow recovery guidance.",
     "Starting over resets the web setup journey; it does not remove SafeWeb DNS from the phone.",
-    "DNS filtering works at the domain-resolution layer. It does not inspect content inside an allowed app or site."
+    "DNS filtering works at the domain-resolution layer. It does not inspect content inside an allowed app or site.",
+    "You do not need a SafeWeb account for the core setup, verification, help, recovery, or removal journey.",
+    "An optional parent account can provide continuity and a lightweight saved-device dashboard.",
+    "A saved device or signed-in account does not by itself mean protection is Verified.",
+    "Logging out changes account access only; it does not remove SafeWeb DNS from a device.",
+    "Deleting a saved device record is different from removing SafeWeb DNS from the physical device."
   ],
   "prohibited_claim_classes": [
     "complete_or_guaranteed_safety",
@@ -75,12 +107,24 @@
     "fear_shame_or_parental_negligence",
     "universal_device_network_market_or_launch_support",
     "fabricated_staffed_support",
-    "pay_for_better_safety"
+    "pay_for_better_safety",
+    "mandatory_login_for_core_value",
+    "browsing_query_activity_history_product",
+    "child_accounts_or_profiles",
+    "broad_or_raw_dns_administration",
+    "account_device_or_dashboard_presence_as_technical_verification",
+    "automatic_j0_j1_to_account_linkage_or_expiry_extension",
+    "lifecycle_operation_conflation",
+    "unknown_destructive_result_as_success_or_automatic_replay"
   ],
   "completion_copy": "Setup complete. Review what SafeWeb verified, what you confirmed, and what is not covered.",
   "localization": {
     "source_semantics": "en",
-    "required_first_public_languages": ["en", "tr", "ar"],
+    "required_first_public_languages": [
+      "en",
+      "tr",
+      "ar"
+    ],
     "arabic_rtl": true,
     "safeweb_brand_invariant_ltr": true,
     "translation_must_not_strengthen_claim": true,
@@ -94,9 +138,28 @@
     "platform_instruction_support_claim": "owning_instruction_support_matrix",
     "data_privacy_claim": "Privacy/Data",
     "legal_market_claim": "applicable_legal_market_authority",
-    "new_product_account_dashboard_claim": "Product_scope_exception_owner",
-    "public_release_claim": "applicable_release_gate"
+    "public_release_claim": "applicable_release_gate",
+    "ordinary_optional_account_dashboard_copy": "Content_within_DEC-0053_scope",
+    "material_product_scope_change": "Project_Owner_product_scope_authority"
   },
   "human_validation_claim": false,
-  "publication_authority": false
+  "publication_authority": false,
+  "action_authority": "A4_AUTO_ALLOWED",
+  "scope_authority": [
+    "DEC-0053/CR-0006",
+    "DEC-0054/CR-0007",
+    "DEC-0052/CR-0005-pre-L8-evidence-rule"
+  ],
+  "product_scope": {
+    "accountless_core_required": true,
+    "optional_parent_account_session": true,
+    "minimum_saved_device_ownership_persistence": true,
+    "lightweight_dashboard_device_management": true,
+    "bounded_account_device_lifecycle": true,
+    "mandatory_login_for_core": false,
+    "browsing_query_activity_history": false,
+    "child_accounts_profiles": false,
+    "broad_raw_dns_administration": false,
+    "automatic_j0_j1_account_linkage": false
+  }
 }

@@ -1,23 +1,25 @@
 # TSK-0322 — Product Voice, Claims, and Terminology Guide
 
-**Version:** 1.0.0  
+**Version:** 2.0.0-post-cr0007
 **Status:** internal L4 product-content contract  
 **Owner:** Content  
-**Action authority:** A3 / AUTO_ALLOWED  
-**Current sequencing:** DEC-0052 / CR-0005  
+**Action authority:** A4 / AUTO_ALLOWED
+**Current sequencing:** DEC-0053 / CR-0006 + DEC-0054 / CR-0007; DEC-0052 / CR-0005 remains the pre-L8 no-human-evidence rule
 **Publication authority:** none
 
 ## 1. Purpose
 
 This guide is the current product-facing language contract for SafeWeb public, setup, help, status/Protection Map, recovery/removal, and downstream implementation surfaces.
 
-It consolidates the accepted verbal-system intent from TSK-0299, the protection-state semantics owned by TSK-0320, the current visible-identity rule owned by TSK-0297/TSK-0301, and the frozen implementation-ready experience baseline TSK-0309.
+It consolidates the accepted verbal-system intent from TSK-0299, the protection-state semantics owned by TSK-0320, the visible-identity rule owned by TSK-0297/TSK-0301, and the current dual-mode Version-1 product/experience baseline proven through TSK-0146 and the corrected integrated TSK-0333 prototype.
 
 Where an older accepted artifact still uses stale pre-product sequencing language or uses `UseSafeWeb` as visible product identity, current authority applies:
 
 - visible brand/product identity: **`SafeWeb`**;
 - `UseSafeWeb.com`: domain/project/technical identifier, not the visible wordmark;
 - product-facing DNS term: **`SafeWeb DNS`** unless the literal domain/endpoint `dns.usesafeweb.com` or `https://dns.usesafeweb.com/dns-query` is technically required;
+- current Version 1 is dual-mode: the complete core setup/protection journey remains usable without login, while an optional parent account/session, minimum saved-device ownership persistence, lightweight dashboard/device management, and bounded account/device lifecycle flows are approved under DEC-0053/CR-0006;
+- mandatory login for core value, browsing/query/activity history, child accounts/profiles, broad/raw DNS administration, automatic J0/J1-to-account linkage, and treating account/device/dashboard presence as technical verification remain prohibited;
 - pre-product human/user validation is not claimed and is not required before L8 under DEC-0052/CR-0005.
 
 This normalization does not change protection-state evidence strength or supported-platform behavior.
@@ -153,11 +155,20 @@ These are approved only in contexts where their ordinary factual conditions rema
 
 ### Accountless/privacy
 
-- `You do not need a SafeWeb account for the current setup journey.`
+- `You do not need a SafeWeb account for the core setup, verification, help, recovery, or removal journey.`
 - `SafeWeb is designed to minimize identity and journey data.`
 - `SafeWeb is not a child browsing or activity monitoring product.`
 
 These do not authorize `zero data`, `collects nothing`, or `completely anonymous`.
+
+### Optional account continuity
+
+- `You can use SafeWeb without signing in; an optional parent account can provide continuity and a lightweight saved-device dashboard.`
+- `A saved device or signed-in account does not by itself mean protection is Verified.`
+- `Logging out changes account access only; it does not remove SafeWeb DNS from a device.`
+- `Deleting a saved device record is different from removing SafeWeb DNS from the physical device.`
+
+These claims authorize only the bounded current Version-1 account/dashboard scope. They do not authorize browsing/activity history, child profiles/accounts, broad DNS administration, automatic anonymous-to-account linkage, or a stronger protection claim.
 
 ### Control/recovery
 
@@ -181,6 +192,8 @@ Use only when the exact current condition is proven:
 | `This setting is set up` | Parent confirmation/current setup evidence supports S2 and no contradiction requires S5. |
 | `Supported on this phone` | Exact device/OS/network combination is inside the current approved support matrix. |
 | `Free core protection` | Current commercial baseline remains unchanged. |
+| `Saved in your dashboard` | The parent is signed in, the device record is explicitly saved/owned, and the product does not present record presence as technical verification. |
+| `Signed in` / `Session ended` | Current account/session state only; wording must not rewrite physical protection truth. |
 | `Available in [market]` | Separate market/legal/publication authority exists; language availability alone is insufficient. |
 
 If the condition is not demonstrable, downgrade to the truthful state or omit the claim. Do not preserve a positive impression with `probably`, `normally`, `should be`, or equivalent wording.
@@ -202,7 +215,13 @@ The following are prohibited unless later higher authority explicitly approves a
 - `Launch-ready`, `available everywhere`, `works on every device/network`, `fully supported` without exact current authority;
 - `24/7 support team`, `a specialist is always available` without an authorized staffed service;
 - `Premium protection`, `pay for better safety`, `guaranteed value` under the current free-core/payment-gated baseline;
-- shield/padlock/certification language or iconography used to imply guaranteed/certified safety.
+- shield/padlock/certification language or iconography used to imply guaranteed/certified safety;
+- wording that makes login/account creation mandatory for core setup, verification, help, recovery, or removal;
+- wording that implies browsing/query/activity history, child accounts/profiles, or broad/raw DNS administration exists in the current product;
+- wording that treats sign-in, account ownership, saved-device presence, or dashboard presence as technical `Verified`;
+- wording that implies automatic J0/J1 import, promotion, linkage, or expiry extension from sign-in/account activity;
+- wording that conflates logout, account deletion, saved-record deletion, revoke/unlink, anonymous-state deletion, and physical SafeWeb DNS removal;
+- wording that reports an unknown destructive-operation result as success or encourages automatic destructive replay.
 
 ## 11. CTA language
 
@@ -258,7 +277,8 @@ Examples:
 | Platform-specific instruction/support claim | Owning instruction/support-matrix task/source |
 | Data/privacy claim | Privacy/data owner and current evidence |
 | Legal/compliance/market claim | Applicable legal/market authority; never infer from this guide |
-| New product capability/account/dashboard claim | Product scope/exception owner authority |
+| Ordinary optional-account/dashboard copy inside the frozen DEC-0053 Version-1 scope | Content (TSK-0322 owner), preserving product/privacy/truth authorities |
+| New or materially broader product capability/account/dashboard claim | Project Owner / product-scope authority |
 | Public-release claim | Applicable publication/release gate |
 
 Any request that requires changing an upstream semantic authority must be routed to that owner rather than silently overridden here.
@@ -276,9 +296,11 @@ A downstream implementation/content QA suite must be able to assert:
 7. uncertainty is explicit and not styled/copy-framed as success;
 8. removal withdraws the SafeWeb DNS active/protection claim;
 9. translated copy preserves the same evidence strength;
-10. no claim implies an account/dashboard/activity-history product exists in the current baseline;
+10. optional account/dashboard copy never implies mandatory login for core value, browsing/query/activity surveillance, child accounts/profiles, broad/raw DNS administration, automatic J0/J1 linkage, or technical verification from account/device/dashboard presence;
 11. no language capability implies market/legal/publication authorization;
-12. technical endpoint strings remain exact.
+12. technical endpoint strings remain exact;
+13. logout, account deletion, saved-record deletion, revoke/unlink, anonymous-state deletion, and physical SafeWeb DNS removal remain distinct in user-facing language;
+14. unknown destructive results remain explicitly uncertain and never imply automatic replay or success.
 
 ## 16. Non-inference fence
 
