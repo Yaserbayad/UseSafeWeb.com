@@ -1,0 +1,116 @@
+name: Accept TSK-0354 application architecture
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'TSK_0354_VERSION_1_APPLICATION_ARCHITECTURE_2026-09-01.md'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-governed-runtime-write
+  cancel-in-progress: false
+
+jobs:
+  accept:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Verify current authority dependencies and ACC-0354
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          python3 - <<'PY'
+          from pathlib import Path
+          import csv
+
+          state = Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          art = Path('TSK_0354_VERSION_1_APPLICATION_ARCHITECTURE_2026-09-01.md').read_text(encoding='utf-8')
+          assert 'POST-FREEZE CR-0008 PUBLISHED, RECONCILED, READ-BACK VERIFIED' in state
+          assert '## TSK-0052 / LG-06 current accepted stable state' in state
+          for tid in ('TSK-0146','TSK-0229','TSK-0309'):
+              assert f'## {tid} current accepted stable state' in state, tid
+          assert '## TSK-0354 current accepted stable state' not in state
+
+          with open('Plans/Master/WBS/master-wbs.csv', encoding='utf-8-sig', newline='') as f:
+              rows = {r['Task_ID']: r for r in csv.DictReader(f)}
+          r = rows['TSK-0354']
+          assert r['Lifecycle_Stage'] == 'L5'
+          assert r['Action_Authority'] == 'AUTO_ALLOWED'
+          assert r['AI_Capability_A0_A4'] == 'A3'
+          deps = r.get('Dependencies','')
+          for tid in ('TSK-0146','TSK-0229','TSK-0309'):
+              assert tid in deps, (tid, deps)
+          acc = r.get('Acceptance_Criteria','')
+          for phrase in ('One production-capable Next.js application','accountless core','optional parent authentication/session','typed AdGuard integration','no browser admin secret','no browsing/activity history','no mandatory login for core value'):
+              assert phrase in acc, phrase
+
+          required = [
+              '# TSK-0354 — Version-1 Application Architecture and Data Boundary',
+              '## 3. Production architecture',
+              '## 4. Trust boundaries',
+              '## 5. Data domains and no-linkage rules',
+              '## 6. Server-only AdGuard integration boundary',
+              '## 7. Authentication and session boundary',
+              '## 8. Failure, deletion and recovery behavior',
+              '## 11. ACC-0354 verification mapping',
+              'Accountless core remains fully usable without login',
+              'No browser code receives AdGuard administrative credentials',
+              'No browsing, DNS-query, visited-domain or child activity history is stored',
+              'TSK-0233 / TSK-0355',
+              'https://nextjs.org/docs/app/guides/self-hosting',
+              'https://nextjs.org/docs/app/getting-started/server-and-client-components',
+              'https://nextjs.org/docs/app/getting-started/route-handlers',
+              'https://firebase.google.com/docs/auth/admin/manage-cookies',
+          ]
+          for x in required:
+              assert x in art, x
+          assert 'PASS CANDIDATE' in art
+          assert 'no implementation, LG-07, LG-08, production deployment, public launch, or real-user evidence is inferred' in art.lower()
+          print('TSK0354_CONTRACT_REVIEW=PASS')
+          PY
+          python3 Plans/Master/Tools/validate_master_plan.py
+          git diff --check
+
+      - name: Record accepted stable state and remote read-back
+        shell: bash
+        run: |
+          set -euo pipefail
+          ART='TSK_0354_VERSION_1_APPLICATION_ARCHITECTURE_2026-09-01.md'
+          ART_BLOB="$(git rev-parse "HEAD:$ART")"
+          SOURCE_COMMIT="$(git rev-parse HEAD)"
+          ART_BLOB="$ART_BLOB" SOURCE_COMMIT="$SOURCE_COMMIT" python3 - <<'PY'
+          from pathlib import Path
+          from datetime import datetime, timezone
+          import os, re
+
+          p=Path('CURRENT_STATE.md')
+          s=p.read_text(encoding='utf-8')
+          assert '## TSK-0354 current accepted stable state — 2026-09-01' not in s
+          now=datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+          s=re.sub(r'(?m)^\*\*Updated:\*\* .*$', f'**Updated:** {now}', s, count=1)
+          s += f'''\n\n## TSK-0354 current accepted stable state — 2026-09-01\n\n`TSK-0354 — Design the Version-1 accountless-core plus optional-account application architecture and data boundary`: **PASS** under current `ACC-0354 / VER-0354 / EVD-0354`, `DEC-0053/CR-0006`, `DEC-0054/CR-0007`, and `DEC-0055/CR-0008` authority.\n\n- Current hard dependencies `TSK-0146`, `TSK-0229`, and `TSK-0309` are current durable PASS; current `LG-06` is PASS.\n- Action authority after CR-0008: **A3 / AUTO_ALLOWED**; the CR-0008 amendment changed only capability/action-authority metadata for this task and did not weaken ACC-0354.\n- Accepted architecture: `TSK_0354_VERSION_1_APPLICATION_ARCHITECTURE_2026-09-01.md`, blob `{os.environ['ART_BLOB']}`, source commit `{os.environ['SOURCE_COMMIT']}`.\n- Verification: current WBS/dependencies/ACC contract, canonical product/data/privacy constraints and source-backed Next.js/Firebase server-boundary guidance were reviewed; the architecture satisfies the complete accountless core, optional account/session/minimum ownership persistence, lightweight dashboard/device management, trust/failure/deletion/recovery boundaries, typed server-only AdGuard adapter, and prohibited-history/mandatory-login constraints.\n- Datastore product and exact dependency versions are intentionally not invented by TSK-0354: `/website` does not yet exist, and exact persistent schema/store plus framework/runtime pins remain downstream `TSK-0233 / TSK-0355` work; Firebase-specific vendor/session selection remains `TSK-0356`.\n- `RSK-0045` remains an active scope/privacy control; the architecture keeps accountless core first-class and prohibits surveillance/complex DNS administration.\n- **Non-inference:** no implementation, LG-07/LG-08, production deployment, public launch, or real-user validation PASS is inferred.\n\n### Queue effect after TSK-0354 PASS\n\nRecompute the current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-0055 authority before selecting the next task.\n'''
+          p.write_text(s.rstrip()+'\n', encoding='utf-8')
+          PY
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: accept TSK-0354 application architecture'
+          COMMIT="$(git rev-parse HEAD)"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$COMMIT"
+          git show "$COMMIT:CURRENT_STATE.md" | grep -F '## TSK-0354 current accepted stable state — 2026-09-01'
+          test "$(git rev-parse "$COMMIT:$ART")" = "$ART_BLOB"
+          python3 Plans/Master/Tools/validate_master_plan.py
+          echo "TSK0354_STATE_COMMIT=$COMMIT"
+          echo "TSK0354_ARTIFACT_BLOB=$ART_BLOB"
+          echo 'TSK0354_REMOTE_READBACK=PASS'
