@@ -73,7 +73,7 @@ jobs:
           for x in required:
               assert x in art, x
           assert 'PASS CANDIDATE' in art
-          assert 'no implementation, LG-07, LG-08, production deployment, public launch, or real-user evidence is inferred' in art.lower()
+          assert 'no implementation, lg-07, lg-08, production deployment, public launch, or real-user evidence is inferred' in art.lower()
           print('TSK0354_CONTRACT_REVIEW=PASS')
           PY
           python3 Plans/Master/Tools/validate_master_plan.py
