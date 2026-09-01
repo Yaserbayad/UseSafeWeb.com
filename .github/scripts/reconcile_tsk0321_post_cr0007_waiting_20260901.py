@@ -46,6 +46,6 @@ section = r'''
 - Until then TSK-0321 is non-PASS. No successor, LG-06, implementation, real-user validation, release or launch status is inferred.
 '''
 
-p.write_text(text.rstrip() + section + '\n', encoding='utf-8')
+p.write_text(text.rstrip() + section.rstrip() + '\n', encoding='utf-8')
 print('TSK0321_WAITING_RUNTIME_PRECONDITIONS=PASS')
 print('TSK0321_WAITING_RUNTIME_SECTION=PREPARED')
