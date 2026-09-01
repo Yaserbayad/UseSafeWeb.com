@@ -51,7 +51,7 @@ jobs:
           assert norm(row.get('Acceptance_ID')) == 'ACC-0144'
           assert norm(row.get('Verification_ID')) == 'VER-0144'
           assert norm(row.get('Evidence_ID')) == 'EVD-0144'
-          assert norm(row.get('Acceptance_Criteria')) == 'External-service safeguard requirement is explicit and plan-linked without implying it is already active.'
+          assert norm(row.get('Acceptance_Criteria')) == 'Requirements define eligibility, supported/unsupported state, one-service limit, parent confirmation, content update ownership, and fallback to Not covered.'
 
           state_path = Path('CURRENT_STATE.md')
           state = state_path.read_text(encoding='utf-8')
