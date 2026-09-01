@@ -91,7 +91,7 @@ PASS. Current dual-mode no-routine-human-support operating model blob `{support_
 
 These four PASS decisions repair stale post-CR-0006 evidence only. They do **not** by themselves make `TSK-0052 / LG-06` PASS and do not infer L5 architecture/vendor/privacy/security readiness, L6 implementation, L7 release readiness, legal completion, real-user validation, payment, production activation, publication or launch.
 '''
-EVIDENCE.write_text(evidence, encoding='utf-8')
+EVIDENCE.write_text(evidence.rstrip() + '\n', encoding='utf-8')
 
 appendix = f'''
 
@@ -117,7 +117,7 @@ The stale post-CR-0006 predecessor evidence identified on the `TSK-0052 / LG-06`
 '''
 
 state = re.sub(r'\*\*Updated:\*\*\s*[^\n]+', f'**Updated:** {now}', state, count=1)
-RUNTIME.write_text(state.rstrip() + appendix + '\n', encoding='utf-8')
+RUNTIME.write_text(state.rstrip() + appendix.rstrip() + '\n', encoding='utf-8')
 
 new_state = read(RUNTIME)
 for heading in headings:
