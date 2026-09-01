@@ -1,0 +1,35 @@
+name: Update TSK-0322 dual-mode product language
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/scripts/update_tsk0322_dual_mode_policy_20260901.py'
+      - '.github/workflows/update-tsk0322-dual-mode-policy-20260901.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply current dual-mode language policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(hostname -s)" = "adguardvm"
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          python3 .github/scripts/update_tsk0322_dual_mode_policy_20260901.py
+          git diff --check
+          test -n "$(git status --porcelain content/TSK-0322/PRODUCT_VOICE_CLAIMS_TERMINOLOGY.md content/TSK-0322/POLICY.json)"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add content/TSK-0322/PRODUCT_VOICE_CLAIMS_TERMINOLOGY.md content/TSK-0322/POLICY.json
+          git commit -m 'content: align TSK-0322 with dual-mode Version 1'
+          git push origin HEAD:main
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$(git rev-parse HEAD)"
+          echo "TSK0322_UPDATE_COMMIT=$(git rev-parse HEAD)"
+          echo "TSK0322_GUIDE_BLOB=$(git rev-parse HEAD:content/TSK-0322/PRODUCT_VOICE_CLAIMS_TERMINOLOGY.md)"
+          echo "TSK0322_POLICY_BLOB=$(git rev-parse HEAD:content/TSK-0322/POLICY.json)"
