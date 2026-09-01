@@ -10,9 +10,9 @@ permissions:
 
 jobs:
   reconcile:
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: ubuntu-latest
     concurrency:
-      group: usesafeweb-tsk0319-one-shot-recovery
+      group: usesafeweb-tsk0319-one-shot-recovery-gh-hosted
       cancel-in-progress: false
     steps:
       - name: Check out current main
