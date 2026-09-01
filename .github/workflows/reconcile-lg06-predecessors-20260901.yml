@@ -1,0 +1,69 @@
+name: Reconcile LG-06 predecessor stable states 2026-09-01
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-lg06-predecessors-20260901.yml'
+      - '.github/scripts/reconcile_lg06_predecessors_20260901.py'
+      - 'TSK_LG06_PREDECESSOR_REQUALIFICATION_AUTOVERIFY_FINAL_2026-09-01.md'
+  workflow_dispatch:
+
+concurrency:
+  group: lg06-predecessor-stable-reconciliation
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Re-run current bounded verifier
+        run: python3 .github/scripts/verify_lg06_predecessor_requalification_20260901.py
+      - name: Construct stable predecessor reconciliation
+        run: python3 .github/scripts/reconcile_lg06_predecessors_20260901.py
+      - name: Validate local mutation
+        run: |
+          git diff --check
+          grep -F '## TSK-0145 current accepted stable state — 2026-09-01 — POST-CR-0006/0007' CURRENT_STATE.md
+          grep -F '## TSK-0043 current accepted stable state — 2026-09-01 — POST-CR-0006/0007' CURRENT_STATE.md
+          grep -F '## TSK-0309 current accepted stable state — 2026-09-01 — POST-CR-0006/0007' CURRENT_STATE.md
+          grep -F '## TSK-0628 current accepted stable state — 2026-09-01 — POST-CR-0006/0007' CURRENT_STATE.md
+          grep -F 'TSK-0052 / LG-06 remains **non-PASS**' CURRENT_STATE.md
+          test -s TSK_LG06_PREDECESSOR_CURRENT_REQUALIFICATION_EVIDENCE_2026-09-01.md
+      - name: Commit with stale-write guard
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md TSK_LG06_PREDECESSOR_CURRENT_REQUALIFICATION_EVIDENCE_2026-09-01.md
+          git commit -m 'state: accept current LG-06 predecessor requalification'
+          git fetch origin main
+          if [ "$(git rev-parse origin/main)" != "${SOURCE_SHA}" ]; then
+            changed="$(git diff --name-only "${SOURCE_SHA}"..origin/main)"
+            bad="$(printf '%s\n' "${changed}" | grep -Ev '^(TSK_LG06_PREDECESSOR_REQUALIFICATION_AUTOVERIFY_2026-09-01\.md)?$' || true)"
+            if [ -n "${bad}" ]; then
+              echo 'Material authority changed after reconciliation source checkout:'
+              printf '%s\n' "${bad}"
+              exit 1
+            fi
+            git rebase origin/main
+          fi
+          git push origin HEAD:main
+      - name: Remote read-back
+        run: |
+          git fetch origin main
+          git show origin/main:CURRENT_STATE.md | grep -F '## TSK-0145 current accepted stable state — 2026-09-01 — POST-CR-0006/0007'
+          git show origin/main:CURRENT_STATE.md | grep -F '## TSK-0043 current accepted stable state — 2026-09-01 — POST-CR-0006/0007'
+          git show origin/main:CURRENT_STATE.md | grep -F '## TSK-0309 current accepted stable state — 2026-09-01 — POST-CR-0006/0007'
+          git show origin/main:CURRENT_STATE.md | grep -F '## TSK-0628 current accepted stable state — 2026-09-01 — POST-CR-0006/0007'
+          git show origin/main:CURRENT_STATE.md | grep -F 'TSK-0052 / LG-06 remains **non-PASS**'
+          git show origin/main:TSK_LG06_PREDECESSOR_CURRENT_REQUALIFICATION_EVIDENCE_2026-09-01.md | grep -F '**Verification run/job:** `33492766097 / 99807875248` — SUCCESS.'
+          echo "REMOTE_HEAD=$(git rev-parse origin/main)"
