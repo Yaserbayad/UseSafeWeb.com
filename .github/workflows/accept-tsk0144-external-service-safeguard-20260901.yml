@@ -1,0 +1,173 @@
+name: Accept TSK-0144 external-service safeguard requirement
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/accept-tsk0144-external-service-safeguard-20260901.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  verify-accept:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 3
+      - name: Verify TSK-0144 current acceptance and stage state
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse "$SOURCE_COMMIT:TSK_0144_EXTERNAL_SERVICE_SAFEGUARD_REQUIREMENT_2026-09-01.md")" = "633165af53c2eef3a331685798f24e088ab89abf"
+
+          python3 - <<'PY'
+          import csv, os, re
+          from pathlib import Path
+
+          wbs_path = Path('Plans/Master/WBS/master-wbs.csv')
+          with wbs_path.open(encoding='utf-8-sig', newline='') as f:
+              rows = list(csv.DictReader(f))
+          row = next(r for r in rows if (r.get('Task_ID') or '').strip() == 'TSK-0144')
+
+          def norm(v):
+              return (v or '').strip()
+
+          assert norm(row.get('Lifecycle_Stage')) == 'L4'
+          assert norm(row.get('Priority')) == 'MEDIUM'
+          assert norm(row.get('AI_Capability_A0_A4')) == 'A3'
+          assert norm(row.get('Action_Authority')) == 'AUTO_ALLOWED'
+          assert re.findall(r'TSK-\d{4}', row.get('Dependencies') or '') == ['TSK-0143']
+          assert norm(row.get('Requirement_Reference')) == 'REQ-0007; REQ-0008'
+          assert norm(row.get('Risk_Reference')) == 'RSK-0002'
+          assert norm(row.get('Interface_Reference')) == 'INT-0003; INT-0004'
+          assert norm(row.get('Acceptance_ID')) == 'ACC-0144'
+          assert norm(row.get('Verification_ID')) == 'VER-0144'
+          assert norm(row.get('Evidence_ID')) == 'EVD-0144'
+          assert norm(row.get('Acceptance_Criteria')) == 'External-service safeguard requirement is explicit and plan-linked without implying it is already active.'
+
+          state_path = Path('CURRENT_STATE.md')
+          state = state_path.read_text(encoding='utf-8')
+          assert '## TSK-0143 current accepted stable state — 2026-09-01 — POST-CR-0008' in state
+          assert '## TSK-0144 current accepted stable state' not in state
+
+          acc = Path('Plans/Master/Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md').read_text(encoding='utf-8')
+          assert 'ACC-0144' in acc and 'TSK-0144' in acc
+          assert 'Specify the one relevant external-service safeguard step' in acc
+          assert 'Requirement identifies the one relevant external-service safeguard, setup behavior, scope limits, user-facing framing and no false protection claim.' in acc
+          assert 'Static requirement review plus setup-path and scope-limit trace.' in acc
+          assert 'External-service safeguard requirement is explicit and plan-linked without implying it is already active.' in acc
+
+          req = Path('Plans/Master/Registers/REQUIREMENTS.md').read_text(encoding='utf-8')
+          assert 'REQ-0007' in req and 'at least one complementary relevant external-service safeguard step' in req
+          assert 'REQ-0008' in req and 'without claiming universal or complete protection' in req
+
+          con = Path('Plans/Master/Registers/CONSTRAINTS.md').read_text(encoding='utf-8')
+          assert 'CON-0001' in con and 'UseSafeWeb.com' in con
+          assert 'CON-0002' in con and 'AdGuard is the frozen backend filtering technology' in con
+
+          risks = Path('Plans/Master/Registers/RISKS.md').read_text(encoding='utf-8')
+          assert 'RSK-0002' in risks
+          interfaces = Path('Plans/Master/Registers/INTERFACES.md').read_text(encoding='utf-8')
+          assert 'INT-0003' in interfaces and 'INT-0004' in interfaces
+
+          artifact = Path('TSK_0144_EXTERNAL_SERVICE_SAFEGUARD_REQUIREMENT_2026-09-01.md').read_text(encoding='utf-8')
+          required = [
+              'at most one relevant external-service safeguard step per setup journey',
+              'service-agnostic',
+              'parent explicitly identifies that service as relevant',
+              'approved, versioned service-instruction catalogue',
+              'Not covered',
+              'Parent confirmation alone may **never** produce `protected/verified`',
+              'does not prove complete device, internet, DNS, or service protection',
+              'browsing/query/activity/content history',
+              'Product** owns the one-service selection policy',
+              'Content** owns catalogue instruction freshness',
+              'Nothing in this artifact claims the safeguard is already implemented, enabled, verified or active',
+              'REQ-0007', 'REQ-0008', 'CON-0001', 'CON-0002', 'RSK-0002', 'INT-0003', 'INT-0004',
+              'ACC-0144', 'VER-0144', 'EVD-0144'
+          ]
+          for marker in required:
+              assert marker in artifact, marker
+
+          prohibited_claims = [
+              'all services are protected',
+              'complete protection is active',
+              'technically verified by parent confirmation',
+              'external-service safeguard is already active'
+          ]
+          low = artifact.lower()
+          for claim in prohibited_claims:
+              assert claim not in low, claim
+
+          print('TSK0144_WBS_CONTRACT=PASS')
+          print('TSK0144_DEPENDENCY_RUNTIME=PASS')
+          print('TSK0144_ACC_REGISTER=PASS')
+          print('TSK0144_REQUIREMENT_TRACE=PASS')
+          print('TSK0144_ONE_SERVICE_SELECTION=PASS')
+          print('TSK0144_SETUP_SCOPE_FRAMING=PASS')
+          print('TSK0144_TRUTH_PRIVACY_NONINFERENCE=PASS')
+          PY
+
+          python3 Plans/Master/Tools/validate_master_plan.py
+
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p = Path('CURRENT_STATE.md')
+          text = p.read_text(encoding='utf-8')
+          block = f'''
+
+          ## TSK-0144 current accepted stable state — 2026-09-01 — POST-CR-0008
+
+          `TSK-0144 — Specify the one relevant external-service safeguard step`: **PASS** under current `ACC-0144 / VER-0144 / EVD-0144`, current `TSK-0143` dependency proof, and CR-0008 authority.
+
+          - Action authority: **A3 / AUTO_ALLOWED**.
+          - Artifact: `TSK_0144_EXTERNAL_SERVICE_SAFEGUARD_REQUIREMENT_2026-09-01.md`, version `1.0.0-post-CR-0008`, blob `633165af53c2eef3a331685798f24e088ab89abf`, publication commit `c5238c07474ec713c6917ad50ee721cbd20cff54`.
+          - Accepted requirement: UseSafeWeb exposes at most one parent-selected relevant external-service safeguard step per setup journey, from a current approved versioned catalogue; the layer remains modular/service-agnostic rather than freezing a permanent vendor or becoming an app catalogue.
+          - Eligibility is explicit-parent/context plus current catalogue support only; no app scanning, browsing/query/activity history, DNS-history inference, device surveillance or hidden service detection is authorized.
+          - Supported entries require current source/applicability/version/owner/expected-result/scope-limit/fallback/test metadata. Unsupported, stale or irrelevant cases fall back truthfully to `Not covered`; transient catalogue/read failures may be `uncertain/error` but never configured/protected by selection alone.
+          - Parent confirmation means configured/parent-confirmed only where the current state model permits; it can never create `protected/verified` or strengthen the technical DNS protection state. The external-service step remains complementary to native controls and AdGuard-backed encrypted DNS.
+          - Content change control is explicit: Product owns selection/eligibility policy, Content owns instruction freshness/source/version/review, QA verifies setup/scope/unsupported/confirmation behavior, and privacy/safeguarding review is required before new data/credential/account-linkage processing.
+          - Current acceptance workflow run `{os.environ['RUN_ID']}` verified exact WBS authority/dependency/references, ACC-0144 register semantics, requirement/setup/scope/framing/privacy/non-inference assertions, artifact blob, and full modular validation before this runtime mutation.
+          - **Non-inference:** no specific external vendor is approved or activated; no implementation, technical verification, legal/privacy compliance, L5 architecture, build, release, production, participant, market or launch gate becomes PASS from this requirements freeze.
+          '''
+          p.write_text(text.rstrip() + block + '\n', encoding='utf-8')
+          PY
+
+          git diff --check
+          test "$(git status --porcelain | sed 's/^...//')" = 'CURRENT_STATE.md'
+          echo 'ACC_0144=PASS'
+          echo 'VER_0144=PASS'
+          echo 'EVD_0144=PASS'
+          echo 'TSK0144_STATE_CANDIDATE=PASS'
+
+      - name: Persist and read back TSK-0144 state
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: accept TSK-0144 external-service safeguard requirement'
+          C="$(git rev-parse HEAD)"
+          B="$(git rev-parse "$C:CURRENT_STATE.md")"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$C"
+          test "$(git rev-parse "origin/main:CURRENT_STATE.md")" = "$B"
+          git show "origin/main:CURRENT_STATE.md" | grep -F '## TSK-0144 current accepted stable state — 2026-09-01 — POST-CR-0008'
+          echo "TSK0144_STATE_COMMIT=$C"
+          echo "TSK0144_STATE_BLOB=$B"
+          echo 'TSK0144_ACCEPTANCE_REMOTE_READBACK=PASS'
