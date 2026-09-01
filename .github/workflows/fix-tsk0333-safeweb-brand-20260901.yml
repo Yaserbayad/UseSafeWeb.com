@@ -1,0 +1,37 @@
+name: Fix TSK-0333 visible SafeWeb brand
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/scripts/fix_tsk0333_safeweb_brand_20260901.py'
+      - '.github/workflows/fix-tsk0333-safeweb-brand-20260901.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply bounded visible-name correction
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(hostname -s)" = "adguardvm"
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          python3 .github/scripts/fix_tsk0333_safeweb_brand_20260901.py
+          git diff --check
+          test -n "$(git status --porcelain prototype/TSK-0333/index.html prototype/TSK-0333/model.mjs prototype/TSK-0333/app.mjs)"
+          test -z "$(git status --porcelain prototype/TSK-0333/prototype.css)"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add prototype/TSK-0333/index.html prototype/TSK-0333/model.mjs prototype/TSK-0333/app.mjs
+          git commit -m 'fix: conform TSK-0333 visible brand to SafeWeb'
+          git push origin HEAD:main
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$(git rev-parse HEAD)"
+          echo "TSK0333_BRAND_FIX_COMMIT=$(git rev-parse HEAD)"
+          echo "TSK0333_INDEX_BLOB=$(git rev-parse HEAD:prototype/TSK-0333/index.html)"
+          echo "TSK0333_MODEL_BLOB=$(git rev-parse HEAD:prototype/TSK-0333/model.mjs)"
+          echo "TSK0333_APP_BLOB=$(git rev-parse HEAD:prototype/TSK-0333/app.mjs)"
