@@ -74,7 +74,7 @@ for m in ['supported_action_needed','guidance_stale_or_uncertain','parent confir
     req(m in t143,f'TSK-0143 current routing marker missing: {m}')
 for m in ['`protected/verified` requires its own current qualifying technical evidence','A **qualifying positive E1** is the only evidence class that can establish `protected/verified`','configured/parent-confirmed','uncertain/error','removed']:
     req(m in t320,f'TSK-0320 truth marker missing: {m}')
-for m in ['Android Private DNS/DoT hostname','Apple DoH profile/Server-URL','Chrome Secure DNS','Firefox','Private Relay','VPN','captive portal','network change','No DNS questions/domains/URLs/browsing history/child activity/persistent identity linkage']:
+for m in ['Android Private DNS/DoT hostname','Apple DoH profile/Server-URL','Chrome Secure DNS','Firefox','Private Relay','VPN','captive portal','network change','Verification and troubleshooting must not require collection of DNS questions, domains, URLs, browsing history, child activity, or persistent identity linkage.']:
     req(m.lower() in t409.lower(),f'TSK-0409 marker missing: {m}')
 print('TSK0041_CURRENT_SEMANTICS=PASS')
 
