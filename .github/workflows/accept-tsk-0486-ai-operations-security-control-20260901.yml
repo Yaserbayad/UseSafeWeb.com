@@ -1,0 +1,209 @@
+name: Accept TSK-0486 AI operations security control
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/accept-tsk-0486-ai-operations-security-control-20260901.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-tsk-0486-acceptance
+  cancel-in-progress: false
+
+jobs:
+  verify-accept:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: Verify ACC-0486 / VER-0486 / EVD-0486
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          python3 - <<'PY'
+          from pathlib import Path
+          import csv
+          import os
+          import re
+          import subprocess
+
+          source_commit = os.environ['SOURCE_COMMIT']
+          run_id = os.environ.get('GITHUB_RUN_ID', 'UNKNOWN')
+          run_attempt = os.environ.get('GITHUB_RUN_ATTEMPT', '1')
+          artifact_path = Path('TSK_0486_AI_EXECUTED_OPERATIONS_SECURITY_CONTROL_2026-09-01.md')
+          state_path = Path('CURRENT_STATE.md')
+          wbs_path = Path('Plans/Master/WBS/master-wbs.csv')
+
+          def git_hash(path: str) -> str:
+              return subprocess.check_output(['git', 'hash-object', path], text=True).strip()
+
+          expected_blobs = {
+              'TSK_0486_AI_EXECUTED_OPERATIONS_SECURITY_CONTROL_2026-09-01.md': 'ef2df08094f1e80ee592abcada145deaa8b600db',
+              'Plans/Master/WBS/master-wbs.csv': 'b27a0c5df2f5636d8ed71051e9e26a68959a2616',
+              'Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md': '2097d83961affaa69850e41a5ffcd72a660d69cd',
+          }
+          for rel, expected in expected_blobs.items():
+              actual = git_hash(rel)
+              assert actual == expected, f'{rel}: {actual} != {expected}'
+
+          with wbs_path.open(encoding='utf-8-sig', newline='') as f:
+              rows = list(csv.DictReader(f))
+          row = next(r for r in rows if (r.get('Task_ID') or '').strip() == 'TSK-0486')
+          expected_row = {
+              'Lifecycle_Stage': 'L5',
+              'Plan_Status': 'PLANNED',
+              'Execution_State': 'WAITING',
+              'Priority': 'HIGH',
+              'Critical_Path': 'NO',
+              'Dependencies': 'TSK-0007',
+              'Acceptance_ID': 'ACC-0486',
+              'Verification_ID': 'VER-0486',
+              'Evidence_ID': 'EVD-0486',
+              'AI_Capability_A0_A4': 'A3',
+              'Action_Authority': 'AUTO_ALLOWED',
+              'Risk_Reference': 'RSK-0007',
+              'Requirement_Reference': 'REQ-0055; REQ-0056; REQ-0058; CON-0009; CON-0028',
+              'Interface_Reference': 'INT-0015',
+          }
+          for field, expected in expected_row.items():
+              actual = (row.get(field) or '').strip()
+              assert actual == expected, f'{field}: {actual!r} != {expected!r}'
+
+          expected_acc = (
+              'AI action authority remains independent of server privilege; owner-provided host '
+              'bootstrap/deployment may use an auditable root-capable path where technically required, '
+              'while normal services run least privilege; tokens/secrets are externally injected, '
+              'scoped/revocable and absent from Git/evidence; HUMAN_ONLY and A2 actions remain gated.'
+          )
+          assert (row.get('Acceptance_Criteria') or '').strip() == expected_acc
+          assert (row.get('Verification_Method') or '').strip() == (
+              'Use the approved checklist/test procedure against the exact artifact/environment; retain reproducible outputs and reviewer result.'
+          )
+
+          state = state_path.read_text(encoding='utf-8')
+          assert '## TSK-0007 current accepted stable state — 2026-09-01' in state
+          assert 'ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0008 PUBLISHED, RECONCILED, READ-BACK VERIFIED.' in state
+          heading = '## TSK-0486 current accepted stable state — 2026-09-01'
+          assert heading not in state
+
+          artifact = artifact_path.read_text(encoding='utf-8')
+          required_markers = [
+              '**Version:** 1.0.0',
+              'Possession of a root-capable path',
+              '**never creates project authority**',
+              '**Normal services are non-root by default.**',
+              '**Externally injected:**',
+              '**Minimum scope:**',
+              '**Revocable and rotatable:**',
+              '**No log disclosure:**',
+              '**No evidence disclosure:**',
+              '| A2 contextual-confidence action | Explicit Project Owner approval is required at the point of use',
+              '| HUMAN_ONLY | AI may prepare/analyze but must not perform or fabricate the human act.',
+              '## 6. Auditable privileged-operation envelope',
+              '## 7. Emergency stop, revoke and rotate procedure',
+              '**Revoke or disable**',
+              '**Rotate/replace**',
+              '**Recompute eligibility and authority**',
+              '## 9. ACC-0486 traceability',
+              '## 10. Verification checklist — VER-0486',
+              '## 11. EVD-0486 evidence contract',
+              '## 12. Non-inference',
+          ]
+          for marker in required_markers:
+              assert marker in artifact, f'artifact marker missing: {marker}'
+
+          # High-confidence literal-secret guard for the new durable artifact only.
+          # Never print a matched value; fail with category only.
+          forbidden = {
+              'private_key_material': re.compile(r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----'),
+              'github_classic_pat': re.compile(r'ghp_[A-Za-z0-9]{30,}'),
+              'github_fine_grained_pat': re.compile(r'github_pat_[A-Za-z0-9_]{40,}'),
+              'aws_access_key': re.compile(r'AKIA[0-9A-Z]{16}'),
+          }
+          for label, pattern in forbidden.items():
+              assert not pattern.search(artifact), f'forbidden literal secret category detected: {label}'
+          print('TSK0486_LITERAL_SECRET_GUARD=PASS')
+
+          controls = {
+              'REQ-0055': Path('Plans/Master/Registers/REQUIREMENTS.md'),
+              'REQ-0056': Path('Plans/Master/Registers/REQUIREMENTS.md'),
+              'REQ-0058': Path('Plans/Master/Registers/REQUIREMENTS.md'),
+              'CON-0009': Path('Plans/Master/Registers/CONSTRAINTS.md'),
+              'CON-0028': Path('Plans/Master/Registers/CONSTRAINTS.md'),
+              'RSK-0007': Path('Plans/Master/Registers/RISKS.md'),
+              'INT-0015': Path('Plans/Master/Registers/INTERFACES.md'),
+              'DEC-0055': Path('Plans/Master/Registers/DECISIONS_TRIGGERS.md'),
+          }
+          for marker, path in controls.items():
+              assert marker in path.read_text(encoding='utf-8'), f'missing current authority marker: {marker}'
+
+          validation = subprocess.run(
+              ['python3', 'Plans/Master/Tools/validate_master_plan.py'],
+              text=True,
+              capture_output=True,
+              check=True,
+          )
+          print(validation.stdout, end='')
+          combined = validation.stdout + validation.stderr
+          for marker in (
+              'VALIDATION PASS', 'assembly_modules=25', 'tasks=641', 'dependency_edges=858',
+              'relationship_entities=5178', 'relationship_targets=20472', 'broken_links=0',
+              'generated_missing_task_ids=0',
+          ):
+              assert marker in combined, f'validator marker missing: {marker}'
+
+          section = f'''{heading}
+
+          `TSK-0486 — Define least-privilege access, secret handling, approval gates, audit evidence, and emergency revocation for AI-executed operations`: **PASS** under current `ACC-0486 / VER-0486 / EVD-0486`, current `TSK-0007` dependency proof, and `DEC-0055/CR-0008` authority.
+
+          - Action authority: **A3 / AUTO_ALLOWED**.
+          - Artifact: `TSK_0486_AI_EXECUTED_OPERATIONS_SECURITY_CONTROL_2026-09-01.md`, version `1.0.0`, blob `ef2df08094f1e80ee592abcada145deaa8b600db`, acceptance source commit `{source_commit}`.
+          - Canonical sources: WBS blob `b27a0c5df2f5636d8ed71051e9e26a68959a2616`; Layer-5 blob `2097d83961affaa69850e41a5ffcd72a660d69cd`.
+          - Verification: GitHub Actions run/attempt `{run_id} / {run_attempt}`; exact WBS/ACC/VER/EVD, current TSK-0007 dependency, CR-0008 authority, REQ-0055/0056/0058, CON-0009/0028, RSK-0007, INT-0015, artifact traceability, high-confidence literal-secret guard, and full master-plan validator were checked before state mutation.
+          - Accepted control: project action authority is independent of technical/server privilege; root-capable owner-provided bootstrap/deployment/recovery is bounded to technically necessary authorized operations and auditable; normal services are least privilege; credential values are externally injected, minimum-scoped, revocable/rotatable and prohibited from Git/log/evidence; A2/HUMAN_APPROVAL_REQUIRED/HUMAN_ONLY gates remain binding; suspected exposure triggers stop/fence/revoke/rotate/cause-correction/reverification/recompute.
+          - Evidence contains no credential value. The literal-secret guard reports category-only failure and never emits matched material.
+          - Runtime/state acceptance does not alter the WBS, graph, manifest, planning modules or CR-0008 baseline.
+          - **Non-inference:** no live host credential, root path, Azure/Firebase/AdGuard/GitHub token scope, deployment, security test, release gate, launch or real-user activation is claimed PASS by this definition task.
+          '''
+          section = '\n'.join(line.strip() for line in section.strip().splitlines())
+          state_path.write_text(state.rstrip() + '\n\n' + section + '\n', encoding='utf-8')
+          print('ACC_0486=PASS')
+          print('VER_0486=PASS')
+          print('EVD_0486=PASS')
+          print('TSK0486_STATE_CANDIDATE=PASS')
+          PY
+          git diff --check
+          test "$(git status --porcelain | sed 's/^...//')" = 'CURRENT_STATE.md'
+
+      - name: Persist CURRENT_STATE and verify exact remote read-back
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: accept TSK-0486 AI operations security control'
+          STATE_COMMIT="$(git rev-parse HEAD)"
+          STATE_BLOB="$(git rev-parse "$STATE_COMMIT:CURRENT_STATE.md")"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$STATE_COMMIT"
+          test "$(git rev-parse "origin/main:CURRENT_STATE.md")" = "$STATE_BLOB"
+          git show "origin/main:CURRENT_STATE.md" | grep -F '## TSK-0486 current accepted stable state — 2026-09-01'
+          echo "TSK0486_STATE_COMMIT=$STATE_COMMIT"
+          echo "TSK0486_STATE_BLOB=$STATE_BLOB"
+          echo 'TSK0486_ACCEPTANCE_REMOTE_READBACK=PASS'
