@@ -8,6 +8,7 @@ on:
       - '.github/scripts/verify_lg06_predecessor_requalification_20260901.py'
       - 'prototype/TSK-0309/**'
       - 'TSK_0628_POST_CR0006_NO_ROUTINE_HUMAN_SUPPORT_OPERATING_MODEL_2026-09-01.md'
+      - 'TSK_0043_POST_CR0006_CROSS_FUNCTIONAL_REQUIREMENTS_REVIEW_2026-09-01.md'
       - 'TSK_0145_REQUIREMENT_TO_EVIDENCE_TRACEABILITY_2026-08-28.md'
       - 'TSK_0321_POST_CR0007_FINAL_ACCESSIBILITY_EVIDENCE_2026-09-01.md'
       - 'prototype/TSK-0333/**'
@@ -16,13 +17,17 @@ on:
       - 'Plans/Master/WBS/master-wbs.csv'
   workflow_dispatch:
 
+concurrency:
+  group: lg06-predecessor-requalification-final
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
 jobs:
   verify:
-    runs-on: [self-hosted, adguardvm]
-    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,28 +38,30 @@ jobs:
         run: git diff --check HEAD^ HEAD
       - name: Confirm clean checkout after verification
         run: test -z "$(git status --porcelain)"
-      - name: Persist successful verification marker
+      - name: Persist successful final verification marker
         env:
           RUN_ID: ${{ github.run_id }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
           SOURCE_SHA: ${{ github.sha }}
         run: |
-          cat > TSK_LG06_PREDECESSOR_REQUALIFICATION_AUTOVERIFY_2026-09-01.md <<EOF
-          # LG-06 predecessor requalification — automated verification
+          cat > TSK_LG06_PREDECESSOR_REQUALIFICATION_AUTOVERIFY_FINAL_2026-09-01.md <<EOF
+          # LG-06 predecessor requalification — final automated verification
 
           **Disposition:** PASS  
           **Source commit:** \`${SOURCE_SHA}\`  
           **GitHub Actions run:** \`${RUN_ID}\` / attempt \`${RUN_ATTEMPT}\`  
-          **Runner:** self-hosted \`adguardvm\`
+          **Verifier:** GitHub-hosted Ubuntu source-only CI
 
-          The repository-current verifier completed successfully against the current WBS, requirement register, traceability matrix, TSK-0309 dual-mode baseline, exact TSK-0333 source blobs, final TSK-0321 accessibility evidence, post-CR-0006 TSK-0628 operating model, and CR-0006/CR-0007 change authority.
+          The repository-current verifier completed successfully against the current WBS, requirement register, traceability matrix, TSK-0309 dual-mode baseline, exact TSK-0333 source blobs, final TSK-0321 accessibility evidence, post-CR-0006 TSK-0628 operating model, current TSK-0043 conflict review, and CR-0006/CR-0007 change authority.
 
-          Verified outcomes: 91 current requirements are represented in the traceability matrix with current source/priority/verification and populated rationale/owner/release/status/task linkage; current TSK-0309 and TSK-0628 ACC wording is present; TSK-0052 is A4/AUTO_ALLOWED; exact integrated-prototype source identity matches the accepted hashes; final accessibility/regression evidence is PASS; dual-mode ordinary support coverage is present; repository whitespace and clean-checkout guards pass.
+          Verified outcomes: 91 current requirements are represented in the traceability matrix with current source/priority/verification and populated rationale/owner/release/status/task linkage; current TSK-0309 and TSK-0628 ACC wording is present; TSK-0052 is A4/AUTO_ALLOWED; exact integrated-prototype source identity matches the accepted hashes; final accessibility/regression evidence is PASS from the previously accepted self-hosted target-environment run; dual-mode ordinary support coverage is present; the current cross-functional review records zero unresolved critical conflicts plus named/datelined noncritical controls; repository whitespace and clean-checkout guards pass.
 
-          This marker proves only the bounded predecessor requalification baseline. It does not by itself mark TSK-0145, TSK-0043, TSK-0309, TSK-0628, TSK-0052/LG-06, or any successor/gate PASS; stable-state reconciliation remains a separate evidence decision.
+          This is source/reconciliation verification only. It reuses, rather than replaces, the durable target-environment TSK-0321 evidence from self-hosted \`adguardvm\`. This marker does not by itself make TSK-0145, TSK-0043, TSK-0309, TSK-0628, TSK-0052/LG-06, or any successor/gate PASS; stable-state reconciliation remains a separate evidence decision.
           EOF
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add TSK_LG06_PREDECESSOR_REQUALIFICATION_AUTOVERIFY_2026-09-01.md
-          git commit -m 'evidence: verify LG-06 predecessor requalification baseline'
+          git add TSK_LG06_PREDECESSOR_REQUALIFICATION_AUTOVERIFY_FINAL_2026-09-01.md
+          git commit -m 'evidence: verify final LG-06 predecessor baseline'
+          git fetch origin main
+          git rebase origin/main
           git push origin HEAD:main
