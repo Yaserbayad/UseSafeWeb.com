@@ -82,7 +82,7 @@ if obj['type']=='tag':
     commit=tag['object']['sha']
 else:
     commit=obj['sha']
-require(commit=='8e680e58c43cc7ae4fe38b3fbb4710024c687c3a','official v0.107.79 tag commit mismatch')
+require(commit=='05ba17b282da1c4393d6a4ba4db0cf519194a362','official v0.107.79 tag commit mismatch')
 require(new['compatibility']['official_tag_commit']==commit,'bundle official tag binding mismatch')
 
 subprocess.run(['python3','Plans/Master/Tools/validate_master_plan.py'],check=True)
@@ -91,5 +91,5 @@ require(subprocess.check_output(['git','status','--porcelain'],text=True).strip(
 print('TSK_0413_REPOSITORY_VERIFICATION=PASS')
 print('prior_config_blob='+old_blob)
 print('official_adguard_release=v0.107.79')
-print('official_tag_commit=8e680e58c43cc7ae4fe38b3fbb4710024c687c3a')
+print('official_tag_commit=05ba17b282da1c4393d6a4ba4db0cf519194a362')
 print('bundle_sha256='+hashlib.sha256((BUNDLE/'bundle.json').read_bytes()).hexdigest())

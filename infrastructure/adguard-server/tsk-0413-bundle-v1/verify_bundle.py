@@ -21,7 +21,7 @@ compat=a['compatibility']
 if compat != {
     'adguard_home_version':'v0.107.79',
     'config_schema_version':34,
-    'official_tag_commit':'8e680e58c43cc7ae4fe38b3fbb4710024c687c3a',
+    'official_tag_commit':'05ba17b282da1c4393d6a4ba4db0cf519194a362',
     'policy':'Exact-version compatibility only. Any AdGuard Home version or schema change requires re-verification before this bundle is used.'
 }: fail('compatibility contract mismatch')
 identity=a['identity']
