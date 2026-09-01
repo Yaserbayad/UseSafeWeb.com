@@ -1558,3 +1558,13 @@ Revalidate TSK-0323 and TSK-0324 against this current language authority before 
 ### Queue status after TSK-0321 acceptance
 
 Recompute successor eligibility from current WBS dependencies, graph, gates, runtime evidence and Action Authority; do not infer eligibility from task numbering.
+
+## TSK-0052 / LG-06 CR-0007 auto-authority reconciliation — 2026-09-01
+
+- Project Owner explicitly approved `APPROVE TSK-0052 LG-06 CR-0007 AUTO-AUTHORITY RECONCILIATION` and instructed autonomous continuation.
+- The stale WBS metadata was reconciled from `A1 / HUMAN_ONLY` to **`A4 / AUTO_ALLOWED`**, matching DEC-0054 / CR-0007 objective LG-06 authority semantics.
+- Planning repair commit: `29a12386ed83d1f96be0dff71a231d269dd85530`; GitHub Actions run `33489842069`.
+- Current repaired WBS blob: `b57104a71ab814d0f67e7fb8b0fd388d1f6aacfa`.
+- Dependencies, ACC-0052 contract, Plan_Status and WBS execution snapshot were not changed by this repair.
+- **No PASS is inferred from the authority repair.** TSK-0052 / LG-06 remains non-PASS until a fresh current-evidence ACC-0052 review is durably verified and reconciled.
+- Evidence: `TSK_0052_LG06_CR0007_AUTO_AUTHORITY_RECONCILIATION_EVIDENCE_2026-09-01.md`.
