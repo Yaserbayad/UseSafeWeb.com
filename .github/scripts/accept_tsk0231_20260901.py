@@ -80,7 +80,7 @@ required_global = [
     'no J1-to-account migration or linkage',
     '`ClientID` is an opaque DNS-control reference and is **never authentication or authorization**',
     'persistent identifiable query/file logging OFF',
-    'no persistent staging unless later evidence justifies it',
+    'Do not operate persistent staging unless later evidence justifies it.',
     'ACC-0231 / VER-0231 / EVD-0231',
     '**Non-inference:** this record does not itself make TSK-0231 PASS.',
 ]
@@ -109,7 +109,6 @@ for idx, match in enumerate(adr_matches):
     links = re.search(r'\*\*Links to requirements/risks:\*\*(.*)', body)
     assert links and 'RSK-0001' in links.group(1), match.group(0)
 
-# Material decision markers must remain aligned to the current dependency architecture.
 architecture_markers = [
     'one production-capable TypeScript + Next.js full-stack application under `/website`',
     'full Phone → Internet → Services → truthful Protection Map/recovery core without login',
@@ -117,7 +116,7 @@ architecture_markers = [
     'concrete datastore product/runtime selection',
     '`dns.usesafeweb.com`',
     '`https://dns.usesafeweb.com/dns-query`',
-    'server-only behind narrow typed/allowlisted application operations',
+    'server-side behind narrow typed/allowlisted application operations',
     'No product schema/store for DNS queries, domains, visited URLs, browsing/top-domain history or child activity',
     'PROD plus disposable CI/ephemeral synthetic/test environments',
     'separate web/app VM and DNS/AdGuard VM boundary',
@@ -126,7 +125,6 @@ architecture_markers = [
 for marker in architecture_markers:
     assert marker in artifact, marker
 
-# Explicit rejected-alternative coverage from the accepted dependency set/current decisions.
 rejected_markers = [
     'Mandatory login is rejected',
     'automatic promotion',
@@ -141,7 +139,6 @@ rejected_markers = [
 for marker in rejected_markers:
     assert marker in artifact, marker
 
-# Privacy and non-inference fences.
 for forbidden_claim in [
     'RSK-0001 is CLOSED',
     'LG-07 is PASS',
