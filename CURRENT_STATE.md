@@ -1858,3 +1858,16 @@ Recompute the current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-
 - Hidden-evidence boundary: Layer 5 explicitly states that hidden chain-of-thought is not evidence and requires inspectable durable evidence; referenced interfaces, requirements, constraints and risk IDs are present in their authoritative registers.
 - Runtime reconciliation only: the canonical WBS, graph, planning modules and CR-0008 authority are unchanged.
 - **Non-inference:** no successor, gate, deployment, launch, tracker, or real-user outcome becomes PASS from this reconciliation alone.
+
+## TSK-0486 current accepted stable state — 2026-09-01
+
+`TSK-0486 — Define least-privilege access, secret handling, approval gates, audit evidence, and emergency revocation for AI-executed operations`: **PASS** under current `ACC-0486 / VER-0486 / EVD-0486`, current `TSK-0007` dependency proof, and `DEC-0055/CR-0008` authority.
+
+- Action authority: **A3 / AUTO_ALLOWED**.
+- Artifact: `TSK_0486_AI_EXECUTED_OPERATIONS_SECURITY_CONTROL_2026-09-01.md`, version `1.0.0`, blob `ef2df08094f1e80ee592abcada145deaa8b600db`, acceptance source commit `c63b572a482ecb29ab24b3b6f4f5008e822255e0`.
+- Canonical sources: WBS blob `b27a0c5df2f5636d8ed71051e9e26a68959a2616`; Layer-5 blob `2097d83961affaa69850e41a5ffcd72a660d69cd`.
+- Verification: GitHub Actions run/attempt `33528950981 / 1`; exact WBS/ACC/VER/EVD, current TSK-0007 dependency, CR-0008 authority, REQ-0055/0056/0058, CON-0009/0028, RSK-0007, INT-0015, artifact traceability, high-confidence literal-secret guard, and full master-plan validator were checked before state mutation.
+- Accepted control: project action authority is independent of technical/server privilege; root-capable owner-provided bootstrap/deployment/recovery is bounded to technically necessary authorized operations and auditable; normal services are least privilege; credential values are externally injected, minimum-scoped, revocable/rotatable and prohibited from Git/log/evidence; A2/HUMAN_APPROVAL_REQUIRED/HUMAN_ONLY gates remain binding; suspected exposure triggers stop/fence/revoke/rotate/cause-correction/reverification/recompute.
+- Evidence contains no credential value. The literal-secret guard reports category-only failure and never emits matched material.
+- Runtime/state acceptance does not alter the WBS, graph, manifest, planning modules or CR-0008 baseline.
+- **Non-inference:** no live host credential, root path, Azure/Firebase/AdGuard/GitHub token scope, deployment, security test, release gate, launch or real-user activation is claimed PASS by this definition task.
