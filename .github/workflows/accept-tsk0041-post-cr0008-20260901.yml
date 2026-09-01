@@ -2,7 +2,10 @@ name: Accept current TSK-0041 requalification
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/accept-tsk0041-post-cr0008-20260901.yml']
+    paths:
+      - '.github/workflows/accept-tsk0041-post-cr0008-20260901.yml'
+      - '.github/scripts/accept_tsk0041_post_cr0008_20260901.py'
+      - 'TSK_0041_POST_CR0008_CURRENT_REQUALIFICATION_AMENDMENT_2026-09-01.md'
 permissions:
   contents: write
 jobs:
