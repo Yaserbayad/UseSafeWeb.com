@@ -1819,3 +1819,18 @@ Recompute the current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-
 - Verification/removal truth: configuration presence, endpoint health, parent confirmation and ownership are separate from device-path technical verification; no technical `Verified` state is allowed without current deterministic device-path evidence. Removal is distinct from account/device-record/session lifecycle actions.
 - `RSK-0004` remains OPEN/unvalidated; later live persistence evidence and expansion triggers can reopen the design. No US DNS node/market activation is inferred.
 - **Non-inference:** no live DNS implementation/activation, LG-07/LG-08, production deployment, market activation, launch, or real-user persistence PASS is inferred.
+
+## TSK-0444 current accepted stable state — 2026-09-01
+
+`TSK-0444 — Record the production + CI/ephemeral environment model and conditional staging rule`: **PASS** under current `ACC-0444 / VER-0444 / EVD-0444`, current `TSK-0355` and `TSK-0411` dependency evidence, current `LG-06` PASS, and `DEC-0055/CR-0008` proportional-evidence authority.
+
+- Action authority: **A3 / AUTO_ALLOWED**.
+- Artifact: `TSK_0444_PRODUCTION_CI_EPHEMERAL_ENVIRONMENT_MODEL_2026-09-01.md`, version `1.0.0`, blob `75de2ff96ecbaf7bb098016822203fe08285695e`, acceptance source commit `04cdf8bffeeebde6fc4ee15ed67483b603de0cce`.
+- Verification: ChatGPT Project Governor cloud/runtime architecture review plus GitHub Actions run/attempt `33522653627 / 1`; exact WBS/ACC/VER/EVD, TSK-0355/TSK-0411/LG-06 current state, owner VM/recovery authority, frozen source blobs, full environment dimensions, INT-0014 bindings, master-plan validity and secret/history exclusions were checked before this mutation.
+- Current lifecycle reconciliation: there is one live production environment. The inherited ACC word `pilot` is represented only as bounded/ramped `PROD-RAMP` live-production validation after LG-09 under DEC-0054; it does not create a pilot VM, second resolver identity, persistent staging environment or extra gate.
+- Production boundary: two owner-provided Ubuntu 24.04 LTS hosts after manual Azure handoff—one lean West-Europe/Netherlands DNS node and one separate web/application VM. Azure control-plane provisioning/configuration remains owner-managed. Public production deployment is not inferred.
+- CI/ephemeral boundary: source CI, target verification, disposable application preview and isolated DNS tests use synthetic/minimum data and no standing duplicate infrastructure by default; GitHub-hosted CI location is not production-region evidence and source-only CI cannot replace target observation when acceptance requires it.
+- Conditional staging: persistent staging is absent. A staging-like environment requires a specific unprovable risk, bounded purpose/evidence/exit, synthetic/minimum data, separate non-production identity, TSK-0413 preservation, cost/authority review and deterministic teardown.
+- TSK-0413 boundary: DNS production/test/recovery preserves exact Quad9 dns10, ECS off, persistent query/file logging off, client-IP anonymization on, 24-hour anonymized aggregate statistics only, loopback DNS/admin, no browser admin credentials and no browsing/query/activity history.
+- `RSK-0048` remains OPEN/critical; architecture does not fabricate timed clean-server success. Rollback/recovery keeps unsafe partial service disabled/uncertain and retains the approximately 30-minute DNS recovery objective.
+- **Non-inference:** no Azure control-plane provisioning, website/DNS deployment, LG-07/LG-08/LG-09, live-production activation, market launch, payment or real-user validation PASS is inferred.
