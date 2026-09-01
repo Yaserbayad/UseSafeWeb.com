@@ -1,0 +1,89 @@
+name: Accept TSK-0518 current independent recovery acceptance plan
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/scripts/accept_tsk0518_current_20260901.py'
+      - '.github/workflows/accept-tsk0518-current-20260901.yml'
+
+permissions:
+  contents: write
+  checks: read
+
+env:
+  VERIFIED_CHECK_RUN_ID: '99847736387'
+  VERIFIED_HEAD: '930d719b928030ea2902e56652554499fb1e4a4e'
+
+concurrency:
+  group: usesafeweb-governed-runtime-write
+  cancel-in-progress: false
+
+jobs:
+  accept:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Reverify current evidence and source state
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          python3 .github/scripts/verify_tsk0518_independent_recovery_acceptance_20260901.py
+          python3 - <<'PY'
+          import json, os, urllib.request
+          rid = os.environ['VERIFIED_CHECK_RUN_ID']
+          req = urllib.request.Request(
+              f'https://api.github.com/repos/Yaserbayad/UseSafeWeb.com/check-runs/{rid}',
+              headers={
+                  'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+                  'Accept': 'application/vnd.github+json',
+                  'User-Agent': 'UseSafeWeb-TSK-0518-acceptor',
+              },
+          )
+          with urllib.request.urlopen(req, timeout=20) as r:
+              d = json.load(r)
+          assert d['status'] == 'completed' and d['conclusion'] == 'success', d
+          assert d['head_sha'] == os.environ['VERIFIED_HEAD'], d['head_sha']
+          print('INDEPENDENT_CHECK_RUN=PASS')
+          PY
+          test "$(git hash-object TSK_0518_INDEPENDENT_RECOVERY_ACCEPTANCE_PLAN_2026-09-01.md)" = '9915f59e356c0d06a0c54ce0c9d4bb63f7e0b553'
+          test "$(git hash-object TSK_0518_INDEPENDENT_RECOVERY_ACCEPTANCE_EVIDENCE_2026-09-01.md)" = '80387be3669c23ba6f7d7a0a128da9fe48cb972b'
+          test "$(git hash-object TSK_0518_INDEPENDENT_RECOVERY_ACCEPTANCE_AUTOVERIFY_2026-09-01.md)" = 'c1c37dd4c080a91e917b313db0ec0c79793333dc'
+          test "$(git hash-object .github/scripts/verify_tsk0518_independent_recovery_acceptance_20260901.py)" = 'bd900f345beffcb812d145e0f4379615b127c0f1'
+
+      - name: Construct bounded PASS mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/accept_tsk0518_current_20260901.py
+          git diff --check
+          test "$(git status --porcelain | sed 's/^...//')" = 'CURRENT_STATE.md'
+          grep -F '## TSK-0518 current accepted stable state — 2026-09-01' CURRENT_STATE.md
+          grep -F 'no recovery implementation, clean-server restore, measured RTO' CURRENT_STATE.md
+          grep -F 'TSK-0445' CURRENT_STATE.md
+
+      - name: Commit push and remote read-back
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: accept TSK-0518 current recovery acceptance plan'
+          COMMIT="$(git rev-parse HEAD)"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$COMMIT"
+          git show "$COMMIT:CURRENT_STATE.md" | grep -F '## TSK-0518 current accepted stable state — 2026-09-01'
+          test "$(git rev-parse "$COMMIT:TSK_0518_INDEPENDENT_RECOVERY_ACCEPTANCE_PLAN_2026-09-01.md")" = '9915f59e356c0d06a0c54ce0c9d4bb63f7e0b553'
+          test "$(git rev-parse "$COMMIT:TSK_0518_INDEPENDENT_RECOVERY_ACCEPTANCE_EVIDENCE_2026-09-01.md")" = '80387be3669c23ba6f7d7a0a128da9fe48cb972b'
+          test "$(git rev-parse "$COMMIT:TSK_0518_INDEPENDENT_RECOVERY_ACCEPTANCE_AUTOVERIFY_2026-09-01.md")" = 'c1c37dd4c080a91e917b313db0ec0c79793333dc'
+          echo "TSK_0518_ACCEPTANCE_COMMIT=$COMMIT"
+          echo 'TSK_0518_REMOTE_READBACK=PASS'
