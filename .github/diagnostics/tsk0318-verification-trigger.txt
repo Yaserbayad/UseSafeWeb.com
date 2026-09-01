@@ -1,0 +1,1 @@
+Read-only TSK-0318 post-CR-0008 acceptance verification trigger.
