@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 3
-      - name: Verify and stage TSK-0042
+      - name: Verify and stage TSK-0042 exact current acceptance
         env:
           SOURCE_COMMIT: ${{ github.sha }}
         shell: bash
