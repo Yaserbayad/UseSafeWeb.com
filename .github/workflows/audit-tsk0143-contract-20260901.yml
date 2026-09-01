@@ -1,0 +1,31 @@
+name: Audit exact TSK-0143 contract
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-tsk0143-contract-20260901.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Print exact canonical row
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv
+          from pathlib import Path
+          with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='') as f:
+              rows=list(csv.DictReader(f))
+          r=next(x for x in rows if (x.get('Task_ID') or '').strip()=='TSK-0143')
+          for k,v in r.items():
+              if (v or '').strip(): print(f'{k}={(v or "").strip()}')
+          PY
+          git diff --check
+          test -z "$(git status --porcelain --untracked-files=no)"
