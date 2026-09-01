@@ -1,2 +1,2 @@
 Read-only canonical HIGH L4 AUTO_ALLOWED frontier audit trigger.
-Retry: discover canonical L4 encoding after schema check.
+Retry: exact CR-0006/CR-0008 dependency-chain comparison.
