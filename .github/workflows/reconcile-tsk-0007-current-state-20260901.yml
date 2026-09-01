@@ -1,0 +1,164 @@
+name: Reconcile TSK-0007 current governance loop
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-tsk-0007-current-state-20260901.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-tsk-0007-current-reconciliation
+  cancel-in-progress: false
+
+jobs:
+  verify-reconcile:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: Verify current TSK-0007 acceptance and construct runtime state
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          python3 - <<'PY'
+          from pathlib import Path
+          import csv
+          import os
+          import subprocess
+
+          wbs_path = Path('Plans/Master/WBS/master-wbs.csv')
+          layer5_path = Path('Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md')
+          state_path = Path('CURRENT_STATE.md')
+          source_commit = os.environ['SOURCE_COMMIT']
+          run_id = os.environ.get('GITHUB_RUN_ID', 'UNKNOWN')
+          run_attempt = os.environ.get('GITHUB_RUN_ATTEMPT', '1')
+
+          def git_hash(path: str) -> str:
+              return subprocess.check_output(['git', 'hash-object', path], text=True).strip()
+
+          with wbs_path.open(encoding='utf-8-sig', newline='') as f:
+              rows = list(csv.DictReader(f))
+          row = next(r for r in rows if (r.get('Task_ID') or '').strip() == 'TSK-0007')
+          expected = {
+              'Lifecycle_Stage': 'L2',
+              'Plan_Status': 'COMPLETED_CANDIDATE',
+              'Execution_State': 'PASS',
+              'Priority': 'HIGH',
+              'Dependencies': 'TSK-0016',
+              'Acceptance_ID': 'ACC-0007',
+              'Verification_ID': 'VER-0007',
+              'Evidence_ID': 'EVD-0007',
+              'AI_Capability_A0_A4': 'A3',
+              'Action_Authority': 'AUTO_ALLOWED',
+              'Risk_Reference': 'RSK-0044',
+              'Interface_Reference': 'INT-0001; INT-0002',
+              'Requirement_Reference': 'REQ-0001; REQ-0002; CON-0020; CON-0021',
+          }
+          for field, value in expected.items():
+              actual = (row.get(field) or '').strip()
+              assert actual == value, f'{field}: {actual!r} != {value!r}'
+
+          expected_acc = (
+              'The protocol implements READ -> ELIGIBILITY -> AUTHORITY -> EXECUTE -> VERIFY -> '
+              'EVIDENCE -> STABLE OUTCOME -> WRITE/READBACK -> RECONCILE -> NEXT and contains no '
+              'hidden-evidence dependency.'
+          )
+          assert (row.get('Acceptance_Criteria') or '').strip() == expected_acc
+
+          assert git_hash('Plans/Master/WBS/master-wbs.csv') == 'b27a0c5df2f5636d8ed71051e9e26a68959a2616'
+          assert git_hash('Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md') == '2097d83961affaa69850e41a5ffcd72a660d69cd'
+
+          layer5 = layer5_path.read_text(encoding='utf-8')
+          required_protocol = (
+              '### 5.1 Normal governed operating loop',
+              'READ CANONICAL STATE -> APPLY LATEST OWNER AUTHORITY -> DERIVE ELIGIBLE TASK -> CHECK DEPENDENCIES/GATE/TRIGGER',
+              'CHECK ACTION AUTHORITY -> LOAD INPUTS/INTERFACES -> EXECUTE BOUNDED UNIT -> VERIFY ALL ACCEPTANCE -> CAPTURE DURABLE EVIDENCE',
+              'ASSIGN TODO/PASS/WAITING/BLOCKED -> UPDATE CANONICAL STATE WHEN AUTHORIZED -> FETCH/REREAD/COMPARE -> RECONCILE PARENTS/DEPENDENCIES/TRACKER -> SELECT NEXT TASK.',
+              'No hidden chain-of-thought is evidence.',
+              '### 5.3 Deterministic eligibility rule',
+              '### 5.4 Evidence and PASS rules',
+          )
+          for marker in required_protocol:
+              assert marker in layer5, f'Layer 5 protocol marker missing: {marker}'
+
+          interfaces = Path('Plans/Master/Registers/INTERFACES.md').read_text(encoding='utf-8')
+          requirements = Path('Plans/Master/Registers/REQUIREMENTS.md').read_text(encoding='utf-8')
+          constraints = Path('Plans/Master/Registers/CONSTRAINTS.md').read_text(encoding='utf-8')
+          risks = Path('Plans/Master/Registers/RISKS.md').read_text(encoding='utf-8')
+          for marker, text in (
+              ('INT-0001', interfaces), ('INT-0002', interfaces),
+              ('REQ-0001', requirements), ('REQ-0002', requirements),
+              ('CON-0020', constraints), ('CON-0021', constraints),
+              ('RSK-0044', risks),
+          ):
+              assert marker in text, f'missing referenced control: {marker}'
+
+          state = state_path.read_text(encoding='utf-8')
+          assert '## TSK-0016 current accepted stable state — 2026-09-01' in state
+          assert 'ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0008 PUBLISHED, RECONCILED, READ-BACK VERIFIED.' in state
+          heading = '## TSK-0007 current accepted stable state — 2026-09-01'
+          assert heading not in state, 'TSK-0007 current state already exists; reconcile instead of duplicating'
+
+          validation = subprocess.run(
+              ['python3', 'Plans/Master/Tools/validate_master_plan.py'],
+              text=True,
+              capture_output=True,
+              check=True,
+          )
+          print(validation.stdout, end='')
+          combined = validation.stdout + validation.stderr
+          for marker in ('VALIDATION PASS', 'tasks=641', 'dependency_edges=858', 'broken_links=0', 'generated_missing_task_ids=0'):
+              assert marker in combined, f'validator marker missing: {marker}'
+
+          section = f'''{heading}
+
+          `TSK-0007 — Define the canonical AI task-selection, authority, execution, verification, evidence, state-update, recovery, and reconciliation loop`: **PASS** under current `ACC-0007 / VER-0007 / EVD-0007`, current `TSK-0016` dependency proof, and `DEC-0055/CR-0008` authority.
+
+          - Action authority: **A3 / AUTO_ALLOWED**.
+          - Dependency: `TSK-0016` is current PASS; no other hard dependency exists.
+          - Acceptance source commit: `{source_commit}`; WBS blob `b27a0c5df2f5636d8ed71051e9e26a68959a2616`; Layer-5 blob `2097d83961affaa69850e41a5ffcd72a660d69cd`.
+          - Verification: GitHub Actions run/attempt `{run_id} / {run_attempt}` plus current master-plan validation. Layer 5 implements canonical-state read, latest-owner authority, eligibility/dependency/gate checks, action authority, bounded execution, acceptance verification, durable evidence, stable TODO/PASS/WAITING/BLOCKED outcome, authorized state write, fetch/read-back comparison, reconciliation, and next-task selection.
+          - Hidden-evidence boundary: Layer 5 explicitly states that hidden chain-of-thought is not evidence and requires inspectable durable evidence; referenced interfaces, requirements, constraints and risk IDs are present in their authoritative registers.
+          - Runtime reconciliation only: the canonical WBS, graph, planning modules and CR-0008 authority are unchanged.
+          - **Non-inference:** no successor, gate, deployment, launch, tracker, or real-user outcome becomes PASS from this reconciliation alone.
+          '''
+          section = '\n'.join(line.strip() for line in section.strip().splitlines())
+          state_path.write_text(state.rstrip() + '\n\n' + section + '\n', encoding='utf-8')
+          print('TSK0007_CURRENT_ACCEPTANCE=PASS')
+          print('TSK0007_STATE_CANDIDATE=PASS')
+          PY
+          git diff --check
+          test "$(git status --porcelain | sed 's/^...//')" = 'CURRENT_STATE.md'
+
+      - name: Persist only CURRENT_STATE and verify remote read-back
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: accept TSK-0007 current governance loop'
+          STATE_COMMIT="$(git rev-parse HEAD)"
+          STATE_BLOB="$(git rev-parse "$STATE_COMMIT:CURRENT_STATE.md")"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$STATE_COMMIT"
+          test "$(git rev-parse "origin/main:CURRENT_STATE.md")" = "$STATE_BLOB"
+          git show "origin/main:CURRENT_STATE.md" | grep -F '## TSK-0007 current accepted stable state — 2026-09-01'
+          echo "TSK0007_STATE_COMMIT=$STATE_COMMIT"
+          echo "TSK0007_STATE_BLOB=$STATE_BLOB"
+          echo 'TSK0007_ACCEPTANCE_REMOTE_READBACK=PASS'
