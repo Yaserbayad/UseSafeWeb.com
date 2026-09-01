@@ -41,7 +41,7 @@ row = [r for r in rows if r['Task_ID'] == 'TSK-0446']
 if len(row) != 1:
     fail('expected exactly one TSK-0446 WBS row')
 row = row[0]
-if row['Layer'] != 'L5':
+if row['Lifecycle_Stage'] != 'L5':
     fail('TSK-0446 is not L5')
 if row['Priority'] != 'CRITICAL':
     fail('TSK-0446 priority drift')
