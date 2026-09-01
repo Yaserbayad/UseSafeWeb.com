@@ -28,7 +28,7 @@ jobs:
           test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
           test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
           test "$(git rev-parse HEAD:Plans/Master/WBS/master-wbs.csv)" = "b27a0c5df2f5636d8ed71051e9e26a68959a2616"
-          test "$(git rev-parse HEAD:TSK_0233_MINIMAL_DUAL_MODE_JOURNEY_ACCOUNT_DATA_MODEL_2026-09-01.md)" = "01093615ee6cf2144c20a28db775baf144b59df4"
+          test "$(git rev-parse HEAD:TSK_0233_MINIMAL_DUAL_MODE_JOURNEY_ACCOUNT_DATA_MODEL_2026-09-01.md)" = "156a1811bc4322e16474874e728d23a97a93ec4c"
 
           python3 - <<'PY'
           import csv, re
@@ -64,12 +64,10 @@ jobs:
           assert norm(row.get('Evidence_ID')) == 'EVD-0233'
           assert norm(row.get('Acceptance_Criteria')) == expected_acceptance
 
-          # Current dependency proof only from explicit accepted-stable runtime headings.
           for dep in ['TSK-0235', 'TSK-0230']:
               assert re.search(rf'^##\s+{dep}(?:\s*/[^\n#]+)?\s+current accepted stable state\b', state, flags=re.M|re.I), dep
           assert not re.search(r'^##\s+TSK-0233(?:\s*/[^\n#]+)?\s+current accepted stable state\b', state, flags=re.M|re.I)
 
-          # Synchronized ACC/VER/EVD register must agree with WBS.
           reg = Path('Plans/Master/Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md').read_text(encoding='utf-8')
           rr = next(line for line in reg.splitlines() if line.startswith('| TSK-0233 |'))
           cells = [c.strip() for c in rr.strip().strip('|').split('|')]
@@ -86,14 +84,13 @@ jobs:
               'Plans/Master/Registers/INTERFACES.md': ['INT-0006','INT-0007'],
           }
           for path, ids in linked.items():
-              lines = Path(path).read_text(encoding='utf-8').splitlines()
+              source_lines = Path(path).read_text(encoding='utf-8').splitlines()
               for item_id in ids:
-                  matches = [line for line in lines if line.startswith(f'| {item_id} |')]
+                  matches = [line for line in source_lines if line.startswith(f'| {item_id} |')]
                   assert len(matches) == 1, (path, item_id, len(matches))
 
-          # Exact artifact identity and non-inference boundary.
           required_markers = [
-              '**Version:** 1.0.0',
+              '**Version:** 1.0.1',
               '**Core value never requires identity.**',
               '**No J1-to-account migration exists in this contract.**',
               '`RSK-0001` remains OPEN',
@@ -114,21 +111,7 @@ jobs:
           for marker in required_markers:
               assert marker in artifact, marker
 
-          # Parse the five field tables and prove every model field has mapping/purpose/access/retention/deletion/backup.
           lines = artifact.splitlines()
-
-          def parse_table_after(header, row_prefix=None):
-              i = lines.index(header)
-              out = []
-              for line in lines[i+2:]:
-                  if not line.startswith('|'):
-                      break
-                  vals = [v.strip() for v in line.strip().strip('|').split('|')]
-                  if row_prefix is not None and not vals[0].startswith(row_prefix):
-                      break
-                  out.append(vals)
-              return out
-
           seven_header = '| Field | Requirement/control | Purpose / lawful-basis status | Storage & access | Retention | Deletion | Backup |'
           seven_indices = [i for i, line in enumerate(lines) if line == seven_header]
           assert len(seven_indices) == 2, seven_indices
@@ -148,10 +131,15 @@ jobs:
           assert len(j1) == 16, len(j1)
 
           auth_header = '| Field/state | Requirement/control | Purpose / lawful-basis status | Storage & access | Retention | Deletion/revocation | Backup |'
-          auth = parse_table_after(auth_header)
+          ai = lines.index(auth_header)
+          auth = []
+          for line in lines[ai+2:]:
+              if not line.startswith('|'):
+                  break
+              vals = [v.strip() for v in line.strip().strip('|').split('|')]
+              assert len(vals) == 7 and all(vals), vals
+              auth.append(vals)
           assert len(auth) == 3, len(auth)
-          for r in auth:
-              assert len(r) == 7 and all(r)
 
           account_header = '| Field | Requirement/control | Purpose / lawful-basis status | Access | Retention | Deletion | Backup |'
           account_indices = [i for i, line in enumerate(lines) if line == account_header]
@@ -168,20 +156,16 @@ jobs:
               account_tables.append(out)
           parent_account, parent_device = account_tables
           assert len(parent_account) == 5, len(parent_account)
-          assert len(parent_device) == 15, len(parent_device)
+          assert len(parent_device) == 16, len(parent_device)
 
           all_fields = j0 + j1 + auth + parent_account + parent_device
-          assert len(all_fields) == 48, len(all_fields)
+          assert len(all_fields) == 49, len(all_fields)
           for r in all_fields:
-              # Requirement/control reference must be explicit and purpose must carry a TSK-0230 lawful-status token or explicit inherited-status language.
               assert re.search(r'(REQ-|CON-|TSK-0230)', r[1]), (r[0], r[1])
               assert any(tok in r[2] for tok in ['LI_CONDITIONAL','CONTRACT_CONDITIONAL','NOT_PERSONAL_OR_SYNTHETIC','same conditional status','same status rule']), (r[0], r[2])
-              assert r[3] not in {'TBD','UNKNOWN','—','-',''}, r[0]
-              assert r[4] not in {'TBD','UNKNOWN','—','-',''}, r[0]
-              assert r[5] not in {'TBD','UNKNOWN','—','-',''}, r[0]
-              assert r[6] not in {'TBD','UNKNOWN','—','-',''}, r[0]
+              for cell in r[3:]:
+                  assert cell not in {'TBD','UNKNOWN','—','-',''}, (r[0], cell)
 
-          # Specific privacy and lifecycle invariants.
           j1_names = {r[0] for r in j1}
           for forbidden in ['`parent_id`','`provider_subject`','`device_id`','`adguard_client_id`','`email`','`ip_address`']:
               assert forbidden not in j1_names, forbidden
@@ -195,23 +179,24 @@ jobs:
               '`settings_profile_id`','`settings_version`','`protection_state`','`protection_reason_code`','`verifier_version`',
               '`evaluated_at`','`evidence_fresh_until`','`row_version`','`created_at`','`updated_at`'
           }
-          # Contract intentionally contains 16 device fields; verify all explicitly.
           assert pd_names == expected_pd, (pd_names, expected_pd)
 
+          settings_profile = next(r for r in parent_device if r[0] == '`settings_profile_id`')
+          settings_version = next(r for r in parent_device if r[0] == '`settings_version`')
+          for r in [settings_profile, settings_version]:
+              assert 'CONTRACT_CONDITIONAL' in r[2] and 'LI_CONDITIONAL' in r[2]
           client_row = next(r for r in parent_device if r[0] == '`adguard_client_id`')
           assert 'never authorization' in client_row[3]
           protection_row = next(r for r in parent_device if r[0] == '`protection_state`')
           assert 'Latest current record only' in protection_row[4]
           assert 'fresh' in protection_row[6].lower()
 
-          # No implicit identity or history store.
           prohibited_schema_tokens = ['| `dns_query` |', '| `domain` |', '| `visited_url` |', '| `top_domain` |', '| `child_activity` |', '| `journey_to_account` |']
           for token in prohibited_schema_tokens:
               assert token.lower() not in artifact.lower(), token
           assert 'No table, cache, log or analytics projection may map the two domains.' in artifact
           assert 'does not import the J1 record or preserve a J1 event trail' in artifact
 
-          # Backup/retention must explicitly fail closed rather than invent unresolved production facts.
           assert 'Until exact backup retention and deletion-propagation/restore semantics are frozen' in artifact
           assert 'no exact period is invented' in artifact.lower()
           assert 'Final UK legal/data readiness' in artifact
@@ -224,7 +209,7 @@ jobs:
           print('TSK0233_DEPENDENCIES=PASS')
           print('TSK0233_ACC_REGISTER=PASS')
           print('TSK0233_LINKED_CONTROLS=PASS')
-          print('TSK0233_FIELD_ROWS=48')
+          print('TSK0233_FIELD_ROWS=49')
           print('TSK0233_FIELD_MAPPING_COMPLETENESS=PASS')
           print('TSK0233_J0_J1_MINIMISATION=PASS')
           print('TSK0233_NO_J1_ACCOUNT_LINKAGE=PASS')
@@ -250,7 +235,7 @@ jobs:
               '`TSK-0233 — Design minimal dual-mode journey/account data model, storage, retention, and deletion flows`: **PASS** under current `ACC-0233 / VER-0233 / EVD-0233`, current `TSK-0235` + `TSK-0230` dependency proof, and CR-0008 authority.',
               '',
               '- Action authority: **A3 / AUTO_ALLOWED**.',
-              '- Artifact: `TSK_0233_MINIMAL_DUAL_MODE_JOURNEY_ACCOUNT_DATA_MODEL_2026-09-01.md`, version `1.0.0`, blob `01093615ee6cf2144c20a28db775baf144b59df4`, publication commit `2583656814dfefa82547cf7dcbe1719b9360d94e`.',
+              '- Artifact: `TSK_0233_MINIMAL_DUAL_MODE_JOURNEY_ACCOUNT_DATA_MODEL_2026-09-01.md`, version `1.0.1`, blob `156a1811bc4322e16474874e728d23a97a93ec4c`, publication commit `139acb64760d1bc224129a1d72849528c1f7b126`.',
               '- Accepted storage model: J0 session-only accountless state; optional J1 anonymous server state max 24h/non-sliding with early deletion and no durable backup; optional AUTH server-session boundary; separate minimum persistent parent/device ownership/settings/lifecycle/current-state domain A.',
               '- No J1-to-account migration/linkage exists. Optional account-mode device creation uses fresh allowlisted account inputs and server-generated ownership/control references; sign-in never extends J1 or imports anonymous history.',
               '- Persistent A-domain fields are limited to minimum provider/account reference, opaque ownership/device IDs, optional nickname/coarse platform, curated settings, current lifecycle/concurrency metadata, server-only ClientID linkage and one current freshness-bounded Protection Map record. ClientID is never authorization and account/device ownership never constitutes technical verification.',
@@ -258,7 +243,7 @@ jobs:
               '- Retention/deletion/backup handling is explicit: J0 session-only; J1 <=24h and no backup; active account/device rows exist only for active approved ownership/settings/lifecycle purpose; device/account deletion and AdGuard reconciliation are separate from physical phone DNS/profile removal; restore cannot resurrect J1 or stale verified protection.',
               '- Production A-domain backup processing remains fail-closed until exact backup retention/access/encryption/deletion-propagation/restore semantics are frozen; durable D25 deletion-completion evidence likewise requires an independently justified basis and exact retention before production. No legal duration was invented.',
               '- `RSK-0001` remains OPEN. This L5 design does not establish final UK legal/data readiness or authorize real England participant processing. `INT-0007` still requires later runtime/database/cache/log/backup/config inspection against actual implementation reality.',
-              f'- Acceptance workflow run `{os.environ["RUN_ID"]}` verified exact WBS/dependencies/ACC/VER/EVD and linked controls, 48 field rows with mapping/access/retention/deletion/backup completeness, anonymous/persistent separation, no J1-account linkage, minimum persistent scope, ClientID non-authorization, no browsing-history store, fail-closed retention/backup handling, core-no-identity invariant, legal non-inference and the full modular validator before this runtime mutation.',
+              f'- Acceptance workflow run `{os.environ["RUN_ID"]}` verified exact WBS/dependencies/ACC/VER/EVD and linked controls, 49 field rows with mapping/access/retention/deletion/backup completeness, anonymous/persistent separation, no J1-account linkage, minimum persistent scope, ClientID non-authorization, no browsing-history store, fail-closed retention/backup handling, core-no-identity invariant, legal non-inference and the full modular validator before this runtime mutation.',
               '- **Non-inference:** no datastore/vendor implementation, auth/session vendor acceptance, production backup approval, code/build/deployment, LG-07/LG-08/LG-09, participant activation, market activation, launch or downstream task becomes PASS from this architecture freeze.',
           ]
           p.write_text(text.rstrip() + '\n\n' + '\n'.join(lines) + '\n', encoding='utf-8')
@@ -290,7 +275,6 @@ jobs:
           test "$(git rev-parse origin/main)" = "$C"
           test "$(git rev-parse "origin/main:CURRENT_STATE.md")" = "$B"
           git show "origin/main:CURRENT_STATE.md" | grep -F '## TSK-0233 current accepted stable state — 2026-09-01 — POST-CR-0008'
-          git show "origin/main:CURRENT_STATE.md" | grep -F 'TSK-0233 — Design minimal dual-mode journey/account data model, storage, retention, and deletion flows`: >/dev/null || true
           echo "TSK0233_STATE_COMMIT=$C"
           echo "TSK0233_STATE_BLOB=$B"
           echo 'TSK0233_ACCEPTANCE_REMOTE_READBACK=PASS'
