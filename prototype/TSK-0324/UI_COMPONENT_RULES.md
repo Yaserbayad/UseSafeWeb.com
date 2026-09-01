@@ -1,10 +1,10 @@
 # TSK-0324 — Lightweight Visual Identity and Reusable UI Component Rules
 
-**Version:** 1.0.0  
+**Version:** 1.1.0-post-cr0007
 **Status:** internal L4 UX/UI consumer contract  
 **Owner:** UX/UI  
 **Action authority:** A3 / AUTO_ALLOWED  
-**Sequencing:** DEC-0052 / CR-0005  
+**Sequencing:** DEC-0053 / CR-0006 + DEC-0054 / CR-0007; DEC-0052 / CR-0005 remains the pre-L8 human-evidence rule
 **Human-validation claim:** none  
 **Build/publication authority:** none
 
@@ -14,7 +14,7 @@ This contract defines how SafeWeb public/product/help/status surfaces consume th
 
 Authority order for this contract:
 
-1. current owner-frozen planning authority and DEC-0052 / CR-0005;
+1. current owner-frozen planning authority including DEC-0053 / CR-0006 and DEC-0054 / CR-0007; DEC-0052 / CR-0005 remains applicable to pre-L8 human-evidence claims;
 2. `brand/identity/TSK-0301/` for logo masters and identity geometry;
 3. `brand/system/TSK-0300/tokens.css` as the **sole mutable implementation-token source** and `components.css` as the existing shared primitive source;
 4. `brand/guidelines/TSK-0297/README.md` for deterministic asset/logo/contrast use;
@@ -23,7 +23,7 @@ Authority order for this contract:
 7. `prototype/TSK-0309/BASELINE.md` for responsive/accessibility/journey behavior;
 8. this TSK-0324 contract for downstream UI composition rules only.
 
-Older TSK-0300/0320 sequencing text that references CR-0003/CR-0004 is superseded for sequencing by current DEC-0052/CR-0005; the still-valid visual/state rules remain usable unless separately contradicted.
+Older TSK-0300/0320 sequencing text that references CR-0003/CR-0004 is superseded by current owner-approved sequencing. The still-valid visual/state rules remain usable unless separately contradicted. Current Version 1 is dual-mode: complete core product value remains usable without login, while optional parent account/session, saved-device continuity, and lightweight dashboard/device-management surfaces are allowed. Account, session, saved-device, or dashboard presence never establishes technical verification.
 
 ## 2. Non-fork rule
 
@@ -41,7 +41,7 @@ If a consuming implementation genuinely needs a new shared token, the change mus
 
 ## 3. Visual character
 
-SafeWeb UI is whitespace-led, mobile-first, calm and task-directed. Product/setup surfaces are operational rather than dashboard-like; public surfaces may carry more brand expression, but proposition and next action outrank decoration.
+SafeWeb UI is whitespace-led, mobile-first, calm and task-directed. Core setup surfaces are operational rather than dashboard-like; the optional signed-in dashboard remains lightweight and task-directed rather than dense administration chrome. Public surfaces may carry more brand expression, but proposition and next action outrank decoration.
 
 Avoid:
 
@@ -153,6 +153,17 @@ Avoid disabled controls as unexplained dead ends. When an action is unavailable,
 
 Buttons generated from the existing padding/type tokens must be verified in implementation to meet the WCAG 2.2 AA target-size requirement. Inline text links may use the standard inline-content exception when applicable; clustered navigation links must retain sufficient target size/spacing.
 
+### Optional account/session/dashboard and lifecycle controls
+
+- Sign-in, account and dashboard navigation is optional continuity UI; it must never gate `Start setup`, verification, Help, recovery or removal.
+- Session/account status is announced as account state only and must never reuse S1–S6 protection-state styling as evidence of device protection.
+- A saved-device card distinguishes saved record metadata from current Protection Map evidence; record presence cannot create `Verified`.
+- Logout, account deletion, saved-record deletion, revoke/unlink and physical SafeWeb DNS removal use distinct labels and consequences.
+- Destructive account/device actions require the current lifecycle confirmation pattern, keyboard-operable controls, visible focus, and a deterministic return/focus target after completion or cancellation.
+- If a destructive provider result is unknown, the UI states uncertainty, blocks duplicate destructive replay and offers authoritative read-back/recovery; it never announces success.
+- At 320 px, optional account/dashboard navigation may collapse or wrap but cannot hide the accountless core path, current protection truth, recovery or removal.
+- Dashboard/device-management surfaces remain lightweight: no browsing/query/activity history, child profiles/accounts or broad/raw DNS administration.
+
 ## 9. Protection Map / state component contract
 
 ACC-0324’s historical “four Protection Map states” minimum is satisfied and superseded in current semantic authority by the complete **six-state S1–S6 model**. The UI MUST support all six without renaming or collapsing them:
@@ -210,7 +221,7 @@ Use polite status announcements for ordinary asynchronous results. Reserve asser
 | Component | Semantic base | Required behavior |
 | --- | --- | --- |
 | `PageShell` | `main` + shared shell | one primary content region; max-width/mobile insets; RTL-safe logical layout |
-| `BrandHeader` | `header` + `nav` where present | approved logo master; `SafeWeb` alt; no account/dashboard nav in current baseline |
+| `BrandHeader` | `header` + `nav` where present | approved logo master; `SafeWeb` alt; accountless core navigation remains available; optional sign-in/account/dashboard navigation may appear where current IA permits; visible keyboard focus |
 | `ScreenTitle` | `h1` | one per screen; programmatic focus target after screen change |
 | `ActionGroup` | grouped buttons/links | one primary action; wraps/stacks safely; keyboard order = visual/reading order |
 | `PrimaryButton` | `button` or action link | explicit action label; visible focus; target-size acceptance |
@@ -223,7 +234,7 @@ Use polite status announcements for ordinary asynchronous results. Reserve asser
 | `LimitationsLink` | link | exposes support/scope boundary; state-neutral |
 | `TechnicalValue` | code/text container | exact LTR endpoint/domain inside RTL; selectable; does not force page overflow |
 
-No text input, identity field, child profile field, payment field or diagnostic upload is part of the current critical journey. Adding one requires separate necessity, privacy and scope authority rather than a local component variant.
+No SafeWeb password/credential field, child profile field, payment field or diagnostic upload is part of the current critical journey. Optional Google sign-in/account continuity uses the separately approved account/session flow and must not create a local credential form. Adding materially broader identity, child, payment, activity-history or diagnostic collection requires separate necessity, privacy and scope authority rather than a local component variant.
 
 ## 12. Logo and domain use
 
@@ -255,7 +266,7 @@ A downstream implementation is not compliant with this contract unless applicabl
 
 ## 14. External accessibility source review
 
-Reviewed 2026-08-29 against current first-party W3C sources:
+Reviewed 2026-09-01 against current first-party W3C sources:
 
 - WCAG 2.2 Recommendation: `https://www.w3.org/TR/WCAG22/` — current Level AA text-contrast baseline, focus-visible/focus-not-obscured requirements and related success criteria.
 - W3C Understanding SC 2.5.8 Target Size (Minimum): `https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum` — current Level AA 24×24 CSS-pixel target minimum with documented exceptions/spacing alternatives.
@@ -275,6 +286,7 @@ TSK-0324 acceptance should assert at minimum:
 - 320/768/1024/1440 responsive behavior is specified;
 - logo/domain/RTL rules are deterministic;
 - accessible component specifications are implementation/QA-testable;
+- optional account/session/dashboard/device-lifecycle controls preserve accountless core access, keyboard/focus semantics, truthful protection state, explicit destructive consequences, and uncertainty on unknown destructive results;
 - no token/logo/state/claim/account fork is created.
 
 ## 16. Non-inference fence
