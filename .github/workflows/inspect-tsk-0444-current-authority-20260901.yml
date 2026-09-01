@@ -1,4 +1,4 @@
-name: Inspect current TSK-0444 authority
+name: Verify and accept TSK-0444 current environment model
 
 on:
   push:
@@ -7,53 +7,52 @@ on:
       - '.github/workflows/inspect-tsk-0444-current-authority-20260901.yml'
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: usesafeweb-tsk-0444-current-acceptance
+  cancel-in-progress: false
 
 jobs:
-  inspect:
+  verify-accept:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
-      - name: Print exact TSK-0444 contract and mapped controls
+        with:
+          fetch-depth: 2
+
+      - name: Verify current contract and construct state candidate
         shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
         run: |
           set -euo pipefail
-          python3 - <<'PY'
-          import csv
-          from pathlib import Path
-          with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='') as f:
-              rows = list(csv.DictReader(f))
-          row = next(r for r in rows if (r.get('Task_ID') or '').strip() == 'TSK-0444')
-          print('TSK0444_ROW_BEGIN')
-          for k,v in row.items():
-              if (v or '').strip():
-                  print(f'{k}={(v or "").strip()}')
-          print('TSK0444_ROW_END')
-          state = Path('CURRENT_STATE.md').read_text(encoding='utf-8')
-          for heading in ('## TSK-0355 current accepted stable state', '## TSK-0411 current accepted stable state', '## TSK-0052 / LG-06 current accepted stable state'):
-              assert heading in state, heading
-          assert (row.get('Action_Authority') or '').strip() == 'AUTO_ALLOWED'
-          assert (row.get('Dependencies') or '').strip() == 'TSK-0355; TSK-0411'
-          print('TSK0444_DEP_GATE_AUTH=PASS')
-          PY
-          python3 - <<'PY'
-          from pathlib import Path
-          files = {
-            'ACCEPTANCE':'Plans/Master/Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md',
-            'RISKS':'Plans/Master/Registers/RISKS.md',
-            'REQUIREMENTS':'Plans/Master/Registers/REQUIREMENTS.md',
-            'CONSTRAINTS':'Plans/Master/Registers/CONSTRAINTS.md',
-            'INTERFACES':'Plans/Master/Registers/INTERFACES.md',
-            'GATES':'Plans/Master/Registers/GATES.md',
-            'DECISIONS':'Plans/Master/Registers/DECISIONS_TRIGGERS.md',
-          }
-          needles = ('ACC-0444','VER-0444','EVD-0444','RSK-0048','REQ-0049','REQ-0050','CON-0004','CON-0005','INT-0014','TSK-0444','LG-06','LG-07','DEC-0016','DEC-0053','DEC-0054','DEC-0055')
-          for label,path in files.items():
-              p=Path(path)
-              print(f'{label}_MATCHES_BEGIN')
-              for i,line in enumerate(p.read_text(encoding='utf-8').splitlines(),1):
-                  if any(n in line for n in needles):
-                      print(f'{label}|{i}|{line}')
-              print(f'{label}_MATCHES_END')
-          PY
-          python3 Plans/Master/Tools/validate_master_plan.py
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          python3 .github/scripts/accept_tsk0444_current_20260901.py
+          git diff --check
+          test "$(git status --porcelain | sed 's/^...//')" = 'CURRENT_STATE.md'
+
+      - name: Persist only CURRENT_STATE and verify remote read-back
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: accept TSK-0444 current environment model'
+          STATE_COMMIT="$(git rev-parse HEAD)"
+          STATE_BLOB="$(git rev-parse "$STATE_COMMIT:CURRENT_STATE.md")"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$STATE_COMMIT"
+          test "$(git rev-parse "origin/main:CURRENT_STATE.md")" = "$STATE_BLOB"
+          git show "origin/main:CURRENT_STATE.md" | grep -F '## TSK-0444 current accepted stable state — 2026-09-01'
+          echo "TSK0444_STATE_COMMIT=$STATE_COMMIT"
+          echo "TSK0444_STATE_BLOB=$STATE_BLOB"
+          echo 'TSK0444_ACCEPTANCE_REMOTE_READBACK=PASS'
