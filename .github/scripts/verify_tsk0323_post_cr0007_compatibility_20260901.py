@@ -66,7 +66,7 @@ print('TSK0323_DUAL_MODE_SCOPE_FENCE=PASS')
 
 md=Path('content/TSK-0323/DEVICE_SERVICE_INSTRUCTION_CATALOGUE.md').read_text(encoding='utf-8')
 oldmd=git_blob(OLD_MD)
-for s in ['**Version:** 1.0.1-post-cr0007','**Last source review:** 2026-09-01','Current Version 1 is dual-mode','Accountless core is preserved','Optional SafeWeb account/dashboard state is non-authoritative for technical protection','account, session, saved-device, or dashboard presence never establishes S1 `Verified`']:
+for s in ['**Version:** 1.0.1-post-cr0007','**Last source review:** 2026-09-01','Current Version 1 is dual-mode','Accountless core is preserved','Optional SafeWeb account/dashboard state is non-authoritative for technical protection','Account, session, saved-device, or dashboard presence never establishes S1 `Verified`']:
     req(s in md,f'TSK0323_MD_CURRENT_SCOPE={s}')
 req(md[md.index('## 4. Registry'):]==oldmd[oldmd.index('## 4. Registry'):],'TSK0323_PROCEDURE_BODY_CHANGED')
 print('TSK0323_PROCEDURE_BODY_UNCHANGED=PASS')
