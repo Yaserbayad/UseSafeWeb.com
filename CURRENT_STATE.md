@@ -1986,3 +1986,18 @@ Recompute the current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-
 - Product owns selection/eligibility policy; Content owns instruction freshness/source/version/review; QA verifies setup/scope/unsupported/confirmation behavior; privacy/safeguarding review is required before new data/credential/account-linkage processing.
 - Acceptance workflow run `33548192727` verified exact WBS authority/dependency/references, canonical ACC/VER/EVD row, every referenced current register target, artifact semantics, and full modular validation before this runtime mutation.
 - **Non-inference:** no specific external vendor is approved or activated; no implementation, technical verification, legal/privacy compliance, L5 architecture, build, release, production, participant, market or launch gate becomes PASS from this requirements freeze.
+
+## TSK-0313 current accepted stable state — 2026-09-01 — POST-CR-0008
+
+`TSK-0313 — Specify Protection Map state and evidence requirements`: **PASS** under current `ACC-0313 / VER-0313 / EVD-0313`, current `TSK-0041` + `TSK-0144` + `TSK-0146` dependency proof, and CR-0008 authority.
+
+- Action authority: **A3 / AUTO_ALLOWED**.
+- Artifact: `TSK_0313_PROTECTION_MAP_STATE_AND_EVIDENCE_REQUIREMENTS_2026-09-01.md`, version `1.0.0-post-CR-0008`, blob `c0afad3fb8b92fde4be613417917e0190c56fd09`, publication commit `42761e3d2a624841f300cbddca9cdb362cef931e`.
+- Accepted requirement: every Protection Map item resolves to exactly one of six evidence-derived states with explicit entry/evidence/transition/unsupported/persistence rules and deterministic examples; only fresh qualifying technical evidence can produce `protected/verified`.
+- Parent/configuration confirmation, account ownership, dashboard/device registration, profile/ClientID presence, journey completion or stored prior state can never substitute for technical verification.
+- Parent-facing EN/TR/AR copy is frozen for all six states, Arabic RTL and accessibility semantics are explicit, and localization may not strengthen evidence claims or imply market activation.
+- Anonymous journey state and optional persistent parent-owned device state are separate domains; sign-in/ownership authorizes access only, cannot extend freshness or strengthen state, and no browsing/query/activity history is stored.
+- Platform/service instructions, support determinations and verifier/remediation behavior require versioned source-backed catalogue metadata, ownership and review triggers; stale/indeterminate source state fails closed to truthful lower states.
+- Twenty deterministic representative cases define state/copy/transition/privacy behavior. They are internal specification evidence only and are not human/user validation under RSK-0002.
+- Acceptance workflow run `33551757104` verified exact WBS/dependencies/ACC/VER/EVD and linked registers, six-state completeness, EN/TR/AR + RTL semantics, persistence separation, source currency, representative tests, privacy/truth/non-inference, and the full modular validator before this runtime mutation.
+- **Non-inference:** no verifier/datastore implementation, browser/device runtime test, legal/privacy-compliance conclusion, behavioral/user validation, L5 architecture, build, deployment, production activation, market activation, launch or downstream gate/task becomes PASS from this L4 requirement freeze.
