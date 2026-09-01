@@ -26,7 +26,11 @@ jobs:
         run: |
           set -euo pipefail
           python3 .github/scripts/reconcile_tsk0319_state.py
-          test "$(git diff --name-only)" = "CURRENT_STATE.md"
+          changed="$(git diff --name-only)"
+          if [ -n "$changed" ] && [ "$changed" != 'CURRENT_STATE.md' ]; then
+            echo "Unexpected changed path(s): $changed" >&2
+            exit 1
+          fi
           git diff --check -- CURRENT_STATE.md
 
       - name: Commit reconciled runtime state
