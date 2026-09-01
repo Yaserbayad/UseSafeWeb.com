@@ -1,0 +1,111 @@
+name: Apply CR-0008 efficiency and authority normalization
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Plans/Master/Tools/apply_cr0008_efficiency_authority_20260901.py'
+      - '.github/workflows/apply-cr0008-efficiency-authority-20260901.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-governed-runtime-write
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Apply bounded CR-0008 planning mutation and validate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          python3 Plans/Master/Tools/apply_cr0008_efficiency_authority_20260901.py | tee /tmp/cr0008.txt
+          python3 Plans/Master/Tools/validate_master_plan.py
+          git diff --check
+          grep -F 'DEC-0055' Plans/Master/Registers/DECISIONS_TRIGGERS.md
+          grep -F 'CR-0008' Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md
+          grep -F '### 5.3.7 Owner proportional-evidence and authority-normalization rule (DEC-0055 / CR-0008)' Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md
+          grep -F 'OWNER_PROPORTIONAL_EVIDENCE_AUTHORITY_NORMALIZATION_CR_0008' Plans/Master/MANIFEST.yaml
+          grep -F 'Converted to `AUTO_ALLOWED`:' CR_0008_ACTION_AUTHORITY_AUDIT_2026-09-01.md
+          test "$(python3 - <<'PY'
+          import csv
+          with open('Plans/Master/WBS/master-wbs.csv', encoding='utf-8-sig', newline='') as f:
+              rows=list(csv.DictReader(f))
+          print(len(rows))
+          PY
+          )" = '641'
+
+      - name: Publish planning amendment and remote read-back
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Plans/Master/WBS/master-wbs.csv \
+                  Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md \
+                  Plans/Master/Registers/DECISIONS_TRIGGERS.md \
+                  Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md \
+                  Plans/Master/MANIFEST.yaml \
+                  Plans/Master/Governance/AUTONOMY_POLICY.yaml \
+                  Plans/Master/Generated/MASTER_PLAN_FULL.md \
+                  Plans/SHA256SUMS.txt \
+                  CR_0008_ACTION_AUTHORITY_AUDIT_2026-09-01.md
+          git commit -m 'governance: apply DEC-0055 CR-0008 efficiency normalization'
+          PLAN_COMMIT="$(git rev-parse HEAD)"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$PLAN_COMMIT"
+          git show "$PLAN_COMMIT:Plans/Master/Registers/DECISIONS_TRIGGERS.md" | grep -F 'DEC-0055'
+          git show "$PLAN_COMMIT:Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md" | grep -F 'CR-0008'
+          git show "$PLAN_COMMIT:Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md" | grep -F '### 5.3.7 Owner proportional-evidence and authority-normalization rule'
+          python3 Plans/Master/Tools/validate_master_plan.py
+          echo "PLAN_COMMIT=$PLAN_COMMIT" >> "$GITHUB_ENV"
+          echo "WBS_BLOB=$(git rev-parse "$PLAN_COMMIT:Plans/Master/WBS/master-wbs.csv")" >> "$GITHUB_ENV"
+          echo "L5_BLOB=$(git rev-parse "$PLAN_COMMIT:Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md")" >> "$GITHUB_ENV"
+          echo 'CR0008_PLAN_READBACK=PASS'
+
+      - name: Synchronize CURRENT_STATE after confirmed planning publication
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          PLAN_COMMIT="$PLAN_COMMIT" WBS_BLOB="$WBS_BLOB" L5_BLOB="$L5_BLOB" python3 - <<'PY'
+          from pathlib import Path
+          from datetime import datetime, timezone
+          import os, re
+          p=Path('CURRENT_STATE.md')
+          s=p.read_text(encoding='utf-8')
+          assert 'DEC-0055 / CR-0008' not in s
+          now=datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+          s=re.sub(r'(?m)^\*\*Updated:\*\* .*$', f'**Updated:** {now}', s, count=1)
+          anchor='**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0007 PUBLISHED, RECONCILED, READ-BACK VERIFIED.**'
+          assert anchor in s
+          s=s.replace(anchor, '**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0008 PUBLISHED, RECONCILED, READ-BACK VERIFIED.**', 1)
+          insert='''\n- Latest post-freeze change: `CR-0008` / `DEC-0055`, explicit Project Owner authority 2026-09-01: proportional evidence plus full action-authority normalization for correctness/efficiency, with no acceptance/scope/dependency weakening and no repository cleanup requirement.\n- CR-0008 planning publication commit: `{plan}`; WBS blob `{wbs}`; Layer-5 blob `{l5}`.\n- CR-0008 audited all 101 prior `HUMAN_ONLY` / `HUMAN_APPROVAL_REQUIRED` WBS rows. Delegable work was converted to `AUTO_ALLOWED`; genuine nondelegable/historical boundaries were retained exactly as recorded in `CR_0008_ACTION_AUTHORITY_AUDIT_2026-09-01.md`.\n- Proportional-evidence rule: minimum durable proof that actually proves the acceptance boundary; separate evidence/verifier/marker/workflow/audit artifacts only when they materially improve proof, risk control, ambiguity resolution or recovery. Security/privacy/recovery/production/high-impact independence remains where risk/acceptance requires it.\n- **No task or gate became PASS solely because CR-0008 changed authority/evidence form.** Existing PASS is preserved only where current evidence still proves unchanged acceptance.\n'''.format(plan=os.environ['PLAN_COMMIT'], wbs=os.environ['WBS_BLOB'], l5=os.environ['L5_BLOB'])
+          pos=s.find('\n', s.find('**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0008'))
+          s=s[:pos+1]+insert+s[pos+1:]
+          s += '''\n\n## DEC-0055 / CR-0008 accepted execution-efficiency state — 2026-09-01\n\n- Owner instruction: preserve SERIAL LIGHT, every acceptance criterion, evidence integrity, security/privacy controls and canonical read-back; reduce only non-value ceremony.\n- WBS authority audit covered all 101 prior human-gated rows and was applied only to `AI_Capability_A0_A4` / `Action_Authority`; task scope, acceptance, dependencies, gates and plan status were not changed by CR-0008.\n- True human boundaries remain where the task itself requires a genuinely nondelegable owner/controller/legal/contract/identity/market/formalization/material-commitment/strategic act.\n- Existing repository artifacts are not reorganized solely for cleanliness.\n- Exact next governed work is not persisted here; recompute it from current WBS, graph, gates, runtime PASS evidence and DEC-0054/DEC-0055 authority.\n'''
+          p.write_text(s.rstrip()+'\n', encoding='utf-8')
+          PY
+          git diff --check
+          git add CURRENT_STATE.md
+          git commit -m 'state: reconcile DEC-0055 CR-0008 authority normalization'
+          STATE_COMMIT="$(git rev-parse HEAD)"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$STATE_COMMIT"
+          git show "$STATE_COMMIT:CURRENT_STATE.md" | grep -F 'DEC-0055 / CR-0008 accepted execution-efficiency state'
+          git show "$STATE_COMMIT:CURRENT_STATE.md" | grep -F 'No task or gate became PASS solely because CR-0008'
+          python3 Plans/Master/Tools/validate_master_plan.py
+          echo "CR0008_STATE_COMMIT=$STATE_COMMIT"
+          echo 'CR0008_RUNTIME_READBACK=PASS'
