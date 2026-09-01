@@ -1886,3 +1886,18 @@ Recompute the current L5 frontier from WBS/graph/gates/runtime and DEC-0054/DEC-
 - Copy is truth-bounded: S2 explicitly says protection has not yet been technically verified; uncertainty/not-covered/removal remain visible; no complete-safety or surveillance claim is permitted.
 - Runtime/state acceptance does not alter the WBS, graph, manifest, planning modules or CR-0008 owner-frozen baseline.
 - **Non-inference:** no verifier implementation, platform support, datastore/schema, build, deployment, legal/privacy compliance, human comprehension, downstream task/gate, production activation or launch becomes PASS from this L4 definition task.
+
+## TSK-0498 current accepted stable state — 2026-09-01 — POST-CR-0008
+
+`TSK-0498 — Define only decision-linked accountless journey, protection-state, self-service, reliability, channel, and cost events`: **PASS** under current `ACC-0498 / VER-0498 / EVD-0498`, current `TSK-0229` + `TSK-0320` dependency proof, and `DEC-0055/CR-0008` authority.
+
+- Action authority: **A3 / AUTO_ALLOWED**.
+- Artifact: `TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md`, version `1.0.1`, blob `6b7a5095122c74ed9ec860b74408dab474576659`, acceptance source commit `3c55b28f40615fe4e682e3f9b8fb1b8eb22989b9`.
+- Verification: GitHub Actions run/attempt `33532592586 / 1` checked exact WBS/ACC/VER/EVD/dependencies/authority; REQ-0060/0061/0062; CON-0007/0008/0009; RSK-0049; INT-0016; exact 12-event allowlist; per-event purpose/fields/retention/owner/denominator; privacy/truth-state boundaries; literal-secret guard; and full modular master-plan validator.
+- Approved data is decision-linked only. Accountless correlation is random, first-party, session-only and maximum 24 hours; sign-in cannot extend/link it. Retained product aggregates are non-linkable; synthetic reliability data is user-independent.
+- No DNS question/domain/URL/browsing/top-domain/child activity/free-text support/persistent account-device analytics identifier/addictive-engagement event is approved. Unknown events/fields fail schema acceptance.
+- `configured/parent-confirmed` remains distinct from technical `protected/verified`; parent/configuration confirmation cannot produce a positive technical verification event.
+- Every consuming KPI must state source/formula/numerator/denominator/window/release-or-cohort/owner/guardrail/decision action; missing data and reproduction failure remain explicit.
+- A pre-PASS catalogue-count defect (`eleven` vs actual 12) and the first acceptance workflow's trailing-whitespace failure were corrected before acceptance; neither produced runtime PASS.
+- Runtime acceptance does not alter the WBS, graph, manifest, planning modules or CR-0008 owner-frozen baseline.
+- **Non-inference:** no analytics vendor/implementation/runtime collection, legal/DPIA conclusion, KPI result, downstream gate, build, production activation, launch or real-user outcome becomes PASS from this definition task.
