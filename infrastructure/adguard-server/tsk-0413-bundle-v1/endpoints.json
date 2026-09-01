@@ -1,0 +1,11 @@
+{
+  "service_name": "UseSafeWeb DNS",
+  "resolver_hostname": "dns.usesafeweb.com",
+  "doh_url": "https://dns.usesafeweb.com/dns-query",
+  "android_private_dns_dot_hostname": "dns.usesafeweb.com",
+  "adguard_admin_bind": "127.0.0.1:3000",
+  "adguard_admin_public_exposure": false,
+  "adguard_admin_authentication_required": true,
+  "adguard_admin_credential_source": "external secret; never versioned",
+  "public_encrypted_dns_tls_termination": "same-host path-restricted reverse proxy; AdGuard internal TLS listener remains disabled"
+}

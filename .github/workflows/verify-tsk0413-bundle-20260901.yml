@@ -1,0 +1,27 @@
+name: Verify TSK-0413 AdGuard recovery bundle
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infrastructure/adguard-server/tsk-0413-bundle-v1/**'
+      - '.github/scripts/verify_tsk0413_bundle_20260901.py'
+      - '.github/workflows/verify-tsk0413-bundle-20260901.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Verify bundle and current authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          python3 .github/scripts/verify_tsk0413_bundle_20260901.py

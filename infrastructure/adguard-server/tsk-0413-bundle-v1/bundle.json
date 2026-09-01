@@ -1,0 +1,120 @@
+{
+  "artifact_schema": "usesafeweb.adguard-recovery-bundle.v1",
+  "bundle_version": "1.0.0",
+  "task_id": "TSK-0413",
+  "acceptance_id": "ACC-0413",
+  "verification_id": "VER-0413",
+  "evidence_id": "EVD-0413",
+  "purpose": "Secret-safe desired-state bundle consumed by recovery automation. This is not a raw AdGuardHome.yaml backup and contains no credentials, private keys, certificates, client identifiers, DNS query history, or browsing/activity history.",
+  "sources": {
+    "owner_baseline": "TSK_0413_OWNER_PRIVACY_BASELINE_RECONCILIATION_2026-09-01.md",
+    "dns_identity": "TSK_0408_POST_CR0007_REVALIDATION_EVIDENCE_2026-09-01.md",
+    "prior_safe_config_artifact": "infrastructure/adguard-server/approved-adguard-config-v1.json",
+    "prior_safe_config_blob": "e9975c4e75c2a68131f049da942468d8d1952d8d"
+  },
+  "compatibility": {
+    "adguard_home_version": "v0.107.79",
+    "config_schema_version": 34,
+    "official_tag_commit": "8e680e58c43cc7ae4fe38b3fbb4710024c687c3a",
+    "policy": "Exact-version compatibility only. Any AdGuard Home version or schema change requires re-verification before this bundle is used."
+  },
+  "identity": {
+    "service_name": "UseSafeWeb DNS",
+    "resolver_hostname": "dns.usesafeweb.com",
+    "doh_url": "https://dns.usesafeweb.com/dns-query",
+    "dot_hostname": "dns.usesafeweb.com"
+  },
+  "admin_policy": {
+    "bind_address": "127.0.0.1:3000",
+    "public_exposure": false,
+    "authentication_required": true,
+    "credential_material": "EXTERNAL_REQUIRED_NOT_VERSIONED",
+    "browser_receives_admin_credentials": false
+  },
+  "diagnostic_policy": {
+    "default_persistent_query_logging": false,
+    "exceptional_query_diagnostics_maximum": "24h",
+    "exceptional_query_diagnostics_delete_after_use": true,
+    "browsing_query_activity_history_prohibited": true
+  },
+  "settings": {
+    "schema_version": 34,
+    "http": {
+      "address": "127.0.0.1:3000",
+      "doh": {
+        "insecure_enabled": true
+      }
+    },
+    "dns": {
+      "bind_hosts": [
+        "127.0.0.1"
+      ],
+      "port": 53,
+      "upstream_dns": [
+        "https://dns10.quad9.net/dns-query"
+      ],
+      "upstream_dns_file": "",
+      "bootstrap_dns": [
+        "9.9.9.10",
+        "149.112.112.10",
+        "2620:fe::10",
+        "2620:fe::fe:10"
+      ],
+      "fallback_dns": [],
+      "private_upstream": [],
+      "upstream_mode": "load_balance",
+      "ratelimit": 20,
+      "ratelimit_subnet_len_ipv4": 24,
+      "ratelimit_subnet_len_ipv6": 56,
+      "ratelimit_whitelist": [],
+      "refuse_any": true,
+      "edns_client_subnet": {
+        "enabled": false,
+        "use_custom": false,
+        "custom_ip": ""
+      },
+      "anonymize_client_ip": true,
+      "cache_size": 4194304,
+      "cache_ttl_min": 0,
+      "cache_ttl_max": 0,
+      "cache_optimistic": false
+    },
+    "filtering": {
+      "protection_enabled": true,
+      "filtering_enabled": true,
+      "blocking_mode": "default",
+      "safebrowsing_enabled": false,
+      "parental_enabled": false,
+      "safesearch_enabled": false
+    },
+    "filters": [
+      {
+        "name": "AdGuard DNS filter",
+        "url": "https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt",
+        "enabled": true
+      }
+    ],
+    "whitelist_filters": [],
+    "user_rules": [],
+    "querylog": {
+      "enabled": false,
+      "file_enabled": false,
+      "interval": "1d"
+    },
+    "statistics": {
+      "enabled": true,
+      "interval": "1d"
+    },
+    "tls": {
+      "enabled": false,
+      "force_https": false,
+      "port_dns_over_quic": 853,
+      "port_dns_over_tls": 853,
+      "port_https": 443,
+      "server_name": ""
+    },
+    "dhcp": {
+      "enabled": false
+    }
+  }
+}
