@@ -117,6 +117,7 @@ jobs:
               'Arabic renders RTL;',
               'Technical language availability does not imply official localized market/legal/support activation; LG-16 remains separate.',
               'These are internal specification tests, not human/user validation.',
+              'Never use `Fully protected`',
               'PM-20',
               'REQ-0028', 'REQ-0029', 'REQ-0035', 'CON-0010', 'CON-0017', 'INT-0009', 'INT-0010', 'RSK-0002',
               'ACC-0313', 'VER-0313', 'EVD-0313'
@@ -131,7 +132,6 @@ jobs:
               'parent confirmation establishes technical verification',
               'account ownership establishes technical verification',
               'all protection is verified',
-              'fully protected',
               'browsing history is stored',
               'user validation passed',
           ]
