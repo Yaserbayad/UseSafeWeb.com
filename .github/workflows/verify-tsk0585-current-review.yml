@@ -21,4 +21,4 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 .github/scripts/verify_tsk0585_current_vendor_review.py
+          python3 .github/scripts/verify_tsk0585_current_vendor_review_v2.py
