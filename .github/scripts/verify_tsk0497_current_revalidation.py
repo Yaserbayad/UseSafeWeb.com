@@ -27,6 +27,17 @@ def require(text: str, concepts: list[str], label: str) -> None:
         raise AssertionError(f"{label} missing concepts: {missing}")
 
 
+def markdown_data_rows(section_text: str, header_prefix: str) -> list[str]:
+    rows = []
+    for line in section_text.splitlines():
+        if not line.startswith("| "):
+            continue
+        if line.startswith(header_prefix) or line.startswith("|---") or line.startswith("| ---"):
+            continue
+        rows.append(line)
+    return rows
+
+
 for path, expected in EXPECTED.items():
     if not Path(path).exists():
         raise AssertionError(f"missing {path}")
@@ -78,7 +89,7 @@ print("TSK0497_PROHIBITED_MEASUREMENT=PASS")
 
 event_section = re.search(r"## 6\. Current approved event catalogue metadata\n(.*?)(?=\n## 7\.)", doc, re.S)
 assert event_section, "event catalogue section missing"
-event_rows = [line for line in event_section.group(1).splitlines() if line.startswith("| `")]
+event_rows = markdown_data_rows(event_section.group(1), "| Event |")
 assert len(event_rows) == 12, len(event_rows)
 header = next(line for line in event_section.group(1).splitlines() if line.startswith("| Event |"))
 require(header.lower(), ["approved purpose", "prohibited", "collection point", "denominator", "retention", "access"], "event table header")
@@ -86,15 +97,15 @@ print("TSK0497_APPROVED_EVENT_METADATA=PASS")
 
 optional_kpi = re.search(r"## 7\. Optional-account KPI definitions.*?\n(.*?)(?=\n## 8\.)", doc, re.S)
 assert optional_kpi
-optional_rows = [line for line in optional_kpi.group(1).splitlines() if line.startswith("| Optional") or line.startswith("| Owned") or line.startswith("| Account-")]
-assert len(optional_rows) >= 4, len(optional_rows)
+optional_rows = markdown_data_rows(optional_kpi.group(1), "| KPI |")
+assert len(optional_rows) == 4, len(optional_rows)
 assert optional_kpi.group(1).lower().count("dormant") >= 4
 print("TSK0497_OPTIONAL_KPI_DORMANCY=PASS")
 
 kpi_section = re.search(r"## 8\. Current accountless/product KPI catalogue\n(.*?)(?=\n## 9\.)", doc, re.S)
 assert kpi_section
-kpi_rows = [line for line in kpi_section.group(1).splitlines() if line.startswith("| Accountless") or line.startswith("| Critical") or line.startswith("| Protection") or line.startswith("| Technical") or line.startswith("| Self-service") or line.startswith("| Synthetic") or line.startswith("| Recovery") or line.startswith("| Qualified") or line.startswith("| Aggregate")]
-assert len(kpi_rows) >= 10, len(kpi_rows)
+kpi_rows = markdown_data_rows(kpi_section.group(1), "| KPI |")
+assert len(kpi_rows) == 10, len(kpi_rows)
 kpi_header = next(line for line in kpi_section.group(1).splitlines() if line.startswith("| KPI |"))
 require(kpi_header.lower(), ["source", "formula", "window", "owner", "guardrail", "decision action"], "KPI header")
 print("TSK0497_KPI_CATALOGUE=PASS")
