@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T02:25:31Z
+**Updated:** 2026-09-02T02:49:18Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2355,5 +2355,24 @@ Recompute the executable frontier from canonical WBS/graph, current runtime evid
 - **Non-inference:** L4 NFR-definition PASS only; no Azure mutation/spend/deployment, web/auth/datastore implementation, legal/privacy completion, participant/publication/payment/market/launch, gate or successor PASS is inferred.
 
 ### Queue status after current TSK-0045 revalidation
+
+Recompute the executable frontier from canonical WBS/graph, current runtime evidence, artifact-specific current-validity, gates and Action Authority. Preserve valid non-uniform historical PASS records unless current evidence materially invalidates them.
+
+
+## TSK-0497 current accepted stable state — 2026-09-02 — POST-CR-0008 DUAL-MODE PRODUCT EVENT/KPI REVALIDATION
+
+`TSK-0497 — Define minimal product event and KPI catalogue`: **PASS** under current `ACC-0497 / VER-0497 / EVD-0497`, current direct predecessor TSK-0230, current dual-mode Version-1 scope and the current TSK-0498 event-schema authority.
+
+- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L4 / MEDIUM / A3 / `AUTO_ALLOWED`; dependency exactly `TSK-0230`.
+- Current artifact `TSK_0497_POST_CR0008_DUAL_MODE_PRODUCT_EVENT_KPI_CATALOGUE_REVALIDATION_2026-09-02.md`, version `2.0.0-post-CR0008`, blob `8c3b26ad0771b09a7e223ffc47f5e81b0ca217c7`, publication commit `26f8720d7a209aa70bdfb73c8ceee456570db97a`.
+- Durable acceptance evidence `TSK_0497_POST_CR0008_CURRENT_REVALIDATION_EVIDENCE_2026-09-02.md`, blob `94f05dfd9b1eb88f65d3a4173373da231f3d371f`, publication commit `b67d99a29671fdb8eb5b3ab409140c3d0d83bc50`.
+- Independent read-only VER-0497: workflow blob `b0ea2fc03440862496f748a1bf5701272d26b77a`; verifier script blob `c1b85b059b74b8a1d1d3b660ab75ff6c4d325cab`; run/job `33583778318 / 100103488785`; conclusion **SUCCESS**.
+- Current event/KPI rule: TSK-0498 remains the single current event-schema authority; unknown events/fields fail closed. Accountless analytics remains non-identifying and short-lived at the raw-linkage boundary. Optional account/session/dashboard/device-management scope does not make account identity an analytics identity; unapproved optional-account KPI sources remain dormant until an owning approved source/event contract exists.
+- Prohibited measurement remains explicit: DNS/domain/URL/browsing/search and child-activity history, raw analytics IP, session replay, attention/addictive-engagement metrics, cross-session/cross-device identity graphs, marketing/advertising profiles, raw tokens/secrets and unnecessary account/device identifiers remain outside product analytics.
+- Historical TSK-0497 evidence remains preserved for compatible aggregate-by-design facts only; its pre-CR-0006 assumption that EXC-0001 remained inactive is superseded for current acceptance.
+- **ACC-0497 = PASS. VER-0497 = PASS. EVD-0497 = SATISFIED.**
+- **Non-inference:** this is L4 measurement/KPI contract PASS only. It does not activate telemetry, approve a datastore/vendor/new optional-account event, create a lawful basis, authorize real-user processing, prove KPI values, implement analytics/authentication, pass a lifecycle gate, publish, activate a market, launch or infer successor PASS.
+
+### Queue status after current TSK-0497 revalidation
 
 Recompute the executable frontier from canonical WBS/graph, current runtime evidence, artifact-specific current-validity, gates and Action Authority. Preserve valid non-uniform historical PASS records unless current evidence materially invalidates them.
