@@ -114,6 +114,8 @@ grep -Fxq 'TSK0455_APPLY_NOOP=PASS' <<<"$noop_out" || test_fail 'verified-compli
 pass 'verified second apply is mutation-free no-op'
 
 # Firewall reconciliation must not append rules or rewrite defaults when exact state is already present.
+CFG[ENABLE_UFW]='true'
+CFG[ADMIN_SSH_CIDR]='192.0.2.10/32'
 UFW_SCENARIO='exact'
 : >/tmp/tsk0455-ufw-calls
 ufw() {
