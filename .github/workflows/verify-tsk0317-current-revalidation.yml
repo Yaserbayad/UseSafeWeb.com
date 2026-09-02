@@ -99,7 +99,7 @@ jobs:
           for s in ['canonical resolver hostname `dns.usesafeweb.com`','Android native DoT-by-hostname behavior','Apple DoH profile/Server-URL behavior','truthful verification/removal/fallback rules']:
               assert s in e408, s
           m409=P['m0409'].read_text(encoding='utf-8')
-          for s in ['Android **Private DNS provider hostname** using `dns.usesafeweb.com`','Apple DoH profile/Server-URL mechanism','Configuration evidence is never technical protection evidence','VPN or DNS-changing security/privacy app','iCloud Private Relay','Browser/app custom encrypted resolver','User intentionally removes the approved UseSafeWeb DNS mechanism']:
+          for s in ['Android **Private DNS provider hostname** using `dns.usesafeweb.com`','Apple DoH profile/Server-URL mechanism','Configuration evidence is never technical protection evidence','VPN or DNS-changing security/privacy app','iCloud Private Relay','Android + app-specific DoH/DoT/custom resolver','User intentionally removes the approved UseSafeWeb DNS mechanism']:
               assert s in m409, s
           print('TSK0317_CURRENT_ENDPOINT_AND_CONFLICT_AUTHORITY=PASS')
 
