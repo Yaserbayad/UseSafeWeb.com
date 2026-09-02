@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T10:59:18Z
+**Updated:** 2026-09-02T14:59:24Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -8,9 +8,15 @@
 
 ## Canonical planning authority
 
-**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0009 PUBLISHED, RECONCILED, READ-BACK VERIFIED.**
+**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0010 PUBLISHED, RECONCILED, READ-BACK VERIFIED.**
 
-- Latest post-freeze change: `CR-0009` / `DEC-0056`, explicit Project Owner authority 2026-09-02: all legal/regulatory/compliance work is owner-external and nonblocking for governed sequencing; AI does not perform or claim legal/compliance verification.
+- Latest post-freeze change: `CR-0010` / `DEC-0057`, explicit Project Owner activation approval 2026-09-02: canonical Master-Plan structural normalization removes redundant hierarchy wrappers while preserving task/readiness/gate/evidence semantics.
+- CR-0010 planning publication head: `c1bd3bff023ed124de6e9907157dfcd70754fe43`; planning-files commit `21353b34dd2da948da96890c0f94f022830f0bf5`; both are clean descendants of frozen baseline `2a9d4fdaca8a13ad8945480b84dc99968fc86837`.
+- Exact 14-file activation set was verified on the staging tree by Git blob SHA and byte size before non-forced fast-forward to `main`; `main` read-back returned exact planning-publication head `c1bd3bff023ed124de6e9907157dfcd70754fe43`; subsequent workflow refresh commit `f8fd913dd54d7e3f212e000ace76b849269bcd41` changed only `TSK_LG06_PREDECESSOR_REQUALIFICATION_AUTOVERIFY_FINAL_2026-09-01.md` to reference the new source commit and introduced no planning/runtime semantic change.
+- Canonical validator on the exact published planning tree: **PASS** — 641 tasks, 858 dependency edges, 4,587 relationship entities, 18,152 relationship targets, 0 broken links, 0 generated missing task IDs.
+- Structural result: 1,200 hierarchy wrappers -> 609; 591 redundant wrappers removed (27 phases, 132 deliverables, 432 work packages). All 641 task IDs and all 858 dependency edges remain.
+- CR-0010 creates no task PASS, gate PASS, milestone PASS, deployment, build, production activation, launch or legal/compliance conclusion. Runtime task/gate/milestone states are unchanged by this reconciliation.
+- Prior post-freeze change: `CR-0009` / `DEC-0056`, explicit Project Owner authority 2026-09-02: all legal/regulatory/compliance work is owner-external and nonblocking for governed sequencing; AI does not perform or claim legal/compliance verification.
 - CR-0009 planning publication commit: `0ec48f84c08a670a3cb637bd27474ce39d51c2db`; deterministic validator PASS before publication.
 - CR-0009 changes only legal-scope dependency/gate evaluation semantics. WBS task definitions/statuses/dependency edges remain unchanged; legal work is not marked legally PASS.
 - Pure legal-scope tasks and legal clauses are `OWNER_EXTERNAL_SATISFIED` for sequencing. Mixed tasks still require every non-legal product, privacy-engineering, security, architecture, delivery, test, recovery, cost and operations criterion.
@@ -35,6 +41,19 @@
 - The prior `TSK_0052_LG06_READINESS_REVIEW_2026-08-30.md` is **superseded as a readiness conclusion** by CR-0006. `LG-06` is not PASS and must not be presented for owner approval until the revised dual-mode L4 baseline is complete.
 - `CR-0005` / `DEC-0052` remains controlling for the pre-L8 rule: all 31 L3 tasks plus `TSK-0187`, `TSK-0326`, and `TSK-0336` remain `NOT_APPLICABLE + PASS` exclusion records; no behavioral/user evidence is inferred. DEC-0054/CR-0007 supersedes the downstream pilot/staging model: first real-user validation remains after `LG-09` PASS but occurs as bounded/ramped **live production validation**, not a separate pilot or staging environment.
 - `LG-06`/`LG-07`/`LG-08`/`LG-09` remain mandatory in order. DEC-0054/CR-0007 creates standing **conditional** authority for evidence-complete automatic gates/live-production activation/public-production GO, but creates no PASS by itself and cannot waive missing evidence or actually applicable legal/privacy/consent/security/platform requirements. `RSK-0002` remains OPEN and non-blocking before L8.
+
+## CR-0010 structural-normalization publication/read-back — 2026-09-02
+
+- Owner activation approval was explicit on 2026-09-02 after `NORMALIZATION_READY_FOR_OWNER_REVIEW`.
+- Frozen pre-activation `main`: `2a9d4fdaca8a13ad8945480b84dc99968fc86837`.
+- Bounded staging branch: `activation/cr0010-structural-normalization`; uploaded planning commit `21353b34dd2da948da96890c0f94f022830f0bf5`; root activation-evidence commit/head `c1bd3bff023ed124de6e9907157dfcd70754fe43`.
+- `main` was advanced by non-forced fast-forward only after the branch was proven 2 commits ahead / 0 behind and every one of the 14 expected files matched the prepared Git blob SHA and byte size.
+- Post-publication workflow refresh commit `f8fd913dd54d7e3f212e000ace76b849269bcd41` is a clean one-commit descendant of the planning publication head and changes only the existing LG-06 automated-verification evidence source-commit/run metadata; all 15 workflows triggered by the CR-0010 publication reached terminal state with no queued/in-progress or failed run.
+- Key published blobs: WBS `eb35f3b10356396c5117e3f47d0b0378953e2157`; relationship index `862c9167dc37ceb12415208065327fd1903edbcc`; manifest `0b0238a75926009a50d8503a7fe86bfa94c77708`; generated full plan `3ed1dadb9da70c076c2b9de5f0893c91d505a4b3`; decisions `7627b51d0447b9ea855050de0e223be920db2eb3`; change-control register `1c44d292486a61d0679da8c7f9ce9a1a8ee4be68`; plan checksums `45d98bea535761a53f9dceee270513ca0bccee35`.
+- Exact published-tree validator result: `VALIDATION PASS`; `assembly_modules=25`; `tasks=641`; `dependency_edges=858`; `relationship_entities=4587`; `relationship_targets=18152`; `broken_links=0`; `generated_missing_task_ids=0`.
+- Semantic-equivalence review remains the approved proof boundary: 43/43 activation checks PASS plus 12/12 adversarial semantic challenges PASS.
+- Historical/current accepted task evidence is preserved; no task definition semantics, dependency edge, package/lifecycle boundary, gate requirement, authority boundary, acceptance/verification/evidence contract, or runtime task/gate/milestone state was changed by CR-0010.
+- **Non-inference:** CR-0010 does not authorize or prove L6 build, production activation, participant processing, launch, payment, market activation, legal/compliance completion or any unrelated task PASS.
 
 ## CR-0009 current owner-external legal-scope boundary — 2026-09-02
 
