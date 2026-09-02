@@ -115,7 +115,7 @@ assert "dns.usesafeweb.com" in current
 assert "https://dns.usesafeweb.com/dns-query" in current
 for forbidden in ["Get UseSafeWeb profile", "Turn on UseSafeWeb"]:
     assert current.count(forbidden) == 1, forbidden
-variants=current.split("## 6. Current instruction variants",1)[1]
+variants=current.split("## 6. Current instruction variants",1)[1].split("## 7. Acceptance reconciliation",1)[0]
 assert "UseSafeWeb" not in variants
 require(variants, ["SafeWeb DNS", "Return to SafeWeb", "Verified", "Status uncertain", "Remove SafeWeb DNS"], "current visible copy")
 print("TSK0307_SAFEWEB_NAMING=PASS")
@@ -127,7 +127,9 @@ sections = [
 ]
 for heading in sections:
     assert heading in current, heading
-for segment in re.split(r"^### ", variants, flags=re.M)[1:]:
+variant_segments = re.split(r"^### ", variants, flags=re.M)[1:]
+assert len(variant_segments) == 9, len(variant_segments)
+for segment in variant_segments:
     require(segment, ["en-GB", "tr-TR", "ar"], segment.splitlines()[0])
 print("TSK0307_LOCALIZED_VARIANTS=9/9_PASS")
 
