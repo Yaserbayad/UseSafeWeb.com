@@ -31,6 +31,7 @@ jobs:
           test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
           test "$(git hash-object website/package-lock.json)" = '14f9a62607489f965b96d98cdf0d825a363cd8bc'
           test "$(git hash-object website/tests/contract/tsk0361.test.mjs)" = '31116c434bda726cf10586070c28efe23bad2053'
+          test "$(git hash-object website/tests/performance/tsk0361-performance.mjs)" = '47b3bdf45c45529a516abd3713928ae98de1a70f'
           node --test website/tests/contract/tsk0361.test.mjs
           python3 tests/repository-structure/verify_structure.py
           python3 Plans/Master/Tools/validate_master_plan.py
@@ -56,8 +57,10 @@ jobs:
           set -euo pipefail
           cd website
           npm install --no-save --no-package-lock --no-fund --no-audit playwright@1.62.1 axe-core@4.13.0
+          test "$(node -p "require('./node_modules/playwright/package.json').version")" = '1.62.1'
+          test "$(node -p "require('./node_modules/axe-core/package.json').version")" = '4.13.0'
           npx playwright install --with-deps chromium
-      - name: Run real-browser E2E acceptance
+      - name: Run real-browser E2E and synthetic performance acceptance
         shell: bash
         run: |
           set -euo pipefail
@@ -69,7 +72,9 @@ jobs:
             if curl --fail --silent --show-error http://127.0.0.1:3000/en-GB >/dev/null; then break; fi
             sleep 1
           done
+          curl --fail --silent --show-error http://127.0.0.1:3000/en-GB >/dev/null
           BASE_URL=http://127.0.0.1:3000 node tests/browser/tsk0361-browser.mjs
+          BASE_URL=http://127.0.0.1:3000 node tests/performance/tsk0361-performance.mjs
           cd ..
           git diff --check
           test -z "$(git status --porcelain)"
