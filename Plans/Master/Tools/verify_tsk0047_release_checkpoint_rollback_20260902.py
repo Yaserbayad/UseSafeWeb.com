@@ -33,6 +33,6 @@ def main():
     ]
     for x in required:req(x in low,f'missing required release-plan boundary: {x}')
     req('persistent staging or separate pilot lifecycle is **not mandatory**' in low,'CR-0007 no-staging/no-pilot rule not explicit')
-    req('no browsing/query/activity history' in low,'non-goal privacy rule missing')
+    req('browsing/query/activity history' in low and ('never migrate or create browsing/query/activity history' in low or 'no browsing/query/activity history' in low),'non-goal privacy rule missing')
     print('PASS: TSK-0047 release/checkpoint/rollback plan satisfies current WBS and CR-0007/CR-0009 boundaries.')
 if __name__=='__main__':main()
