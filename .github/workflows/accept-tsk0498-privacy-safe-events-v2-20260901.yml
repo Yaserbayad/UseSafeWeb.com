@@ -36,18 +36,17 @@ jobs:
               reader = csv.DictReader(f)
               rows = list(reader)
               fields = reader.fieldnames or []
-          print('WBS_FIELDS=' + json.dumps(fields, ensure_ascii=False))
-          matches = [r for r in rows if 'TSK-0358' in r.values()]
+          id_field = next((k for k in fields if k.lstrip('\ufeff') == 'Task_ID'), None)
+          if not id_field:
+              raise SystemExit('Task_ID field missing')
+          matches = [r for r in rows if r.get(id_field) == 'TSK-0358']
           if len(matches) != 1:
-              raise SystemExit(f'expected exactly one TSK-0358 row, found {len(matches)}')
+              raise SystemExit(f'expected exactly one exact TSK-0358 row, found {len(matches)}')
           row = matches[0]
           print('TSK0358_ROW=' + json.dumps(row, ensure_ascii=False, sort_keys=True))
 
-          dep_fields = {k:v for k,v in row.items() if 'depend' in k.lower() or 'predecess' in k.lower()}
-          print('TSK0358_DEP_FIELDS=' + json.dumps(dep_fields, ensure_ascii=False, sort_keys=True))
-          deps = sorted(set(re.findall(r'TSK-\d{4}', ' '.join(dep_fields.values()))))
+          deps = sorted(set(re.findall(r'TSK-\d{4}', row.get('Dependencies',''))))
           print('TSK0358_DEPS=' + ';'.join(deps))
-
           state = (root/'CURRENT_STATE.md').read_text(encoding='utf-8')
           for dep in deps:
               patterns = [
