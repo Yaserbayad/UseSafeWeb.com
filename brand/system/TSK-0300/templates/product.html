@@ -21,7 +21,7 @@
     <section class="sw-copy sw-stack">
       <p class="sw-kicker">Setup</p>
       <h1 class="sw-title">Set up the internet protection layer</h1>
-      <p>Follow the supported instructions for this device. Completing a step does not by itself mean SafeWeb has verified the protection.</p>
+      <p>Follow the supported instructions for this device. Completing a step, signing in or seeing a device in a dashboard does not by itself mean SafeWeb has verified the protection.</p>
     </section>
 
     <section class="sw-panel sw-copy">
@@ -39,12 +39,21 @@
       <p class="sw-status__note">State is expressed in text and is not encoded by brand color.</p>
     </section>
 
+    <section class="sw-card sw-copy" aria-labelledby="continuity-title">
+      <h2 id="continuity-title">Optional account continuity</h2>
+      <p>After the core journey, a parent may finish without an account or explicitly choose sign-in for bounded session continuity and lightweight device management. Sign-in does not automatically import anonymous journey state or upgrade the protection state.</p>
+      <div class="sw-row">
+        <button class="sw-button" type="button">Finish without account</button>
+        <button class="sw-button sw-button--secondary" type="button">Sign in to manage devices</button>
+      </div>
+    </section>
+
     <section id="help" class="sw-callout sw-copy">
       <strong>Need help?</strong>
       <p>Use the issue-specific self-service path, then recheck only after the relevant condition changes.</p>
     </section>
 
-    <p id="exit" class="sw-template-note">Accountless-first internal reference. No login, dashboard, persistent parent profile or marketing upsell is introduced by this template.</p>
+    <p id="exit" class="sw-template-note">Accountless-first internal reference. Optional account/session/dashboard continuity is separate from the complete login-free core and does not introduce a child profile, browsing history, raw DNS administration or a marketing upsell.</p>
   </main>
 </body>
 </html>
