@@ -17,8 +17,6 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: /dev/null
       - name: Generate isolated official scaffold and emit pins
         shell: bash
         run: |
