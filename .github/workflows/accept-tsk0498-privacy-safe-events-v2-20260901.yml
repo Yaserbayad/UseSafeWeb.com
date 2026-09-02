@@ -1,50 +1,23 @@
-name: Temporary - Recompute post-TSK0454 L6 frontier
+name: Retired - Accept TSK-0498 privacy-safe event contract v2
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/accept-tsk0498-privacy-safe-events-v2-20260901.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  audit-l6:
+  verify-retired-state:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - name: Derive eligible L6 tasks with execution inputs
+      - uses: actions/checkout@v4
+      - name: Verify durable TSK-0498 acceptance without mutation
         shell: bash
         run: |
           set -euo pipefail
-          python3 - <<'PY'
-          import csv,re
-          from pathlib import Path
-          rows=list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='')))
-          state=Path('CURRENT_STATE.md').read_text(encoding='utf-8-sig')
-          def passed(tid):
-              pats=[rf'^##+\s+{re.escape(tid)}(?:\s*/[^\n]*)?\s+current accepted stable state[^\n]*$',rf'^##+\s+{re.escape(tid)}(?:\s*/[^\n]*)?\s+accepted stable state[^\n]*$']
-              starts=[]
-              for p in pats: starts += [m.start() for m in re.finditer(p,state,re.M|re.I)]
-              if starts:
-                  s=max(starts); e=state.find('\n## ',s+3); e=len(state) if e<0 else e
-                  if '**PASS**' in state[s:e] or ': **PASS**' in state[s:e] or '`: **PASS**' in state[s:e]: return True
-              return bool(re.search(rf'`{re.escape(tid)}[^`]*`[^\n]*\*\*PASS\*\*',state,re.I))
-          assert passed('TSK-0454')
-          eligible=[]
-          for i,r in enumerate(rows):
-              if r.get('Lifecycle_Stage')!='L6' or passed(r['Task_ID']) or r.get('Plan_Status')=='DEFERRED': continue
-              deps=[d.strip() for d in (r.get('Dependencies') or '').split(';') if d.strip()]
-              if all(passed(d) or d=='TSK-0240' for d in deps): eligible.append((i,r))
-          print('ELIGIBLE_COUNT='+str(len(eligible)))
-          for i,r in eligible:
-              keys=['Task_ID','Title','Priority','Critical_Path','Dependencies','Trigger','Preconditions','Inputs','Output/Artifact','Acceptance_ID','Acceptance_Criteria','Verification_ID','Verification_Method','Evidence_ID','Evidence_Required','Primary_Owner','AI_Capability_A0_A4','Action_Authority','Execution_Instructions','Required_Tools_or_Access','Idempotency','Reversibility','Retry_Recovery','Escalation_Condition','Risk_Reference','Interface_Reference','Requirement_Reference','Cost/Budget','Relative_Timing','Notes']
-              print('===ELIGIBLE===')
-              for k in keys: print(k+'='+(r.get(k) or '').replace('\n',' '))
-          print('WEBSITE_FILES=')
-          for p in sorted(Path('website').rglob('*')):
-              if p.is_file(): print(str(p))
-          PY
-          python3 tests/repository-structure/verify_structure.py
+          grep -Fq '## TSK-0498 current accepted stable state — 2026-09-01 — POST-CR-0008' CURRENT_STATE.md
+          grep -Fq '`TSK-0498 — Define only decision-linked accountless journey, protection-state, self-service, reliability, channel, and cost events`: **PASS**' CURRENT_STATE.md
+          test "$(git hash-object TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md)" = '6b7a5095122c74ed9ec860b74408dab474576659'
+          grep -Fq '**Version:** 1.0.1' TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md
           python3 Plans/Master/Tools/validate_master_plan.py
+          echo 'TSK0498_HISTORICAL_ACCEPT_WORKFLOW_RETIRED=PASS'
