@@ -33,6 +33,12 @@ test('pins the approved Next.js application baseline without a local database', 
   }
 });
 
+test('pins the Next 16 compatible ESLint 9 maintenance line', () => {
+  const pkg = readJson('package.json');
+  assert.equal(pkg.devDependencies?.eslint, '9.39.5');
+  assert.equal(pkg.devDependencies?.['eslint-config-next'], '16.3.4');
+});
+
 test('uses the approved standalone self-hosting and security baseline', () => {
   const nextConfig = read('next.config.ts');
   assert.match(nextConfig, /output:\s*['"]standalone['"]/);
