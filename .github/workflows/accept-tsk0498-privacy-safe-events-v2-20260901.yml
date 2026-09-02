@@ -1,61 +1,23 @@
-name: Temporary - Audit normalized L5 frontier
+name: Retired - Accept TSK-0498 privacy-safe event contract v2
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  audit-l5:
+  verify-retired-state:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Emit current normalized L5 frontier evidence
+      - name: Verify durable TSK-0498 acceptance without mutation
         shell: bash
         run: |
           set -euo pipefail
-          python3 - <<'PY'
-          import csv, re
-          from pathlib import Path
-
-          rows = list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='')))
-          state = Path('CURRENT_STATE.md').read_text(encoding='utf-8-sig')
-          by_id = {r['Task_ID']: r for r in rows}
-
-          def current_pass(tid):
-              pats = [
-                  rf'^##+\s+{re.escape(tid)}\s+current accepted stable state[^\n]*$',
-                  rf'^##+\s+{re.escape(tid)}\s+accepted stable state[^\n]*$',
-              ]
-              starts=[]
-              for pat in pats:
-                  starts += [m.start() for m in re.finditer(pat, state, re.M|re.I)]
-              if starts:
-                  s=max(starts); e=state.find('\n## ',s+3); e=len(state) if e<0 else e
-                  sec=state[s:e]
-                  if '**PASS**' in sec or ': **PASS**' in sec or '`: **PASS**' in sec:
-                      return True
-              if re.search(rf'^-\s+`{re.escape(tid)}`\s+—[^\n]*$', state, re.M):
-                  return True
-              return False
-
-          l5=[r for r in rows if r.get('Lifecycle_Stage')=='L5']
-          print(f'L5_TOTAL={len(l5)}')
-          print('WBS_FIELDS='+'|'.join(rows[0].keys()))
-          for i,r in enumerate(l5,1):
-              tid=r['Task_ID']; deps=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
-              if current_pass(tid):
-                  continue
-              depstat=[]
-              for d in deps:
-                  dr=by_id.get(d,{})
-                  depstat.append(f"{d}:{'PASS' if current_pass(d) else 'NONPASS'}:{dr.get('Lifecycle_Stage','?')}:{dr.get('Action_Authority','?')}:{dr.get('Primary_Owner','?')}:{dr.get('Task_Title','')[:70]}")
-              print('ROW|' + '|'.join([
-                  str(i), tid, r.get('Priority',''), r.get('Action_Authority',''), r.get('AI_Capability_A0_A4',''),
-                  r.get('Plan_Status',''), r.get('WBS_Execution_Status',''), r.get('Critical_Path',''), r.get('Primary_Owner',''),
-                  r.get('Task_Title','').replace('|','/'), ';'.join(deps), ' || '.join(depstat)
-              ]))
-          PY
+          grep -Fq '## TSK-0498 current accepted stable state — 2026-09-01 — POST-CR-0008' CURRENT_STATE.md
+          grep -Fq '`TSK-0498 — Define only decision-linked accountless journey, protection-state, self-service, reliability, channel, and cost events`: **PASS**' CURRENT_STATE.md
+          test "$(git hash-object TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md)" = '6b7a5095122c74ed9ec860b74408dab474576659'
+          grep -Fq '**Version:** 1.0.1' TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md
           python3 Plans/Master/Tools/validate_master_plan.py
+          echo 'TSK0498_HISTORICAL_ACCEPT_WORKFLOW_RETIRED=PASS'
