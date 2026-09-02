@@ -1,0 +1,80 @@
+name: Audit post-TSK-0045 current L4 frontier
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/diagnostics/post-tsk0045-frontier-trigger.txt']
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Derive dependency-current frontier
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv,re,subprocess
+          from collections import defaultdict,deque
+          from datetime import date
+          from pathlib import Path
+          W='Plans/Master/WBS/master-wbs.csv'; G='Plans/Master/RELATIONSHIP_INDEX.yaml'; S='CURRENT_STATE.md'
+          E={W:'b27a0c5df2f5636d8ed71051e9e26a68959a2616',G:'c108d2c162bcea2ee4cc01def46d0487a9501032',S:'c50c9c119f4cd1b1ed0258292a4cda34639cf20e'}
+          def blob(p): return subprocess.check_output(['git','hash-object',p],text=True).strip()
+          for p,h in E.items(): assert blob(p)==h,(p,blob(p),h)
+          with open(W,newline='',encoding='utf-8-sig') as f: rows=list(csv.DictReader(f))
+          by={r['Task_ID']:r for r in rows if r.get('Task_ID')}; order={r['Task_ID']:i for i,r in enumerate(rows) if r.get('Task_ID')}
+          state=Path(S).read_text(encoding='utf-8'); sec=defaultdict(list)
+          for m in re.finditer(r'^(##|###) (TSK-\d{4})\b.*?(?=^(?:##|###) |\Z)',state,re.M|re.S):
+              text=m.group(0); head=text.splitlines()[0]; dm=re.search(r'20\d{2}-\d{2}-\d{2}',head)
+              sec[m.group(2)].append({'pass':'**PASS' in text,'current':'current accepted' in head.lower(),'date':date.fromisoformat(dm.group(0)) if dm else None})
+          current={t for t,ss in sec.items() if any(s['pass'] and s['current'] for s in ss)}
+          hist={t for t,ss in sec.items() if any(s['pass'] for s in ss)}
+          static={t for t,r in by.items() if (r.get('Execution_State') or '').strip()=='PASS'}
+          deps={}; children=defaultdict(set)
+          for t,r in by.items():
+              ds=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]; deps[t]=ds
+              for d in ds: children[d].add(t)
+          def latest(t,cur=False):
+              ds=[s['date'] for s in sec.get(t,[]) if s['pass'] and s['date'] and (not cur or s['current'])]
+              return max(ds) if ds else None
+          def newer(t):
+              if t in current or t not in hist: return []
+              td=latest(t); return [(d,latest(d,True)) for d in deps.get(t,[]) if latest(d,True) and (td is None or latest(d,True)>td)]
+          stale={t for t in hist if newer(t)}
+          effective=set(current)|{t for t in hist if t not in stale}|{t for t in static if t not in hist and t not in current}
+          changed=True
+          while changed:
+              changed=False
+              for t in list(effective):
+                  if t in current: continue
+                  if any(d not in effective for d in deps.get(t,[])): effective.remove(t); stale.add(t); changed=True
+          def desc(t):
+              seen=set(); q=deque(children.get(t,()))
+              while q:
+                  x=q.popleft()
+                  if x in seen: continue
+                  seen.add(x); q.extend(children.get(x,()))
+              return len(seen)
+          ready=[]
+          for t,r in by.items():
+              if (r.get('Lifecycle_Stage') or '').strip()!='L4' or (r.get('Action_Authority') or '').strip()!='AUTO_ALLOWED' or t in effective: continue
+              missing=[d for d in deps[t] if d not in effective]
+              if not missing: ready.append((desc(t),order[t],t,r,'REVALIDATE' if t in hist or t in static else 'NEW',newer(t)))
+          ready.sort(key=lambda x:(-x[0],x[1],x[2]))
+          print('AUDIT_INPUT_RUNTIME='+blob(S)); print('CURRENT_PASS_COUNT='+str(len(current))); print('STALE_COUNT='+str(len(stale))); print('READY_COUNT='+str(len(ready)))
+          for i,(dc,o,t,r,mode,nw) in enumerate(ready,1): print('READY|{}|{}|mode={}|desc={}|priority={}|critical={}|deps={}|newer={}|acc={}|title={}'.format(i,t,mode,dc,r.get('Priority',''),r.get('Critical_Path',''),';'.join(deps[t]) or 'NONE',';'.join(f'{d}@{dt}' for d,dt in nw) or 'NONE',r.get('Acceptance_ID',''),(r.get('Title') or '').replace('|','/')))
+          for t in ['TSK-0497','TSK-0308','TSK-0307','TSK-0311','TSK-0044','TSK-0353','TSK-0585','TSK-0352','TSK-0297']:
+              if t in by:
+                  r=by[t]; missing=[d for d in deps[t] if d not in effective]
+                  print('ROW|{}|effective={}|hist={}|current={}|static={}|deps={}|missing={}|acceptance={}|title={}'.format(t,t in effective,t in hist,t in current,t in static,r.get('Dependencies',''),';'.join(missing) or 'NONE',(r.get('Acceptance_Criteria') or '').replace('|','/'),(r.get('Title') or '').replace('|','/')))
+          print('POST_TSK0045_FRONTIER_AUDIT=PASS')
+          PY
