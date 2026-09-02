@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T07:49:27Z
+**Updated:** 2026-09-02T07:54:18Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2645,3 +2645,23 @@ Recompute the current L5 frontier from canonical WBS/graph, current runtime PASS
 ### Queue status after TSK-0356 acceptance
 
 Recompute the current L5 frontier from canonical WBS/graph, runtime PASS evidence, gates, constraints/interfaces and Action Authority. Preserve all legal/material-action fences; do not infer successor or LG-07 PASS.
+
+## TSK-0232 current accepted stable state — 2026-09-02 — POST-CR-0008 OWNERSHIP/AUTHORIZATION MODEL
+
+`TSK-0232 — Design minimal parent/device model and ownership authorization boundary`: **PASS** under current `ACC-0232 / VER-0232 / EVD-0232`, direct predecessors `TSK-0233; TSK-0356`, DEC-0053/CR-0006 optional-account authority and DEC-0055/CR-0008 proportional-evidence authority.
+
+- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L5 / MEDIUM / A3 / `AUTO_ALLOWED`; both direct predecessors are current durable PASS.
+- Accepted artifact: `TSK_0232_POST_CR0008_PARENT_DEVICE_OWNERSHIP_AUTHORIZATION_MODEL_2026-09-02.md`, version `1.0.0-post-CR0008`, blob `30de2625f977e4d8017630c15de74ea19fde195c`, publication commit `d2705797f51f0cfa3683fbebcd1a9966aac3da78`.
+- `VER-0232`: current Project-Governor/API/security reviewer inspection against the WBS/ACC/VER/EVD contract, current TSK-0233 data model and TSK-0356 session architecture found every applicable ACC-0232 element present and no contradictory current evidence.
+- One parent owns zero-or-more devices; each device has exactly one current parent. Shared/co-parent ownership and device transfer are excluded from Version 1.
+- Every device list/read/create/update/settings/provision/verify/reinstall/revoke/unlink/remove/delete/recover/replace operation derives parent identity from the verified server session and enforces ownership server-side. Request-supplied parent identity, provider email/subject, device ID entropy or AdGuard ClientID never substitutes for authorization.
+- `parent_id` and `device_id` are opaque random/non-semantic server-generated identifiers. Current provider-subject mapping and non-null active ClientID mappings are unique; ClientID is server-side control linkage only.
+- Required access paths/index semantics, `row_version` compare-and-swap concurrency, duplicate-create/provision idempotency, ambiguous external-result reconciliation and generic cross-parent/IDOR failure semantics are explicit.
+- Device/account deletion reconciles external AdGuard state before final local deletion; physical device profile removal remains a separate truth. Backup restore cannot resurrect deleted authority or stale positive Protection Map evidence and production A-domain backup processing remains blocked until the exact predecessor backup contract is frozen.
+- No datastore product is selected/configured and no new personal-data category is authorized. Child identity/profile, browsing/query/domain/activity history, provider bearer tokens, hardware identifiers and raw AdGuard administration remain excluded.
+- `RSK-0001` remains OPEN; no legal/backup completion, Firebase/AdGuard mutation, real account/device, runtime IDOR test, `LG-07`, L6 build or public activation is inferred.
+- `TSK-0410` may consume TSK-0232 only after fresh eligibility recomputation against its other current dependencies and authority.
+
+### Queue status after TSK-0232 acceptance
+
+Recompute the current L5 frontier from canonical WBS/graph, runtime PASS evidence, gates, constraints/interfaces and Action Authority. Preserve every legal/material-action fence; do not infer TSK-0410, TSK-0234 or LG-07 PASS from numbering alone.
