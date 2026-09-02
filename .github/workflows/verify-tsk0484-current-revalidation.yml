@@ -100,18 +100,24 @@ jobs:
           ]: assert token in al, token
           print('TSK0484_CURRENT_SECURITY_INVARIANTS=PASS')
 
-          nfr_rows=re.findall(r'^\| (SEC-[A-Z]+-\d{2}) \| ([^\n]+)$',a,re.MULTILINE)
-          ids={x[0] for x in nfr_rows}
+          parsed={}
+          for line in a.splitlines():
+              if not re.match(r'^\| SEC-[A-Z]+-\d{2} \|',line):
+                  continue
+              cells=[c.strip() for c in line.strip().strip('|').split('|')]
+              assert len(cells)==4, (cells[0] if cells else 'unknown')+' invalid NFR column count'
+              nid, mapping, requirement, verification=cells
+              parsed[nid]=(mapping,requirement,verification)
           required={
             'SEC-RES-01','SEC-RES-02','SEC-WEB-01','SEC-WEB-02','SEC-AUTH-01','SEC-SESS-01','SEC-AUTHZ-01','SEC-DATA-01',
             'SEC-PROV-01','SEC-ADG-01','SEC-PRIV-01','SEC-ANON-01','SEC-TRUTH-01','SEC-CI-01','SEC-REC-01','SEC-GUIDE-01'
           }
-          assert ids==required, (ids,required)
-          for nid,row in nfr_rows:
-              assert re.search(r'TM-\d{2}',row), nid+' missing threat mapping'
-              assert 'TB-' in row, nid+' missing boundary mapping'
-              cells=[c.strip() for c in row.split('|')]
-              assert len(cells)>=4 and len(cells[-1])>=25, nid+' missing measurable verification'
+          assert set(parsed)==required, (set(parsed),required)
+          for nid,(mapping,requirement,verification) in parsed.items():
+              assert re.search(r'TM-\d{2}',mapping), nid+' missing threat mapping'
+              assert 'TB-' in mapping, nid+' missing boundary mapping'
+              assert len(requirement)>=25, nid+' missing material requirement'
+              assert len(verification)>=25, nid+' missing measurable verification'
           print('TSK0484_16_NFR_THREAT_CONTROL_VERIFICATION_MAP=PASS')
 
           for source in [
