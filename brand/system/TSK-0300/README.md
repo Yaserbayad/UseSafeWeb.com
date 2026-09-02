@@ -36,11 +36,11 @@ Brand color never communicates protection state. A state must always be expresse
 
 Reference UI may demonstrate the current TSK-0320 vocabulary only:
 
-- `Verified` — current qualifying system evidence;
-- `You confirmed this is set up` — parent-confirmed, not independently verified;
+- `Protection verified` — current qualifying technical evidence;
+- `Setup confirmed` — configuration/parent confirmation only; mandatory supporting copy: `Protection has not yet been technically verified.`;
 - `Action needed`;
 - `Not covered`;
-- `Status uncertain`;
+- `Protection status could not be verified`;
 - `Removed`.
 
 No template may convert these into an overall safety score, `Safe`, `100% protected`, or similar complete-safety claim. Visual treatment is deliberately neutral/non-color-only.
