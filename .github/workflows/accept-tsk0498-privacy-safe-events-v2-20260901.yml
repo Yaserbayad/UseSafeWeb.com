@@ -1,36 +1,23 @@
-name: Temporary - Inspect Next.js 16.3.3 scaffold pins for TSK-0361
+name: Retired - Accept TSK-0498 privacy-safe event contract v2
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/accept-tsk0498-privacy-safe-events-v2-20260901.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  inspect-next-scaffold:
-    runs-on: ubuntu-24.04
+  verify-retired-state:
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-      - name: Generate isolated official scaffold and emit pins
+      - uses: actions/checkout@v4
+      - name: Verify durable TSK-0498 acceptance without mutation
         shell: bash
         run: |
           set -euo pipefail
-          node --version
-          npm --version
-          rm -rf /tmp/usesafeweb-next-scaffold
-          npx --yes create-next-app@16.3.3 /tmp/usesafeweb-next-scaffold --typescript --eslint --app --src-dir --no-tailwind --use-npm --import-alias '@/*' --yes
-          echo '--- package.json ---'
-          cat /tmp/usesafeweb-next-scaffold/package.json
-          echo '--- lock root package ---'
-          node - <<'NODE'
-          const lock=require('/tmp/usesafeweb-next-scaffold/package-lock.json');
-          console.log(JSON.stringify(lock.packages[''], null, 2));
-          NODE
-          echo '--- build ---'
-          npm --prefix /tmp/usesafeweb-next-scaffold run build
+          grep -Fq '## TSK-0498 current accepted stable state — 2026-09-01 — POST-CR-0008' CURRENT_STATE.md
+          grep -Fq '`TSK-0498 — Define only decision-linked accountless journey, protection-state, self-service, reliability, channel, and cost events`: **PASS**' CURRENT_STATE.md
+          test "$(git hash-object TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md)" = '6b7a5095122c74ed9ec860b74408dab474576659'
+          grep -Fq '**Version:** 1.0.1' TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md
+          python3 Plans/Master/Tools/validate_master_plan.py
+          echo 'TSK0498_HISTORICAL_ACCEPT_WORKFLOW_RETIRED=PASS'
