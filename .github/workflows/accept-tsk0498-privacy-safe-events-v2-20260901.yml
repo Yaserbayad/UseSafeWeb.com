@@ -14,13 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Verify TSK-0050 baseline persistence
+      - name: Verify corrected TSK-0050 baseline persistence
         shell: bash
         run: |
           set -euo pipefail
           test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
           test "$(git hash-object TSK_0050_LG07_APPROVED_BASELINE_PERSISTENCE_INDEX_2026-09-02.md)" = '971af8e89ce79bfe00e4c08d647104b445673ec5'
-          test "$(git hash-object Plans/Master/Tools/verify_tsk0050_lg07_baseline_persistence_20260902.py)" = 'b129600383f025d2e93076bddd80e700886b7ee5'
+          test "$(git hash-object Plans/Master/Tools/verify_tsk0050_lg07_baseline_persistence_20260902.py)" = '3023e556b991958ec6106f891d4548228bafafe8'
           python3 Plans/Master/Tools/verify_tsk0050_lg07_baseline_persistence_20260902.py
           python3 Plans/Master/Tools/validate_master_plan.py
           git diff --check
