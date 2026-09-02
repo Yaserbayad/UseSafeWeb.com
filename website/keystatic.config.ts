@@ -13,7 +13,11 @@ const homeSchema = {
 };
 
 const storage = process.env.NEXT_PUBLIC_KEYSTATIC_STORAGE === "github"
-  ? { kind: "github" as const, repo: "Yaserbayad/UseSafeWeb.com", branchPrefix: "content/" }
+  ? {
+      kind: "github" as const,
+      repo: { owner: "Yaserbayad", name: "UseSafeWeb.com" },
+      branchPrefix: "content/",
+    }
   : { kind: "local" as const };
 
 export default config({
