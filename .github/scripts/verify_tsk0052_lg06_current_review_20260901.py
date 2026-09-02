@@ -18,7 +18,7 @@ def row_with_prefix(path: str, prefix: str) -> str:
     return matches[0]
 
 wbs='Plans/Master/WBS/master-wbs.csv'
-assert blob(wbs)=='b57104a71ab814d0f67e7fb8b0fd388d1f6aacfa', blob(wbs)
+assert blob(wbs)=='eb35f3b10356396c5117e3f47d0b0378953e2157', blob(wbs)
 with open(wbs, newline='', encoding='utf-8-sig') as f:
     rows=list(csv.DictReader(f))
 rows52=[r for r in rows if r.get('Task_ID')=='TSK-0052']
@@ -39,7 +39,7 @@ for phrase in ['Product, Brand and Experience Freeze','dual-mode Version-1','acc
     assert phrase in lg06, phrase
 
 decisions='Plans/Master/Registers/DECISIONS_TRIGGERS.md'
-assert blob(decisions)=='380ff579dcffb7b8df73611e9159c672f9ed489e', blob(decisions)
+assert blob(decisions)=='7627b51d0447b9ea855050de0e223be920db2eb3', blob(decisions)
 d53=row_with_prefix(decisions,'| DEC-0053 |')
 d54=row_with_prefix(decisions,'| DEC-0054 |')
 for phrase in ['optional parent account','complete core safety setup/protection journey remains usable without login','Mandatory login','browsing/activity history','child accounts','unrestricted DNS administration']:
@@ -67,8 +67,9 @@ for heading in [
     '## TSK-0628 current accepted stable state — 2026-09-01 — POST-CR-0006/0007',
 ]:
     assert heading in state, heading
-assert '`TSK-0052 / LG-06` remains **non-PASS**' in state
-assert '## TSK-0052 / LG-06 current accepted stable state' not in state
+assert '## TSK-0052 / LG-06 current accepted stable state — 2026-09-01 — POST-CR-0007' in state
+assert '`TSK-0052 / LG-06 — Product, Brand and Experience Freeze`: **PASS**' in state
+assert '**Unlock:** L5 / LG-07 architecture-security-privacy-delivery readiness work may now be derived from current authority.' in state
 
 expected={
     'prototype/TSK-0333/index.html':'934dc19d00cc9dd32e1ebc20c604373d153d4013',
@@ -85,7 +86,7 @@ unchanged={
     'brand/identity/TSK-0301/README.md':'b8ffd2ed234465a238558a7b94e56274de49696a',
     'brand/system/TSK-0300/tokens.css':'cd7d9a7cd5109e1ff0baa76532495dfd7a27a70f',
     'brand/system/TSK-0300/components.css':'831e92a74b6dda04252d93242cb33bd491a02381',
-    'brand/guidelines/TSK-0297/README.md':'89e915678e85f7f301e8fa4b05c335cd803dd9d4',
+    'brand/guidelines/TSK-0297/README.md':'e79121fd95932a6f4b2550f5f05b84c6e9c7aeac',
     'TSK_0307_SOURCE_BACKED_INSTRUCTION_CONTENT_CATALOGUE_2026-08-28.md':'d717c9b3f66197abe1f3e73361633f222b817e7c',
     'TSK_0311_LOCALIZATION_CONTENT_ARCHITECTURE_2026-08-29.md':'ef746d64c7878eb7d0f1b8fdf2356721728041c4',
     'TSK_0559_FIRST_PHONE_CONTENT_QUALITY_SOURCE_UPDATE_PRUNING_STANDARD_2026-08-28.md':'b2039d48e2356c0ea37fafe4fadc59d065cca6c8',
