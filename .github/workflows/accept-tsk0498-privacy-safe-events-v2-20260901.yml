@@ -1,4 +1,4 @@
-name: Temporary - TSK-0361 browser and WCAG acceptance
+name: Temporary - Verify TSK-0361 locale/canonical fix
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  browser-acceptance:
+  verify-fix:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
@@ -20,37 +20,24 @@ jobs:
           node-version: '22.23.2'
           cache: npm
           cache-dependency-path: website/package-lock.json
-      - name: Build verified application
+      - name: Verify locale-root and path-aware metadata fix
         shell: bash
         run: |
           set -euo pipefail
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
           test "$(git hash-object website/package-lock.json)" = '14f9a62607489f965b96d98cdf0d825a363cd8bc'
+          test "$(git hash-object website/tests/contract/tsk0361.test.mjs)" = '31116c434bda726cf10586070c28efe23bad2053'
+          node --test website/tests/contract/tsk0361.test.mjs
+          python3 tests/repository-structure/verify_structure.py
+          python3 Plans/Master/Tools/validate_master_plan.py
           cd website
           npm ci --no-fund --no-audit
           npm run lint
           npm run typecheck
           NEXT_TELEMETRY_DISABLED=1 npm run build
-      - name: Install exact ephemeral browser acceptance tooling
-        shell: bash
-        run: |
-          set -euo pipefail
-          cd website
-          npm install --no-save --no-package-lock --no-fund --no-audit playwright@1.62.1 axe-core@4.13.0
-          test "$(node -p "require('./node_modules/playwright/package.json').version")" = '1.62.1'
-          test "$(node -p "require('./node_modules/axe-core/package.json').version")" = '4.13.0'
-          npx playwright install --with-deps chromium
-      - name: Execute production browser acceptance
-        shell: bash
-        run: |
-          set -euo pipefail
-          cd website
-          NEXT_TELEMETRY_DISABLED=1 npm start -- -p 3000 > /tmp/tsk0361-next.log 2>&1 &
-          SERVER_PID=$!
-          trap 'kill "$SERVER_PID" 2>/dev/null || true; cat /tmp/tsk0361-next.log' EXIT
-          for i in $(seq 1 60); do
-            if curl --fail --silent --show-error http://127.0.0.1:3000/en-GB >/dev/null; then break; fi
-            sleep 1
-          done
-          curl --fail --silent --show-error http://127.0.0.1:3000/en-GB >/dev/null
-          BASE_URL=http://127.0.0.1:3000 node tests/browser/tsk0361-browser.mjs
-          echo 'TSK0361_PRODUCTION_BROWSER_RUN=PASS'
+          npm audit --audit-level=high
+          npm audit --omit=dev --audit-level=high
+          cd ..
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'TSK0361_LOCALE_CANONICAL_FIX_BUILD=PASS'
