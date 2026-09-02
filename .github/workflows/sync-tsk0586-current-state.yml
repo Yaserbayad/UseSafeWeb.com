@@ -2,80 +2,110 @@ name: Sync TSK-0586 current state
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
-      - .github/workflows/sync-tsk0586-current-state.yml
+      - '.github/workflows/sync-tsk0586-current-state.yml'
   workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: usesafeweb-current-state-write
+  cancel-in-progress: false
+
 jobs:
   sync:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Check out current main
         uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
+          persist-credentials: true
 
       - name: Guard, append, commit, and push stable checkpoint
         shell: bash
         run: |
           set -euo pipefail
+          artifact='TSK_0586_PREDEVELOPMENT_INFRASTRUCTURE_OPERATING_COST_BASELINE_2026-09-02.md'
+          expected_artifact_blob='4e244c35ff7b954b88fc38868eab7c084dcbb27f'
           expected_state_blob='fac91ea72b2d9a03a7c1e4e5d7ee7bea930e2f32'
           expected_wbs_blob='b27a0c5df2f5636d8ed71051e9e26a68959a2616'
-          expected_artifact_blob='4e244c35ff7b954b88fc38868eab7c084dcbb27f'
-          marker='## TSK-0586 current accepted stable state'
+          marker='## TSK-0586 current accepted stable state — 2026-09-02 — POST-CR-0008 PRE-DEVELOPMENT COST BASELINE'
 
-          test "$(git hash-object CURRENT_STATE.md)" = "$expected_state_blob"
+          test "$(git hash-object "$artifact")" = "$expected_artifact_blob"
           test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "$expected_wbs_blob"
-          test "$(git hash-object TSK_0586_PREDEVELOPMENT_INFRASTRUCTURE_OPERATING_COST_BASELINE_2026-09-02.md)" = "$expected_artifact_blob"
-          grep -Fq '## TSK-0236 current accepted stable state' CURRENT_STATE.md
-          if grep -Fq "$marker" CURRENT_STATE.md; then
-            echo 'TSK-0586 marker already present; refusing duplicate append.' >&2
-            exit 1
+          if grep -Fqx "$marker" CURRENT_STATE.md; then
+            echo 'TSK0586_RUNTIME_ALREADY_PRESENT=PASS'
+            exit 0
           fi
+          test "$(git hash-object CURRENT_STATE.md)" = "$expected_state_blob"
+          grep -Fq '## TSK-0236 current accepted stable state' CURRENT_STATE.md
+
+          python3 - <<'PY'
+          from datetime import datetime, timezone
+          from pathlib import Path
+          p = Path('CURRENT_STATE.md')
+          lines = p.read_text(encoding='utf-8').splitlines()
+          stamp = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+          for i, line in enumerate(lines):
+              if line.startswith('**Updated:**'):
+                  lines[i] = f'**Updated:** {stamp}'
+                  break
+          else:
+              raise SystemExit('CURRENT_STATE Updated field not found')
+          p.write_text('\n'.join(lines).rstrip() + '\n', encoding='utf-8')
+          print(f'CURRENT_STATE_UPDATED={stamp}')
+          PY
 
           cat >> CURRENT_STATE.md <<'EOF'
 
-## TSK-0586 current accepted stable state — 2026-09-02 — POST-CR-0008 PRE-DEVELOPMENT COST BASELINE
+          ## TSK-0586 current accepted stable state — 2026-09-02 — POST-CR-0008 PRE-DEVELOPMENT COST BASELINE
 
-`TSK-0586 — Build pre-development infrastructure and operating cost baseline`: **PASS** under current `ACC-0586 / VER-0586 / EVD-0586`, current direct predecessor `TSK-0236`, DEC-0053/CR-0006 optional-account authority and DEC-0055/CR-0008 proportional-evidence authority.
+          `TSK-0586 — Build pre-development infrastructure and operating cost baseline`: **PASS** under current `ACC-0586 / VER-0586 / EVD-0586`, current direct predecessor `TSK-0236`, DEC-0053/CR-0006 optional-account authority and DEC-0055/CR-0008 proportional-evidence authority.
 
-- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L5 / MEDIUM / A3 / `AUTO_ALLOWED`; direct dependency exactly `TSK-0236`, which is current durable PASS.
-- Accepted artifact: `TSK_0586_PREDEVELOPMENT_INFRASTRUCTURE_OPERATING_COST_BASELINE_2026-09-02.md`, version `1.0.0-post-CR0008`, blob `4e244c35ff7b954b88fc38868eab7c084dcbb27f`, publication commit `af2f096b74ea27b3775ecf0165bfff85021ccf54`.
-- `VER-0586`: current Project-Governor/finance reviewer inspection against the WBS/ACC/VER/EVD contract, TSK-0236, TSK-0585, current requirements/constraints/interfaces/risks and exact GitHub artifact found every applicable ACC-0586 element present and no contradictory current evidence.
-- Current exact Azure/runtime monthly total is **UNCONFIRMED** because canonical evidence does not contain the exact Azure VM/disk/public-IP SKUs, invoice, egress tier, selected datastore or selected paid secrets/monitoring/CI products. No amount is invented.
-- The accountless core has no authentication-service dependency and therefore no authentication-service fee. Under current CR-0006 optional-account scope, the initial base Firebase Google/social route retains TSK-0585's dated `$0` authentication-service-fee assumption; Identity Platform, SMS/phone auth and paid auth variants are not activated or priced as current services.
-- AdGuard Home self-hosted software licence fee is `$0` under the current TSK-0585 official-source review; no separate AdGuard Home API subscription fee is evidenced. This does not imply zero infrastructure cost or remove GPL/legal review triggers.
-- Low/base/high scenarios are source-bound equations/envelopes, **not forecasts**. They separate DNS/Azure infrastructure, web/application, optional persistence/operations and vendor-fee components; every unknown component identifies the exact evidence required before a numeric total is valid.
-- CON-0004 remains intact: Azure control-plane provisioning/configuration is owner-managed; this task performs/authorizes no resize, resource creation, region expansion or spend. Material spend/new contracts retain their current human authority.
-- GTM discretionary budget is excluded from infrastructure cost. Fixed supporter prices are product constraints, not assumed revenue. No fundraising program is authorized under REQ-0081/CON-0013.
-- `RSK-0005` sustainability/support-load risk remains OPEN; `RSK-0001` legal/privacy readiness remains OPEN. No production support volume, wage/opportunity-cost rate, supporter conversion, revenue, real-user load or paid-provider activation is inferred.
-- **Non-inference:** no Azure budget approval, datastore/provider selection, paid authentication/payment activation, LG-07, L6 build, production activation, participant processing or launch PASS is inferred from TSK-0586.
-- `TSK-0587` may consume TSK-0586 only after fresh eligibility recomputation against its other hard dependency and HUMAN_ONLY authority. `TSK-0237` may consume TSK-0586 only after its other current dependencies are satisfied.
+          - Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L5 / MEDIUM / A3 / `AUTO_ALLOWED`; direct dependency exactly `TSK-0236`, which is current durable PASS.
+          - Accepted artifact: `TSK_0586_PREDEVELOPMENT_INFRASTRUCTURE_OPERATING_COST_BASELINE_2026-09-02.md`, version `1.0.0-post-CR0008`, blob `4e244c35ff7b954b88fc38868eab7c084dcbb27f`, publication commit `af2f096b74ea27b3775ecf0165bfff85021ccf54`.
+          - `VER-0586`: current Project-Governor/finance reviewer inspection against the WBS/ACC/VER/EVD contract, TSK-0236, TSK-0585, current requirements/constraints/interfaces/risks and exact GitHub artifact found every applicable ACC-0586 element present and no contradictory current evidence.
+          - Current exact Azure/runtime monthly total is **UNCONFIRMED** because canonical evidence does not contain the exact Azure VM/disk/public-IP SKUs, invoice, egress tier, selected datastore or selected paid secrets/monitoring/CI products. No amount is invented.
+          - The accountless core has no authentication-service dependency and therefore no authentication-service fee. Under current CR-0006 optional-account scope, the initial base Firebase Google/social route retains TSK-0585's dated `$0` authentication-service-fee assumption; Identity Platform, SMS/phone auth and paid auth variants are not activated or priced as current services.
+          - AdGuard Home self-hosted software licence fee is `$0` under the current TSK-0585 official-source review; no separate AdGuard Home API subscription fee is evidenced. This does not imply zero infrastructure cost or remove GPL/legal review triggers.
+          - Low/base/high scenarios are source-bound equations/envelopes, **not forecasts**. They separate DNS/Azure infrastructure, web/application, optional persistence/operations and vendor-fee components; every unknown component identifies the exact evidence required before a numeric total is valid.
+          - CON-0004 remains intact: Azure control-plane provisioning/configuration is owner-managed; this task performs/authorizes no resize, resource creation, region expansion or spend. Material spend/new contracts retain their current human authority.
+          - GTM discretionary budget is excluded from infrastructure cost. Fixed supporter prices are product constraints, not assumed revenue. No fundraising program is authorized under REQ-0081/CON-0013.
+          - `RSK-0005` sustainability/support-load risk remains OPEN; `RSK-0001` legal/privacy readiness remains OPEN. No production support volume, wage/opportunity-cost rate, supporter conversion, revenue, real-user load or paid-provider activation is inferred.
+          - **Non-inference:** no Azure budget approval, datastore/provider selection, paid authentication/payment activation, LG-07, L6 build, production activation, participant processing or launch PASS is inferred from TSK-0586.
+          - `TSK-0587` may consume TSK-0586 only after fresh eligibility recomputation against its other hard dependency and HUMAN_ONLY authority. `TSK-0237` may consume TSK-0586 only after its other current dependencies are satisfied.
 
-### Queue status after TSK-0586 acceptance
+          ### Queue status after TSK-0586 acceptance
 
-Recompute the entire residual L5 frontier from canonical WBS/graph, runtime PASS evidence, gates, constraints/interfaces and Action Authority. Preserve the owner-deferred legal/privacy chain, Azure/material-spend fences and HUMAN_ONLY boundaries; do not infer LG-07 or any successor PASS from numbering alone.
-EOF
+          Recompute the entire residual L5 frontier from canonical WBS/graph, runtime PASS evidence, gates, constraints/interfaces and Action Authority. Preserve the owner-deferred legal/privacy chain, Azure/material-spend fences and HUMAN_ONLY boundaries; do not infer LG-07 or any successor PASS from numbering alone.
+          EOF
+
+          grep -Fqx "$marker" CURRENT_STATE.md
+          git diff --check
+          changes="$(git status --porcelain)"
+          test "$(printf '%s\n' "$changes" | sed '/^$/d' | wc -l)" -eq 1
+          printf '%s\n' "$changes" | grep -Fx ' M CURRENT_STATE.md'
 
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add CURRENT_STATE.md
-          git diff --cached --quiet && { echo 'No state change produced.' >&2; exit 1; }
           git commit -m 'state: accept TSK-0586 cost baseline'
           git push origin HEAD:main
+          echo 'TSK0586_RUNTIME_WRITE=PASS'
 
       - name: Remote read-back
         shell: bash
         run: |
           set -euo pipefail
           git fetch origin main
-          git show origin/main:CURRENT_STATE.md | grep -Fq '## TSK-0586 current accepted stable state'
-          echo "remote_head=$(git rev-parse origin/main)"
-          git show origin/main:CURRENT_STATE.md > /tmp/current-state-readback.md
-          echo "remote_state_blob=$(git hash-object /tmp/current-state-readback.md)"
+          git show origin/main:CURRENT_STATE.md | grep -F '## TSK-0586 current accepted stable state — 2026-09-02 — POST-CR-0008 PRE-DEVELOPMENT COST BASELINE'
+          git show origin/main:CURRENT_STATE.md | grep -F '`TSK-0586 — Build pre-development infrastructure and operating cost baseline`: **PASS**'
+          git show origin/main:CURRENT_STATE.md | grep -F 'Current exact Azure/runtime monthly total is **UNCONFIRMED**'
+          git show origin/main:CURRENT_STATE.md | grep -F 'no Azure budget approval, datastore/provider selection, paid authentication/payment activation, LG-07, L6 build, production activation, participant processing or launch PASS is inferred from TSK-0586.'
+          echo "REMOTE_STATE_BLOB=$(git rev-parse origin/main:CURRENT_STATE.md)"
+          echo "REMOTE_HEAD=$(git rev-parse origin/main)"
