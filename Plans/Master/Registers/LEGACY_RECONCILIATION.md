@@ -827,7 +827,7 @@
 
 | Legacy assumption/structure | Current result | Reason |
 | --- | --- | --- |
-| Stage -> Phase -> Deliverable -> Task as completeness architecture | LEGACY/SOURCE only; final hierarchy is Program -> Package -> Phase -> Deliverable -> Work Package -> Task with lifecycle as WHEN. | Old chronology hid responsibility ownership/interfaces and could not prove package/lifecycle completeness. |
+| Stage -> Phase -> Deliverable -> Task as completeness architecture | LEGACY/SOURCE only; current hierarchy is Program -> Package -> optional Phase -> optional Deliverable -> optional Work Package -> Task, with lifecycle as WHEN and each intermediate layer retained only when it adds independent grouping/governance/traceability value. | Old chronology hid responsibility ownership/interfaces and could not prove package/lifecycle completeness; redundant singleton wrappers are not governance requirements. |
 | First coded MCP requires authenticated Firebase/Google parent dashboard and AdGuard control plane | SUPERSEDED; accountless-first is mandatory baseline; optional persistence/dashboard is EXC-0001. | Latest owner decision explicitly rejects mandatory account as a starting assumption. |
 | Lightweight logo/brand essentials near launch | MERGED into full brand strategy, verbal/visual identity, tokens, guidelines, accessibility and cross-surface acceptance after validation evidence. | Brand is a first-class product package, not launch decoration. |
 | Support queue/live operating model | UPDATED to self-service automation, automated verification/troubleshooting/recovery, AI assistance and exceptional escalation only. | No routine human support; repeated ordinary help is a product defect. |

@@ -1,8 +1,8 @@
 # UseSafeWeb.com — Modular Master Planning System
 
-> **Authority state:** This modular system remains a **candidate / not yet owner-frozen or canonical**. The 2026-08-27 owner technical/commercial amendment is incorporated before freeze; it changes candidate content but does not itself execute TSK-0017, authorize project build/launch/payment, or synchronize runtime `CURRENT_STATE.md`.
+> **Authority state:** This modular system is the **owner-frozen canonical planning authority** after the 2026-08-27 freeze and subsequent owner-approved, published/read-back post-freeze change controls through `CR-0010 / DEC-0057`, routed by `MANIFEST.yaml`. Runtime state remains separate in repository `CURRENT_STATE.md`.
 >
-> **Migration and reconciliation scope:** The modular architecture remains a storage/retrieval migration. This pre-canonicalization audit additionally corrects only (a) migration defects and (b) stale lower-authority text that contradicted explicit higher-authority owner decisions already present in the source, especially DEC-0042/EXC-0001. No new product strategy, scope expansion, stable ID renumbering, or dependency redesign was introduced. The bounded corrections are enumerated in `VALIDATION_REPORT.md`.
+> **Migration and reconciliation scope:** Historical pre-canonicalization migration/audit evidence remains preserved in `VALIDATION_REPORT.md` and governance history. Current planning semantics follow the latest owner-approved canonical decisions and change controls; historical candidate/publication wording is not current authority. No derived view may override the authoritative modules routed by `MANIFEST.yaml`.
 
 ## Project identity and purpose
 

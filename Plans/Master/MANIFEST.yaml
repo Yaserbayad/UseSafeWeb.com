@@ -4,7 +4,7 @@ canonical_root: Plans/Master
 source_plan:
   name: UseSafeWeb_Master_Plan_FINAL.md
   sha256: 04fe68fe4e922322cb878c3c35f97e0b5b4862a333df4c313cbfc2b359ebfc1e
-  status: 2.0-owner-frozen / OWNER_FREEZE_2026-08-27 / OWNER_TECHNICAL_COMMERCIAL_AMENDMENT_APPLIED / OWNER_LEGAL_HOLD_ACTIVE_TO_2027-08-27 / OWNER_AZURE_HANDOFF_BOUNDARY_APPLIED_2026-08-27 / POST_FREEZE_CR_0001_DEPENDENCY_REPAIR_2026-08-27 / OWNER_LEGAL_SEQUENCING_OVERRIDE_ACTIVE_TO_2027-08-27 / CR_0003_CR_0004_HISTORICAL_SEQUENCING_SUPERSEDED / OWNER_INTEGRATED_PRODUCT_FIRST_HUMAN_VALIDATION_SEQUENCE_2026-08-29 / PRE_PRODUCT_HUMAN_VALIDATION_EXCLUDED / OWNER_V1_OPTIONAL_ACCOUNT_SCOPE_2026-08-30 / deterministic validation pending CR-0006 execution readback / OWNER_AUTONOMY_PRODUCTION_ONLY_CR_0007 / OWNER_PROPORTIONAL_EVIDENCE_AUTHORITY_NORMALIZATION_CR_0008
+  status: 2.0-owner-frozen / OWNER_FREEZE_2026-08-27 / OWNER_TECHNICAL_COMMERCIAL_AMENDMENT_APPLIED / OWNER_LEGAL_HOLD_ACTIVE_TO_2027-08-27 / OWNER_AZURE_HANDOFF_BOUNDARY_APPLIED_2026-08-27 / POST_FREEZE_CR_0001_DEPENDENCY_REPAIR_2026-08-27 / OWNER_LEGAL_SEQUENCING_OVERRIDE_ACTIVE_TO_2027-08-27 / CR_0003_CR_0004_HISTORICAL_SEQUENCING_SUPERSEDED / OWNER_INTEGRATED_PRODUCT_FIRST_HUMAN_VALIDATION_SEQUENCE_2026-08-29 / PRE_PRODUCT_HUMAN_VALIDATION_EXCLUDED / OWNER_V1_OPTIONAL_ACCOUNT_SCOPE_2026-08-30 / OWNER_AUTONOMY_PRODUCTION_ONLY_CR_0007 / OWNER_PROPORTIONAL_EVIDENCE_AUTHORITY_NORMALIZATION_CR_0008 / OWNER_EXTERNAL_LEGAL_SCOPE_CR_0009 / OWNER_STRUCTURAL_NORMALIZATION_CR_0010
 migration_prompt:
   name: UseSafeWeb_Master_Plan_Modularization_Prompt(1).txt
   sha256: 49031063a84f9b56ed98b5b07782f1d9818b01b84e0761d3c48018fc07ef5e5b
@@ -337,20 +337,21 @@ canonicalization:
   canonical_activation_condition: TSK-0009 publication PASS plus TSK-0011 exact GitHub read-back PASS; volatile execution state is then rebaselined in repository CURRENT_STATE.md under TSK-0010
 
 post_freeze_change_control:
-  latest_change: CR-0009
+  latest_change: CR-0010
   date: '2026-09-02'
-  status: owner-external legal/compliance scope amendment; legal work is nonblocking for governed sequencing while remaining outside AI evidence claims
-  authority: explicit current Project Owner instruction 2026-09-02; DEC-0056/CR-0009; actual law/safety/security/platform/technical reality remains higher authority
+  status: owner-approved canonical Master-Plan structural normalization; redundant hierarchy wrappers removed with task/readiness/gate/evidence semantics preserved
+  authority: explicit current Project Owner activation approval 2026-09-02; DEC-0057/CR-0010; actual law/safety/security/platform/technical reality remains higher authority
   affected_scope:
-  - Layer-5 legal-scope dependency and gate-evaluation semantics
-  - all legal/regulatory/compliance work becomes OWNER_EXTERNAL_SATISFIED for project sequencing and is not AI-executed
-  - mixed tasks retain every non-legal acceptance requirement
-  - DEC-0036 and DEC-0049/CR-0002 timing/preparatory-only legal-hold restrictions are superseded for active sequencing
-  - no WBS task definition, acceptance, dependency, plan status, relationship edge or task runtime PASS is created by this change
+  - WBS hierarchy fields only: Parent_ID, Phase_ID, Deliverable_ID and Work_Package_ID where redundant wrappers are normalized away
+  - PHASES, DELIVERABLES and WORK_PACKAGES registers remove only reviewed redundant wrappers and update nearest retained governed parent links
+  - RELATIONSHIP_INDEX hierarchy-only traversal links are rebuilt to the reviewed normalized structure
+  - WBS task IDs, task non-hierarchy semantics, 858 dependency edges, packages, lifecycles, gates, milestones, risks, interfaces, authority and ACC/VER/EVD semantics are unchanged
+  - 195 historical/current accepted tasks retain exact WBS rows and valid historical/runtime evidence
+  - no task, gate, milestone, deployment, launch or legal/compliance PASS is created by this change
   affected_gates:
-  - legal/regulatory/compliance clauses are owner-external and nonblocking from LG-07 onward
-  - all remaining technical, product, security, privacy-engineering, delivery, test, recovery, cost and operations evidence remains mandatory
-  semantic_delta: external legal satisfaction is a sequencing rule only and must never be presented as legal/compliance evidence or a verified legal fact
+  - no lifecycle-gate satisfaction rule or current gate outcome changes
+  - current eligibility/frontier semantics remain equivalent because every selection-driving WBS field is unchanged
+  semantic_delta: hierarchy is Program -> Package -> optional Phase -> optional Deliverable -> optional Work Package -> Task; intermediate layers exist only where they add independent grouping, governance or traceability value
   change_record: Registers/EXCEPTIONS_CHANGE_CONTROLS.md#post-freeze-material-change-records
 
 generated_assembly_contract:
