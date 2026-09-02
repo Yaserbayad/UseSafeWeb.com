@@ -1,23 +1,23 @@
-name: Retired - Accept TSK-0498 privacy-safe event contract v2
+name: Temporary - Verify corrected TSK-0237 vendor monitoring design
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
-  verify-retired-state:
+  verify-tsk0237:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify durable TSK-0498 acceptance without mutation
+      - name: Verify corrected TSK-0237
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq '## TSK-0498 current accepted stable state — 2026-09-01 — POST-CR-0008' CURRENT_STATE.md
-          grep -Fq '`TSK-0498 — Define only decision-linked accountless journey, protection-state, self-service, reliability, channel, and cost events`: **PASS**' CURRENT_STATE.md
-          test "$(git hash-object TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md)" = '6b7a5095122c74ed9ec860b74408dab474576659'
-          grep -Fq '**Version:** 1.0.1' TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
+          test "$(git hash-object TSK_0237_VENDOR_VERSION_PRICE_TERMS_COMPATIBILITY_MONITORING_TRIGGERS_2026-09-02.md)" = '4eae7703238a603885da93cf816e61b43726efe1'
+          test "$(git hash-object Plans/Master/Tools/verify_tsk0237_vendor_monitoring_20260902.py)" = 'd5806fb8d2d50519b57d82abb605a8f8aa74feae'
+          python3 Plans/Master/Tools/verify_tsk0237_vendor_monitoring_20260902.py
           python3 Plans/Master/Tools/validate_master_plan.py
-          echo 'TSK0498_HISTORICAL_ACCEPT_WORKFLOW_RETIRED=PASS'
