@@ -1,17 +1,21 @@
-name: Temporary - TSK-0361 final review RED browser regression
+name: Temporary - TSK-0361 final acceptance
 
 on:
   push:
     branches:
       - feature/tsk-0361-nextjs-public-site-20260902
     paths:
+      - 'website/**'
+      - 'Plans/Master/WBS/master-wbs.csv'
+      - 'Plans/Master/Tools/validate_master_plan.py'
+      - 'tests/repository-structure/**'
       - '.github/workflows/accept-tsk0498-privacy-safe-events-v2-20260901.yml'
 
 permissions:
   contents: read
 
 jobs:
-  browser-review-red:
+  accept-tsk0361:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
@@ -20,15 +24,32 @@ jobs:
           node-version: '22.23.2'
           cache: npm
           cache-dependency-path: website/package-lock.json
-      - name: Build current application
+      - name: Verify committed source and production build
         shell: bash
         run: |
           set -euo pipefail
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
+          test "$(git hash-object website/package-lock.json)" = '14f9a62607489f965b96d98cdf0d825a363cd8bc'
+          test "$(git hash-object website/tests/contract/tsk0361.test.mjs)" = '2aae1c36cb052acca8bd7176c3503ef36c59b083'
+          node --test website/tests/contract/tsk0361.test.mjs
+          python3 tests/repository-structure/verify_structure.py
+          python3 Plans/Master/Tools/validate_master_plan.py
           cd website
           npm ci --no-fund --no-audit
           npm run lint
           npm run typecheck
           NEXT_TELEMETRY_DISABLED=1 npm run build
+          npm audit --audit-level=high
+          npm audit --omit=dev --audit-level=high
+          test "$(node -p "require('./node_modules/next/package.json').version")" = '16.3.3'
+          test "$(node -p "require('./node_modules/react/package.json').version")" = '19.2.8'
+          test "$(node -p "require('./node_modules/react-dom/package.json').version")" = '19.2.8'
+          test "$(node -p "require('./node_modules/eslint/package.json').version")" = '9.39.5'
+          cd ..
+          python3 tests/repository-structure/verify_structure.py
+          python3 Plans/Master/Tools/validate_master_plan.py
+          git diff --check
+          test -z "$(git status --porcelain)"
       - name: Install exact ephemeral browser acceptance tooling
         shell: bash
         run: |
@@ -36,16 +57,19 @@ jobs:
           cd website
           npm install --no-save --no-package-lock --no-fund --no-audit playwright@1.62.1 axe-core@4.13.0
           npx playwright install --with-deps chromium
-      - name: Run final review regression suite before fix
+      - name: Run real-browser E2E acceptance
         shell: bash
         run: |
           set -euo pipefail
           cd website
-          NEXT_TELEMETRY_DISABLED=1 npm start -- -p 3000 > /tmp/tsk0361-review-red.log 2>&1 &
+          NEXT_TELEMETRY_DISABLED=1 npm start -- -p 3000 > /tmp/tsk0361-acceptance.log 2>&1 &
           SERVER_PID=$!
-          trap 'kill "$SERVER_PID" 2>/dev/null || true; cat /tmp/tsk0361-review-red.log' EXIT
+          trap 'kill "$SERVER_PID" 2>/dev/null || true; cat /tmp/tsk0361-acceptance.log' EXIT
           for i in $(seq 1 60); do
             if curl --fail --silent --show-error http://127.0.0.1:3000/en-GB >/dev/null; then break; fi
             sleep 1
           done
           BASE_URL=http://127.0.0.1:3000 node tests/browser/tsk0361-browser.mjs
+          cd ..
+          git diff --check
+          test -z "$(git status --porcelain)"
