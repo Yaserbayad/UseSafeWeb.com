@@ -1,4 +1,4 @@
-name: Temporary - Audit post-LG07 L6 eligible frontier
+name: Temporary - Inspect top L6 execution contracts
 
 on:
   push:
@@ -10,59 +10,29 @@ permissions:
   contents: read
 
 jobs:
-  audit-l6-frontier:
+  inspect-l6-contracts:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Derive current L6 eligible frontier
+      - name: Emit exact execution fields for eligible L6 candidates
         shell: bash
         run: |
           set -euo pipefail
           test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
           python3 - <<'PY'
-          import csv,re
+          import csv
           from pathlib import Path
           rows=list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='')))
-          state=Path('CURRENT_STATE.md').read_text(encoding='utf-8-sig')
-          by={r['Task_ID']:r for r in rows}
-          def passed(tid):
-              pats=[rf'^##+\s+{re.escape(tid)}(?:\s*/[^\n]*)?\s+current accepted stable state[^\n]*$',rf'^##+\s+{re.escape(tid)}(?:\s*/[^\n]*)?\s+accepted stable state[^\n]*$']
-              starts=[]
-              for p in pats: starts += [m.start() for m in re.finditer(p,state,re.M|re.I)]
-              if starts:
-                  s=max(starts); e=state.find('\n## ',s+3); e=len(state) if e<0 else e
-                  sec=state[s:e]
-                  if '**PASS**' in sec or ': **PASS**' in sec or '`: **PASS**' in sec:return True
-              return bool(re.search(rf'`{re.escape(tid)}[^`]*`[^\n]*\*\*PASS\*\*',state,re.I))
-          def external(tid):
-              # Current explicit CR-0009 sequencing treatment known in runtime.
-              return tid=='TSK-0240' and 'OWNER_EXTERNAL_SATISFIED' in state
-          assert passed('TSK-0050') and '`LG-07 — Architecture, Security, Privacy and Delivery Readiness`: **PASS**' in state
-          print('WBS_COLUMNS='+','.join(rows[0].keys()))
-          eligible=[]
-          for i,r in enumerate(rows):
-              if r.get('Lifecycle_Stage')!='L6' or passed(r['Task_ID']): continue
-              deps=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
-              depstat=[]; ok=True
-              for d in deps:
-                  st='PASS' if passed(d) else ('OWNER_EXTERNAL' if external(d) else 'NONPASS')
-                  depstat.append(f'{d}:{st}')
-                  if st=='NONPASS':ok=False
-              if ok and r.get('Plan_Status')!='DEFERRED':
-                  eligible.append((i,r,depstat))
-          print('ELIGIBLE_L6_COUNT='+str(len(eligible)))
-          for i,r,ds in eligible:
-              fields=[
-                  r['Task_ID'],r.get('Title',''),r.get('Priority',''),r.get('Critical_Path',''),r.get('Plan_Status',''),r.get('Action_Authority',''),r.get('AI_Capability_A0_A4',''),r.get('Primary_Owner',''),r.get('Dependencies',''),';'.join(ds),r.get('Risk_Reference',''),r.get('Acceptance_ID',''),r.get('Acceptance_Criteria',''),r.get('Verification_ID',''),r.get('Verification_Method',''),r.get('Evidence_ID',''),r.get('Evidence_Required',''),r.get('Interface_Reference',''),r.get('Requirement_Reference',''),r.get('Notes','')
-              ]
-              print('ELIGIBLE|'+ '|'.join((x or '').replace('\n',' ') for x in fields))
-          print('FIRST_20_NONPASS_L6_BY_WBS=')
-          n=0
-          for r in rows:
-              if r.get('Lifecycle_Stage')=='L6' and not passed(r['Task_ID']):
-                  deps=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
-                  print('L6ROW|'+ '|'.join([r['Task_ID'],r.get('Title',''),r.get('Priority',''),r.get('Action_Authority',''),r.get('Plan_Status',''),r.get('Dependencies',''),';'.join(f'{d}:{"PASS" if passed(d) else ("OWNER_EXTERNAL" if external(d) else "NONPASS")}' for d in deps)]))
-                  n+=1
-                  if n>=20: break
+          keys=['Task_ID','Title','Priority','Critical_Path','Dependencies','Trigger','Preconditions','Inputs','Output/Artifact','Acceptance_ID','Acceptance_Criteria','Verification_ID','Verification_Method','Evidence_ID','Evidence_Required','Primary_Owner','AI_Capability_A0_A4','Action_Authority','Execution_Instructions','Required_Tools_or_Access','Idempotency','Reversibility','Retry_Recovery','Escalation_Condition','Risk_Reference','Interface_Reference','Requirement_Reference','Cost/Budget','Relative_Timing','Notes']
+          for tid in ['TSK-0455','TSK-0357','TSK-0361','TSK-0454','TSK-0395']:
+              r=next(x for x in rows if x['Task_ID']==tid)
+              print('=== '+tid+' ===')
+              for k in keys: print(k+'='+(r.get(k) or '').replace('\n',' '))
           PY
+          echo '--- root tree ---'
+          find . -maxdepth 2 -type f -not -path './.git/*' | sort | head -200
+          echo '--- key manifests ---'
+          for f in package.json pnpm-lock.yaml yarn.lock package-lock.json pyproject.toml requirements.txt docker-compose.yml compose.yml; do if [ -f "$f" ]; then echo "FOUND=$f"; sed -n '1,160p' "$f"; fi; done
+          echo '--- website/infrastructure dirs ---'
+          find website infrastructure -maxdepth 3 -type f 2>/dev/null | sort | head -240 || true
           python3 Plans/Master/Tools/validate_master_plan.py
