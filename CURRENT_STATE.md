@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T01:08:02Z
+**Updated:** 2026-09-02T01:24:01Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2256,3 +2256,24 @@ Recompute the next executable frontier from canonical WBS/graph, current runtime
 ### Queue status after current TSK-0310 revalidation
 
 Recompute the next executable frontier from canonical WBS/graph, current runtime evidence, gates, current source validity and Action Authority. Preserve valid non-uniform historical PASS records unless current evidence explicitly invalidates them; do not infer a successor PASS solely from TSK-0310 completion.
+
+## TSK-0484 current accepted stable state — 2026-09-02 — POST-CR-0008 SECURITY NFR REVALIDATION
+
+`TSK-0484 — Define security and abuse-resistance NFRs`: **PASS** under current `ACC-0484 / VER-0484 / EVD-0484`, current dependency TSK-0230, current TSK-0485 30-threat/10-boundary model, current dual-mode Version-1 scope and refreshed first-party security-source review.
+
+- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L4 / MEDIUM / A3 / `AUTO_ALLOWED`; dependency exactly `TSK-0230`.
+- Current artifact `TSK_0484_POST_CR0008_SECURITY_ABUSE_NFR_REVALIDATION_2026-09-02.md`, version `2.0.0-post-CR0008`, blob `285ee390499190137e8aac0fed976975fb79ed80`, publication commit `45ce41549d878fcf7875d880803a9134d075555f`.
+- Current evidence `TSK_0484_POST_CR0008_CURRENT_REVALIDATION_EVIDENCE_2026-09-02.md`, blob `a7461f68f99ccda5c947a4ee77453817db9db1e5`, publication commit `d4fb458003e72cb3d07b8421dbb7c03b7a86be80`.
+- Independent read-only VER-0484 final workflow blob `b12ec1801dee4afe633fafb8830fc2be7498a07d`; run/job `33579079770 / 100089332047`: **SUCCESS**.
+- The historical TSK-0484 contract explicitly reopened itself when account/authentication or persistent customer storage was introduced; CR-0006 activated optional parent auth/session and minimum persistent parent/device/dashboard state, so this was a genuine current-boundary requalification rather than date-only refresh.
+- Current TSK-0485 supplies all 30 threat rows and 10 trust boundaries; current TSK-0230 supplies the accountless/account/session/device/ClientID/privacy/deletion boundary.
+- Sixteen current threat-mapped measurable security NFRs are accepted across resolver abuse, web/application, authentication, session, authorization, persistent-data consistency, provider failure, AdGuard control, privacy, anonymous state, truthful protection state, CI/supply-chain, recovery and source-backed guidance.
+- Public resolver abuse/availability remains distinct from application/user-data security. Authentication never substitutes for authorization; parent/device ownership is server-enforced; ClientID is never a credential or authorization token; account/configuration presence is never technical protection evidence.
+- No browsing/query/activity-history product store is authorized through account, dashboard, analytics, diagnostics or backup paths. J0/J1 and account domains remain separate.
+- High/Critical current-release threat paths remain release-blocking until their implementation and blocking target-environment verification actually succeed.
+- TSK-0353 retains detailed authentication/session/security-NFR ownership; TSK-0352 retains exact typed/allowlisted AdGuard API/ClientID lifecycle ownership. Neither task is inferred PASS.
+- **Non-inference:** L4 security-NFR definition PASS only; no application/authentication/datastore implementation, provider activation, production security, final legal/privacy compliance, TSK-0352/0353, later gate, participant, publication, payment, market activation or launch PASS is inferred.
+
+### Queue status after current TSK-0484 revalidation
+
+Recompute the executable frontier from canonical WBS/graph, current runtime evidence, artifact-specific reopen/change semantics, gates and Action Authority. Preserve valid non-uniform historical PASS records unless current evidence materially invalidates them.
