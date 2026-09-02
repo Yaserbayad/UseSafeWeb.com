@@ -42,20 +42,20 @@
       <h2 id="core-title">Accountless core remains first-class</h2>
       <p>Continue through platform routing, DNS setup and technical verification without creating or signing into an account.</p>
       <div class="sw-ds-state-grid" data-layout="three">
-        <article class="sw-ds-state-item">
+        <article class="sw-ds-state-item" data-evidence-state="configured/parent-confirmed">
           <h3>Phone</h3>
-          <p class="sw-ds-state-item__label">You confirmed this is set up</p>
-          <p class="sw-ds-state-item__evidence">Configuration confirmation is not system verification.</p>
+          <p class="sw-ds-state-item__label">Setup confirmed</p>
+          <p class="sw-ds-state-item__evidence">Protection has not yet been technically verified.</p>
         </article>
-        <article class="sw-ds-state-item">
+        <article class="sw-ds-state-item" data-evidence-state="protected/verified">
           <h3>Internet</h3>
-          <p class="sw-ds-state-item__label">Verified</p>
+          <p class="sw-ds-state-item__label">Protection verified</p>
           <p class="sw-ds-state-item__evidence">A qualifying technical check supplied the evidence for this layer.</p>
         </article>
-        <article class="sw-ds-state-item">
+        <article class="sw-ds-state-item" data-evidence-state="uncertain/error">
           <h3>Service</h3>
-          <p class="sw-ds-state-item__label">Status uncertain</p>
-          <p class="sw-ds-state-item__evidence">Evidence is insufficient; no optimistic fallback is shown.</p>
+          <p class="sw-ds-state-item__label">Protection status could not be verified</p>
+          <p class="sw-ds-state-item__evidence">Retry verification or follow the troubleshooting steps before relying on this protection.</p>
         </article>
       </div>
     </section>
@@ -90,7 +90,7 @@
                 <strong>Family phone</strong>
                 <span>Ownership: Registered to this parent account</span>
                 <span>Configuration: Present</span>
-                <span>Protection verification: Status uncertain</span>
+                <span>Protection verification: Protection status could not be verified</span>
               </div>
               <div class="sw-ds-actions">
                 <button class="sw-button sw-button--secondary" type="button">Check protection</button>
