@@ -1,23 +1,40 @@
-name: Retired - Accept TSK-0498 privacy-safe event contract v2
+name: Temporary - Enumerate normalized L6 implementation rows for TSK-0048
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
-  verify-retired-state:
+  enumerate-l6:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify durable TSK-0498 acceptance without mutation
+      - name: Emit current non-PASS L6 rows
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq '## TSK-0498 current accepted stable state — 2026-09-01 — POST-CR-0008' CURRENT_STATE.md
-          grep -Fq '`TSK-0498 — Define only decision-linked accountless journey, protection-state, self-service, reliability, channel, and cost events`: **PASS**' CURRENT_STATE.md
-          test "$(git hash-object TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md)" = '6b7a5095122c74ed9ec860b74408dab474576659'
-          grep -Fq '**Version:** 1.0.1' TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md
+          python3 - <<'PY'
+          import csv,re
+          from pathlib import Path
+          rows=list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='')))
+          state=Path('CURRENT_STATE.md').read_text(encoding='utf-8-sig')
+          def passed(tid):
+              pats=[rf'^##+\s+{re.escape(tid)}\s+current accepted stable state[^\n]*$',rf'^##+\s+{re.escape(tid)}\s+accepted stable state[^\n]*$']
+              starts=[]
+              for p in pats: starts += [m.start() for m in re.finditer(p,state,re.M|re.I)]
+              if starts:
+                  s=max(starts); e=state.find('\n## ',s+3); e=len(state) if e<0 else e
+                  sec=state[s:e]
+                  return '**PASS**' in sec or ': **PASS**' in sec or '`: **PASS**' in sec
+              return False
+          fields=['Task_ID','Title','Primary_Owner','Dependencies','Acceptance_ID','Acceptance_Criteria','Verification_ID','Verification_Method','Output/Artifact','Priority','Critical_Path','Risk_Reference','Relative_Timing','Action_Authority','AI_Capability_A0_A4','Plan_Status']
+          l6=[r for r in rows if r.get('Lifecycle_Stage')=='L6' and not passed(r['Task_ID'])]
+          print('L6_NONPASS_TOTAL='+str(len(l6)))
+          for r in l6:
+              vals=[(r.get(f,'') or '').replace('\n',' ').replace('|','/') for f in fields]
+              print('ROW|'+'|'.join(vals))
+          PY
           python3 Plans/Master/Tools/validate_master_plan.py
-          echo 'TSK0498_HISTORICAL_ACCEPT_WORKFLOW_RETIRED=PASS'
