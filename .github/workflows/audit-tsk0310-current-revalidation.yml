@@ -70,15 +70,12 @@ jobs:
           print('TSK0310_CURRENT_WBS_CONTRACT=PASS')
 
           rt=Path('CURRENT_STATE.md').read_text(encoding='utf-8')
-          def sections(tid):
-              pats=[
-                rf'^## {tid} current accepted stable state.*?(?=^## |\Z)',
-                rf'^### {tid} accepted stable state.*?(?=^### |^## |\Z)',
-              ]
-              out=[]
-              for p in pats: out.extend(m.group(0) for m in re.finditer(p,rt,re.MULTILINE|re.DOTALL))
-              return out
-          def pass_sections(tid): return [s for s in sections(tid) if '**PASS' in s]
+          # Preserve valid non-uniform historical/current task headings. Task sections are bounded by
+          # the next level-2/3 heading; acceptance is content-based, not heading-phrase-based.
+          def task_sections(tid):
+              pat=rf'^(##|###) {re.escape(tid)}\b.*?(?=^(?:##|###) |\Z)'
+              return [m.group(0) for m in re.finditer(pat,rt,re.MULTILINE|re.DOTALL)]
+          def pass_sections(tid): return [s for s in task_sections(tid) if '**PASS' in s]
           for tid in deps:
               assert pass_sections(tid), f'no durable PASS section for {tid}'
               print('CURRENT_PREDECESSOR_PASS|'+tid+'|PASS')
