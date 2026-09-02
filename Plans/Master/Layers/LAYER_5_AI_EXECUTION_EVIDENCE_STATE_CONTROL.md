@@ -101,6 +101,17 @@ No hidden chain-of-thought is evidence. Useful evidence is a source-cited analys
 - Historical/excluded rows are not retroactively rewritten solely to make counts look cleaner. No authority reclassification creates task/gate `PASS`, supplies missing evidence, changes scope/acceptance/dependencies, or waives legal/safety/security/platform reality.
 - Do not reorganize existing repository artifacts solely for cleanliness. Repository layout work requires separate product/governance value beyond aesthetics.
 
+### 5.3.8 Owner-external legal/compliance scope (DEC-0056 / CR-0009)
+
+- Effective **2026-09-02** until explicitly superseded, legal/regulatory/compliance work is outside AI project scope. This rule supersedes the timing and preparatory-only restrictions in Section 5.3.1 / DEC-0049 / CR-0002 for active sequencing; their history remains traceable.
+- A **legal-scope item** is a task or acceptance clause whose primary required outcome is a legal/regulatory/compliance determination, legal assessment/opinion, filing/registration, representative appointment, regulated-fee determination/payment, legal approval, attestation, signature, or equivalent externally accountable legal act. A legacy `OWNER_LEGAL_HOLD_2026-08-27` marker is sufficient to classify that task as legal-scope.
+- Legal-scope items are **OWNER_EXTERNAL_SATISFIED** for governed dependency and gate evaluation. They are not selected or executed by AI and do not block otherwise eligible technical/product/security/privacy-engineering/delivery/operations work. Existing WBS/graph rows remain unchanged for traceability; this semantic treatment is not a task `PASS` and is not legal evidence.
+- For a mixed task or gate, exclude only the legal/regulatory/compliance clause. Every non-legal acceptance boundary remains mandatory, including data minimisation, privacy engineering, security, auth/authz/CSRF/IDOR, deletion/recovery mechanics, vendor technical behavior, architecture, testing, observability, rollback, cost and operational readiness.
+- AI outputs and runtime evidence must never state or imply that a legal obligation was verified, satisfied, waived, exempted, registered, paid, approved, signed or attested merely because DEC-0056 allows sequencing past it. Where material, label the legal portion `owner-external / not verified by AI`.
+- Actual law, safety, security, platform and technical reality remain higher authority. If a known real-world prohibition makes an action impermissible, do not perform it. If a consequential external legal act inherently requires a person/professional, leave that act external; do not fabricate it.
+- No existing technical/product/security/privacy-engineering `PASS` is invalidated solely by this scope change. No new task or gate becomes `PASS` solely because legal work moved outside AI scope; each gate still requires all remaining non-legal acceptance evidence.
+- Reopening legal work for AI sequencing requires a later explicit Project Owner instruction and ordinary change-control/read-back.
+
 ### 5.4 Evidence and PASS rules
 
 - Each task has VER-xxxx, EVD-xxxx and ACC-xxxx identifiers.

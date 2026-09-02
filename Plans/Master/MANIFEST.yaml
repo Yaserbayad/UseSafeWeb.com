@@ -337,20 +337,20 @@ canonicalization:
   canonical_activation_condition: TSK-0009 publication PASS plus TSK-0011 exact GitHub read-back PASS; volatile execution state is then rebaselined in repository CURRENT_STATE.md under TSK-0010
 
 post_freeze_change_control:
-  latest_change: CR-0008
-  date: '2026-09-01'
-  status: proportional-evidence and delegated action-authority normalization amendment; canonical publication/read-back completed and reconciled
-  authority: explicit current Project Owner approval 2026-09-01; DEC-0055/CR-0008 with DEC-0054/CR-0007 underlying autonomy preserved; actual applicable law/safety/security/platform/technical reality remains higher authority
+  latest_change: CR-0009
+  date: '2026-09-02'
+  status: owner-external legal/compliance scope amendment; legal work is nonblocking for governed sequencing while remaining outside AI evidence claims
+  authority: explicit current Project Owner instruction 2026-09-02; DEC-0056/CR-0009; actual law/safety/security/platform/technical reality remains higher authority
   affected_scope:
-  - Layer-5 proportional-evidence and action-authority semantics
-  - all 101 prior HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED WBS rows audited: 75 delegable rows converted to AUTO_ALLOWED and 26 genuine human/historical boundaries retained
-  - decision register and derived autonomy projection synchronized to DEC-0055/CR-0008
-  - no task scope, title, acceptance criterion, dependency, gate, or plan-status change
-  - no repository reorganization solely for cleanliness; proportional evidence reduces ceremony without weakening proof
+  - Layer-5 legal-scope dependency and gate-evaluation semantics
+  - all legal/regulatory/compliance work becomes OWNER_EXTERNAL_SATISFIED for project sequencing and is not AI-executed
+  - mixed tasks retain every non-legal acceptance requirement
+  - DEC-0036 and DEC-0049/CR-0002 timing/preparatory-only legal-hold restrictions are superseded for active sequencing
+  - no WBS task definition, acceptance, dependency, plan status, relationship edge or task runtime PASS is created by this change
   affected_gates:
-  - no gate scope, dependency, or acceptance semantics changed by CR-0008
-  - DEC-0054/CR-0007 automatic/conditional gate and production-lifecycle authority remains controlling underneath DEC-0055 normalization
-  semantic_delta: authority/evidence-form normalization creates no PASS; minimum durable proof must still establish every current acceptance boundary, with independent verification retained where risk or acceptance requires it
+  - legal/regulatory/compliance clauses are owner-external and nonblocking from LG-07 onward
+  - all remaining technical, product, security, privacy-engineering, delivery, test, recovery, cost and operations evidence remains mandatory
+  semantic_delta: external legal satisfaction is a sequencing rule only and must never be presented as legal/compliance evidence or a verified legal fact
   change_record: Registers/EXCEPTIONS_CHANGE_CONTROLS.md#post-freeze-material-change-records
 
 generated_assembly_contract:
