@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T03:32:45Z
+**Updated:** 2026-09-02T03:54:48Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2435,5 +2435,25 @@ Recompute the executable frontier from canonical WBS/graph, current runtime evid
 - **Non-inference:** L4 localization/content architecture PASS only; no production locale files, Turkish/Arabic linguistic certification, native-speaker/representative-parent validation, market activation, auth/session/dashboard/device implementation, legal/privacy completion, publication, participant processing, payment, LG-06, launch or successor PASS is inferred.
 
 ### Queue status after current TSK-0311 revalidation
+
+Recompute the executable frontier from canonical WBS/graph, current runtime evidence, artifact-specific current-validity, gates and Action Authority. Preserve valid non-uniform historical PASS records unless current evidence materially invalidates them.
+
+
+## TSK-0044 current accepted stable state — 2026-09-02 — POST-CR-0008 DUAL-MODE ADGUARD API/CREDENTIAL/FAILURE NFR REVALIDATION
+
+`TSK-0044 — Define AdGuard API compatibility, credential-isolation and failure NFRs`: **PASS** under current `ACC-0044 / VER-0044 / EVD-0044`, current direct predecessors TSK-0484 / TSK-0538 / TSK-0146, current dual-mode Version-1 scope and the frozen AdGuard Home v0.107.79 backend boundary.
+
+- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L4 / MEDIUM / A3 / `AUTO_ALLOWED`; dependencies exactly `TSK-0484; TSK-0538; TSK-0146`.
+- Current artifact `TSK_0044_POST_CR0008_DUAL_MODE_ADGUARD_API_COMPATIBILITY_CREDENTIAL_FAILURE_NFR_REVALIDATION_2026-09-02.md`, version `2.0.0-post-CR0008`, blob `9e2df58093c592621eb1531dc1c34393a247dd80`, publication commit `2c14ee2539f3e85cd3fe7e2ed7d7c7a7b73dce9e`.
+- Durable acceptance evidence `TSK_0044_POST_CR0008_CURRENT_REVALIDATION_EVIDENCE_2026-09-02.md`, blob `e2180b768d63a54ce65d2959ef9b7a19e02082bd`, publication commit `725fd2f841503a39044c24cda62d04a4b8dcbe5b`.
+- Independent read-only VER-0044: workflow blob `00e367e8dc5456b5052f1f8f6a6daa1fb4cc113b`; verifier script blob `0c92fdebb55da98e8f94be649f5bec88f85233e2`; run/job `33588675744 / 100118011663`; conclusion **SUCCESS**.
+- The accepted private-control rule remains: browsers/customer surfaces receive no AdGuard admin credential or generic `/control` proxy; version/schema drift fails closed; secrets remain server-side; HTTP/write acknowledgement never proves mutation success.
+- Accountless setup remains login-free and creates no persistent AdGuard client/account ownership state. Optional account/device management may use a persistent opaque/high-entropy ClientID only under a separately accepted downstream TSK-0352 API/lifecycle contract with server-side ownership authorization, query/statistics exclusion and distinct deletion/revoke/removal truth.
+- Auth/provider or datastore failure cannot make the independent accountless core unavailable. Invalid sessions cannot mutate device/AdGuard state; ambiguous datastore + AdGuard mutations reconcile before retry; account/device ownership never substitutes for technical Protection Map verification.
+- Historical TSK-0044 evidence remains preserved for compatible v0.107.79 control-plane, credential, privacy, timeout/retry, idempotency and version-regression facts. Its pre-CR-0006 whole-product accountless-only assumption is superseded.
+- **ACC-0044 = PASS. VER-0044 = PASS. EVD-0044 = SATISFIED.**
+- **Non-inference:** this is L4 NFR-definition PASS only. It does not implement the AdGuard adapter, approve/execute TSK-0352, create a persistent client, activate authentication/datastore, rotate credentials, change AdGuard configuration/version, authorize real-user processing, publish, launch, pass a lifecycle gate or infer successor PASS.
+
+### Queue status after current TSK-0044 revalidation
 
 Recompute the executable frontier from canonical WBS/graph, current runtime evidence, artifact-specific current-validity, gates and Action Authority. Preserve valid non-uniform historical PASS records unless current evidence materially invalidates them.
