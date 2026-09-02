@@ -1,5 +1,4 @@
-# Retrigger after initial workflow-registration window; state/hash guards make this idempotent.
-name: Accept TSK-0319 post-CR-0008 current PASS
+name: TSK-0239 registered acceptance carrier
 
 on:
   push:
@@ -10,80 +9,59 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: tsk0239-registered-acceptance-carrier
+  cancel-in-progress: false
+
 jobs:
-  accept:
-    runs-on: [self-hosted, Linux, X64]
-    concurrency:
-      group: usesafeweb-governance-state-prod
-      cancel-in-progress: false
+  verify-accept-restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           ref: main
           fetch-depth: 0
-          persist-credentials: true
-      - name: Verify exact accepted pre-state and evidence
-        shell: bash
+
+      - name: Independently verify TSK-0239
+        run: python3 Plans/Master/Tools/verify_tsk0239_security_control_matrix_20260902.py --verify
+
+      - name: Record PASS, restore carrier, and publish safely
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+          CARRIER_BASE_SHA: 0a73fa0a121355a5e55f263a52ff942acf9871a5
         run: |
-          set -euo pipefail
-          test "$(git hash-object CURRENT_STATE.md)" = "c9d4735e18752284cc61c4b6a4ad771c752f9685"
-          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "b27a0c5df2f5636d8ed71051e9e26a68959a2616"
-          test "$(git hash-object Plans/Master/RELATIONSHIP_INDEX.yaml)" = "c108d2c162bcea2ee4cc01def46d0487a9501032"
-          test "$(git hash-object TSK_0319_POST_CR0008_AUTOMATED_VERIFICATION_TROUBLESHOOTING_RECOVERY_HELP_2026-09-01.md)" = "dec2b556745c635656fa0f18945c63c47120f6ff"
-          test "$(git hash-object TSK_0319_POST_CR0008_INDEPENDENT_VERIFICATION_EVIDENCE_2026-09-01.md)" = "8a797f8257247bc3c557af10fe1d16b37c831077"
-          grep -Fq '## TSK-0315 current accepted stable state' CURRENT_STATE.md
-          grep -Fq '## TSK-0320 current accepted stable state' CURRENT_STATE.md
-          grep -Fq '## TSK-0628 current accepted stable state' CURRENT_STATE.md
-          grep -Fq '## TSK-0485 current accepted stable state' CURRENT_STATE.md
-          ! grep -Eq '^## TSK-0319 .*current accepted stable state' CURRENT_STATE.md
-      - name: Append stable current PASS and dependency-integrity reconciliation
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          from datetime import datetime, timezone
-          p=Path('CURRENT_STATE.md')
-          text=p.read_text(encoding='utf-8')
-          if text.count('**Updated:**') != 1:
-              raise SystemExit('unexpected Updated field count')
-          now=datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
-          lines=text.splitlines()
-          for i,line in enumerate(lines):
-              if line.startswith('**Updated:**'):
-                  lines[i]=f'**Updated:** {now}'
-                  break
-          text='\n'.join(lines).rstrip()+'\n\n'
-          section='''## TSK-0319 current accepted stable state — 2026-09-01 — POST-CR-0008 REQUALIFICATION
-
-`TSK-0319 — Design automated verification, issue-specific troubleshooting, safe reset/reinstall/remove, and point-of-need help`: **PASS** under current `ACC-0319 / VER-0319 / EVD-0319`, `DEC-0053/CR-0006`, `DEC-0054/CR-0007` and `DEC-0055/CR-0008` authority.
-
-- Current WBS blob `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L4, priority HIGH, hard dependencies `TSK-0315; TSK-0320`, A3 / `AUTO_ALLOWED`, plan status `PLANNED`; the WBS planning snapshot is not runtime proof.
-- Both hard dependencies are current durable PASS under strict current-accepted-stable-state semantics.
-- Current design artifact: `TSK_0319_POST_CR0008_AUTOMATED_VERIFICATION_TROUBLESHOOTING_RECOVERY_HELP_2026-09-01.md`, version `2.0.0-post-CR-0008`, blob `dec2b556745c635656fa0f18945c63c47120f6ff`, publication commit `e323852452a4dd7a9163d98b00aca6509202fcb2`.
-- Independent acceptance evidence: `TSK_0319_POST_CR0008_INDEPENDENT_VERIFICATION_EVIDENCE_2026-09-01.md`, blob `8a797f8257247bc3c557af10fe1d16b37c831077`, publication commit `050374e470e58d7fbd30bfd85bf60eef32197da4`; verifier run/job `33567214382 / 100053030433`: **SUCCESS**.
-- Independent verification proved the exact current WBS row and ACC/VER/EVD IDs, `TSK-0315` and `TSK-0320` current predecessor PASS, canonical graph dependencies `TSK-0319 -> TSK-0315/TSK-0320`, and downstream edge `TSK-0628 -> TSK-0319/TSK-0331`.
-- ACC-0319 is satisfied: top accountless and optional-account/provider/session/dashboard/device-lifecycle failures have bounded issue-specific decision trees; privacy-safe automatic checks are defined where appropriate; equivalent retries require changed evidence; ambiguous consequential outcomes stop blind replay; current TSK-0320 protection truth is preserved; Android/iPhone reset/reinstall/remove/recovery and account/device lifecycle recovery are explicit; point-of-need help and exceptional escalation are bounded; and routine diagnostics exclude browsing/query/activity history, raw DNS history, credentials, unnecessary child data and unrestricted DNS administration.
-- The prior pre-CR-0006 accountless-only TSK-0319 artifact remains historical evidence for unchanged accountless facts only and does not supply current dual-mode acceptance proof.
-- **Dependency-integrity reconciliation:** the missing current direct-predecessor proof beneath `TSK-0628` is now repaired. The existing current dual-mode TSK-0628 artifact/evidence remains substantively valid, its other direct predecessor `TSK-0331` remains current PASS, and the previously accepted `TSK-0628 -> LG-06` chain is therefore again dependency-complete. This repair does not fabricate new substantive TSK-0628/LG-06 evidence or widen their accepted scope.
-- **Non-inference:** this PASS is L4 troubleshooting/recovery/help design acceptance only. It does not prove support automation/provider integration is implemented, production diagnostics work, legal/privacy compliance is complete, real-user supportability is proven, or L5/L6/L7 implementation/launch readiness.
-
-### Queue status after post-CR-0008 TSK-0319 requalification
-
-Recompute the current HIGH L4/AUTO_ALLOWED frontier from canonical WBS/graph, strict current PASS evidence, CR-0006 semantic validity and project priority rules. Do not select by task number and do not treat historical accountless-only PASS as current dual-mode proof.
-'''
-          text += section
-          p.write_text(text,encoding='utf-8')
-          PY
+          python3 Plans/Master/Tools/verify_tsk0239_security_control_matrix_20260902.py --record-state
           git diff --check
-          grep -Fq '## TSK-0319 current accepted stable state — 2026-09-01 — POST-CR-0008 REQUALIFICATION' CURRENT_STATE.md
-          grep -Fq '## TSK-0485 current accepted stable state' CURRENT_STATE.md
-      - name: Commit stable runtime state
-        shell: bash
-        run: |
-          set -euo pipefail
+          grep -F '## TSK-0239 current accepted stable state — 2026-09-02 — POST-CR-0009' CURRENT_STATE.md
+          grep -F 'all 30 TM-01..TM-30 rows exactly once' CURRENT_STATE.md
+          grep -F 'no legal PASS/evidence is claimed' CURRENT_STATE.md
+
+          git show "${CARRIER_BASE_SHA}:.github/workflows/accept-tsk0319-post-cr0008.yml" > .github/workflows/accept-tsk0319-post-cr0008.yml
+          rm -f .github/workflows/accept-tsk0239-security-control-matrix-20260902.yml
+
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add CURRENT_STATE.md
-          git commit -m 'state: accept TSK-0319 post-CR-0008 requalification'
-          git push
+          git add CURRENT_STATE.md .github/workflows/accept-tsk0319-post-cr0008.yml
+          git add -u .github/workflows/accept-tsk0239-security-control-matrix-20260902.yml
+          git commit -m 'state: accept TSK-0239 security privacy control matrix'
+
+          git fetch origin main
+          if [ "$(git rev-parse origin/main)" != "${SOURCE_SHA}" ]; then
+            echo 'Main changed after TSK-0239 checkout; refusing ambiguous state publication.'
+            exit 1
+          fi
+          git push origin HEAD:main
+
+      - name: Exact remote read-back
+        run: |
+          git fetch origin main
+          git show origin/main:CURRENT_STATE.md | grep -F '## TSK-0239 current accepted stable state — 2026-09-02 — POST-CR-0009'
+          git show origin/main:CURRENT_STATE.md | grep -F 'all 30 TM-01..TM-30 rows exactly once'
+          git show origin/main:TSK_0239_SECURITY_PRIVACY_CONTROL_IMPLEMENTATION_VERIFICATION_MATRIX_2026-09-02.md | grep -F '## 7. Acceptance disposition'
+          test "$(git show origin/main:.github/workflows/accept-tsk0319-post-cr0008.yml | git hash-object --stdin)" = "0c5648ac4da9ed0ac8357ff31373c0ab846082dd"
+          if git cat-file -e origin/main:.github/workflows/accept-tsk0239-security-control-matrix-20260902.yml 2>/dev/null; then
+            echo 'Temporary TSK-0239 workflow still exists.'
+            exit 1
+          fi
+          echo "REMOTE_HEAD=$(git rev-parse origin/main)"
