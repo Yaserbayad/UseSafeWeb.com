@@ -1,0 +1,163 @@
+name: Verify TSK-0310 current revalidation
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/diagnostics/tsk0310-verify-trigger.txt']
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out current main authority
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify current authority, source and predecessor bindings
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv, re, subprocess
+          from pathlib import Path
+
+          expected={
+            'Plans/Master/WBS/master-wbs.csv':'b27a0c5df2f5636d8ed71051e9e26a68959a2616',
+            'Plans/Master/RELATIONSHIP_INDEX.yaml':'c108d2c162bcea2ee4cc01def46d0487a9501032',
+            'CURRENT_STATE.md':'2d2e3c9de8f247bcff4f54388002917127c55c24',
+            'TSK_0310_POST_CR0008_CURRENT_DEPENDENCY_REVALIDATION_2026-09-02.md':'c24d89d23dd81063e1b4b6693a0b98212e750ec6',
+            'TSK_0310_RENDERED_BROWSER_ACCEPTANCE_EVIDENCE_2026-08-29.md':'02b34756862a62091908e60d32b490059a84a67c',
+            'prototype/TSK-0310/index.html':'5d80dfdefb52042bc34468723354fefd325285e4',
+            'prototype/TSK-0310/model.mjs':'01343273fd09c3c12d26f0c0eb1ae9a2fce10c91',
+            'prototype/TSK-0310/app.mjs':'a4a0aff8848f8541e2581e333efbf48767c9f0ff',
+            'prototype/TSK-0310/prototype.css':'004b0b34c0e5d94e3eacbeae25710284ef9a7886',
+            'prototype/TSK-0310/package.json':'9cbf9f5102592a0147c531748db49b68e4ee1648',
+            'prototype/TSK-0310/browser-acceptance.mjs':'f791a797f6a64be8b74eb13cbd2e628d5b083007',
+            'brand/system/TSK-0300/tokens.css':'cd7d9a7cd5109e1ff0baa76532495dfd7a27a70f',
+            'brand/system/TSK-0300/components.css':'831e92a74b6dda04252d93242cb33bd491a02381',
+            'brand/identity/TSK-0301/safeweb-wordmark-primary.svg':'f93958e3e4a16f9056693072c1b9b8b31fcda852',
+            'TSK_0300_POST_CR0008_CURRENT_REVALIDATION_EVIDENCE_2026-09-02.md':'efaf7c80c1723208569b13ba4e725b2e7cad8d1a',
+            'TSK_0317_POST_CR0008_CURRENT_REVALIDATION_EVIDENCE_2026-09-02.md':'cd001f3ce391634e38ef0c89934cb34f4f347401',
+            'TSK_0318_POST_CR0008_DUAL_MODE_PUBLIC_PRODUCT_SETUP_IA_2026-09-01.md':'975e2e7a8e85e9408e0bbbc2be226f3fdd012db3',
+            'TSK_0320_PROTECTION_STATE_MODEL_AND_COPY_RULES_2026-08-28.md':'1146f7622f434590dde1253d11f14fb6a87e19de',
+            'TSK_0320_PROTECTION_STATE_MODEL_AND_COPY_RULES_EVIDENCE_2026-08-28.md':'93e32071ce111fddda7df826c3106f1eca3dfc07',
+            'TSK_0321_ACCESSIBILITY_REVIEW_ACCEPTANCE_EVIDENCE_2026-08-29.md':'7ab9dd2467ca8ad755ef308c4b2ecade71023be8',
+            'TSK_0408_CURRENT_ACCEPTANCE_EVIDENCE_2026-09-01.md':'0bbf1d934ecd4a7693baf7de56362391e46dcf55',
+          }
+          def blob(p): return subprocess.check_output(['git','hash-object',p],text=True).strip()
+          for p,sha in expected.items():
+              assert Path(p).exists(), f'missing {p}'
+              actual=blob(p)
+              assert actual==sha, f'hash drift {p}: {actual} != {sha}'
+          print('TSK0310_VER_IMMUTABLE_INPUT_HASHES=PASS')
+
+          with open('Plans/Master/WBS/master-wbs.csv',newline='',encoding='utf-8-sig') as f:
+              rows=list(csv.DictReader(f))
+          r={x['Task_ID']:x for x in rows if x.get('Task_ID')}['TSK-0310']
+          deps=[x.strip() for x in r['Dependencies'].split(';') if x.strip()]
+          assert r['Lifecycle_Stage']=='L4' and r['Priority']=='HIGH'
+          assert r['AI_Capability_A0_A4']=='A3' and r['Action_Authority']=='AUTO_ALLOWED'
+          assert set(deps)=={'TSK-0318','TSK-0317','TSK-0320','TSK-0300'} and len(deps)==4
+          assert (r['Acceptance_ID'],r['Verification_ID'],r['Evidence_ID'])==('ACC-0310','VER-0310','EVD-0310')
+          acc=r['Acceptance_Criteria'].lower()
+          required={'discovery','routing','native safeguard','dns setup','verification','external service','protection map','troubleshooting','recovery','removal','limitations'}
+          assert all(x in acc for x in required)
+          ver=r['Verification_Method'].lower()
+          assert all(x in ver for x in ['functional','negative','configuration','security/privacy','rollback'])
+          print('TSK0310_VER_CURRENT_WBS_CONTRACT=PASS')
+
+          rt=Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          def task_sections(tid):
+              pat=rf'^(##|###) {re.escape(tid)}\b.*?(?=^(?:##|###) |\Z)'
+              return [m.group(0) for m in re.finditer(pat,rt,re.MULTILINE|re.DOTALL)]
+          def pass_sections(tid): return [s for s in task_sections(tid) if '**PASS' in s]
+          for tid in deps:
+              assert pass_sections(tid), f'missing durable PASS evidence for {tid}'
+          print('TSK0310_VER_CURRENT_PREDECESSORS=PASS')
+
+          s318='\n'.join(pass_sections('TSK-0318')).lower()
+          assert all(x in s318 for x in ['tsk-0310','own current acc','accountless public-to-setup','optional account/dashboard branch'])
+          print('TSK0310_VER_CURRENT_SCOPE_BOUNDARY=PASS')
+
+          s321='\n'.join(pass_sections('TSK-0321'))
+          assert all(x in s321 for x in ['004b0b34c0e5d94e3eacbeae25710284ef9a7886','218/218','TSK0310_RENDERED_REACCEPTANCE=PASS','667/667','TSK0321_AUTHORITATIVE_ACCESSIBILITY_REVIEW=PASS'])
+          print('TSK0310_VER_ACCESSIBILITY_REACCEPTANCE=PASS')
+
+          artifact=Path('TSK_0310_POST_CR0008_CURRENT_DEPENDENCY_REVALIDATION_2026-09-02.md').read_text(encoding='utf-8').lower()
+          for concept in ['current wbs contract','historical rendered-browser evidence retained','current authoritative prototype source','current tsk-0300 predecessor proof','approved safeweb identity preserved','current tsk-0317 predecessor proof','current tsk-0318 scope proof','current tsk-0320 state/copy proof','candidate disposition']:
+              assert concept in artifact, concept
+          assertions=re.findall(r'(?m)^(\d+)\. ',artifact)
+          assert len(set(assertions))>=12 and set(map(str,range(1,13))).issubset(set(assertions))
+          assert 'acc-0310 current candidate: pass pending independent current ver-0310' in artifact
+          print('TSK0310_VER_REVALIDATION_ARTIFACT=PASS')
+
+          idx=Path('prototype/TSK-0310/index.html').read_text(encoding='utf-8')
+          assert '../../brand/system/TSK-0300/tokens.css' in idx
+          assert '../../brand/system/TSK-0300/components.css' in idx
+          assert '../../brand/identity/TSK-0301/safeweb-wordmark-primary.svg' in idx
+          assert 'SafeWeb — Internal mobile-first prototype' in idx
+          print('TSK0310_VER_SAFEWEB_SHARED_SYSTEM_BINDING=PASS')
+
+          hist=Path('TSK_0310_RENDERED_BROWSER_ACCEPTANCE_EVIDENCE_2026-08-29.md').read_text(encoding='utf-8')
+          assert all(x in hist for x in ['BROWSER_ACCEPTANCE_CHECKS=218','BROWSER_ACCEPTANCE=PASS','RENDERED_ACCEPTANCE=PASS','ACC-0310 = PASS','VER-0310 = PASS','EVD-0310 = SATISFIED'])
+          print('TSK0310_VER_HISTORICAL_RENDERED_PROOF=PASS')
+
+          e317=Path('TSK_0317_POST_CR0008_CURRENT_REVALIDATION_EVIDENCE_2026-09-02.md').read_text(encoding='utf-8').lower()
+          assert all(x in e317 for x in ['android','iphone','dns.usesafeweb.com','doh','profile','configuration evidence','accountless'])
+          e408=Path('TSK_0408_CURRENT_ACCEPTANCE_EVIDENCE_2026-09-01.md').read_text(encoding='utf-8').lower()
+          assert all(x in e408 for x in ['dns.usesafeweb.com','android','dot','apple','doh','server-url','verification','removal','fallback'])
+          print('TSK0310_VER_PLATFORM_ENDPOINT_COMPATIBILITY=PASS')
+
+          print('TSK0310_STATIC_CURRENT_ACCEPTANCE=PASS')
+          print('WBS_BLOB='+blob('Plans/Master/WBS/master-wbs.csv'))
+          print('GRAPH_BLOB='+blob('Plans/Master/RELATIONSHIP_INDEX.yaml'))
+          print('RUNTIME_BLOB='+blob('CURRENT_STATE.md'))
+          print('ARTIFACT_BLOB='+blob('TSK_0310_POST_CR0008_CURRENT_DEPENDENCY_REVALIDATION_2026-09-02.md'))
+          PY
+      - name: Install isolated browser verifier
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd prototype/TSK-0310
+          npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+          npx playwright install --with-deps chromium
+      - name: Run current rendered browser acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/tsk0310-http.log 2>&1 &
+          server_pid=$!
+          cleanup() {
+            kill "$server_pid" 2>/dev/null || true
+            wait "$server_pid" 2>/dev/null || true
+            rm -rf prototype/TSK-0310/node_modules
+          }
+          trap cleanup EXIT
+          ready=0
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4173/prototype/TSK-0310/ >/dev/null; then ready=1; break; fi
+            sleep 1
+          done
+          if [ "$ready" != "1" ]; then cat /tmp/tsk0310-http.log; exit 1; fi
+          node prototype/TSK-0310/browser-acceptance.mjs | tee /tmp/tsk0310-browser.log
+          grep -Fx 'BROWSER_ACCEPTANCE_CHECKS=218' /tmp/tsk0310-browser.log
+          grep -Fx 'BROWSER_ACCEPTANCE=PASS' /tmp/tsk0310-browser.log
+          echo 'TSK0310_CURRENT_RENDERED_ACCEPTANCE=PASS'
+      - name: Verify repository source remained unchanged
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf prototype/TSK-0310/node_modules
+          git diff --check
+          git diff --exit-code -- prototype/TSK-0310 brand/system/TSK-0300 brand/identity/TSK-0301
+          echo 'TSK0310_VER_SOURCE_UNCHANGED=PASS'
