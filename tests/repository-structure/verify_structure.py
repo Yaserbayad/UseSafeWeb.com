@@ -20,7 +20,6 @@ def main() -> None:
         "REPOSITORY_STRUCTURE.md",
         "website/README.md",
         "website/src/README.md",
-        "website/public/README.md",
         "website/config/README.md",
         "website/tests/README.md",
         "infrastructure/README.md",
