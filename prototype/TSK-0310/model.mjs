@@ -13,22 +13,22 @@ export const SCREEN = Object.freeze({
 });
 
 export const EVIDENCE_STATE = Object.freeze({
-  VERIFIED: 'verified',
-  PARENT_CONFIRMED: 'parent-confirmed',
+  VERIFIED: 'protected/verified',
+  PARENT_CONFIRMED: 'configured/parent-confirmed',
   ACTION_NEEDED: 'action-needed',
   NOT_COVERED: 'not-covered',
-  UNCERTAIN: 'uncertain',
+  UNCERTAIN: 'uncertain/error',
   REMOVED: 'removed'
 });
 
 export const STATE_COPY = Object.freeze({
   [EVIDENCE_STATE.VERIFIED]: Object.freeze({
-    label: 'Verified',
-    supporting: 'SafeWeb verified this protection step is active on your current setup.'
+    label: 'Protection verified',
+    supporting: 'SafeWeb verified this protection step for this setup.'
   }),
   [EVIDENCE_STATE.PARENT_CONFIRMED]: Object.freeze({
-    label: 'You confirmed this is set up',
-    supporting: 'SafeWeb has not independently verified this setting.'
+    label: 'Setup confirmed',
+    supporting: 'Protection has not yet been technically verified.'
   }),
   [EVIDENCE_STATE.ACTION_NEEDED]: Object.freeze({
     label: 'Action needed',
@@ -39,12 +39,12 @@ export const STATE_COPY = Object.freeze({
     supporting: 'SafeWeb does not cover this on your current setup.'
   }),
   [EVIDENCE_STATE.UNCERTAIN]: Object.freeze({
-    label: 'Status uncertain',
-    supporting: 'We can’t verify this protection right now. Check it before relying on this layer.'
+    label: 'Protection status could not be verified',
+    supporting: 'Retry verification or follow the troubleshooting steps before relying on this protection.'
   }),
   [EVIDENCE_STATE.REMOVED]: Object.freeze({
     label: 'Removed',
-    supporting: 'SafeWeb DNS is no longer active on this device.'
+    supporting: 'SafeWeb DNS is no longer configured on this device.'
   })
 });
 
