@@ -1,4 +1,4 @@
-name: Temporary - TSK-0358 RED browser
+name: Temporary - TSK-0358 browser RED after type-safe engine
 
 on:
   push:
@@ -9,42 +9,76 @@ on:
       - '.github/workflows/accept-tsk0498-privacy-safe-events-v2-20260901.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  red-contract:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22.23.2
-          cache: npm
-          cache-dependency-path: website/package-lock.json
-      - name: Verify TSK-0358 logic slice remains green
-        shell: bash
-        run: |
-          set -euo pipefail
-          cd website
-          npm ci --no-fund --no-audit
-          node --test tests/contract/tsk0358.test.mjs
-
   red-browser:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: feature/tsk-0358-accountless-core-state-machine-20260902
+          fetch-depth: 0
       - uses: actions/setup-node@v6
         with:
           node-version: 22.23.2
           cache: npm
           cache-dependency-path: website/package-lock.json
-      - name: Build current product baseline
+      - name: Apply narrow TypeScript narrowing correction
         shell: bash
         run: |
           set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('website/src/lib/core-state-machine.ts')
+          t=p.read_text(encoding='utf-8')
+          old="""export type CoreEvent =
+            | { type: 'SELECT_DEVICE'; deviceFamily?: DeviceFamily }
+            | { type: 'CONTINUE_NATIVE' }
+            | { type: 'CONTINUE_DNS' }
+            | { type: 'VERIFICATION_RESULT' }
+            | { type: 'OPEN_TROUBLESHOOT' }
+            | { type: 'OPEN_RECOVERY' }
+            | { type: 'REMOVE_CONFIGURATION' }
+            | { type: 'RESTART_SETUP' }
+            | { type: 'COMPLETE' };
+          """
+          new="""export type CoreEvent =
+            | { type: 'SELECT_DEVICE'; deviceFamily?: DeviceFamily }
+            | { type: 'CONTINUE_NATIVE'; deviceFamily?: DeviceFamily }
+            | { type: 'CONTINUE_DNS'; deviceFamily?: DeviceFamily }
+            | { type: 'VERIFICATION_RESULT'; deviceFamily?: DeviceFamily }
+            | { type: 'OPEN_TROUBLESHOOT'; deviceFamily?: DeviceFamily }
+            | { type: 'OPEN_RECOVERY'; deviceFamily?: DeviceFamily }
+            | { type: 'REMOVE_CONFIGURATION'; deviceFamily?: DeviceFamily }
+            | { type: 'RESTART_SETUP'; deviceFamily?: DeviceFamily }
+            | { type: 'COMPLETE'; deviceFamily?: DeviceFamily };
+          """
+          if new not in t:
+              if t.count(old) != 1: raise SystemExit('unexpected CoreEvent shape')
+              t=t.replace(old,new)
+          p.write_text(t,encoding='utf-8')
+          PY
+      - name: Verify engine logic and production build
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
           cd website
           npm ci --no-fund --no-audit
+          node --test tests/contract/tsk0358.test.mjs
           NEXT_TELEMETRY_DISABLED=1 npm run build
+      - name: Persist only the proven engine type correction
+        shell: bash
+        run: |
+          set -euo pipefail
+          changed="$(git status --porcelain | sed 's/^...//' | sort)"
+          test "$changed" = 'website/src/lib/core-state-machine.ts'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add website/src/lib/core-state-machine.ts
+          git commit -m 'fix: make TSK-0358 event union type-safe'
+          git push origin HEAD:feature/tsk-0358-accountless-core-state-machine-20260902
       - name: Install exact browser tooling
         shell: bash
         run: |
@@ -52,7 +86,7 @@ jobs:
           cd website
           npm install --no-save --no-package-lock --no-fund --no-audit playwright@1.62.1
           npx playwright install --with-deps chromium
-      - name: Prove TSK-0358 browser contract is RED before UI implementation
+      - name: Prove browser orchestration remains RED before UI implementation
         shell: bash
         run: |
           set -euo pipefail
