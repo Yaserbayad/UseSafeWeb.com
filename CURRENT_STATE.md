@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T00:35:34Z
+**Updated:** 2026-09-02T00:47:25Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2210,3 +2210,27 @@ Recompute the next executable frontier from canonical WBS/graph, current runtime
 ### Queue status after current TSK-0300 revalidation
 
 Recompute the next executable frontier from current WBS/graph, runtime evidence, lifecycle/gates and Action Authority. TSK-0317 is the expected remaining successor-chain candidate only if its current dependency/gate/semantic validity independently passes. Preserve corrected TSK-0299, TSK-0485, synchronized TSK-0318/TSK-0319, current TSK-0301 and current TSK-0316 unchanged.
+## TSK-0317 current accepted stable state — 2026-09-02 — POST-CR-0008 CURRENT PLATFORM-PATH REVALIDATION
+
+`TSK-0317 — Design the simplest technically correct install, verification, removal, and recovery path for each supported platform`: **PASS** under current `ACC-0317 / VER-0317 / EVD-0317`, current direct predecessor TSK-0316, DEC-0053/CR-0006 dual-mode scope, DEC-0055/CR-0008 Action Authority, current TSK-0408/0409 technical mechanism/conflict authority, and current external Android/Apple source review.
+
+- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L4 / HIGH / A4 / `AUTO_ALLOWED`; dependency exactly `TSK-0316`.
+- Current artifact `TSK_0317_POST_CR0008_CURRENT_PLATFORM_PATH_REVALIDATION_2026-09-02.md`, version `2.0.0-post-cr0008`, blob `37173d2f9cb970a7b5e6a83af90c8f868f9fbfa8`, publication commit `2dcaa44f4b0f536729d5f3f6d2ac2c509c35bd3a`.
+- Current durable evidence `TSK_0317_POST_CR0008_CURRENT_REVALIDATION_EVIDENCE_2026-09-02.md`, blob `cd001f3ce391634e38ef0c89934cb34f4f347401`, publication commit `b82f658214f5f75821a94419bedf3d1ef36d36bf`.
+- Independent read-only VER-0317 final workflow `.github/workflows/verify-tsk0317-current-revalidation.yml`, blob `b36c1fca1c4ad6f31cf8eb4b55cb25a33c35b6e6`; run/job `33576615158 / 100081874297`: **SUCCESS** with `contents: read`.
+- Earlier VER runs/jobs `33576324000 / 100080973119`, `33576461447 / 100081409912`, and `33576541527 / 100081654136` are diagnostic-only brittle-source-text matcher failures. They did not mutate governed state or weaken acceptance.
+- Historical TSK-0317 platform mechanics remain compatible where current verification confirms them, but historical `A1 / HUMAN_ONLY`, human-decision packet and generic parent-facing `UseSafeWeb` wording are superseded by current WBS/CR-0008 and corrected TSK-0299.
+- The complete install/verify/remove/recover platform path remains accountless. Optional account/session/dashboard/device continuity is orthogonal and never changes the OS setup mechanism, creates technical verification evidence or automatically links J0/J1.
+- Android current baseline retains the native Private DNS provider-hostname path with exact technical hostname `dns.usesafeweb.com`; the parent/OS performs the system setting change. The Apple DoH URL is not substituted into the Android provider-hostname field.
+- iPhone current baseline retains the separately verified SafeWeb profile/DoH route with canonical technical endpoint `https://dns.usesafeweb.com/dns-query`; TSK-0317 does not fabricate/release a `.mobileconfig` artifact and installation/removal remain explicit user/OS actions.
+- Current official-source review on 2026-09-02 confirmed Android's provider-hostname Private DNS model, Apple manual profile-install/removal permission model and Apple encrypted DNS Settings payload semantics. If current Apple security policy such as Stolen Device Protection blocks profile installation, SafeWeb does not instruct the parent to weaken security merely to obtain a positive state.
+- Automatic behavior is limited to reliable routing, copy/delivery of already verified artifacts, controlled verification and state rendering. Unsupported/managed/VPN/Private-Relay/app-specific-resolver/network conflicts stop or demote the claim rather than being hidden.
+- Configuration/profile/account/dashboard/device ownership/parent confirmation never equals `Verified`; current controlled technical evidence owns the protection claim. No browsing/query/activity history is required for verification.
+- Removal/recovery is explicit. Removing the SafeWeb DNS mechanism ends the SafeWeb DNS claim and does not falsely imply account/device/anonymous-state deletion; deleting account/device state does not falsely imply physical DNS removal.
+- No silent plaintext downgrade may retain an active SafeWeb protection claim. Retry/replay requires changed condition/new evidence and reconciliation of ambiguous consequential state.
+- Parent-facing generic product/feature wording uses `SafeWeb` / `SafeWeb DNS`; `UseSafeWeb.com`, `dns.usesafeweb.com` and `https://dns.usesafeweb.com/dns-query` remain literal only as actual domain/technical identifiers.
+- **Non-inference:** current L4 platform-path design PASS only; no integrated implementation/build, release profile, auth/provider architecture, persistent schema/storage, legal/privacy completion, representative-parent evidence, participant/publication/payment/market activation, production behavior, LG-06, launch or successor PASS is inferred.
+
+### Queue status after current TSK-0317 revalidation
+
+Recompute the next executable frontier from canonical WBS/graph, current runtime PASS evidence, lifecycle/gates, current source validity and Action Authority. Do not infer any successor PASS solely from TSK-0317 completion. Preserve corrected TSK-0299, TSK-0485, synchronized TSK-0318/TSK-0319, current TSK-0301, current TSK-0316 and current TSK-0300 unchanged.
