@@ -28,6 +28,7 @@ jobs:
           from pathlib import Path
           W='Plans/Master/WBS/master-wbs.csv'; G='Plans/Master/RELATIONSHIP_INDEX.yaml'; S='CURRENT_STATE.md'
           E={W:'b27a0c5df2f5636d8ed71051e9e26a68959a2616',G:'c108d2c162bcea2ee4cc01def46d0487a9501032',S:'960f8449943552a6c7a8b747b0d9b072f8eaa507'}
+          MATERIAL_INVALID={'TSK-0308'}
           def blob(p): return subprocess.check_output(['git','hash-object',p],text=True).strip()
           for p,h in E.items(): assert blob(p)==h,(p,blob(p),h)
           with open(W,newline='',encoding='utf-8-sig') as f: rows=list(csv.DictReader(f))
@@ -36,7 +37,8 @@ jobs:
           for idx,m in enumerate(re.finditer(r'^(##|###) (TSK-\d{4})\b.*?(?=^(?:##|###) |\Z)',state,re.M|re.S)):
               text=m.group(0); head=text.splitlines()[0]; dm=re.search(r'20\d{2}-\d{2}-\d{2}',head)
               sec[m.group(2)].append({'pass':'**PASS' in text,'current':'current accepted' in head.lower(),'date':date.fromisoformat(dm.group(0)) if dm else None,'order':idx,'head':head})
-          current={t for t,ss in sec.items() if any(s['pass'] and s['current'] for s in ss)}
+          raw_current={t for t,ss in sec.items() if any(s['pass'] and s['current'] for s in ss)}
+          current=raw_current-MATERIAL_INVALID
           hist={t for t,ss in sec.items() if any(s['pass'] for s in ss)}
           static={t for t,r in by.items() if (r.get('Execution_State') or '').strip()=='PASS'}
           deps={}; children=defaultdict(set)
@@ -52,8 +54,8 @@ jobs:
           def newer(t):
               if t in current or t not in hist: return []
               td=latest(t); return [(d,latest(d,True)) for d in deps.get(t,[]) if latest(d,True) and (td is None or latest(d,True)>td)]
-          stale={t for t in hist if newer(t)}
-          effective=set(current)|{t for t in hist if t not in stale}|{t for t in static if t not in hist and t not in current}
+          stale=set(MATERIAL_INVALID)|{t for t in hist if newer(t)}
+          effective=set(current)|{t for t in hist if t not in stale}|{t for t in static if t not in hist and t not in current and t not in MATERIAL_INVALID}
           changed=True
           while changed:
               changed=False
@@ -73,15 +75,15 @@ jobs:
               missing=[d for d in deps[t] if d not in effective]
               if not missing: ready.append((desc(t),order[t],t,r,'REVALIDATE' if t in hist or t in static else 'NEW',newer(t)))
           ready.sort(key=lambda x:(-x[0],x[1],x[2]))
-          print('AUDIT_INPUT_RUNTIME='+blob(S)); print('CURRENT_PASS_COUNT='+str(len(current))); print('STALE_COUNT='+str(len(stale))); print('READY_COUNT='+str(len(ready)))
+          print('AUDIT_INPUT_RUNTIME='+blob(S)); print('MATERIAL_INVALID='+(';'.join(sorted(MATERIAL_INVALID)) or 'NONE')); print('CURRENT_PASS_COUNT='+str(len(current))); print('STALE_COUNT='+str(len(stale))); print('READY_COUNT='+str(len(ready)))
           for i,(dc,o,t,r,mode,nw) in enumerate(ready,1): print('READY|{}|{}|mode={}|desc={}|priority={}|critical={}|deps={}|newer={}|acc={}|title={}'.format(i,t,mode,dc,r.get('Priority',''),r.get('Critical_Path',''),';'.join(deps[t]) or 'NONE',';'.join(f'{d}@{dt}' for d,dt in nw) or 'NONE',r.get('Acceptance_ID',''),(r.get('Title') or '').replace('|','/')))
           print('TSK0300_DIRECT_CHILD_COUNT='+str(len(children['TSK-0300'])))
           for t in sorted(children['TSK-0300'],key=lambda x:order.get(x,10**9)):
               r=by[t]; newest=newest_section(t); missing=[d for d in deps[t] if d not in effective]
-              print('TSK0300_CHILD|{}|effective={}|current={}|hist={}|static={}|latest_head={}|deps={}|missing={}|acc={}|title={}'.format(t,t in effective,t in current,t in hist,t in static,(newest or {}).get('head','NONE').replace('|','/'),';'.join(deps[t]) or 'NONE',';'.join(missing) or 'NONE',r.get('Acceptance_ID',''),(r.get('Title') or '').replace('|','/')))
-          for t in ['TSK-0310','TSK-0297']:
+              print('TSK0300_CHILD|{}|material_invalid={}|effective={}|raw_current={}|current={}|hist={}|static={}|latest_head={}|deps={}|missing={}|acc={}|title={}'.format(t,t in MATERIAL_INVALID,t in effective,t in raw_current,t in current,t in hist,t in static,(newest or {}).get('head','NONE').replace('|','/'),';'.join(deps[t]) or 'NONE',';'.join(missing) or 'NONE',r.get('Acceptance_ID',''),(r.get('Title') or '').replace('|','/')))
+          for t in ['TSK-0308','TSK-0310','TSK-0297']:
               if t in by:
                   r=by[t]; missing=[d for d in deps[t] if d not in effective]
-                  print('ROW|{}|effective={}|hist={}|current={}|static={}|deps={}|missing={}|acceptance={}|title={}'.format(t,t in effective,t in hist,t in current,t in static,r.get('Dependencies',''),';'.join(missing) or 'NONE',(r.get('Acceptance_Criteria') or '').replace('|','/'),(r.get('Title') or '').replace('|','/')))
+                  print('ROW|{}|material_invalid={}|effective={}|hist={}|current={}|static={}|deps={}|missing={}|acceptance={}|title={}'.format(t,t in MATERIAL_INVALID,t in effective,t in hist,t in current,t in static,r.get('Dependencies',''),';'.join(missing) or 'NONE',(r.get('Acceptance_Criteria') or '').replace('|','/'),(r.get('Title') or '').replace('|','/')))
           print('POST_REFRESHED_TSK0310_FRONTIER_AUDIT=PASS')
           PY
