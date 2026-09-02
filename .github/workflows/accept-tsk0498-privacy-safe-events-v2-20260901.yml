@@ -1,23 +1,69 @@
-name: Retired - Accept TSK-0498 privacy-safe event contract v2
+name: Temporary - Post-TSK-0357 frontier diagnostic
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - diag/post-tsk0357-frontier-20260902
+    paths:
+      - '.github/workflows/accept-tsk0498-privacy-safe-events-v2-20260901.yml'
 
 permissions:
   contents: read
 
 jobs:
-  verify-retired-state:
-    runs-on: ubuntu-latest
+  inspect:
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - name: Verify durable TSK-0498 acceptance without mutation
+      - uses: actions/checkout@v6
+      - name: Print exact TSK-0358 authority and dependency evidence
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq '## TSK-0498 current accepted stable state — 2026-09-01 — POST-CR-0008' CURRENT_STATE.md
-          grep -Fq '`TSK-0498 — Define only decision-linked accountless journey, protection-state, self-service, reliability, channel, and cost events`: **PASS**' CURRENT_STATE.md
-          test "$(git hash-object TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md)" = '6b7a5095122c74ed9ec860b74408dab474576659'
-          grep -Fq '**Version:** 1.0.1' TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md
+          test "$(git rev-parse HEAD^)" = '21d6a75d674b99a03ed4056a629fc1695835d687'
+          test "$(git diff --name-only HEAD^ HEAD)" = '.github/workflows/accept-tsk0498-privacy-safe-events-v2-20260901.yml'
           python3 Plans/Master/Tools/validate_master_plan.py
-          echo 'TSK0498_HISTORICAL_ACCEPT_WORKFLOW_RETIRED=PASS'
+          python3 - <<'PY'
+          import csv, json, re
+          from pathlib import Path
+
+          root = Path('.')
+          wbs = root/'Plans/Master/WBS/master-wbs.csv'
+          with wbs.open(encoding='utf-8', newline='') as f:
+              reader = csv.DictReader(f)
+              rows = list(reader)
+              fields = reader.fieldnames or []
+          print('WBS_FIELDS=' + json.dumps(fields, ensure_ascii=False))
+          matches = [r for r in rows if 'TSK-0358' in r.values()]
+          if len(matches) != 1:
+              raise SystemExit(f'expected exactly one TSK-0358 row, found {len(matches)}')
+          row = matches[0]
+          print('TSK0358_ROW=' + json.dumps(row, ensure_ascii=False, sort_keys=True))
+
+          dep_fields = {k:v for k,v in row.items() if 'depend' in k.lower() or 'predecess' in k.lower()}
+          print('TSK0358_DEP_FIELDS=' + json.dumps(dep_fields, ensure_ascii=False, sort_keys=True))
+          deps = sorted(set(re.findall(r'TSK-\d{4}', ' '.join(dep_fields.values()))))
+          print('TSK0358_DEPS=' + ';'.join(deps))
+
+          state = (root/'CURRENT_STATE.md').read_text(encoding='utf-8')
+          for dep in deps:
+              patterns = [
+                  rf'## {re.escape(dep)} current accepted stable state',
+                  rf'`{re.escape(dep)}[^`]*`: \*\*PASS\*\*',
+              ]
+              ok = any(re.search(p, state) for p in patterns)
+              print(f'DEP_RUNTIME_{dep}=' + ('PASS_EVIDENCE_PRESENT' if ok else 'NO_DIRECT_PASS_MARKER'))
+
+          needles = ['TSK-0358', 'ACC-0358', 'VER-0358', 'EVD-0358']
+          for path in sorted((root/'Plans/Master').rglob('*')):
+              if not path.is_file() or path.suffix.lower() not in {'.md','.yaml','.yml','.csv','.json','.txt'}:
+                  continue
+              try:
+                  lines = path.read_text(encoding='utf-8').splitlines()
+              except Exception:
+                  continue
+              for i,line in enumerate(lines,1):
+                  if any(n in line for n in needles):
+                      print(f'AUTH_MATCH={path}:{i}:{line}')
+
+          print('TSK0358_DIAGNOSTIC=PASS')
+          PY
