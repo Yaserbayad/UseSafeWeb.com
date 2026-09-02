@@ -1,4 +1,4 @@
-name: TSK-0361 branch contract
+name: TSK-0361 branch acceptance
 
 on:
   push:
@@ -18,15 +18,19 @@ jobs:
     defaults:
       run:
         working-directory: website
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
           node-version: '22'
+          cache: npm
+          cache-dependency-path: website/package-lock.json
       - name: Verify TSK-0361 static contract
         run: npm run test:contract
-      - name: Install exact declared dependencies
-        run: npm install --no-audit --no-fund
+      - name: Install locked dependency graph
+        run: npm ci --no-audit --no-fund
       - name: Verify installed top-level dependency graph
         run: npm ls --depth=0
       - name: Lint application
@@ -35,3 +39,7 @@ jobs:
         run: npm run build
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high
+      - name: Install acceptance browsers
+        run: npx playwright install --with-deps chromium firefox webkit
+      - name: Run real-browser accessibility and journey acceptance
+        run: npm run test:e2e
