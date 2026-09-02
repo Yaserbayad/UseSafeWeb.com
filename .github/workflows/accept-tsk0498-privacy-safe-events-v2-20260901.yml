@@ -1,38 +1,23 @@
-name: Temporary - Inspect top L6 execution contracts
+name: Retired - Accept TSK-0498 privacy-safe event contract v2
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/accept-tsk0498-privacy-safe-events-v2-20260901.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  inspect-l6-contracts:
+  verify-retired-state:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - name: Emit exact execution fields for eligible L6 candidates
+      - uses: actions/checkout@v4
+      - name: Verify durable TSK-0498 acceptance without mutation
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
-          python3 - <<'PY'
-          import csv
-          from pathlib import Path
-          rows=list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='')))
-          keys=['Task_ID','Title','Priority','Critical_Path','Dependencies','Trigger','Preconditions','Inputs','Output/Artifact','Acceptance_ID','Acceptance_Criteria','Verification_ID','Verification_Method','Evidence_ID','Evidence_Required','Primary_Owner','AI_Capability_A0_A4','Action_Authority','Execution_Instructions','Required_Tools_or_Access','Idempotency','Reversibility','Retry_Recovery','Escalation_Condition','Risk_Reference','Interface_Reference','Requirement_Reference','Cost/Budget','Relative_Timing','Notes']
-          for tid in ['TSK-0455','TSK-0357','TSK-0361','TSK-0454','TSK-0395']:
-              r=next(x for x in rows if x['Task_ID']==tid)
-              print('=== '+tid+' ===')
-              for k in keys: print(k+'='+(r.get(k) or '').replace('\n',' '))
-          PY
-          echo '--- root tree ---'
-          find . -maxdepth 2 -type f -not -path './.git/*' | sort | head -200
-          echo '--- key manifests ---'
-          for f in package.json pnpm-lock.yaml yarn.lock package-lock.json pyproject.toml requirements.txt docker-compose.yml compose.yml; do if [ -f "$f" ]; then echo "FOUND=$f"; sed -n '1,160p' "$f"; fi; done
-          echo '--- website/infrastructure dirs ---'
-          find website infrastructure -maxdepth 3 -type f 2>/dev/null | sort | head -240 || true
+          grep -Fq '## TSK-0498 current accepted stable state — 2026-09-01 — POST-CR-0008' CURRENT_STATE.md
+          grep -Fq '`TSK-0498 — Define only decision-linked accountless journey, protection-state, self-service, reliability, channel, and cost events`: **PASS**' CURRENT_STATE.md
+          test "$(git hash-object TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md)" = '6b7a5095122c74ed9ec860b74408dab474576659'
+          grep -Fq '**Version:** 1.0.1' TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md
           python3 Plans/Master/Tools/validate_master_plan.py
+          echo 'TSK0498_HISTORICAL_ACCEPT_WORKFLOW_RETIRED=PASS'
