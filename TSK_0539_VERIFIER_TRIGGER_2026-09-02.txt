@@ -1,0 +1,1 @@
+TSK-0539 registered verifier trigger. Temporary; acceptance carrier removes this file only after successful verification and remote read-back.
