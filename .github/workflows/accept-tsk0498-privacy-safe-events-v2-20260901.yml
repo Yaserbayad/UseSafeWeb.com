@@ -1,4 +1,4 @@
-name: Temporary - TSK-0361 RED acceptance contract
+name: Temporary - TSK-0361 GREEN acceptance contract
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  red-tsk0361:
+  green-tsk0361:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
