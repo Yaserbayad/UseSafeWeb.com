@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const securityHeaders = [
@@ -10,6 +11,9 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
+  turbopack: {
+    root: path.resolve(process.cwd(), ".."),
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
