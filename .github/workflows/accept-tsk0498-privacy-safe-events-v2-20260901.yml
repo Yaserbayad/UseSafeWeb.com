@@ -1,48 +1,23 @@
-name: Temporary - Audit residual L5 frontier after TSK-0237
+name: Retired - Accept TSK-0498 privacy-safe event contract v2
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  audit-l5:
+  verify-retired-state:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Emit residual L5 and dependency status
+      - name: Verify durable TSK-0498 acceptance without mutation
         shell: bash
         run: |
           set -euo pipefail
-          python3 - <<'PY'
-          import csv,re
-          from pathlib import Path
-          rows=list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='')))
-          state=Path('CURRENT_STATE.md').read_text(encoding='utf-8-sig')
-          by={r['Task_ID']:r for r in rows}
-          def passed(tid):
-              pats=[rf'^##+\s+{re.escape(tid)}\s+current accepted stable state[^\n]*$',rf'^##+\s+{re.escape(tid)}\s+accepted stable state[^\n]*$']
-              starts=[]
-              for p in pats: starts += [m.start() for m in re.finditer(p,state,re.M|re.I)]
-              if starts:
-                  s=max(starts);e=state.find('\n## ',s+3);e=len(state) if e<0 else e
-                  sec=state[s:e]
-                  if '**PASS**' in sec or ': **PASS**' in sec or '`: **PASS**' in sec:return True
-              # Allow explicit current gate/task PASS statements for legacy/current accepted sections with non-standard headings.
-              return bool(re.search(rf'`{re.escape(tid)}[^`]*`[^\n]*\*\*PASS\*\*',state,re.I))
-          residual=[]
-          for r in rows:
-              if r.get('Lifecycle_Stage')!='L5' or passed(r['Task_ID']): continue
-              deps=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
-              ds=[]
-              for d in deps:
-                  dr=by.get(d,{})
-                  ds.append(f"{d}:{'PASS' if passed(d) else 'NONPASS'}:{dr.get('Action_Authority','?')}:{dr.get('Lifecycle_Stage','?')}")
-              residual.append(r['Task_ID'])
-              print('ROW|'+ '|'.join([r['Task_ID'],r.get('Title',''),r.get('Plan_Status',''),r.get('Action_Authority',''),r.get('AI_Capability_A0_A4',''),r.get('Dependencies',''),';'.join(ds)]))
-          print('RESIDUAL_L5_COUNT='+str(len(residual)))
-          print('RESIDUAL_L5_IDS='+';'.join(residual))
-          PY
+          grep -Fq '## TSK-0498 current accepted stable state — 2026-09-01 — POST-CR-0008' CURRENT_STATE.md
+          grep -Fq '`TSK-0498 — Define only decision-linked accountless journey, protection-state, self-service, reliability, channel, and cost events`: **PASS**' CURRENT_STATE.md
+          test "$(git hash-object TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md)" = '6b7a5095122c74ed9ec860b74408dab474576659'
+          grep -Fq '**Version:** 1.0.1' TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md
           python3 Plans/Master/Tools/validate_master_plan.py
+          echo 'TSK0498_HISTORICAL_ACCEPT_WORKFLOW_RETIRED=PASS'
