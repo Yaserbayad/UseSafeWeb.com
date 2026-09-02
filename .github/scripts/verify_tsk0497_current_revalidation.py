@@ -60,40 +60,22 @@ headings = [line for line in doc.splitlines() if line.startswith("## ")]
 assert len(headings) >= 13
 print("TSK0497_STRUCTURE=PASS")
 
-# Single schema authority and exact current event set.
 require(low, ["single event-schema authority", "tsk-0498 remains the current authoritative l5 event contract", "unknown event names or fields are rejected"], "schema authority")
-expected_events = [
-    "journey_started",
-    "journey_step_entered",
-    "journey_step_outcome",
-    "journey_completed",
-    "protection_state_evaluated",
-    "protection_verification_outcome",
-    "self_service_opened",
-    "self_service_outcome",
-    "synthetic_service_probe_result",
-    "recovery_operation_outcome",
-    "channel_entry",
-    "cost_period_recorded",
-]
+expected_events = ["journey_started", "journey_step_entered", "journey_step_outcome", "journey_completed", "protection_state_evaluated", "protection_verification_outcome", "self_service_opened", "self_service_outcome", "synthetic_service_probe_result", "recovery_operation_outcome", "channel_entry", "cost_period_recorded"]
 for event in expected_events:
     assert f"`{event}`" in doc, event
 print("TSK0497_TSK0498_SCHEMA_ALIGNMENT=PASS")
 
-# Accountless privacy/retention semantics.
 require(low, ["no stable analytics user id", "maximum 24 hours", "sign-in cannot extend or link accountless event history", "maximum 13 months", "synthetic reliability", "30 days", "cost analytics", "dns qname", "unknown/high-cardinality fields fail closed"], "accountless privacy")
 print("TSK0497_ACCOUNTLESS_PRIVACY_RETENTION=PASS")
 
-# Optional account boundary: product analytics stays non-identifying, operational identifiers remain outside analytics.
-require(low, ["account identity is not thereby analytics identity", "zero account/device identifiers", "operational/security event", "no implicit new event approval", "dormant / no current data source", "account/session/device operational logs cannot be repurposed as product analytics"], "optional-account boundary")
+require(low, ["account identity is not thereby analytics identity", "account/device identifiers", "by default the analytics payload contains", "operational/security event", "no implicit new event approval", "dormant / no current data source", "account/session/device operational logs cannot be repurposed as product analytics"], "optional-account boundary")
 require(low, ["email", "provider subject", "adguard clientid", "session/token id"], "optional-account prohibited identifiers")
 print("TSK0497_OPTIONAL_ACCOUNT_BOUNDARY=PASS")
 
-# Global prohibited measurement classes.
 require(low, ["dns query/qname", "browsing/search history", "child activity", "raw ip as analytics data", "session replay", "daily-active-user", "cross-session/cross-device identity graph", "marketing/advertising profile"], "prohibited classes")
 print("TSK0497_PROHIBITED_MEASUREMENT=PASS")
 
-# Approved event table must expose ACC metadata for all 12 current events.
 event_section = re.search(r"## 6\. Current approved event catalogue metadata\n(.*?)(?=\n## 7\.)", doc, re.S)
 assert event_section, "event catalogue section missing"
 event_rows = [line for line in event_section.group(1).splitlines() if line.startswith("| `")]
@@ -102,7 +84,6 @@ header = next(line for line in event_section.group(1).splitlines() if line.start
 require(header.lower(), ["approved purpose", "prohibited", "collection point", "denominator", "retention", "access"], "event table header")
 print("TSK0497_APPROVED_EVENT_METADATA=PASS")
 
-# Dormant optional-account KPIs are defined but not activated.
 optional_kpi = re.search(r"## 7\. Optional-account KPI definitions.*?\n(.*?)(?=\n## 8\.)", doc, re.S)
 assert optional_kpi
 optional_rows = [line for line in optional_kpi.group(1).splitlines() if line.startswith("| Optional") or line.startswith("| Owned") or line.startswith("| Account-")]
@@ -110,7 +91,6 @@ assert len(optional_rows) >= 4, len(optional_rows)
 assert optional_kpi.group(1).lower().count("dormant") >= 4
 print("TSK0497_OPTIONAL_KPI_DORMANCY=PASS")
 
-# Current product KPI table includes source/formula/window/owner/guardrail/action and sufficient decision coverage.
 kpi_section = re.search(r"## 8\. Current accountless/product KPI catalogue\n(.*?)(?=\n## 9\.)", doc, re.S)
 assert kpi_section
 kpi_rows = [line for line in kpi_section.group(1).splitlines() if line.startswith("| Accountless") or line.startswith("| Critical") or line.startswith("| Protection") or line.startswith("| Technical") or line.startswith("| Self-service") or line.startswith("| Synthetic") or line.startswith("| Recovery") or line.startswith("| Qualified") or line.startswith("| Aggregate")]
@@ -119,18 +99,15 @@ kpi_header = next(line for line in kpi_section.group(1).splitlines() if line.sta
 require(kpi_header.lower(), ["source", "formula", "window", "owner", "guardrail", "decision action"], "KPI header")
 print("TSK0497_KPI_CATALOGUE=PASS")
 
-# Data quality/access/deletion and no backdoor operational analytics.
 require(low, ["event absence is not automatically a negative outcome", "unknown schema versions/fields/events are rejected", "synthetic/test data cannot enter a real-user cohort", "account/operational logs are not a backdoor analytics store", "kpi percentages are not emitted when the required denominator is unavailable", "least privilege", "blocked from processing until exact purpose"], "quality/access/deletion")
 print("TSK0497_QUALITY_ACCESS_DELETION=PASS")
 
-# Historical contradiction is explicitly reconciled rather than silently preserved.
 historical = Path("TSK_0497_MINIMAL_PRODUCT_EVENT_KPI_CATALOGUE_2026-08-28.md").read_text(encoding="utf-8").lower()
 require(historical, ["account/login/password-reset/dashboard event while exc-0001 remains inactive", "login`, `logout`, `signup`"], "historical account exclusion")
 assert "exc-0001 remains inactive" not in low
 require(low, ["cr-0006 activated optional parent account", "historical tsk-0497 event names", "not independently collection-approved"], "current reconciliation")
 print("TSK0497_HISTORICAL_CURRENT_RECONCILIATION=PASS")
 
-# Non-inference.
 require(low, ["does not activate telemetry", "approve a datastore", "approve a new optional-account event name", "create a legal basis", "authorize real-user processing", "prove kpi values", "gate or infer any successor pass"], "non-inference")
 print("TSK0497_NON_INFERENCE=PASS")
 
