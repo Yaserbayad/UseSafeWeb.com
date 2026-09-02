@@ -15,12 +15,15 @@ export function JourneyResumePanel({ locale, resumeLabel, resetLabel, resumeNote
   const [href, setHref] = useState<string | null>(null);
 
   useEffect(() => {
-    try {
-      const state = readJourneyState(window.sessionStorage, Date.now());
-      setHref(state ? resumeHref(state, locale) : null);
-    } catch {
-      setHref(null);
-    }
+    const timer = window.setTimeout(() => {
+      try {
+        const state = readJourneyState(window.sessionStorage, Date.now());
+        setHref(state ? resumeHref(state, locale) : null);
+      } catch {
+        setHref(null);
+      }
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [locale]);
 
   if (!href) return null;
