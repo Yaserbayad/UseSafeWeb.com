@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T02:49:18Z
+**Updated:** 2026-09-02T03:06:14Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2374,5 +2374,26 @@ Recompute the executable frontier from canonical WBS/graph, current runtime evid
 - **Non-inference:** this is L4 measurement/KPI contract PASS only. It does not activate telemetry, approve a datastore/vendor/new optional-account event, create a lawful basis, authorize real-user processing, prove KPI values, implement analytics/authentication, pass a lifecycle gate, publish, activate a market, launch or infer successor PASS.
 
 ### Queue status after current TSK-0497 revalidation
+
+Recompute the executable frontier from canonical WBS/graph, current runtime evidence, artifact-specific current-validity, gates and Action Authority. Preserve valid non-uniform historical PASS records unless current evidence materially invalidates them.
+
+
+## TSK-0308 current accepted stable state — 2026-09-02 — POST-CR-0008 DUAL-MODE SHARED RESPONSIVE DESIGN-SYSTEM REVALIDATION
+
+`TSK-0308 — Create the shared responsive design system for public and product surfaces`: **PASS** under current `ACC-0308 / VER-0308 / EVD-0308`, current direct predecessors TSK-0309 / TSK-0300, current CR-0006/CR-0008 dual-mode scope and fresh structural/rendered-browser verification.
+
+- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L4 / HIGH / A3 / `AUTO_ALLOWED`; dependencies exactly `TSK-0309; TSK-0300`.
+- Current revalidation artifact `TSK_0308_POST_CR0008_DUAL_MODE_SHARED_RESPONSIVE_DESIGN_SYSTEM_REVALIDATION_2026-09-02.md`, version `2.0.0-post-CR0008`, blob `90dce398ae86238abf5cf141acac47d78bf085b8`, publication commit `0f840f3616af0030d65181965a4bf683a981586f`.
+- Durable acceptance evidence `TSK_0308_POST_CR0008_CURRENT_REVALIDATION_EVIDENCE_2026-09-02.md`, blob `f280154e45fccbcaab51a2fdca2dd3c33edbb99a`, publication commit `e4030b0fb1fa223870118be8c4f4603bc6d82258`.
+- Historical owner-approved TSK-0308 package remains immutable provenance for compatible DS-01 through DS-13, state, responsive, accessibility and localization facts. Its blanket pre-CR-0006 Login/Account/Dashboard/Profile exclusions are superseded only for current scope.
+- Current additive authority: `prototype/TSK-0308/DUAL_MODE_ADDENDUM.md` blob `195ace26e6e8586e8e19da85a21d430a4a89a55a`; `dual-mode-addendum.css` blob `67fe4f16a1aca56c7cd03ab28ec807a52e3e23e8`; `dual-mode-reference.html` blob `293945d9e2df823079e8dd73134168773a65a652`.
+- Current design-system rule: DS-01 through DS-13 remain preserved; DS-14 `OptionalAccountEntry`, DS-15 `SessionStatus`, DS-16 `DeviceManagementList` and DS-17 `AccountLifecycleActions` add the bounded optional-account/session/dashboard/device-lifecycle composition required by current TSK-0309 while preserving the complete login-free core.
+- TSK-0300 remains the sole shared token/primitive authority. SafeWeb identity remains unchanged. Account/session/device ownership never substitutes for technical protection verification; provider/session failure preserves an accountless continuation where the core path is available; account/device/anonymous-state/DNS-removal operations remain distinct.
+- Independent read-only VER-0308: script blob `c614eb171c13a7c845257a10cb0597eb7d851b37`; accepted workflow blob `b26d5f8f502b1f6e3e671b179c23734fe6d07ccc`; run/job `33585488537 / 100108650200`; conclusion **SUCCESS**.
+- Fresh rendered verification: 320 / 768 / 1024 / 1440 PASS; no horizontal overflow; accountless primary; optional-account secondary; provider fallback; identity/protection separation; lifecycle separation; RTL; visible focus; clean console; source unchanged.
+- **ACC-0308 = PASS. VER-0308 = PASS. EVD-0308 = SATISFIED.**
+- **Non-inference:** L4 design-system PASS only; no authentication/session/datastore/device-ownership implementation, real-user processing, legal/privacy completion, public publication, payment/market activation, LG-06, launch or successor PASS is inferred.
+
+### Queue status after current TSK-0308 revalidation
 
 Recompute the executable frontier from canonical WBS/graph, current runtime evidence, artifact-specific current-validity, gates and Action Authority. Preserve valid non-uniform historical PASS records unless current evidence materially invalidates them.
