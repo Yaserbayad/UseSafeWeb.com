@@ -1,181 +1,22 @@
-name: Publish refreshed LG-06 evidence
+name: Retired - Publish refreshed LG-06 evidence
 
 on:
-  pull_request:
-    branches: [main]
-    paths: ['.github/diagnostics/tsk0052-lg06-publish-trigger.txt']
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  verify-and-publish:
+  verify-retired-state:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 0
-          persist-credentials: true
-      - name: Independently verify refreshed LG-06
+      - name: Verify durable LG-06 state without mutation
         shell: bash
         run: |
           set -euo pipefail
-          python3 .github/scripts/verify_tsk0052_lg06_current_refresh.py | tee /tmp/lg06-refresh-verification.log
-          grep -Fx 'LG06_REFRESH_ACC0052=PASS' /tmp/lg06-refresh-verification.log
-          grep -Fx 'LG06_REFRESH_VER0052=PASS' /tmp/lg06-refresh-verification.log
-          grep -Fx 'LG06_REFRESH_EVD_READY=PASS' /tmp/lg06-refresh-verification.log
-          grep -Fx 'LG06_CURRENT_FREEZE_REVALIDATION=PASS' /tmp/lg06-refresh-verification.log
-      - name: Publish durable EVD-0052
-        shell: bash
-        env:
-          RUN_ID: ${{ github.run_id }}
-          REPOSITORY: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          import os, re, subprocess
-          from pathlib import Path
-
-          def blob(path):
-              return subprocess.check_output(['git','hash-object',path],text=True).strip()
-
-          evidence_path=Path('TSK_0052_LG06_POST_CR0008_CURRENT_FREEZE_EVIDENCE_2026-09-02.md')
-          if evidence_path.exists():
-              text=evidence_path.read_text(encoding='utf-8')
-              for marker in ['ACC-0052 = PASS','VER-0052 = PASS','EVD-0052 = SATISFIED','LG06_CURRENT_FREEZE_REVALIDATION=PASS']:
-                  assert marker in text, marker
-              print('LG06_REFRESH_EVIDENCE_PUBLICATION=ALREADY_APPLIED')
-              raise SystemExit(0)
-
-          verifier_blob=blob('.github/scripts/verify_tsk0052_lg06_current_refresh.py')
-          workflow_blob=blob('.github/workflows/publish-tsk0052-lg06-refresh-evidence.yml')
-          audit_blob=blob('.github/workflows/audit-post-tsk0045-frontier.yml')
-          run_id=os.environ['RUN_ID']
-          repo=os.environ['REPOSITORY']
-          run_url=f'https://github.com/{repo}/actions/runs/{run_id}'
-
-          text=f'''# TSK-0052 / LG-06 — Refreshed Current Freeze Evidence — Post-CR-0008
-
-**Task / Gate / Acceptance / Verification / Evidence:** TSK-0052 / LG-06 / ACC-0052 / VER-0052 / EVD-0052  
-**Date:** 2026-09-02 UTC  
-**Result:** PASS candidate for guarded runtime reconciliation; unlock is limited to internal L5 work.
-
-## 1. Immutable current inputs
-
-- WBS blob `b27a0c5df2f5636d8ed71051e9e26a68959a2616`.
-- Relationship-index blob `c108d2c162bcea2ee4cc01def46d0487a9501032`.
-- Gate-register blob `87cf9060954a82e1d5a092200d3c922f1986a5da`.
-- Risk-register blob `0ebb7ab97ec4d418e61eaae0fce6a35e3a9e36ec`.
-- Pre-reconciliation runtime blob `b8baccb4c7f89e4b0029dd9b1cc686cf3eff09f2`.
-- Refreshed gate review `TSK_0052_LG06_POST_CR0008_CURRENT_FREEZE_REVALIDATION_2026-09-02.md`, blob `0647adbbc03a2f2750c9ab869b5788775ea77f9e`.
-- Robust verifier script blob `{verifier_blob}`.
-- Evidence-publishing workflow blob `{workflow_blob}`.
-- Reusable L4 frontier-audit workflow blob `{audit_blob}`.
-- Independent verification run `{run_id}`: {run_url} — **SUCCESS required for this file to exist**.
-
-## 2. L4 completion and gate contract
-
-The verifier reparsed TSK-0052 from canonical WBS and the LG-06 row from the canonical gate register. It proved A4 / AUTO_ALLOWED, direct hard dependencies exactly `TSK-0043; TSK-0321; TSK-0309; TSK-0628`, and the full current ACC-0052 gate boundary.
-
-It independently recomputed the effective-PASS graph while preserving current PASS, valid non-uniform historical PASS and still-valid static PASS, recursively removing stale predecessor proof. Result:
-
-- `LG06_REFRESH_L4_TOTAL=89`
-- `LG06_REFRESH_L4_EFFECTIVE=86`
-- `LG06_REFRESH_L4_DEPENDENCY_BLOCKED=3`
-- `LG06_REFRESH_L4_READY=0`
-- `LG06_REFRESH_L4_EXHAUSTION=PASS`
-
-The separate read-only frontier audit `33594970281 / 100136470954` also proved `READY_COUNT=0` on the exact pre-gate runtime.
-
-## 3. Refreshed material evidence bindings
-
-- Corrected TSK-0300 evidence `a3e39896b67098ced321cb9e4b82c65c440806e4`; run/job `33592292946 / 100128578252`.
-- Refreshed TSK-0310 evidence `34d119334e07a5d6ffe63fb893bb741d3aa0c775`; run/job `33592936750 / 100130472136`; fresh browser acceptance `221/221 PASS`.
-- Corrected TSK-0308 evidence `959c1f47d600fefbceb2f569ed5c7c606beae48f`; run/job `33593810379 / 100133049388`; 320/768/1024/1440 rendered acceptance PASS.
-- Current TSK-0297 evidence `0415b7c6719712de33822e991dd0882096c0a030`; run/job `33594493974 / 100135082837`; all 18 selectable manifest sources recomputed from current `main`.
-- Current TSK-0317 evidence `cd001f3ce391634e38ef0c89934cb34f4f347401`; final run/job `33576615158 / 100081874297`.
-- Current TSK-0299 semantic owner `ff30500b933b9ecc92325659d49ea4e671d296d2`.
-- Current TSK-0320 semantic owner `bdc6bacc424669708f410466f3cfd5527f1c2b3c`.
-
-## 4. Current frozen protection-state contract
-
-1. `protected/verified` — `Protection verified`.
-2. `configured/parent-confirmed` — `Setup confirmed`, with `Protection has not yet been technically verified.`.
-3. `action-needed` — `Action needed`.
-4. `not-covered` — `Not covered`.
-5. `uncertain/error` — `Protection status could not be verified`.
-6. `removed` — `Removed`.
-
-Account/session/dashboard/device ownership does not substitute for technical protection evidence.
-
-## 5. ACC-0052 matrix result
-
-The independent verifier required every refreshed review category to resolve only to current/effective task evidence:
-
-- product/non-goals;
-- requirements/traceability;
-- critical conflicts;
-- accountless core / Protection Map / recovery;
-- optional account/session;
-- ownership persistence/dashboard/device management;
-- deletion/revoke/recovery;
-- privacy/security/truth boundaries;
-- brand/identity/responsive design system;
-- verbal/content/source/support system;
-- accessibility/responsive/i18n;
-- self-service/no-routine-human-support.
-
-All category predicates passed, together with all four direct TSK-0052 predecessor checks.
-
-## 6. Open risks and non-inference
-
-The verifier independently confirmed `RSK-0002`, `RSK-0005`, `RSK-0015`, `RSK-0017`, and `RSK-0022` remain **Open**. LG-06 does not erase these risks or waive legal/privacy/consent/security/vendor requirements.
-
-This gate result does not implement authentication/persistence, process real users, authorize publication/payment/market activation/production/launch, or pass LG-07/LG-08/LG-09. It unlocks internal L5 architecture/security/privacy/delivery-readiness work only.
-
-The first refreshed verifier run `33595260013 / 100137308216` is retained as diagnostic evidence only: it failed on a guessed legacy evidence filename/marker that is not current gate authority. The verifier was corrected only at that provenance locator; no current acceptance/gate/matrix/risk predicate was weakened.
-
-## 7. Independent verifier markers
-
-The successful verification that produced this file required, among others:
-
-- `LG06_REFRESH_INPUT_HASHES=PASS`
-- `LG06_REFRESH_WBS_CONTRACT=PASS`
-- `LG06_REFRESH_GATE_REGISTER=PASS`
-- `LG06_REFRESH_EFFECTIVE_PARSER=PASS`
-- `LG06_REFRESH_DIRECT_PREDECESSORS=PASS`
-- `LG06_REFRESH_MATRIX_EFFECTIVE=PASS`
-- `LG06_REFRESH_L4_EXHAUSTION=PASS`
-- `LG06_REFRESH_EXTERNAL_L4_AUDIT_BINDING=PASS`
-- `LG06_REFRESH_TSK0300_BINDING=PASS`
-- `LG06_REFRESH_TSK0310_BINDING=PASS`
-- `LG06_REFRESH_TSK0308_BINDING=PASS`
-- `LG06_REFRESH_TSK0297_BINDING=PASS`
-- `LG06_REFRESH_CURRENT_STATE_COPY=PASS`
-- `LG06_REFRESH_CURRENT_VERBAL_AUTHORITY=PASS`
-- `LG06_REFRESH_OPEN_RISKS=PASS`
-- `LG06_REFRESH_NONINFERENCE=PASS`
-- `LG06_REFRESH_PROVENANCE=PASS`
-- `LG06_REFRESH_ACC0052=PASS`
-- `LG06_REFRESH_VER0052=PASS`
-- `LG06_REFRESH_EVD_READY=PASS`
-- `LG06_CURRENT_FREEZE_REVALIDATION=PASS`
-
-## 8. Disposition
-
-**ACC-0052 = PASS. VER-0052 = PASS. EVD-0052 = SATISFIED** for the current post-CR-0008 L4 Product, Brand and Experience Freeze, pending guarded runtime synchronization and exact read-back.
-'''
-          evidence_path.write_text(text,encoding='utf-8')
-          print('LG06_REFRESH_EVIDENCE_CANDIDATE=PASS')
-          PY
-          changes="$(git status --porcelain)"
-          test "$(printf '%s\n' "$changes" | sed '/^$/d' | wc -l)" -eq 1
-          printf '%s\n' "$changes" | grep -F 'TSK_0052_LG06_POST_CR0008_CURRENT_FREEZE_EVIDENCE_2026-09-02.md'
-          git diff --check
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add TSK_0052_LG06_POST_CR0008_CURRENT_FREEZE_EVIDENCE_2026-09-02.md
-          git commit -m 'evidence: accept refreshed LG-06 current freeze'
-          git push origin HEAD:main
-          echo 'LG06_REFRESH_EVIDENCE_PUBLICATION=PASS'
+          grep -Fq '## TSK-0052 / LG-06 current accepted stable state — 2026-09-01 — POST-CR-0007' CURRENT_STATE.md
+          grep -Fq '`TSK-0052 / LG-06 — Product, Brand and Experience Freeze`: **PASS**' CURRENT_STATE.md
+          grep -Fq 'latest_change: CR-0010' Plans/Master/MANIFEST.yaml
+          python3 Plans/Master/Tools/validate_master_plan.py
+          echo 'LG06_HISTORICAL_PUBLISH_WORKFLOW_RETIRED=PASS'
