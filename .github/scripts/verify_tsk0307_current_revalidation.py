@@ -150,7 +150,8 @@ assert "Parent-facing product name is **SafeWeb** / **SafeWeb DNS**" in current
 assert "technical identifiers continue to use the `usesafeweb.com` domain" in current
 print("TSK0307_HISTORICAL_CURRENT_RECONCILIATION=PASS")
 
-require(current, ["does not distribute a production Apple profile", "does not implement account/session/dashboard behavior", "does not prove native-speaker/representative-parent comprehension", "public publication", "LG-06"], "non-inference")
+non_inference = current.split("## 8. Non-inference",1)[1]
+require(non_inference, ["does not distribute a production Apple profile", "implement account/session/dashboard behavior", "prove native-speaker/representative-parent comprehension", "legal/privacy completion", "public publication", "participant processing", "payment", "market activation", "LG-06", "launch"], "non-inference")
 print("TSK0307_NON_INFERENCE=PASS")
 print("TSK0307_CURRENT_ACC=PASS")
 print("TSK0307_CURRENT_VER=PASS")
