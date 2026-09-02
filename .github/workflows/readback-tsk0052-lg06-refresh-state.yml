@@ -1,0 +1,105 @@
+name: Read back refreshed LG-06 state
+
+on:
+  workflow_run:
+    workflows: ['Reconcile refreshed LG-06 state']
+    types: [completed]
+
+permissions:
+  contents: write
+
+jobs:
+  readback:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Independently read back exact LG-06 durable state
+        shell: bash
+        env:
+          READBACK_RUN_ID: ${{ github.run_id }}
+          STATE_WORKFLOW_RUN_ID: ${{ github.event.workflow_run.id }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv,re,subprocess,os
+          from pathlib import Path
+
+          S='CURRENT_STATE.md'
+          E='TSK_0052_LG06_POST_CR0008_CURRENT_FREEZE_EVIDENCE_2026-09-02.md'
+          OUT='TSK_0052_LG06_POST_CR0008_CURRENT_FREEZE_READBACK_2026-09-02.md'
+          HEADING='## TSK-0052 / LG-06 current accepted stable state — 2026-09-02 — POST-CR-0008 FREEZE REVALIDATION'
+          def blob(p): return subprocess.check_output(['git','hash-object',p],text=True).strip()
+          state=Path(S).read_text(encoding='utf-8')
+          assert HEADING in state,'current LG-06 heading missing'
+          section=state.split(HEADING,1)[1]
+          evidence_blob=blob(E)
+          required=[
+            '**PASS**',
+            'ACC-0052 = PASS. VER-0052 = PASS. EVD-0052 = SATISFIED.',
+            evidence_blob,
+            'LG06_REFRESH_L4_EXHAUSTION=PASS',
+            'Unlock: internal L5 architecture/security/privacy/delivery-readiness work only.',
+            'RSK-0002', 'RSK-0005', 'RSK-0015', 'RSK-0017', 'RSK-0022',
+          ]
+          for marker in required: assert marker in section,marker
+          last_change=subprocess.check_output(['git','log','-1','--format=%H|%s','--',S],text=True).strip()
+          sha,msg=last_change.split('|',1)
+          assert msg=='state: reaccept refreshed LG-06 current freeze',(sha,msg)
+          changed=subprocess.check_output(['git','show','--format=','--name-only',sha],text=True).splitlines()
+          changed=[x for x in changed if x.strip()]
+          assert changed==[S],changed
+          commit_text=subprocess.check_output(['git','show','--format=','--unified=3',sha,'--',S],text=True)
+          assert HEADING in commit_text
+          assert 'ACC-0052 = PASS. VER-0052 = PASS. EVD-0052 = SATISFIED.' in commit_text
+          runtime_blob=blob(S)
+          evidence=Path(E).read_text(encoding='utf-8')
+          for marker in ['LG06_CURRENT_FREEZE_REVALIDATION=PASS','LG06_REFRESH_L4_READY=0','LG06_REFRESH_MATRIX_EFFECTIVE=PASS','LG06_REFRESH_OPEN_RISKS=PASS']:
+              assert marker in evidence,marker
+          if Path(OUT).exists():
+              prior=Path(OUT).read_text(encoding='utf-8')
+              for marker in [runtime_blob,sha,evidence_blob,'LG06_REFRESH_DURABLE_READBACK=PASS']:
+                  assert marker in prior,marker
+              print('LG06_REFRESH_READBACK_PUBLICATION=ALREADY_APPLIED')
+              raise SystemExit(0)
+          state_run=os.environ['STATE_WORKFLOW_RUN_ID']
+          readback_run=os.environ['READBACK_RUN_ID']
+          repo=os.environ['REPOSITORY']
+          text=f'''# TSK-0052 / LG-06 — Independent Durable State Read-Back — Post-CR-0008
+
+**Date:** 2026-09-02 UTC  
+**Result:** `LG06_REFRESH_DURABLE_READBACK=PASS`
+
+- Runtime commit: `{sha}` — `state: reaccept refreshed LG-06 current freeze`.
+- Runtime blob: `{runtime_blob}`.
+- Durable EVD-0052 blob: `{evidence_blob}`.
+- Upstream state-workflow run: `{state_run}` — `https://github.com/{repo}/actions/runs/{state_run}`.
+- Independent read-back run: `{readback_run}` — `https://github.com/{repo}/actions/runs/{readback_run}`.
+- Exact commit inspection proved `CURRENT_STATE.md` was the only file changed by the gate-state commit.
+- The current LG-06 section contains PASS, the exact EVD blob, current L4-exhaustion proof, open-risk preservation and the internal-L5-only unlock fence.
+- No LG-07/LG-08/LG-09, production, participant, publication, payment, market activation or launch PASS is inferred.
+
+`LG06_REFRESH_DURABLE_READBACK=PASS`
+'''
+          Path(OUT).write_text(text,encoding='utf-8')
+          print('LG06_REFRESH_DURABLE_READBACK=PASS')
+          PY
+          changes="$(git status --porcelain)"
+          if [ -z "$changes" ]; then
+            echo 'LG06_REFRESH_READBACK_PUBLICATION=ALREADY_APPLIED'
+            exit 0
+          fi
+          test "$(printf '%s\n' "$changes" | sed '/^$/d' | wc -l)" -eq 1
+          printf '%s\n' "$changes" | grep -F 'TSK_0052_LG06_POST_CR0008_CURRENT_FREEZE_READBACK_2026-09-02.md'
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add TSK_0052_LG06_POST_CR0008_CURRENT_FREEZE_READBACK_2026-09-02.md
+          git commit -m 'evidence: read back refreshed LG-06 durable state'
+          git push origin HEAD:main
+          echo 'LG06_REFRESH_READBACK_PUBLICATION=PASS'
