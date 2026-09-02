@@ -1,0 +1,97 @@
+name: Audit TSK-0046 current revalidation
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/diagnostics/tsk0046-current-audit-trigger.txt']
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out current main authority
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Audit exact current TSK-0046 contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv, re, subprocess
+          from pathlib import Path
+
+          expected={
+            'Plans/Master/WBS/master-wbs.csv':'b27a0c5df2f5636d8ed71051e9e26a68959a2616',
+            'Plans/Master/RELATIONSHIP_INDEX.yaml':'c108d2c162bcea2ee4cc01def46d0487a9501032',
+            'CURRENT_STATE.md':'b0e320a862eaf83b3fea11e565b42621608578eb',
+            'TSK_0046_PERFORMANCE_CAPACITY_NFR_2026-08-28.md':'2c48f975d557b1bb4ba6c58c2a8ad3580b2c7b06',
+            'TSK_0046_PERFORMANCE_CAPACITY_NFR_EVIDENCE_2026-08-28.md':'09d111530c5e9c86feb2cafb54f62fb046a44b6f',
+            'TSK_0538_POST_CR0008_DUAL_MODE_RELIABILITY_OBSERVABILITY_NFR_REVALIDATION_2026-09-02.md':'44c9c299465e821e2ffd84a54b77e3e615d61925',
+            'TSK_0538_POST_CR0008_CURRENT_REVALIDATION_EVIDENCE_2026-09-02.md':'3ba04601ea5574fcd1fb1f58f95922ae94b74ac2',
+          }
+          def blob(path): return subprocess.check_output(['git','hash-object',path],text=True).strip()
+          for path,sha in expected.items():
+              assert Path(path).exists(), 'missing '+path
+              actual=blob(path)
+              assert actual==sha, f'hash drift {path}: {actual} != {sha}'
+          print('TSK0046_AUDIT_INPUT_HASHES=PASS')
+
+          with open('Plans/Master/WBS/master-wbs.csv',newline='',encoding='utf-8-sig') as f:
+              rows=list(csv.DictReader(f))
+          byid={r['Task_ID']:r for r in rows if r.get('Task_ID')}
+          r=byid['TSK-0046']
+          for key in ['Task_ID','Lifecycle_Stage','Title','Plan_Status','Execution_State','Priority','Critical_Path','Dependencies','Dependency_Type','Trigger','Preconditions','Inputs','Output/Artifact','Acceptance_ID','Acceptance_Criteria','Verification_ID','Verification_Method','Evidence_ID','Evidence_Required','Primary_Owner','AI_Capability_A0_A4','Action_Authority','Required_Tools_or_Access','Risk_Reference','Interface_Reference','Requirement_Reference','Source_Reference','Notes']:
+              print('ROW|'+key+'|'+(r.get(key) or ''))
+          assert r['Lifecycle_Stage']=='L4'
+          assert r['Priority']=='MEDIUM'
+          assert r['AI_Capability_A0_A4']=='A3'
+          assert r['Action_Authority']=='AUTO_ALLOWED'
+          deps=[x.strip() for x in (r['Dependencies'] or '').split(';') if x.strip()]
+          assert deps==['TSK-0538'], deps
+          assert (r['Acceptance_ID'],r['Verification_ID'],r['Evidence_ID'])==('ACC-0046','VER-0046','EVD-0046')
+          print('TSK0046_CURRENT_WBS_CONTRACT=PASS')
+
+          rt=Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          pat=re.compile(r'^(##|###) (TSK-\d{4})\b.*?(?=^(?:##|###) |\Z)',re.MULTILINE|re.DOTALL)
+          sections={}
+          for m in pat.finditer(rt): sections.setdefault(m.group(2),[]).append(m.group(0))
+          assert any('**PASS' in s and 'current accepted' in s.splitlines()[0].lower() for s in sections.get('TSK-0538',[]))
+          print('TSK0046_CURRENT_PREDECESSOR_TSK0538=PASS')
+
+          h=Path('TSK_0046_PERFORMANCE_CAPACITY_NFR_2026-08-28.md').read_text(encoding='utf-8')
+          preserved=[
+            'minimum 2× verified capacity margin',
+            'Use only fixed project-owned or otherwise controlled synthetic names',
+            'p50/p95/p99',
+            'never disable/raise rate limiting',
+            'degradation behavior',
+            'capacity-review',
+          ]
+          for token in preserved: assert token.lower() in h.lower(), token
+          assert 'CR-0003' in h and 'pilot' in h.lower()
+          print('TSK0046_HISTORICAL_CORE_REUSABLE=PASS')
+          print('TSK0046_HISTORICAL_SEQUENCING_STALE=YES')
+
+          c=Path('TSK_0538_POST_CR0008_DUAL_MODE_RELIABILITY_OBSERVABILITY_NFR_REVALIDATION_2026-09-02.md').read_text(encoding='utf-8').lower()
+          for concept in ['optional sign-in', 'dashboard/device', 'account deletion', 'provider/datastore', 'accountless core', 'p95', 'p99']:
+              assert concept in c, concept
+          print('TSK0046_CURRENT_DUAL_MODE_RELIABILITY_INPUT=PASS')
+
+          low=rt.lower()
+          assert 'no separate mandatory pilot or staging lifecycle/environment' in low
+          assert 'first real users are live production users after' in low
+          assert 'optional parent account' in low and 'complete accountless core' in low
+          print('TSK0046_CURRENT_CR0006_CR0007_SCOPE=PASS')
+
+          print('WBS_BLOB='+blob('Plans/Master/WBS/master-wbs.csv'))
+          print('GRAPH_BLOB='+blob('Plans/Master/RELATIONSHIP_INDEX.yaml'))
+          print('RUNTIME_BLOB='+blob('CURRENT_STATE.md'))
+          print('TSK0046_CURRENT_REVALIDATION_REQUIRED=YES')
+          print('TSK0046_CURRENT_CONTRACT_AUDIT=PASS')
+          PY
