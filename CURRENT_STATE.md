@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T01:24:01Z
+**Updated:** 2026-09-02T01:36:33Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2277,3 +2277,26 @@ Recompute the next executable frontier from canonical WBS/graph, current runtime
 ### Queue status after current TSK-0484 revalidation
 
 Recompute the executable frontier from canonical WBS/graph, current runtime evidence, artifact-specific reopen/change semantics, gates and Action Authority. Preserve valid non-uniform historical PASS records unless current evidence materially invalidates them.
+
+## TSK-0538 current accepted stable state — 2026-09-02 — POST-CR-0008 DUAL-MODE RELIABILITY NFR REVALIDATION
+
+`TSK-0538 — Define reliability, observability, recovery, and service-level NFRs`: **PASS** under current `ACC-0538 / VER-0538 / EVD-0538`, current direct predecessor TSK-0484, current dual-mode Version-1 scope and refreshed reliability/observability source review.
+
+- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L4 / MEDIUM / A3 / `AUTO_ALLOWED`; dependency exactly `TSK-0484`.
+- Current artifact `TSK_0538_POST_CR0008_DUAL_MODE_RELIABILITY_OBSERVABILITY_NFR_REVALIDATION_2026-09-02.md`, version `2.0.0-post-CR0008`, blob `44c9c299465e821e2ffd84a54b77e3e615d61925`, publication commit `7559ded680625af640f6d7797bd296afc97a9b31`.
+- Current durable evidence `TSK_0538_POST_CR0008_CURRENT_REVALIDATION_EVIDENCE_2026-09-02.md`, blob `3ba04601ea5574fcd1fb1f58f95922ae94b74ac2`, publication commit `56ec474ce63d85d1575ae75b7e0140e9d429eed3`.
+- Independent structural verifier script blob `b71a66bfac3584d52cc7b3f16c5096962c1a3d2c`; read-only workflow blob `a92aed2c2ccef8b2d9f706995dfedc5d454254df`; run/job `33579914315 / 100091795138`: **SUCCESS**.
+- Historical TSK-0538 evidence remains valid for the unchanged lean single-node DNS/accountless baseline, but its future web/app critical-journey model was accountless-only and did not cover the now-active optional session/dashboard/device/provider/datastore boundary.
+- Current TSK-0484 makes authentication/session/ownership/provider/datastore/reconciliation/accountless-fallback failure boundaries active; TSK-0538 therefore required current revalidation rather than date-only preservation.
+- Current acceptance defines 12 critical journeys, 13 bounded on-call questions, privacy-safe bounded metrics/logs/optional traces, and 14 provisional internal SLI/SLO rows. Account-only and accountless-core failure are measured separately.
+- Historical DNS recovery objective `<=30 minutes` remains. Provisional accountless web/app RTO is `<=30 minutes` without inferring HA spend. Third-party provider recovery time is not fabricated; fail-closed account authority plus accountless fallback and fresh restoration evidence are required.
+- Persistent account/device recovery permits zero security-authority regression: restore cannot cross ownership, resurrect deleted/revoked authority or present ambiguous mutation as success. Consequential unknown outcomes reconcile before replay.
+- Backup/restore remains privacy-minimal and excludes DNS/query/domain/browsing history, J0/J1, raw product events, bearer/session material and ordinary provider/service-account secrets.
+- PAGE/TICKET alerting remains symptom-centered and requires affected journey, symptom, first diagnostic check, owner and runbook. High-cardinality identity/token/ClientID/raw URL/DNS data remains prohibited from metric labels.
+- OpenTelemetry is only a vendor-neutral instrumentation vocabulary if/when cross-component instrumentation is justified; no collector/backend/APM vendor, HA topology or paid monitoring deployment is selected or authorized here.
+- TSK-0352 and TSK-0353 retain their own implementation/security ownership and are not inferred PASS.
+- **Non-inference:** L4 reliability/observability/recovery/service-level NFR definition PASS only; no telemetry implementation, backend/collector, HA, auth/provider/datastore implementation, production SLO attainment, target-environment incident/recovery evidence, public SLA, later task/gate, participant, publication, payment, market activation or launch PASS is inferred.
+
+### Queue status after current TSK-0538 revalidation
+
+Recompute the executable frontier from canonical WBS/graph, current runtime evidence, artifact-specific change/reopen semantics, gates and Action Authority. Preserve valid non-uniform historical PASS records where current evidence still proves unchanged acceptance.
