@@ -27,51 +27,31 @@ jobs:
           from collections import defaultdict, deque
           from datetime import date
           from pathlib import Path
-
-          WBS='Plans/Master/WBS/master-wbs.csv'
-          GRAPH='Plans/Master/RELATIONSHIP_INDEX.yaml'
-          RUNTIME='CURRENT_STATE.md'
-          expected={
-            WBS:'b27a0c5df2f5636d8ed71051e9e26a68959a2616',
-            GRAPH:'c108d2c162bcea2ee4cc01def46d0487a9501032',
-            RUNTIME:'a09b3c3a9dece3ec19c21d5bf5f1fdd2f004b482',
-          }
+          WBS='Plans/Master/WBS/master-wbs.csv'; GRAPH='Plans/Master/RELATIONSHIP_INDEX.yaml'; RUNTIME='CURRENT_STATE.md'
+          expected={WBS:'b27a0c5df2f5636d8ed71051e9e26a68959a2616',GRAPH:'c108d2c162bcea2ee4cc01def46d0487a9501032',RUNTIME:'a09b3c3a9dece3ec19c21d5bf5f1fdd2f004b482'}
           def blob(p): return subprocess.check_output(['git','hash-object',p],text=True).strip()
           for p,sha in expected.items(): assert blob(p)==sha,(p,blob(p),sha)
-
           with open(WBS,newline='',encoding='utf-8-sig') as f: rows=list(csv.DictReader(f))
           byid={r['Task_ID']:r for r in rows if r.get('Task_ID')}
           runtime=Path(RUNTIME).read_text(encoding='utf-8')
-
-          # Generic task-section parser: preserve non-uniform accepted/current headings.
           sections=defaultdict(list)
           pat=re.compile(r'^(##|###) (TSK-\d{4})\b.*?(?=^(?:##|###) |\Z)',re.MULTILINE|re.DOTALL)
           for m in pat.finditer(runtime):
               text=m.group(0); tid=m.group(2); heading=text.splitlines()[0]
-              is_pass='**PASS' in text
               dm=re.search(r'20\d{2}-\d{2}-\d{2}',heading)
-              d=date.fromisoformat(dm.group(0)) if dm else None
-              current=('current accepted' in heading.lower())
-              sections[tid].append({'text':text,'heading':heading,'pass':is_pass,'date':d,'current':current})
-
+              sections[tid].append({'text':text,'pass':'**PASS' in text,'date':date.fromisoformat(dm.group(0)) if dm else None,'current':'current accepted' in heading.lower()})
           current_pass={tid for tid,ss in sections.items() if any(s['pass'] and s['current'] for s in ss)}
           historical_pass={tid for tid,ss in sections.items() if any(s['pass'] for s in ss)}
           static_pass={tid for tid,r in byid.items() if (r.get('Execution_State') or '').strip()=='PASS'}
-          base_pass=current_pass | historical_pass | static_pass
-
+          base_pass=current_pass|historical_pass|static_pass
           def latest_pass_date(tid):
-              ds=[s['date'] for s in sections.get(tid,[]) if s['pass'] and s['date']]
-              return max(ds) if ds else None
+              ds=[s['date'] for s in sections.get(tid,[]) if s['pass'] and s['date']]; return max(ds) if ds else None
           def latest_current_date(tid):
-              ds=[s['date'] for s in sections.get(tid,[]) if s['pass'] and s['current'] and s['date']]
-              return max(ds) if ds else None
-
+              ds=[s['date'] for s in sections.get(tid,[]) if s['pass'] and s['current'] and s['date']]; return max(ds) if ds else None
           deps={}; children=defaultdict(set)
           for tid,r in byid.items():
-              ds=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
-              deps[tid]=ds
+              ds=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]; deps[tid]=ds
               for d in ds: children[d].add(tid)
-
           def descendants(tid):
               seen=set(); q=deque(children.get(tid,()))
               while q:
@@ -79,62 +59,29 @@ jobs:
                   if x in seen: continue
                   seen.add(x); q.extend(children.get(x,()))
               return len(seen)
-
-          # Historical PASS is a revalidation candidate when a direct predecessor has a later
-          # current accepted PASS. This operationalizes the no-historical-PASS-substitution rule.
           def needs_revalidation(tid):
-              if tid in current_pass or tid not in historical_pass:
-                  return False, []
-              td=latest_pass_date(tid)
-              newer=[]
+              if tid in current_pass or tid not in historical_pass: return False,[]
+              td=latest_pass_date(tid); newer=[]
               for d in deps.get(tid,[]):
                   dd=latest_current_date(d)
-                  if dd and (td is None or dd > td): newer.append((d,dd.isoformat()))
-              return bool(newer), newer
-
-          ready=[]; blocked=[]; preserved=[]
+                  if dd and (td is None or dd>td): newer.append((d,dd.isoformat()))
+              return bool(newer),newer
+          ready=[]; blocked=[]
           for tid,r in byid.items():
-              if (r.get('Lifecycle_Stage') or '').strip()!='L4': continue
-              if (r.get('Action_Authority') or '').strip()!='AUTO_ALLOWED': continue
+              if (r.get('Lifecycle_Stage') or '').strip()!='L4' or (r.get('Action_Authority') or '').strip()!='AUTO_ALLOWED': continue
               reval,newer=needs_revalidation(tid)
-              if tid in current_pass:
-                  preserved.append((tid,'CURRENT'))
-                  continue
-              if tid in historical_pass and not reval:
-                  preserved.append((tid,'HISTORICAL_VALID'))
-                  continue
-              if tid in static_pass and tid not in historical_pass:
-                  preserved.append((tid,'STATIC_PASS_NO_RUNTIME_CONTRADICTION'))
-                  continue
+              if tid in current_pass or (tid in historical_pass and not reval) or (tid in static_pass and tid not in historical_pass): continue
               missing=[d for d in deps[tid] if d not in base_pass]
-              mode='REVALIDATE' if reval else 'NEW'
-              item=(descendants(tid),tid,r,missing,mode,newer)
+              item=(descendants(tid),tid,r,missing,'REVALIDATE' if reval else 'NEW',newer)
               (ready if not missing else blocked).append(item)
-
-          ready.sort(key=lambda x:(-x[0], x[1]))
-          blocked.sort(key=lambda x:(-x[0], x[1]))
-
-          print('AUDIT_INPUT_WBS='+blob(WBS))
-          print('AUDIT_INPUT_GRAPH='+blob(GRAPH))
-          print('AUDIT_INPUT_RUNTIME='+blob(RUNTIME))
-          print('CURRENT_PASS_COUNT='+str(len(current_pass)))
-          print('ANY_RUNTIME_PASS_COUNT='+str(len(historical_pass)))
-          print('STATIC_WBS_PASS_COUNT='+str(len(static_pass)))
-          print('READY_COUNT='+str(len(ready)))
+          ready.sort(key=lambda x:(-x[0],x[1])); blocked.sort(key=lambda x:(-x[0],x[1]))
+          print('AUDIT_INPUT_WBS='+blob(WBS)); print('AUDIT_INPUT_GRAPH='+blob(GRAPH)); print('AUDIT_INPUT_RUNTIME='+blob(RUNTIME)); print('READY_COUNT='+str(len(ready)))
           for rank,(desc,tid,r,missing,mode,newer) in enumerate(ready,1):
-              print('READY|{}|{}|mode={}|desc={}|priority={}|critical={}|deps={}|newer_current_deps={}|acc={}|title={}'.format(
-                rank,tid,mode,desc,r.get('Priority',''),r.get('Critical_Path',''),';'.join(deps[tid]) or 'NONE',
-                ';'.join(f'{d}@{dt}' for d,dt in newer) or 'NONE',r.get('Acceptance_ID',''),(r.get('Title') or '').replace('|','/')))
-          for desc,tid,r,missing,mode,newer in blocked:
-              print('BLOCKED|{}|mode={}|desc={}|priority={}|missing={}|title={}'.format(tid,mode,desc,r.get('Priority',''),';'.join(missing),(r.get('Title') or '').replace('|','/')))
-
-          # Exact top-chain rows for semantic selection.
-          for tid in ['TSK-0308','TSK-0307','TSK-0311','TSK-0353','TSK-0352','TSK-0297']:
+              print('READY|{}|{}|mode={}|desc={}|priority={}|critical={}|deps={}|newer_current_deps={}|acc={}|title={}'.format(rank,tid,mode,desc,r.get('Priority',''),r.get('Critical_Path',''),';'.join(deps[tid]) or 'NONE',';'.join(f'{d}@{dt}' for d,dt in newer) or 'NONE',r.get('Acceptance_ID',''),(r.get('Title') or '').replace('|','/')))
+          for tid in ['TSK-0484','TSK-0497','TSK-0308','TSK-0307','TSK-0311','TSK-0044','TSK-0353','TSK-0352','TSK-0297']:
               r=byid.get(tid)
               if not r: continue
               reval,newer=needs_revalidation(tid)
-              print('ROW|{}|stage={}|priority={}|a={}|authority={}|plan={}|exec={}|deps={}|acc={}|ver={}|evd={}|trigger={}|pre={}|inputs={}|artifact={}|acceptance={}|verification={}|evidence={}|newer_current_deps={}|title={}|notes={}'.format(
-                tid,r.get('Lifecycle_Stage',''),r.get('Priority',''),r.get('AI_Capability_A0_A4',''),r.get('Action_Authority',''),r.get('Plan_Status',''),r.get('Execution_State',''),r.get('Dependencies',''),r.get('Acceptance_ID',''),r.get('Verification_ID',''),r.get('Evidence_ID',''),
-                (r.get('Trigger') or '').replace('|','/'),(r.get('Preconditions') or '').replace('|','/'),(r.get('Inputs') or '').replace('|','/'),(r.get('Output/Artifact') or '').replace('|','/'),(r.get('Acceptance_Criteria') or '').replace('|','/'),(r.get('Verification_Method') or '').replace('|','/'),(r.get('Evidence_Required') or '').replace('|','/'),';'.join(f'{d}@{dt}' for d,dt in newer) or 'NONE',(r.get('Title') or '').replace('|','/'),(r.get('Notes') or '').replace('|','/')))
+              print('ROW|{}|stage={}|priority={}|critical={}|a={}|authority={}|plan={}|exec={}|deps={}|acc={}|ver={}|evd={}|trigger={}|pre={}|inputs={}|artifact={}|acceptance={}|verification={}|evidence={}|newer_current_deps={}|risk={}|interfaces={}|requirements={}|sources={}|title={}|notes={}'.format(tid,r.get('Lifecycle_Stage',''),r.get('Priority',''),r.get('Critical_Path',''),r.get('AI_Capability_A0_A4',''),r.get('Action_Authority',''),r.get('Plan_Status',''),r.get('Execution_State',''),r.get('Dependencies',''),r.get('Acceptance_ID',''),r.get('Verification_ID',''),r.get('Evidence_ID',''),(r.get('Trigger') or '').replace('|','/'),(r.get('Preconditions') or '').replace('|','/'),(r.get('Inputs') or '').replace('|','/'),(r.get('Output/Artifact') or '').replace('|','/'),(r.get('Acceptance_Criteria') or '').replace('|','/'),(r.get('Verification_Method') or '').replace('|','/'),(r.get('Evidence_Required') or '').replace('|','/'),';'.join(f'{d}@{dt}' for d,dt in newer) or 'NONE',(r.get('Risk_Reference') or '').replace('|','/'),(r.get('Interface_Reference') or '').replace('|','/'),(r.get('Requirement_Reference') or '').replace('|','/'),(r.get('Source_Reference') or '').replace('|','/'),(r.get('Title') or '').replace('|','/'),(r.get('Notes') or '').replace('|','/')))
           print('POST_TSK0310_FRONTIER_AUDIT=PASS')
           PY
