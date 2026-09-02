@@ -1,4 +1,4 @@
-name: Temporary - Post-TSK-0358 L6 frontier
+name: Temporary - Inspect TSK-0360 contract
 
 on:
   push:
@@ -11,13 +11,13 @@ permissions:
   contents: read
 
 jobs:
-  inspect-frontier:
+  inspect-tsk0360:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - name: Derive evidence-backed L6 candidates
+      - name: Print exact TSK-0360 authority
         shell: bash
         run: |
           set -euo pipefail
@@ -29,78 +29,23 @@ jobs:
           python3 - <<'PY'
           import csv, json, re
           from pathlib import Path
-
           root = Path('.')
-          state = (root / 'CURRENT_STATE.md').read_text(encoding='utf-8')
-          with (root / 'Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='') as f:
+          with (root/'Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='') as f:
               rows = list(csv.DictReader(f))
-          by_id = {r['Task_ID']: r for r in rows}
-          index = {r['Task_ID']: i for i, r in enumerate(rows)}
-
-          heading_pass = set(re.findall(r'^## (TSK-\d{4}) current accepted stable state', state, flags=re.M))
-          explicit_pass = set(re.findall(r'`(TSK-\d{4})[^`]*`: \*\*PASS\*\*', state))
-          current_pass = heading_pass | explicit_pass
-          wbs_pass = {r['Task_ID'] for r in rows if r.get('Execution_State') == 'PASS'}
-
-          print('CURRENT_PASS_COUNT=' + str(len(current_pass)))
-          print('LG07_PASS=' + ('YES' if re.search(r'LG-07[^\n]{0,300}\*\*PASS\*\*|LG-07[^\n]{0,300}: PASS', state) else 'NO_DIRECT_MARKER'))
-          print('TSK0455_HOST_FENCE=' + ('YES' if 'TSK-0455 remains non-PASS and non-executable until the owner-provided fresh Ubuntu 24.04 target host' in state else 'NO'))
-
-          def deps_of(row):
-              return sorted(set(re.findall(r'TSK-\d{4}', row.get('Dependencies', ''))))
-
-          def dep_status(dep):
-              if dep in current_pass:
-                  return 'PASS_CURRENT'
-              if dep in wbs_pass:
-                  return 'PASS_WBS_HISTORICAL'
-              d = by_id.get(dep)
-              if d and d.get('Plan_Status') == 'NOT_APPLICABLE' and d.get('Execution_State') == 'PASS':
-                  return 'NOT_APPLICABLE_PASS'
-              return 'UNPROVEN'
-
-          successors = []
-          for r in rows:
-              if r['Task_ID'] in current_pass:
+          row = next((r for r in rows if r.get('Task_ID') == 'TSK-0360'), None)
+          if row is None: raise SystemExit('TSK-0360 row missing')
+          print('TSK0360_ROW=' + json.dumps(row, ensure_ascii=False, sort_keys=True))
+          state = (root/'CURRENT_STATE.md').read_text(encoding='utf-8')
+          for dep in sorted(set(re.findall(r'TSK-\d{4}', row.get('Dependencies','')))):
+              print('DEP_' + dep.replace('-', '') + '_PASS=' + ('YES' if f'## {dep} current accepted stable state' in state else 'NO'))
+          needles = ('TSK-0360','ACC-0360','VER-0360','EVD-0360','INT-0011','INT-0012','RSK-0045','REQ-0036','REQ-0037','CON-0010','CON-0011')
+          for path in sorted((root/'Plans/Master').rglob('*')):
+              if not path.is_file() or path.suffix.lower() not in {'.md','.yaml','.yml','.csv','.json','.txt'}:
                   continue
-              if 'TSK-0358' in deps_of(r):
-                  successors.append(r)
-          for r in successors:
-              ds = deps_of(r)
-              print('DIRECT_SUCCESSOR=' + json.dumps({
-                  'Task_ID': r['Task_ID'], 'Title': r['Title'], 'Lifecycle_Stage': r['Lifecycle_Stage'],
-                  'Priority': r['Priority'], 'Action_Authority': r['Action_Authority'],
-                  'Execution_State': r['Execution_State'], 'Dependencies': ds,
-                  'Dependency_Status': {d: dep_status(d) for d in ds},
-                  'Required_Tools_or_Access': r['Required_Tools_or_Access'], 'WBS_Index': index[r['Task_ID']],
-              }, ensure_ascii=False, sort_keys=True))
-
-          candidates = []
-          for r in rows:
-              if r.get('Lifecycle_Stage') != 'L6' or r.get('Action_Authority') != 'AUTO_ALLOWED':
-                  continue
-              if r['Task_ID'] in current_pass or r.get('Plan_Status') == 'NOT_APPLICABLE':
-                  continue
-              if r.get('Priority') not in {'CRITICAL', 'HIGH'}:
-                  continue
-              ds = deps_of(r)
-              statuses = {d: dep_status(d) for d in ds}
-              if any(v == 'UNPROVEN' for v in statuses.values()):
-                  continue
-              access = r.get('Required_Tools_or_Access', '')
-              fenced = r['Task_ID'] in {'TSK-0455','TSK-0456'} or 'fresh Ubuntu 24.04' in access
-              candidates.append((0 if r['Priority']=='CRITICAL' else 1, index[r['Task_ID']], r, statuses, fenced))
-          candidates.sort(key=lambda x: (x[0], x[1]))
-          for _, _, r, statuses, fenced in candidates[:30]:
-              print('ELIGIBLE_BY_DEPS=' + json.dumps({
-                  'Task_ID': r['Task_ID'], 'Title': r['Title'], 'Priority': r['Priority'],
-                  'Action_Authority': r['Action_Authority'], 'Execution_State': r['Execution_State'],
-                  'Dependencies': deps_of(r), 'Dependency_Status': statuses,
-                  'Required_Tools_or_Access': r['Required_Tools_or_Access'],
-                  'Preconditions': r['Preconditions'], 'Trigger': r['Trigger'],
-                  'Access_Fenced': fenced, 'WBS_Index': index[r['Task_ID']],
-                  'Acceptance_ID': r['Acceptance_ID'], 'Verification_ID': r['Verification_ID'],
-                  'Risk_Reference': r['Risk_Reference'], 'Interface_Reference': r['Interface_Reference'],
-              }, ensure_ascii=False, sort_keys=True))
-          print('FRONTIER_DIAGNOSTIC=PASS')
+              try: lines = path.read_text(encoding='utf-8').splitlines()
+              except Exception: continue
+              for i,line in enumerate(lines,1):
+                  if any(n in line for n in needles):
+                      print(f'AUTH_MATCH={path}:{i}:{line}')
+          print('TSK0360_CONTRACT_DIAG=PASS')
           PY
