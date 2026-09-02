@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T03:54:48Z
+**Updated:** 2026-09-02T04:05:48Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2455,5 +2455,27 @@ Recompute the executable frontier from canonical WBS/graph, current runtime evid
 - **Non-inference:** this is L4 NFR-definition PASS only. It does not implement the AdGuard adapter, approve/execute TSK-0352, create a persistent client, activate authentication/datastore, rotate credentials, change AdGuard configuration/version, authorize real-user processing, publish, launch, pass a lifecycle gate or infer successor PASS.
 
 ### Queue status after current TSK-0044 revalidation
+
+Recompute the executable frontier from canonical WBS/graph, current runtime evidence, artifact-specific current-validity, gates and Action Authority. Preserve valid non-uniform historical PASS records unless current evidence materially invalidates them.
+
+
+## TSK-0353 current accepted stable state — 2026-09-02 — POST-CR-0008 AUTHORIZATION/SESSION/ACCOUNT-LIFECYCLE NFR
+
+`TSK-0353 — Define authentication, authorization, session and account-lifecycle NFRs`: **PASS** under current `ACC-0353 / VER-0353 / EVD-0353`, current direct predecessors TSK-0230 / TSK-0484 and the current dual-mode Version-1 accountless-first product boundary.
+
+- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L4 / MEDIUM / A3 / `AUTO_ALLOWED`; dependencies exactly `TSK-0230; TSK-0484`.
+- Current artifact `TSK_0353_POST_CR0008_AUTHORIZATION_SESSION_ACCOUNT_LIFECYCLE_NFRS_2026-09-02.md`, version `1.0.0-post-CR0008`, blob `3cb7c248b6d121e1c8d9db47accdf639998edc93`, publication commit `5b12d4d78589c5c76013422dfa98ab8fab2ab64d`.
+- Durable evidence `TSK_0353_POST_CR0008_CURRENT_NFR_EVIDENCE_2026-09-02.md`, blob `a87a0fa9e3fbf227869d7ef81f68c1828d7944bb`, publication commit `b089aed4ade87d9f25deb62b8abf2cef5e583e8f`.
+- Independent read-only VER-0353: verifier script blob `9c60b5b087eaf9dd2a2a79e9440997bb89d7fa67`; workflow blob `ef2bc9ac92ab11886859af397c91ae602f511b10`; run/job `33589319072 / 100119889794`; conclusion **SUCCESS**, no verifier correction cycle.
+- Token rule: Firebase/Google identity is accepted only after backend signature/issuer/audience/expiry/subject verification and applicable CSRF/revocation checks; immutable provider subject/UID, not email, anchors identity.
+- Session rule: server-managed host cookie is `Secure`, `HttpOnly`, explicit `SameSite=Lax` baseline, non-sliding and maximum 7 days; recent authentication `<=5 minutes` is required before session issue and high-risk account operations.
+- Authorization rule: every account/device operation derives parent identity from the verified session and performs server-side parent-to-object ownership authorization; opaque IDs/ClientID are never authorization or technical protection evidence.
+- Lifecycle rule: current-browser logout, global/security revocation and account deletion remain distinct; deletion/revocation is reconciled across required domains and never implies physical DNS/profile removal without separate proof.
+- Failure rule: provider or ownership-datastore failure grants no account authority and cannot disable the independently healthy accountless core; ambiguous consequential mutations reconcile before retry/success.
+- Privacy rule: security events are operational/security-only, contain no raw tokens/cookies/email/DNS history, and durable collection is blocked until exact necessary bounded retention/deletion is defined under TSK-0230.
+- **ACC-0353 = PASS. VER-0353 = PASS. EVD-0353 = SATISFIED.**
+- **Non-inference:** this is L4 NFR-definition PASS only; it does not activate Firebase/Google, implement accounts/sessions/datastore/AdGuard integration, authorize real-user processing, create legal compliance, pass a lifecycle gate, publish, activate a market, launch or infer successor PASS.
+
+### Queue status after current TSK-0353 acceptance
 
 Recompute the executable frontier from canonical WBS/graph, current runtime evidence, artifact-specific current-validity, gates and Action Authority. Preserve valid non-uniform historical PASS records unless current evidence materially invalidates them.
