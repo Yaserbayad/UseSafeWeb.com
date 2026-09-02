@@ -337,22 +337,20 @@ canonicalization:
   canonical_activation_condition: TSK-0009 publication PASS plus TSK-0011 exact GitHub read-back PASS; volatile execution state is then rebaselined in repository CURRENT_STATE.md under TSK-0010
 
 post_freeze_change_control:
-  latest_change: CR-0007
-  date: '2026-08-31'
-  status: owner autonomy and production-only lifecycle amendment; canonical reliance requires deterministic validation plus GitHub publication/read-back
-  authority: explicit current Project Owner answers 2026-08-31; DEC-0054; actual applicable law/safety/security/platform/technical reality remains higher authority
+  latest_change: CR-0008
+  date: '2026-09-01'
+  status: proportional-evidence and delegated action-authority normalization amendment; canonical publication/read-back completed and reconciled
+  authority: explicit current Project Owner approval 2026-09-01; DEC-0055/CR-0008 with DEC-0054/CR-0007 underlying autonomy preserved; actual applicable law/safety/security/platform/technical reality remains higher authority
   affected_scope:
-  - evidence-driven autonomy inside frozen scope, including detailed account/dashboard UX and ordinary product/design translation
-  - no mandatory pilot or staging lifecycle/environment; first real users are live production after LG-09 readiness
-  - automatic evidence gates and automatic UK production GO where current prerequisites pass
-  - routine technical scaling/spend/incidents autonomous inside approved bounds
-  - named-market activation, nondelegable legal/identity/contract acts, organizational formalization/material commitments and strategic transition remain human
+  - Layer-5 proportional-evidence and action-authority semantics
+  - all 101 prior HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED WBS rows audited: 75 delegable rows converted to AUTO_ALLOWED and 26 genuine human/historical boundaries retained
+  - decision register and derived autonomy projection synchronized to DEC-0055/CR-0008
+  - no task scope, title, acceptance criterion, dependency, gate, or plan-status change
+  - no repository reorganization solely for cleanliness; proportional evidence reduces ceremony without weakening proof
   affected_gates:
-  - LG-06 through LG-15 rebaselined to DEC-0054 automatic/conditional authority semantics
-  - LG-16 remains Project Owner named-market activation
-  - LG-17 splits routine technical scaling from human formalization/material commitments
-  - LG-18 splits routine incident remediation from human strategic transition
-  semantic_delta: no governance change itself creates PASS; objective evidence, tests, recovery/rollback and actual applicable requirements remain mandatory
+  - no gate scope, dependency, or acceptance semantics changed by CR-0008
+  - DEC-0054/CR-0007 automatic/conditional gate and production-lifecycle authority remains controlling underneath DEC-0055 normalization
+  semantic_delta: authority/evidence-form normalization creates no PASS; minimum durable proof must still establish every current acceptance boundary, with independent verification retained where risk or acceptance requires it
   change_record: Registers/EXCEPTIONS_CHANGE_CONTROLS.md#post-freeze-material-change-records
 
 generated_assembly_contract:
