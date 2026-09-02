@@ -133,7 +133,8 @@ jobs:
             '`https://dns.usesafeweb.com/dns-query`',
             'Installation/authorization remains an explicit iOS/user action in Settings.',
             'do not instruct the user to weaken security merely to make SafeWeb green',
-            'profile removal remain explicit user/OS actions',
+            'Must remain user/OS controlled:',
+            '- profile removal.',
             'Profile presence, successful download, account/session state, dashboard presence or parent confirmation is insufficient for `Verified`.',
             'Treat profile removal as removal of the profile-owned SafeWeb DNS configuration; do not claim unrelated account/device data was deleted.',
           ]
