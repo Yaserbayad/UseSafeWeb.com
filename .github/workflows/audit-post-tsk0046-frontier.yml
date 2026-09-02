@@ -107,7 +107,7 @@ jobs:
           ready.sort(key=lambda x:(-x[0],x[1],x[2],x[3]))
           blocked.sort(key=lambda x:(-x[0],x[1],x[2],x[3]))
           print('AUDIT_INPUT_WBS='+blob(WBS)); print('AUDIT_INPUT_GRAPH='+blob(GRAPH)); print('AUDIT_INPUT_RUNTIME='+blob(RUNTIME))
-          print('CURRENT_PASS_COUNT='+str(len(current_pass))); print('HISTORICAL_PASS_COUNT='+str(len(historical_pass))); print('STATIC_PASS_COUNT='+str(len(static_pass));)
+          print('CURRENT_PASS_COUNT='+str(len(current_pass))); print('HISTORICAL_PASS_COUNT='+str(len(historical_pass))); print('STATIC_PASS_COUNT='+str(len(static_pass)))
           print('STALE_OR_REVALIDATION_REQUIRED_COUNT='+str(len(stale)))
           print('READY_COUNT='+str(len(ready)))
           for rank,(desc,pr,ordn,tid,r,missing,mode,newer) in enumerate(ready,1):
