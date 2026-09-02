@@ -21,10 +21,42 @@ jobs:
           ref: main
           fetch-depth: 0
 
+      - name: Persist exact verifier token correction if still needed
+        id: verifier_fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          F='Plans/Master/Tools/verify_tsk0239_security_control_matrix_20260902.py'
+          if grep -Fq "'not represented here as legal PASS'" "$F"; then
+            python3 - <<'PY'
+          from pathlib import Path
+          p=Path('Plans/Master/Tools/verify_tsk0239_security_control_matrix_20260902.py')
+          s=p.read_text(encoding='utf-8')
+          old="        'not represented here as legal PASS',\n"
+          new="        'is **not** represented here as legal PASS',\n"
+          assert s.count(old) == 1
+          p.write_text(s.replace(old,new,1), encoding='utf-8')
+          PY
+            git diff --check
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add "$F"
+            git commit -m 'fix: match TSK-0239 legal-boundary markdown exactly'
+            git fetch origin main
+            test "$(git rev-parse origin/main)" = "${GITHUB_SHA}"
+            git push origin HEAD:main
+            echo 'corrected=true' >> "$GITHUB_OUTPUT"
+          else
+            grep -Fq "'is **not** represented here as legal PASS'" "$F"
+            echo 'corrected=false' >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Independently verify TSK-0239
+        if: steps.verifier_fix.outputs.corrected != 'true'
         run: python3 Plans/Master/Tools/verify_tsk0239_security_control_matrix_20260902.py --verify
 
       - name: Record PASS and restore all temporary workflow changes
+        if: steps.verifier_fix.outputs.corrected != 'true'
         env:
           SOURCE_SHA: ${{ github.sha }}
           CARRIER_BASE_SHA: 415975c3e7961575aa036df88c362af4cf046e7a
@@ -55,6 +87,7 @@ jobs:
           git push origin HEAD:main
 
       - name: Exact remote read-back
+        if: steps.verifier_fix.outputs.corrected != 'true'
         run: |
           git fetch origin main
           git show origin/main:CURRENT_STATE.md | grep -F '## TSK-0239 current accepted stable state — 2026-09-02 — POST-CR-0009'
