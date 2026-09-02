@@ -65,13 +65,14 @@ test('consumes the canonical SafeWeb design-system sources rather than inventing
 test('integrates an accessible component library and browser-editable content adapter', () => {
   const page = read('src/app/[lang]/page.tsx');
   const cms = read('keystatic.config.ts');
-  const cmsRoute = read('src/app/keystatic/[[...params]]/page.tsx');
+  const cmsClient = read('src/app/keystatic/keystatic.ts');
+  read('src/app/keystatic/[[...params]]/page.tsx');
   const cmsApi = read('src/app/api/keystatic/[...params]/route.ts');
 
   assert.match(page, /radix-ui/);
   assert.match(cms, /@keystatic\/core/);
   assert.match(cms, /kind:\s*['"]local['"]/);
-  assert.match(cmsRoute, /makePage/);
+  assert.match(cmsClient, /makePage/);
   assert.match(cmsApi, /makeRouteHandler/);
 });
 
