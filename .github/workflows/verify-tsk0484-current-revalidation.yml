@@ -71,7 +71,13 @@ jobs:
               assert tb in threat, tb
           threat_ids=set(re.findall(r'\| (TM-\d{2}) \|',threat))
           assert threat_ids=={f'TM-{n:02d}' for n in range(1,31)}, sorted(threat_ids)
-          for token in ['parent authentication/ownership and `ClientID` never substitute for object authorization or technical protection verification','persistent identifiable DNS query/file logging remains OFF','no browsing/query/activity-history product store','CONTROL PLAN DEFINED; IMPLEMENTATION/RETEST REQUIRED']:
+          for token in [
+              'optional parent authentication/account ownership never substitutes for technical protection verification',
+              '`ClientID` is an opaque DNS-control reference and is never authentication or authorization',
+              'persistent identifiable DNS query/file logging remains OFF',
+              'no browsing/query/activity-history product store',
+              'CONTROL PLAN DEFINED; IMPLEMENTATION/RETEST REQUIRED',
+          ]:
               assert token in threat, token
           print('TSK0484_CURRENT_30_THREAT_10_BOUNDARY_MODEL=PASS')
 
