@@ -30,7 +30,7 @@ jobs:
           set -euo pipefail
           test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
           test "$(git hash-object website/package-lock.json)" = '14f9a62607489f965b96d98cdf0d825a363cd8bc'
-          test "$(git hash-object website/tests/contract/tsk0361.test.mjs)" = '2aae1c36cb052acca8bd7176c3503ef36c59b083'
+          test "$(git hash-object website/tests/contract/tsk0361.test.mjs)" = '31116c434bda726cf10586070c28efe23bad2053'
           node --test website/tests/contract/tsk0361.test.mjs
           python3 tests/repository-structure/verify_structure.py
           python3 Plans/Master/Tools/validate_master_plan.py
