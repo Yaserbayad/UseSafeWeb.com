@@ -1,23 +1,29 @@
-name: Retired - Accept TSK-0498 privacy-safe event contract v2
+name: Temporary - Verify TSK-0051 LG-07 readiness decision
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/accept-tsk0498-privacy-safe-events-v2-20260901.yml'
 
 permissions:
   contents: read
 
 jobs:
-  verify-retired-state:
+  verify-tsk0051:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Verify durable TSK-0498 acceptance without mutation
+      - uses: actions/checkout@v6
+      - name: Independently verify TSK-0051 LG-07
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq '## TSK-0498 current accepted stable state — 2026-09-01 — POST-CR-0008' CURRENT_STATE.md
-          grep -Fq '`TSK-0498 — Define only decision-linked accountless journey, protection-state, self-service, reliability, channel, and cost events`: **PASS**' CURRENT_STATE.md
-          test "$(git hash-object TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md)" = '6b7a5095122c74ed9ec860b74408dab474576659'
-          grep -Fq '**Version:** 1.0.1' TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
+          test "$(git hash-object Plans/Master/Registers/GATES.md)" = '87cf9060954a82e1d5a092200d3c922f1986a5da'
+          test "$(git hash-object TSK_0051_LG07_ARCHITECTURE_DELIVERY_READINESS_DECISION_2026-09-02.md)" = 'f3febe09b804163e47b96a1784512b8b12620628'
+          test "$(git hash-object Plans/Master/Tools/verify_tsk0051_lg07_readiness_20260902.py)" = '479e27b5910c0967b8fcb687140546d9c2df4ebc'
+          test "$(git hash-object TSK_0048_DEPENDENCY_ORDERED_VERTICAL_IMPLEMENTATION_BACKLOG_2026-09-02.md)" = '4463a818d15a9faa4e48363105bce92fe28e3450'
+          python3 Plans/Master/Tools/verify_tsk0051_lg07_readiness_20260902.py
           python3 Plans/Master/Tools/validate_master_plan.py
-          echo 'TSK0498_HISTORICAL_ACCEPT_WORKFLOW_RETIRED=PASS'
+          git diff --check
+          echo 'TSK0051_LG07_INDEPENDENT_VERIFICATION=PASS'
