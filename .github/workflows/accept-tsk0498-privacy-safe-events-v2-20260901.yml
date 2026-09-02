@@ -1,22 +1,23 @@
-name: Temporary - Independently verify TSK-0048 backlog
+name: Retired - Accept TSK-0498 privacy-safe event contract v2
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  verify-tsk0048:
+  verify-retired-state:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify published TSK-0048
+      - name: Verify durable TSK-0498 acceptance without mutation
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object TSK_0048_DEPENDENCY_ORDERED_VERTICAL_IMPLEMENTATION_BACKLOG_2026-09-02.md)" = '4463a818d15a9faa4e48363105bce92fe28e3450'
-          python3 Plans/Master/Tools/verify_tsk0048_vertical_backlog_20260902.py
+          grep -Fq '## TSK-0498 current accepted stable state — 2026-09-01 — POST-CR-0008' CURRENT_STATE.md
+          grep -Fq '`TSK-0498 — Define only decision-linked accountless journey, protection-state, self-service, reliability, channel, and cost events`: **PASS**' CURRENT_STATE.md
+          test "$(git hash-object TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md)" = '6b7a5095122c74ed9ec860b74408dab474576659'
+          grep -Fq '**Version:** 1.0.1' TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md
           python3 Plans/Master/Tools/validate_master_plan.py
-          git diff --exit-code -- TSK_0048_DEPENDENCY_ORDERED_VERTICAL_IMPLEMENTATION_BACKLOG_2026-09-02.md
+          echo 'TSK0498_HISTORICAL_ACCEPT_WORKFLOW_RETIRED=PASS'
