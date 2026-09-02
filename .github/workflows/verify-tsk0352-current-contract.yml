@@ -21,4 +21,4 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 .github/scripts/verify_tsk0352_current_contract.py
+          python3 .github/scripts/verify_tsk0352_current_contract_v2.py
