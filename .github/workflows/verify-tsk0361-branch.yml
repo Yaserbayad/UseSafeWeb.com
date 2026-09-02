@@ -13,12 +13,25 @@ permissions:
   contents: read
 
 jobs:
-  contract:
+  verify:
     runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: website
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
           node-version: '22'
       - name: Verify TSK-0361 static contract
-        run: node website/tests/tsk0361-contract.mjs
+        run: npm run test:contract
+      - name: Install exact declared dependencies
+        run: npm install --no-audit --no-fund
+      - name: Verify installed top-level dependency graph
+        run: npm ls --depth=0
+      - name: Lint application
+        run: npm run lint
+      - name: Build standalone application
+        run: npm run build
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high

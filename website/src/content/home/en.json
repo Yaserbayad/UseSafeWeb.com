@@ -1,0 +1,11 @@
+{
+  "eyebrow": "First phone safety setup",
+  "title": "Set up sensible safeguards for a first phone",
+  "intro": "SafeWeb guides parents and caregivers through phone settings, encrypted DNS protection, and relevant service controls, then shows what is verified, confirmed, needs action, or is not covered.",
+  "accountless": "You can start and complete the core setup without an account or payment card.",
+  "privacy": "SafeWeb does not monitor messages, photos, contacts, location, or browsing history.",
+  "limitation": "It helps reduce some risks, but it does not cover every app, connection, or behavior.",
+  "ctaLabel": "Start setup",
+  "detailsTitle": "What SafeWeb does not do",
+  "detailsBody": "SafeWeb is not surveillance software. It does not read a child’s messages, inspect photos or contacts, track location, or create a browsing-history feed. Native controls, DNS filtering, and service settings each have limits, and the Protection Map keeps those limits visible."
+}

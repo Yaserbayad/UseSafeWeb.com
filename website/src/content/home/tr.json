@@ -1,0 +1,11 @@
+{
+  "eyebrow": "İlk telefon güvenlik kurulumu",
+  "title": "İlk telefon için makul korumaları ayarlayın",
+  "intro": "SafeWeb; ebeveynleri ve bakım verenleri telefon ayarları, şifreli DNS koruması ve ilgili hizmet kontrolleri boyunca yönlendirir; ardından neyin doğrulandığını, onaylandığını, işlem gerektirdiğini veya kapsam dışında olduğunu gösterir.",
+  "accountless": "Temel kurulumu hesap olmadan ve ödeme kartı gerekmeksizin başlatıp tamamlayabilirsiniz.",
+  "privacy": "SafeWeb mesajları, fotoğrafları, kişileri, konumu veya tarama geçmişini izlemez.",
+  "limitation": "Bazı riskleri azaltmaya yardımcı olur; her uygulamayı, bağlantıyı veya davranışı kapsamaz.",
+  "ctaLabel": "Kurulumu başlat",
+  "detailsTitle": "SafeWeb ne yapmaz?",
+  "detailsBody": "SafeWeb bir gözetim yazılımı değildir. Çocuğun mesajlarını okumaz, fotoğraf veya kişileri incelemez, konumu takip etmez ve tarama geçmişi akışı oluşturmaz. Yerleşik kontrollerin, DNS filtrelemenin ve hizmet ayarlarının sınırları vardır; Protection Map bu sınırları görünür tutar."
+}
