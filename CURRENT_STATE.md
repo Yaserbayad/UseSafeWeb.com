@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T22:42:46Z
+**Updated:** 2026-09-02T23:57:02Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2984,3 +2984,21 @@ Recompute the complete current L6 executable frontier from canonical WBS/graph, 
 ### Queue effect
 
 `TSK-0358` may now consume this current accepted TSK-0357 state subject to its own remaining dependencies, gates, authority, and acceptance contract. `TSK-0455` remains non-PASS pending its mandatory fresh target-host `VER-0455` evidence.
+
+## TSK-0358 current accepted stable state — 2026-09-02
+
+`TSK-0358 — Implement routing, setup, verification, Protection Map, troubleshooting, recovery/removal, and completion without mandatory login`: **PASS** under current `ACC-0358 / VER-0358 / EVD-0358`, current durable PASS dependencies `TSK-0320`, `TSK-0357`, and `TSK-0361`, and the active owner/accountless-first privacy fence.
+
+- Current WBS: **L6 / CRITICAL / A3 / AUTO_ALLOWED**.
+- Durable implementation is canonical `main` commit `e2586f389a29524b23d105cd56acaa2a038b2b46`: browser/server application state-machine routing covers setup, verification, truthful Protection Map, troubleshooting, recovery/removal, restart and completion without mandatory login; accountless state inherits the bounded J0 scope/hard expiry and rejects malformed/expired/identity/history-bearing state.
+- Optional-account entry/return/expiry/logout/dashboard routing exists only as a capability-gated state contract. The current owner fence remains non-activated: no `/account` or `/dashboard` product route, persistent account store, mandatory login, or protection-strengthening effect was introduced.
+- Clean merged-main target-runtime verification: run `33693907580`, job `100458530863`: **SUCCESS** on Ubuntu 24.04 / Node 22.23.2 / Next.js production runtime / real Chromium; master-plan validation PASS; **22/22** contract tests PASS; lint has zero errors; typecheck and production build PASS; production/all dependency audits report **0 vulnerabilities**; `TSK0361_BROWSER_ACCEPTANCE=PASS`; `TSK0357_BROWSER_ACCEPTANCE=PASS`; `TSK0358_BROWSER_ACCEPTANCE=PASS`; `TSK0358_CLEAN_MAIN_ACCEPTANCE=PASS`.
+- Supplemental exact-main acceptance: run `33697256795`, job `100468702948`: **SUCCESS**; directly executed enabled optional-account `ENTER`, `RETURN`, `DASHBOARD`, `EXPIRE`, and `LOGOUT` transitions against the merged TypeScript module while proving `coreRequiresLogin=false`, account ownership cannot manufacture technical verification, and the owner fence remains non-activated. Markers: `TSK0358_OPTIONAL_ACCOUNT_STATE_CONTRACT=PASS`, `TSK0358_OWNER_FENCE_NON_ACTIVATION=PASS`, `TSK0358_SUPPLEMENTAL_ACCEPTANCE=PASS`.
+- Contract/authority diagnostic: run `33697144786`, job `100468359799`: **SUCCESS**; exact current WBS/ACC/VER/EVD loaded, all three dependencies confirmed current PASS, and the canonical master-plan validator passed.
+- Recorded deviation/disposition: ESLint emitted one non-error `@typescript-eslint/no-unused-vars` warning for the intentionally non-operative `_accountState` parameter in `coreRequiresLogin`; the lint command passed, behavior is directly verified, and the warning does not weaken any ACC-0358 criterion.
+- For `VER-0358`, the applicable target environment is the built Next.js application exercised in its production server runtime with a real browser; no public/production deployment or participant processing is inferred or claimed.
+- **Non-inference:** this PASS does not activate persistent optional accounts/dashboard, prove `TSK-0455` target-host recovery, deploy any server, authorize production/public activation, participant processing, payment, market activation, launch, or any downstream task/gate PASS.
+
+### Queue effect
+
+Recompute the complete current L6 executable frontier from canonical WBS/graph/runtime/gates/risks/interfaces and Action Authority. `TSK-0455` remains non-PASS and non-executable until the owner-provided fresh Ubuntu 24.04 target host plus required DNS/TLS/monitoring access exists for mandatory `VER-0455` target-host execution.
