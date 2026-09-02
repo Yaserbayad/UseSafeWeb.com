@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T18:05:01Z
+**Updated:** 2026-09-02T18:18:53Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2932,3 +2932,21 @@ Recompute current authority. `TSK-0051` becomes dependency-eligible only if `TSK
 ### Queue status after TSK-0050 acceptance
 
 LG-07 and all non-legal L5 readiness work are complete. Recompute the full current L6 eligible frontier from WBS/graph/runtime/gates and select the highest-priority genuinely executable `AUTO_ALLOWED` task. `TSK-0240` remains owner-external under CR-0009 and is not selected as legal work.
+
+## TSK-0454 current accepted stable state — 2026-09-02 — POST-LG-07 SOURCE STRUCTURE
+
+`TSK-0454 — Create approved source, infrastructure, configuration, test, and documentation structure`: **PASS** under current `ACC-0454 / VER-0454 / EVD-0454`.
+
+- Current normalized WBS blob `eb35f3b10356396c5117e3f47d0b0378953e2157`: L6 / A3 / `AUTO_ALLOWED`; sole dependency `TSK-0050` is current durable PASS and LG-07 is current durable PASS.
+- Implementation merged through PR `#57`; merge commit `3c2cd8e2f042111dabd1ec50d1b12a0acc48a451`. Scope is canonical source/infrastructure/config/test/docs ownership only; it does not implement the Next.js application or TSK-0455 target-host deployment.
+- Canonical structure verifier: `tests/repository-structure/verify_structure.py`, blob `ae2444df35bcf3c967800709b35a0366924e55e0`.
+- TDD evidence run `33665697962`: initial branch attempt failed as expected on the first missing canonical file (`.gitignore`); subsequent GREEN runs passed after the minimum structure was implemented; post-review GREEN passed after removing an unnecessary `website/public/README.md` runtime/public asset.
+- Independent clean-`main` verification run `33666317227`: **SUCCESS**. It verified canonical `/website`, `/infrastructure/adguard-server`, `/tests`, `/docs`, ownership/authority boundaries, generated-file locations, secret exclusions, no tracked runtime secret-like paths, `git diff --check`, and the full modular master-plan validator: 641 tasks / 858 dependency edges / 0 broken links / 0 generated missing task IDs.
+- Pre-merge five-axis review found and resolved one required issue: documentation was not left under the future Next.js `public/` runtime-static directory. Final PR diff contains 10 structure/test/documentation files and no workflow, planning-authority, runtime-state, application-behavior, dependency-version, Azure-control-plane or production changes.
+- Single-authority invariant is explicit: `Plans/Master/` remains planning authority and `CURRENT_STATE.md` remains volatile runtime authority; no duplicate task/gate/state store was created.
+- Secret boundary is explicit: environment-specific values, credentials, tokens and private keys remain outside Git; generated dependency/build/coverage output is ignored.
+- **Non-inference:** no TSK-0357/TSK-0361/TSK-0395/TSK-0455 implementation, target-host execution, deployment, production activation, participant processing, new spend, launch or legal/compliance PASS is inferred.
+
+### Queue status after TSK-0454 acceptance
+
+Recompute the full current L6 frontier. TSK-0455 remains non-executable until its required owner-provided fresh Ubuntu 24.04 Azure host plus DNS/TLS/monitoring access exists; select the highest-priority genuinely executable remaining `AUTO_ALLOWED` task.
