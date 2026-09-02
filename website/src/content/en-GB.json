@@ -1,0 +1,142 @@
+{
+  "common": {
+    "brand": "SafeWeb",
+    "dnsHostname": "dns.usesafeweb.com",
+    "dohUrl": "https://dns.usesafeweb.com/dns-query",
+    "skipLink": "Skip to main content",
+    "primaryNavigationLabel": "Primary navigation",
+    "languageNavigationLabel": "Language",
+    "nav": { "how": "How it works", "compatibility": "Compatibility", "limits": "Protection & limits", "privacy": "Privacy", "help": "Help", "start": "Start setup" },
+    "footerTitle": "Bounded, evidence-led protection",
+    "footerBody": "Core setup is accountless. SafeWeb does not provide browsing history, child profiles, a safety score, or unrestricted DNS administration."
+  },
+  "home": {
+    "kicker": "First phone safety setup",
+    "title": "Set up safer DNS without creating an account",
+    "summary": "SafeWeb guides a parent through phone safeguards and encrypted DNS, then keeps protection claims tied to current evidence.",
+    "cards": [
+      { "title": "Accountless core", "body": "Start, understand, troubleshoot, remove, and recover without signing in." },
+      { "title": "Truthful status", "body": "A saved setting or account never becomes technical verification by itself." },
+      { "title": "Small scope", "body": "No browsing history, child account, activity timeline, or broad DNS console." }
+    ],
+    "noteTitle": "What SafeWeb can prove",
+    "noteBody": "Each protection layer is reported separately. Unsupported or uncertain conditions stop with a clear next action instead of a positive claim.",
+    "primaryLabel": "Start setup",
+    "secondaryLabel": "See how it works"
+  },
+  "howItWorks": {
+    "kicker": "How it works",
+    "title": "Phone, Internet, then relevant services",
+    "summary": "SafeWeb separates each layer so one successful step never certifies another.",
+    "cards": [
+      { "title": "1. Phone", "body": "Review the supported native safeguard. Parent confirmation is recorded only as confirmation." },
+      { "title": "2. Internet", "body": "Configure the approved encrypted DNS path and verify it with qualifying technical evidence." },
+      { "title": "3. Services", "body": "Show only a currently approved relevant service safeguard; zero applicable services is valid." }
+    ],
+    "noteTitle": "No overall safety score",
+    "noteBody": "The Protection Map keeps verified, confirmed, action-needed, uncertain, not-covered, and removed states distinct."
+  },
+  "compatibility": {
+    "kicker": "Compatibility",
+    "title": "Use only a supported setup path",
+    "summary": "SafeWeb currently guides supported Android Private DNS and the approved iPhone encrypted-DNS profile route.",
+    "cards": [
+      { "title": "Android", "body": "Supported Android phones use the Private DNS provider-hostname control where it is available and usable." },
+      { "title": "iPhone", "body": "Supported iPhones use the approved encrypted-DNS profile flow with explicit iOS installation approval." },
+      { "title": "Managed or conflicting devices", "body": "If device policy, VPN, Private Relay, another resolver, or an unsupported platform blocks a reliable result, SafeWeb reports the limitation instead of inventing a workaround." }
+    ],
+    "noteTitle": "Management controls stay authoritative",
+    "noteBody": "Do not weaken employer, school, or security controls merely to make SafeWeb show a positive state."
+  },
+  "limits": {
+    "kicker": "Protection & limits",
+    "title": "Protection is evidence-bounded",
+    "summary": "SafeWeb can reduce exposure through supported safeguards, but it cannot prove complete device or child safety.",
+    "cards": [
+      { "title": "Verified", "body": "Reserved for current qualifying technical evidence for that layer." },
+      { "title": "Status uncertain", "body": "Used when current evidence is incomplete or conflicting." },
+      { "title": "Not covered", "body": "Used when the current platform, network, or service path is outside supported scope." }
+    ],
+    "noteTitle": "Separate lifecycle meanings",
+    "noteBody": "Removing SafeWeb DNS, deleting a future account record, logging out, and deleting anonymous web state are different operations."
+  },
+  "privacy": {
+    "kicker": "Privacy",
+    "title": "Minimise data by design",
+    "summary": "The accountless public/start experience does not need identity, browsing history, activity history, or raw DNS history.",
+    "cards": [
+      { "title": "No identity required", "body": "The core setup path remains usable without a parent or child account." },
+      { "title": "No surveillance view", "body": "There is no history timeline, top-sites list, child profile, or raw query dashboard." },
+      { "title": "Separate domains", "body": "Any future optional account/device records remain separate from anonymous setup state unless an explicit approved transfer is later implemented." }
+    ],
+    "noteTitle": "This is a product privacy boundary",
+    "noteBody": "Public legal or regulatory conclusions remain outside this implementation and are not inferred from this page."
+  },
+  "help": {
+    "kicker": "Help",
+    "title": "Solve the specific issue in front of you",
+    "summary": "SafeWeb support starts from the current setup or verification problem and avoids broad data collection.",
+    "cards": [
+      { "title": "Setup or verification", "body": "Check the relevant platform setting and only retry after a condition changes or new evidence exists." },
+      { "title": "Blocked site or service", "body": "A content problem does not automatically change the DNS-path evidence state." },
+      { "title": "Removal and recovery", "body": "Remove only the SafeWeb-owned setting or profile, then confirm ordinary connectivity without claiming protection remains active." }
+    ],
+    "noteTitle": "Do not send sensitive diagnostics",
+    "noteBody": "Routine help should not request browsing history, raw DNS logs, child profile data, passwords, tokens, or broad network dumps."
+  },
+  "status": {
+    "kicker": "Service status",
+    "title": "Status must stay separate from protection state",
+    "summary": "A service or provider incident can affect availability, but operational availability never proves that a device is protected.",
+    "cards": [
+      { "title": "Current publication boundary", "body": "This baseline does not publish or claim live production status. A later approved status surface must use aggregate or synthetic operational evidence." }
+    ],
+    "noteTitle": "No production claim",
+    "noteBody": "The existence of this route is not evidence of production activation, deployment, launch, or current service availability."
+  },
+  "start": {
+    "kicker": "Accountless setup",
+    "title": "Start without signing in",
+    "summary": "Choose the phone you are setting up. The current baseline uses URL routing only and stores no journey state.",
+    "cards": [
+      { "title": "What happens next", "body": "SafeWeb routes to the supported native phone safeguard, then the approved DNS setup instructions." },
+      { "title": "What does not happen", "body": "Starting setup does not create an account, identify a child, or record browsing activity." }
+    ],
+    "noteTitle": "Accountless remains first-class",
+    "noteBody": "Optional account continuity belongs to a later bounded feature slice and cannot become a prerequisite for core value.",
+    "primaryLabel": "Choose phone"
+  },
+  "route": {
+    "kicker": "Setup",
+    "title": "Which phone are you setting up?",
+    "summary": "Choose the current supported path. SafeWeb selects the approved DNS mechanism; you do not need to choose a DNS protocol.",
+    "androidLabel": "Android phone",
+    "iphoneLabel": "iPhone",
+    "otherLabel": "Another or managed device",
+    "noteTitle": "Unsupported paths stop truthfully",
+    "noteBody": "If the needed control is absent, locked, managed, or incompatible, use compatibility guidance instead of a speculative setup."
+  },
+  "native": {
+    "kicker": "Phone safeguard",
+    "androidTitle": "Review the current Android family safeguard",
+    "iphoneTitle": "Review Screen Time / Content & Privacy Restrictions",
+    "androidBody": "Review the supported Android native safeguard for this phone. SafeWeb does not silently change platform controls.",
+    "iphoneBody": "Review the supported Apple Screen Time / Content & Privacy Restrictions setting. SafeWeb does not silently change platform controls.",
+    "noteTitle": "Parent confirmation is not verification",
+    "noteBody": "Your confirmation can record that you completed this step, but it never becomes technical DNS verification.",
+    "continueLabel": "Continue to DNS setup",
+    "supportLabel": "Check compatibility"
+  },
+  "dns": {
+    "kicker": "Internet setup",
+    "androidTitle": "Configure SafeWeb DNS on Android",
+    "androidIntro": "Open Android's Private DNS setting and choose the provider-hostname option. Enter dns.usesafeweb.com and save. Use the hostname exactly as shown — not an https:// address. Return to SafeWeb so protection can be checked.",
+    "androidSteps": ["Open Android Private DNS.", "Choose the provider-hostname option.", "Enter dns.usesafeweb.com exactly as shown.", "Save the setting and return to SafeWeb."],
+    "iphoneTitle": "Install the approved SafeWeb DNS profile on iPhone",
+    "iphoneIntro": "Get the exact verified SafeWeb DNS profile for this environment, then follow iPhone's profile-installation flow and explicitly approve the installation in iOS. SafeWeb does not install it silently.",
+    "noteTitle": "Configuration presence is not enough",
+    "noteBody": "A saved setting, installed profile, or signed-in account cannot become Verified without the separately approved technical verification check.",
+    "helpLabel": "Read verification and troubleshooting help",
+    "backLabel": "Choose a different phone"
+  }
+}

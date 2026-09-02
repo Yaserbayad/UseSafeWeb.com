@@ -1,0 +1,142 @@
+{
+  "common": {
+    "brand": "SafeWeb",
+    "dnsHostname": "dns.usesafeweb.com",
+    "dohUrl": "https://dns.usesafeweb.com/dns-query",
+    "skipLink": "Ana içeriğe geç",
+    "primaryNavigationLabel": "Ana gezinme",
+    "languageNavigationLabel": "Dil",
+    "nav": { "how": "Nasıl çalışır", "compatibility": "Uyumluluk", "limits": "Koruma ve sınırlar", "privacy": "Gizlilik", "help": "Yardım", "start": "Kurulumu başlat" },
+    "footerTitle": "Sınırları açık, kanıta dayalı koruma",
+    "footerBody": "Temel kurulum hesapsızdır. SafeWeb gezinme geçmişi, çocuk profili, güvenlik puanı veya sınırsız DNS yönetimi sunmaz."
+  },
+  "home": {
+    "kicker": "İlk telefon güvenlik kurulumu",
+    "title": "Hesap oluşturmadan daha güvenli DNS kurun",
+    "summary": "SafeWeb, ebeveyni telefon korumaları ve şifreli DNS adımlarında yönlendirir; koruma ifadelerini yalnızca güncel kanıta bağlar.",
+    "cards": [
+      { "title": "Hesapsız temel yol", "body": "Oturum açmadan başlatın, anlayın, sorun giderin, kaldırın ve bağlantıyı geri kazanın." },
+      { "title": "Doğru durum", "body": "Kaydedilmiş bir ayar veya hesap tek başına teknik doğrulama sayılmaz." },
+      { "title": "Dar kapsam", "body": "Gezinme geçmişi, çocuk hesabı, etkinlik zaman çizelgesi veya geniş DNS konsolu yoktur." }
+    ],
+    "noteTitle": "SafeWeb neyi kanıtlayabilir?",
+    "noteBody": "Her koruma katmanı ayrı raporlanır. Desteklenmeyen veya belirsiz koşullar olumlu bir iddia yerine açık bir sonraki adımla durur.",
+    "primaryLabel": "Kurulumu başlat",
+    "secondaryLabel": "Nasıl çalıştığını görün"
+  },
+  "howItWorks": {
+    "kicker": "Nasıl çalışır",
+    "title": "Telefon, İnternet, sonra ilgili hizmetler",
+    "summary": "SafeWeb her katmanı ayırır; bir adımın başarılı olması diğerini doğrulamaz.",
+    "cards": [
+      { "title": "1. Telefon", "body": "Desteklenen yerel korumayı inceleyin. Ebeveyn onayı yalnızca onay olarak tutulur." },
+      { "title": "2. İnternet", "body": "Onaylı şifreli DNS yolunu yapılandırın ve uygun teknik kanıtla doğrulayın." },
+      { "title": "3. Hizmetler", "body": "Yalnızca güncel olarak onaylanmış ilgili hizmet korumasını gösterin; hiç uygun hizmet olmaması geçerlidir." }
+    ],
+    "noteTitle": "Genel güvenlik puanı yok",
+    "noteBody": "Koruma Haritası doğrulandı, ebeveyn onaylı, işlem gerekli, belirsiz, kapsam dışı ve kaldırıldı durumlarını ayrı tutar."
+  },
+  "compatibility": {
+    "kicker": "Uyumluluk",
+    "title": "Yalnızca desteklenen kurulum yolunu kullanın",
+    "summary": "SafeWeb şu anda desteklenen Android Özel DNS ve onaylı iPhone şifreli DNS profili yollarını yönlendirir.",
+    "cards": [
+      { "title": "Android", "body": "Desteklenen Android telefonlarda kullanılabilir olduğunda Özel DNS sağlayıcı ana bilgisayar adı denetimi kullanılır." },
+      { "title": "iPhone", "body": "Desteklenen iPhone'larda iOS içinde açık yükleme onayı gerektiren onaylı şifreli DNS profili yolu kullanılır." },
+      { "title": "Yönetilen veya çakışan cihazlar", "body": "Cihaz politikası, VPN, Private Relay, başka bir çözümleyici veya desteklenmeyen platform güvenilir sonucu engelliyorsa SafeWeb bir geçici çözüm uydurmak yerine sınırı gösterir." }
+    ],
+    "noteTitle": "Yönetim denetimleri önceliklidir",
+    "noteBody": "SafeWeb'i olumlu göstermek için işveren, okul veya güvenlik denetimlerini zayıflatmayın."
+  },
+  "limits": {
+    "kicker": "Koruma ve sınırlar",
+    "title": "Koruma yalnızca kanıt kadar güçlüdür",
+    "summary": "SafeWeb desteklenen korumalarla riski azaltabilir; ancak cihazın veya çocuğun tamamen güvende olduğunu kanıtlayamaz.",
+    "cards": [
+      { "title": "Doğrulandı", "body": "Yalnızca ilgili katman için güncel ve uygun teknik kanıt bulunduğunda kullanılır." },
+      { "title": "Durum belirsiz", "body": "Güncel kanıt eksik veya çelişkili olduğunda kullanılır." },
+      { "title": "Kapsam dışı", "body": "Mevcut platform, ağ veya hizmet yolu desteklenen kapsamın dışındaysa kullanılır." }
+    ],
+    "noteTitle": "Yaşam döngüsü işlemleri ayrıdır",
+    "noteBody": "SafeWeb DNS'i kaldırmak, gelecekteki bir hesap kaydını silmek, çıkış yapmak ve anonim web durumunu silmek farklı işlemlerdir."
+  },
+  "privacy": {
+    "kicker": "Gizlilik",
+    "title": "Veriyi tasarım gereği en aza indirin",
+    "summary": "Hesapsız genel/başlangıç deneyimi kimlik, gezinme geçmişi, etkinlik geçmişi veya ham DNS geçmişi gerektirmez.",
+    "cards": [
+      { "title": "Kimlik gerekmez", "body": "Temel kurulum ebeveyn veya çocuk hesabı olmadan kullanılabilir." },
+      { "title": "Gözetim görünümü yok", "body": "Geçmiş zaman çizelgesi, en çok ziyaret edilen siteler, çocuk profili veya ham sorgu paneli yoktur." },
+      { "title": "Ayrı veri alanları", "body": "Gelecekteki isteğe bağlı hesap/cihaz kayıtları, ayrıca onaylanmış açık bir aktarım uygulanmadıkça anonim kurulum durumundan ayrı kalır." }
+    ],
+    "noteTitle": "Bu bir ürün gizliliği sınırıdır",
+    "noteBody": "Kamusal hukuki veya düzenleyici sonuçlar bu uygulamanın dışındadır ve bu sayfadan çıkarılmaz."
+  },
+  "help": {
+    "kicker": "Yardım",
+    "title": "Önünüzdeki belirli sorunu çözün",
+    "summary": "SafeWeb desteği mevcut kurulum veya doğrulama sorunundan başlar ve geniş veri toplamaktan kaçınır.",
+    "cards": [
+      { "title": "Kurulum veya doğrulama", "body": "İlgili platform ayarını kontrol edin; yalnızca bir koşul değiştiğinde veya yeni kanıt olduğunda yeniden deneyin." },
+      { "title": "Engellenen site veya hizmet", "body": "İçerik sorunu DNS yolu kanıt durumunu otomatik olarak değiştirmez." },
+      { "title": "Kaldırma ve kurtarma", "body": "Yalnızca SafeWeb'e ait ayarı veya profili kaldırın; ardından korumanın sürdüğünü iddia etmeden normal bağlantıyı kontrol edin." }
+    ],
+    "noteTitle": "Hassas tanılama verileri göndermeyin",
+    "noteBody": "Rutin yardım gezinme geçmişi, ham DNS günlükleri, çocuk profili verileri, parolalar, tokenlar veya geniş ağ dökümleri istememelidir."
+  },
+  "status": {
+    "kicker": "Hizmet durumu",
+    "title": "Hizmet durumu koruma durumundan ayrı kalmalıdır",
+    "summary": "Bir hizmet veya sağlayıcı olayı kullanılabilirliği etkileyebilir; operasyonel kullanılabilirlik cihazın korunduğunu kanıtlamaz.",
+    "cards": [
+      { "title": "Mevcut yayın sınırı", "body": "Bu temel sürüm canlı üretim durumunu yayımlamaz veya iddia etmez. Gelecekte onaylanmış bir durum yüzeyi yalnızca toplu veya sentetik operasyonel kanıt kullanmalıdır." }
+    ],
+    "noteTitle": "Üretim iddiası yok",
+    "noteBody": "Bu rotanın varlığı üretim etkinleştirmesi, dağıtım, lansman veya güncel hizmet kullanılabilirliği kanıtı değildir."
+  },
+  "start": {
+    "kicker": "Hesapsız kurulum",
+    "title": "Oturum açmadan başlayın",
+    "summary": "Kuracağınız telefonu seçin. Bu temel sürüm yalnızca URL yönlendirmesi kullanır ve yolculuk durumu saklamaz.",
+    "cards": [
+      { "title": "Sonraki adım", "body": "SafeWeb sizi desteklenen yerel telefon korumasına ve ardından onaylı DNS kurulum talimatlarına yönlendirir." },
+      { "title": "Olmayan şey", "body": "Kurulumu başlatmak hesap oluşturmaz, çocuğu tanımlamaz veya gezinme etkinliği kaydetmez." }
+    ],
+    "noteTitle": "Hesapsız yol birinci sınıftır",
+    "noteBody": "İsteğe bağlı hesap sürekliliği sonraki sınırlı özellik dilimine aittir ve temel değer için ön koşul olamaz.",
+    "primaryLabel": "Telefonu seç"
+  },
+  "route": {
+    "kicker": "Kurulum",
+    "title": "Hangi telefonu kuruyorsunuz?",
+    "summary": "Mevcut desteklenen yolu seçin. SafeWeb onaylı DNS mekanizmasını seçer; DNS protokolü seçmeniz gerekmez.",
+    "androidLabel": "Android telefon",
+    "iphoneLabel": "iPhone",
+    "otherLabel": "Başka veya yönetilen cihaz",
+    "noteTitle": "Desteklenmeyen yollar doğru şekilde durur",
+    "noteBody": "Gerekli denetim yoksa, kilitliyse, yönetiliyorsa veya uyumsuzsa spekülatif kurulum yerine uyumluluk rehberini kullanın."
+  },
+  "native": {
+    "kicker": "Telefon koruması",
+    "androidTitle": "Mevcut Android aile korumasını inceleyin",
+    "iphoneTitle": "Ekran Süresi / İçerik ve Gizlilik Sınırlamaları'nı inceleyin",
+    "androidBody": "Bu telefon için desteklenen Android yerel korumasını inceleyin. SafeWeb platform denetimlerini sessizce değiştirmez.",
+    "iphoneBody": "Desteklenen Apple Ekran Süresi / İçerik ve Gizlilik Sınırlamaları ayarını inceleyin. SafeWeb platform denetimlerini sessizce değiştirmez.",
+    "noteTitle": "Ebeveyn onayı doğrulama değildir",
+    "noteBody": "Onayınız bu adımı tamamladığınızı kaydedebilir; ancak hiçbir zaman teknik DNS doğrulaması olmaz.",
+    "continueLabel": "DNS kurulumuna devam et",
+    "supportLabel": "Uyumluluğu kontrol et"
+  },
+  "dns": {
+    "kicker": "İnternet kurulumu",
+    "androidTitle": "Android'da SafeWeb DNS'i yapılandırın",
+    "androidIntro": "Android'da Özel DNS ayarını açın ve sağlayıcı ana bilgisayar adı seçeneğini seçin. dns.usesafeweb.com adresini girip kaydedin. Ana bilgisayar adını gösterildiği gibi kullanın; https:// adresi girmeyin. Korumanın kontrol edilebilmesi için SafeWeb'e geri dönün.",
+    "androidSteps": ["Android Özel DNS ayarını açın.", "Sağlayıcı ana bilgisayar adı seçeneğini seçin.", "dns.usesafeweb.com adresini aynen girin.", "Ayarı kaydedip SafeWeb'e geri dönün."],
+    "iphoneTitle": "iPhone'a onaylı SafeWeb DNS profilini yükleyin",
+    "iphoneIntro": "Bu ortam için doğrulanmış SafeWeb DNS profilini alın, ardından iPhone'un profil yükleme akışını izleyin ve yüklemeyi iOS'ta açıkça onaylayın. SafeWeb profili sessizce yüklemez.",
+    "noteTitle": "Yapılandırmanın bulunması yeterli değildir",
+    "noteBody": "Kaydedilmiş ayar, yüklü profil veya oturum açılmış hesap, ayrıca onaylanmış teknik doğrulama olmadan Doğrulandı durumuna geçemez.",
+    "helpLabel": "Doğrulama ve sorun giderme yardımını okuyun",
+    "backLabel": "Farklı telefon seç"
+  }
+}
