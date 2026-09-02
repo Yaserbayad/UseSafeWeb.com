@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import csv,re
+import csv,re,subprocess
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[3]
 WBS=ROOT/'Plans/Master/WBS/master-wbs.csv'
@@ -8,6 +8,10 @@ ART=ROOT/'TSK_0050_LG07_APPROVED_BASELINE_PERSISTENCE_INDEX_2026-09-02.md'
 
 def req(c,m):
     if not c: raise AssertionError(m)
+
+def semantic_text(text):
+    text=text.lower().replace('`','').replace('*','')
+    return re.sub(r'\s+',' ',text)
 
 def passed(state,tid):
     pats=[rf'^##+\s+{re.escape(tid)}(?:\s*/[^\n]*)?\s+current accepted stable state[^\n]*$',rf'^##+\s+{re.escape(tid)}(?:\s*/[^\n]*)?\s+accepted stable state[^\n]*$']
@@ -26,19 +30,19 @@ def main():
     req(r['Dependencies'].strip()=='TSK-0051','dependency changed')
     req(r['Action_Authority']=='AUTO_ALLOWED' and r['AI_Capability_A0_A4']=='A3','authority/capability changed')
     req(r['Acceptance_ID']=='ACC-0050' and r['Verification_ID']=='VER-0050' and r['Evidence_ID']=='EVD-0050','ACC/VER/EVD changed')
-    acc=r['Acceptance_Criteria'].lower()
+    acc=semantic_text(r['Acceptance_Criteria'])
     for x in ['all approved artifacts are in version control','references are internally consistent','commit sha and current-state next action are verified','no secrets/participant data are included']:
         req(x in acc,f'missing ACC-0050 clause: {x}')
     state=STATE.read_text(encoding='utf-8-sig')
     req(passed(state,'TSK-0051'),'TSK-0051 not current PASS')
     req('`LG-07 — Architecture, Security, Privacy and Delivery Readiness`: **PASS**' in state,'LG-07 not current PASS')
-    text=ART.read_text(encoding='utf-8'); low=text.lower()
+    low=semantic_text(ART.read_text(encoding='utf-8'))
     required=[
       'canonical normalized wbs blob','canonical lg-07 gate-register blob','tsk-0051 / lg-07 durable pass state commit','current_state.md remains the only volatile runtime authority',
       'final lg-07 readiness decision','dependency-ordered l6 implementation backlog','master verification and acceptance plan','release/checkpoint/rollback plan','vendor/api/version/price/change monitoring','pre-development infrastructure/operating-cost model','owner-approved resource/cost/tool envelope','security/privacy implementation/control matrix','privacy-safe observability design',
       'wbs remains the sole task/dependency/acceptance authority','gate register remains the sole gate-definition authority','recompute the full l6 eligible frontier','tsk-0454 is tsk-0050\'s direct wbs successor','no password, token, private key, production secret, raw dns query, browsing/activity history, participant record, or other participant data'
     ]
-    for x in required:req(x in low,f'missing TSK-0050 persistence invariant: {x}')
+    for x in required:req(x in low,f'missing TSK-0050 persistence semantic invariant: {x}')
     files={
       'TSK_0051_LG07_ARCHITECTURE_DELIVERY_READINESS_DECISION_2026-09-02.md':'f3febe09b804163e47b96a1784512b8b12620628',
       'Plans/Master/Tools/verify_tsk0051_lg07_readiness_20260902.py':'88185897babde6b76c8e49dbead65ac59bbd377b',
@@ -53,7 +57,6 @@ def main():
       'TSK_0239_SECURITY_PRIVACY_CONTROL_IMPLEMENTATION_VERIFICATION_MATRIX_2026-09-02.md':'674c21b4c169da4fb496617164ad68cfc6527fb4',
       'TSK_0539_PRIVACY_SAFE_LOGS_METRICS_TRACES_DASHBOARDS_ALERTS_2026-09-02.md':'291cd76d5f71fedb98188e6ecd5679c16ea44a98'
     }
-    import subprocess
     for rel,expected in files.items():
         p=ROOT/rel
         req(p.is_file(),f'missing approved baseline file: {rel}')
