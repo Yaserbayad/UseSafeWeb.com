@@ -39,10 +39,12 @@ test('pins the Next 16 compatible ESLint 9 maintenance line', () => {
   assert.equal(pkg.devDependencies?.['eslint-config-next'], '16.3.4');
 });
 
-test('uses the approved standalone self-hosting and security baseline', () => {
+test('uses the approved standalone self-hosting and repo-root Turbopack boundary', () => {
   const nextConfig = read('next.config.ts');
   assert.match(nextConfig, /output:\s*['"]standalone['"]/);
   assert.match(nextConfig, /poweredByHeader:\s*false/);
+  assert.match(nextConfig, /turbopack:\s*\{/);
+  assert.match(nextConfig, /root:\s*path\.resolve\(process\.cwd\(\),\s*['"]\.\.['"]\)/);
   assert.match(nextConfig, /X-Content-Type-Options/);
   assert.match(nextConfig, /Referrer-Policy/);
   assert.match(nextConfig, /Permissions-Policy/);
