@@ -78,7 +78,8 @@ jobs:
           print('TSK0314_RESPONSIVE_RTL=PASS')
 
           # Browser/OS policy and dated source snapshot use current stable/release semantics rather than forecasts.
-          require(low,['release-time matrix','chrome desktop','edge desktop','firefox desktop','safari/macos','iphone/ipad','android web ui','stable/release channels'], 'browser policy')
+          require(low,['release-time matrix','chrome desktop','edge desktop','firefox desktop','safari/macos','iphone/ipad','android web ui'], 'browser policy')
+          require(low,['current stable','current release','beta/dev/canary/preview','production-support proof'], 'browser channel semantics')
           require(low,['chrome 152 stable','firefox 155 released','edge 152 stable','edge 153 stable is scheduled','ios/ipados 26.6.1','macos 26.6.2','safari 26.6.1','august 2026 android bulletin remains latest'], 'dated snapshot')
           require(low,['chromereleases.googleblog.com','firefox 155','learn.microsoft.com/deployedge/microsoft-edge-release-schedule','support.apple.com/100100','source.android.com/docs/security/bulletin/asb-overview'], 'source references')
           print('TSK0314_CURRENT_BROWSER_OS_SOURCES=PASS')
