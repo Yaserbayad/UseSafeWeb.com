@@ -47,8 +47,7 @@ jobs:
               if re.search(rf'`?{re.escape(tid)}\b[^\n]*:\s*\*\*PASS\*\*', lead, re.I):
                   pass_ids.add(tid)
 
-          assert 'TSK-0361' in pass_ids
-          for tid in ('TSK-0354', 'TSK-0308', 'TSK-0307', 'TSK-0320'):
+          for tid in ('TSK-0361','TSK-0354','TSK-0308','TSK-0307','TSK-0320','TSK-0445'):
               assert tid in pass_ids, tid
           assert '`LG-07 — Architecture, Security, Privacy and Delivery Readiness`: **PASS**' in state
 
@@ -59,12 +58,9 @@ jobs:
           candidates = []
           for r in l6:
               tid = (r.get('Task_ID') or '').strip()
-              if not tid or tid in pass_ids:
+              if not tid or tid in pass_ids or (r.get('Action_Authority') or '').strip() != 'AUTO_ALLOWED':
                   continue
-              if (r.get('Action_Authority') or '').strip() != 'AUTO_ALLOWED':
-                  continue
-              missing = [d for d in deps(r) if d not in pass_ids]
-              if not missing:
+              if not [d for d in deps(r) if d not in pass_ids]:
                   candidates.append(r)
 
           priority_rank = {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3}
@@ -83,9 +79,9 @@ jobs:
               return critical, high, total
 
           candidates.sort(key=lambda r: (
+              priority_rank.get((r.get('Priority') or '').strip(), 9),
               -successor_pressure((r.get('Task_ID') or '').strip())[0],
               -successor_pressure((r.get('Task_ID') or '').strip())[1],
-              priority_rank.get((r.get('Priority') or '').strip(), 9),
               (r.get('Task_ID') or '').strip(),
           ))
 
@@ -96,26 +92,19 @@ jobs:
               tid = (r.get('Task_ID') or '').strip()
               c, h, t = successor_pressure(tid)
               print('FRONTIER|' + '|'.join([
-                  tid,
-                  (r.get('Priority') or '').strip(),
-                  (r.get('AI_Capability_A0_A4') or '').strip(),
-                  (r.get('Action_Authority') or '').strip(),
-                  ','.join(deps(r)) or '-',
-                  f'unlocks_critical={c}',
-                  f'unlocks_high={h}',
-                  f'unlocks_total={t}',
+                  tid,(r.get('Priority') or '').strip(),(r.get('AI_Capability_A0_A4') or '').strip(),
+                  (r.get('Action_Authority') or '').strip(),','.join(deps(r)) or '-',
+                  f'unlocks_critical={c}',f'unlocks_high={h}',f'unlocks_total={t}',
                   (r.get('Task_Name') or r.get('Title') or r.get('Task') or r.get('Objective') or '').replace('|','/').strip(),
               ]))
 
-          # Show exact dependency state around the likely accountless-core chain.
-          for tid in ('TSK-0357','TSK-0358','TSK-0359','TSK-0360','TSK-0362','TSK-0363'):
+          for tid in ('TSK-0455','TSK-0456','TSK-0457','TSK-0357','TSK-0358'):
               r = by_id[tid]
               missing = [d for d in deps(r) if d not in pass_ids]
               print(f'CHAIN|{tid}|priority={(r.get("Priority") or "").strip()}|deps={",".join(deps(r))}|missing={",".join(missing) or "NONE"}|authority={(r.get("Action_Authority") or "").strip()}')
 
-          assert candidates, 'No strict L6 dependency-ready AUTO_ALLOWED candidate found'
-          assert (candidates[0].get('Task_ID') or '').strip() == 'TSK-0357', [(r.get('Task_ID') or '').strip() for r in candidates[:10]]
-          print('SELECTED_BY_DEPENDENCY_PRESSURE=TSK-0357')
+          assert candidates and (candidates[0].get('Task_ID') or '').strip() == 'TSK-0455'
+          print('SELECTED_BY_GOVERNING_PRIORITY=TSK-0455')
           PY
           git diff --check
           test -z "$(git status --porcelain)"
