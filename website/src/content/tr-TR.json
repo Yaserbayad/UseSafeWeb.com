@@ -97,14 +97,17 @@
   "start": {
     "kicker": "Hesapsız kurulum",
     "title": "Oturum açmadan başlayın",
-    "summary": "Kuracağınız telefonu seçin. Bu temel sürüm yalnızca URL yönlendirmesi kullanır ve yolculuk durumu saklamaz.",
+    "summary": "Kurulum yaptığınız telefonu seçin. SafeWeb, tamamlanmamış kuruluma bu oturum içinde devam edebilmeniz için yalnızca bu tarayıcı sekmesinde asgari kurulum durumunu tutar; durum otomatik olarak sona erer.",
     "cards": [
       { "title": "Sonraki adım", "body": "SafeWeb sizi desteklenen yerel telefon korumasına ve ardından onaylı DNS kurulum talimatlarına yönlendirir." },
       { "title": "Olmayan şey", "body": "Kurulumu başlatmak hesap oluşturmaz, çocuğu tanımlamaz veya gezinme etkinliği kaydetmez." }
     ],
     "noteTitle": "Hesapsız yol birinci sınıftır",
     "noteBody": "İsteğe bağlı hesap sürekliliği sonraki sınırlı özellik dilimine aittir ve temel değer için ön koşul olamaz.",
-    "primaryLabel": "Telefonu seç"
+    "primaryLabel": "Telefonu seç",
+    "resumeLabel": "Kuruluma devam et",
+    "resetLabel": "Baştan başla",
+    "resumeNote": "Bu tarayıcı sekmesinde tamamlanmamış bir kurulum var. Burada yalnızca kontrollü kurulum durumu tutulur; baştan başlamak bunu hemen siler."
   },
   "route": {
     "kicker": "Kurulum",
