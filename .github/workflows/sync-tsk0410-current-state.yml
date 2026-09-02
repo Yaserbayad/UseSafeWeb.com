@@ -1,0 +1,107 @@
+name: Sync TSK-0410 current state
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/sync-tsk0410-current-state.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-current-state-write
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out current main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Guard, append, commit, and push stable checkpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifact='TSK_0410_POST_CR0008_ALLOWLISTED_ADGUARD_ADAPTER_CLIENTID_LIFECYCLE_2026-09-02.md'
+          expected_artifact_blob='a0f98fbd69c49a5082c7853afc2487439b753c91'
+          expected_state_blob='97c9b789ce993832e2de795852dc769be26d084c'
+          marker='## TSK-0410 current accepted stable state — 2026-09-02 — POST-CR-0008 ADGUARD ADAPTER/CLIENTID CONTRACT'
+
+          test "$(git hash-object "$artifact")" = "$expected_artifact_blob"
+          if grep -Fqx "$marker" CURRENT_STATE.md; then
+            echo 'TSK0410_RUNTIME_ALREADY_PRESENT=PASS'
+            exit 0
+          fi
+          test "$(git hash-object CURRENT_STATE.md)" = "$expected_state_blob"
+
+          python3 - <<'PY'
+          from datetime import datetime, timezone
+          from pathlib import Path
+          p = Path('CURRENT_STATE.md')
+          lines = p.read_text(encoding='utf-8').splitlines()
+          stamp = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+          for i, line in enumerate(lines):
+              if line.startswith('**Updated:**'):
+                  lines[i] = f'**Updated:** {stamp}'
+                  break
+          else:
+              raise SystemExit('CURRENT_STATE Updated field not found')
+          p.write_text('\n'.join(lines).rstrip() + '\n', encoding='utf-8')
+          print(f'CURRENT_STATE_UPDATED={stamp}')
+          PY
+
+          cat >> CURRENT_STATE.md <<'EOF'
+
+          ## TSK-0410 current accepted stable state — 2026-09-02 — POST-CR-0008 ADGUARD ADAPTER/CLIENTID CONTRACT
+
+          `TSK-0410 — Design allowlisted server-side AdGuard adapter and ClientID lifecycle contract`: **PASS** under current `ACC-0410 / VER-0410 / EVD-0410`, direct predecessors `TSK-0411; TSK-0232; TSK-0352`, current v0.107.79 compatibility authority and DEC-0055/CR-0008 proportional-evidence authority.
+
+          - Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L5 / MEDIUM / A3 / `AUTO_ALLOWED`; all three direct predecessors are current durable PASS.
+          - Accepted artifact: `TSK_0410_POST_CR0008_ALLOWLISTED_ADGUARD_ADAPTER_CLIENTID_LIFECYCLE_2026-09-02.md`, version `1.0.0-post-CR0008`, blob `a0f98fbd69c49a5082c7853afc2487439b753c91`, publication commit `f8fb1aee8504ff0c262ed7ff5c5b215572655cbe`.
+          - `VER-0410`: current Project-Governor/API/security/source-driven review against the WBS/ACC/VER/EVD contract, TSK-0411, TSK-0232, TSK-0352, TSK-0412/0413 and the exact 2026-09-02 v0.107.79 OpenAPI/AdGuard Knowledge Base found every applicable ACC-0410 element present and no contradictory current evidence.
+          - The application may use only a private typed adapter; no browser/customer raw `/control/*` proxy or AdGuard admin credential is permitted. The exact server-to-server private control transport remains downstream deployment work; adapter mutation is disabled until that route is proven.
+          - Current adapter surface is limited to compatibility check, owned binding search/create/reconcile, approved curated-profile apply, ClientID rotation and owned binding delete. Browser-supplied parent ID, ClientID, AdGuard name or raw Client payload never selects authority/object state.
+          - Persistent ClientIDs remain server-generated 26-character lowercase base32 values and the direct DoH route remains `https://dns.usesafeweb.com/dns-query/{client_id}`. ClientID never grants parent authorization or technical protection truth.
+          - Every managed client add/update/rotation explicitly sets and read-back verifies `ignore_querylog=true` and `ignore_statistics=true`; this does not disable TSK-0413's separate global anonymized aggregate operational statistics with 24-hour retention, which are never exposed as per-client history by this adapter.
+          - The v0.107.79 pin, `/control` Basic-Auth boundary, exact `clientsAdd/clientsSearch/clientsUpdate/clientsDelete` shapes, privacy fields and global bundle compatibility form a fail-closed mutation gate. v0.108+ behavior is not imported.
+          - Read-only search/compatibility may use at most two extra bounded transient retries within the caller deadline. Consequential mutation sends at most one request before mandatory exact observation; timeout/disconnect/5xx/ambiguous acknowledgement enters outcome-unknown reconciliation and is never blindly replayed.
+          - HTTP 200 alone is not terminal evidence; local ownership/binding truth and exact observed AdGuard name/ID/privacy/profile state must agree. Cross-parent/IDOR, response/schema/privacy drift and restore/recovery cases fail closed.
+          - No adapter code/private route/live AdGuard mutation/target timeout measurement/legal or backup completion/`LG-07`/L6/public activation is inferred.
+          - `TSK-0234` may consume TSK-0410 as a satisfied hard dependency only after fresh eligibility recomputation against its other current dependencies and authority.
+
+          ### Queue status after TSK-0410 acceptance
+
+          Recompute the current L5 frontier from canonical WBS/graph, runtime PASS evidence, current official version evidence, gates, constraints/interfaces and Action Authority. Preserve all legal/material-action fences and do not infer TSK-0234 or LG-07 PASS.
+          EOF
+
+          grep -Fqx "$marker" CURRENT_STATE.md
+          git diff --check
+          changes="$(git status --porcelain)"
+          test "$(printf '%s\n' "$changes" | sed '/^$/d' | wc -l)" -eq 1
+          printf '%s\n' "$changes" | grep -Fx ' M CURRENT_STATE.md'
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: accept TSK-0410 AdGuard adapter contract'
+          git push origin HEAD:main
+          echo 'TSK0410_RUNTIME_WRITE=PASS'
+
+      - name: Remote read-back
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git show origin/main:CURRENT_STATE.md | grep -F '## TSK-0410 current accepted stable state — 2026-09-02 — POST-CR-0008 ADGUARD ADAPTER/CLIENTID CONTRACT'
+          git show origin/main:CURRENT_STATE.md | grep -F '`TSK-0410 — Design allowlisted server-side AdGuard adapter and ClientID lifecycle contract`: **PASS**'
+          git show origin/main:CURRENT_STATE.md | grep -F 'No adapter code/private route/live AdGuard mutation/target timeout measurement/legal or backup completion/`LG-07`/L6/public activation is inferred.'
+          echo "REMOTE_STATE_BLOB=$(git rev-parse origin/main:CURRENT_STATE.md)"
+          echo "REMOTE_HEAD=$(git rev-parse origin/main)"
