@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T07:54:18Z
+**Updated:** 2026-09-02T07:59:09Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2665,3 +2665,24 @@ Recompute the current L5 frontier from canonical WBS/graph, runtime PASS evidenc
 ### Queue status after TSK-0232 acceptance
 
 Recompute the current L5 frontier from canonical WBS/graph, runtime PASS evidence, gates, constraints/interfaces and Action Authority. Preserve every legal/material-action fence; do not infer TSK-0410, TSK-0234 or LG-07 PASS from numbering alone.
+
+## TSK-0410 current accepted stable state — 2026-09-02 — POST-CR-0008 ADGUARD ADAPTER/CLIENTID CONTRACT
+
+`TSK-0410 — Design allowlisted server-side AdGuard adapter and ClientID lifecycle contract`: **PASS** under current `ACC-0410 / VER-0410 / EVD-0410`, direct predecessors `TSK-0411; TSK-0232; TSK-0352`, current v0.107.79 compatibility authority and DEC-0055/CR-0008 proportional-evidence authority.
+
+- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L5 / MEDIUM / A3 / `AUTO_ALLOWED`; all three direct predecessors are current durable PASS.
+- Accepted artifact: `TSK_0410_POST_CR0008_ALLOWLISTED_ADGUARD_ADAPTER_CLIENTID_LIFECYCLE_2026-09-02.md`, version `1.0.0-post-CR0008`, blob `a0f98fbd69c49a5082c7853afc2487439b753c91`, publication commit `f8fb1aee8504ff0c262ed7ff5c5b215572655cbe`.
+- `VER-0410`: current Project-Governor/API/security/source-driven review against the WBS/ACC/VER/EVD contract, TSK-0411, TSK-0232, TSK-0352, TSK-0412/0413 and the exact 2026-09-02 v0.107.79 OpenAPI/AdGuard Knowledge Base found every applicable ACC-0410 element present and no contradictory current evidence.
+- The application may use only a private typed adapter; no browser/customer raw `/control/*` proxy or AdGuard admin credential is permitted. The exact server-to-server private control transport remains downstream deployment work; adapter mutation is disabled until that route is proven.
+- Current adapter surface is limited to compatibility check, owned binding search/create/reconcile, approved curated-profile apply, ClientID rotation and owned binding delete. Browser-supplied parent ID, ClientID, AdGuard name or raw Client payload never selects authority/object state.
+- Persistent ClientIDs remain server-generated 26-character lowercase base32 values and the direct DoH route remains `https://dns.usesafeweb.com/dns-query/{client_id}`. ClientID never grants parent authorization or technical protection truth.
+- Every managed client add/update/rotation explicitly sets and read-back verifies `ignore_querylog=true` and `ignore_statistics=true`; this does not disable TSK-0413's separate global anonymized aggregate operational statistics with 24-hour retention, which are never exposed as per-client history by this adapter.
+- The v0.107.79 pin, `/control` Basic-Auth boundary, exact `clientsAdd/clientsSearch/clientsUpdate/clientsDelete` shapes, privacy fields and global bundle compatibility form a fail-closed mutation gate. v0.108+ behavior is not imported.
+- Read-only search/compatibility may use at most two extra bounded transient retries within the caller deadline. Consequential mutation sends at most one request before mandatory exact observation; timeout/disconnect/5xx/ambiguous acknowledgement enters outcome-unknown reconciliation and is never blindly replayed.
+- HTTP 200 alone is not terminal evidence; local ownership/binding truth and exact observed AdGuard name/ID/privacy/profile state must agree. Cross-parent/IDOR, response/schema/privacy drift and restore/recovery cases fail closed.
+- No adapter code/private route/live AdGuard mutation/target timeout measurement/legal or backup completion/`LG-07`/L6/public activation is inferred.
+- `TSK-0234` may consume TSK-0410 as a satisfied hard dependency only after fresh eligibility recomputation against its other current dependencies and authority.
+
+### Queue status after TSK-0410 acceptance
+
+Recompute the current L5 frontier from canonical WBS/graph, runtime PASS evidence, current official version evidence, gates, constraints/interfaces and Action Authority. Preserve all legal/material-action fences and do not infer TSK-0234 or LG-07 PASS.
