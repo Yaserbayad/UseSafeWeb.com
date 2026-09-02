@@ -78,7 +78,7 @@ jobs:
           print('AUDIT_INPUT_WBS='+blob(WBS)); print('AUDIT_INPUT_GRAPH='+blob(GRAPH)); print('AUDIT_INPUT_RUNTIME='+blob(RUNTIME)); print('READY_COUNT='+str(len(ready)))
           for rank,(desc,tid,r,missing,mode,newer) in enumerate(ready,1):
               print('READY|{}|{}|mode={}|desc={}|priority={}|critical={}|deps={}|newer_current_deps={}|acc={}|title={}'.format(rank,tid,mode,desc,r.get('Priority',''),r.get('Critical_Path',''),';'.join(deps[tid]) or 'NONE',';'.join(f'{d}@{dt}' for d,dt in newer) or 'NONE',r.get('Acceptance_ID',''),(r.get('Title') or '').replace('|','/')))
-          for tid in ['TSK-0497','TSK-0308','TSK-0307','TSK-0311','TSK-0044','TSK-0353','TSK-0352','TSK-0297']:
+          for tid in ['TSK-0538','TSK-0497','TSK-0308','TSK-0307','TSK-0311','TSK-0044','TSK-0353','TSK-0352','TSK-0297']:
               r=byid.get(tid)
               if not r: continue
               reval,newer=needs_revalidation(tid)
