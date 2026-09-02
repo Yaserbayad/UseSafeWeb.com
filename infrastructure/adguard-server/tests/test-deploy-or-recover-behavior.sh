@@ -38,7 +38,7 @@ EOF
 }
 cleanup() {
   cp -a /tmp/tsk0455-allowlist.original "$BUNDLE_ALLOWLIST" 2>/dev/null || true
-  rm -rf "$TEST_ROOT" /tmp/tsk0455-test.out /tmp/tsk0455-test.err /tmp/tsk0455-allowlist.original
+  rm -rf "$TEST_ROOT" /tmp/tsk0455-test.out /tmp/tsk0455-test.err /tmp/tsk0455-allowlist.original /tmp/tsk0455-ufw-calls
 }
 trap cleanup EXIT
 
@@ -96,6 +96,105 @@ pass 'concurrent invocation rejection'
 
 expect_exit 10 "$TARGET" --remove --config "$CONFIG"
 pass 'guarded remove refusal'
+
+# A verified compliant host must exit --apply before any mutator executes.
+set +e
+noop_out="$(
+  (
+    set -e
+    verify_state() { return 0; }
+    snapshot_for_rollback() { printf 'unexpected mutation\n' >&2; exit 97; }
+    apply_state
+  ) 2>&1
+)"
+noop_rc=$?
+set -e
+[[ "$noop_rc" == 0 ]] || fail "verified-compliant apply did not no-op; rc=${noop_rc}; output=${noop_out}"
+grep -Fxq 'TSK0455_APPLY_NOOP=PASS' <<<"$noop_out" || fail 'verified-compliant apply did not emit stable no-op evidence'
+pass 'verified second apply is mutation-free no-op'
+
+# Firewall reconciliation must not append rules or rewrite defaults when exact state is already present.
+UFW_SCENARIO='exact'
+: >/tmp/tsk0455-ufw-calls
+ufw() {
+  printf '%s\n' "$*" >>/tmp/tsk0455-ufw-calls
+  case "$*" in
+    'status')
+      cat <<'EOF'
+Status: active
+To                         Action      From
+--                         ------      ----
+22/tcp                     ALLOW IN    192.0.2.10/32
+80/tcp                     ALLOW IN    Anywhere
+443/tcp                    ALLOW IN    Anywhere
+853/tcp                    ALLOW IN    Anywhere
+80/tcp (v6)                ALLOW IN    Anywhere (v6)
+443/tcp (v6)               ALLOW IN    Anywhere (v6)
+853/tcp (v6)               ALLOW IN    Anywhere (v6)
+EOF
+      ;;
+    'status verbose')
+      cat <<'EOF'
+Status: active
+Logging: on (low)
+Default: deny (incoming), allow (outgoing), disabled (routed)
+New profiles: skip
+EOF
+      ;;
+    'show added')
+      cat <<'EOF'
+Added user rules (see 'ufw status' for running firewall):
+ufw allow from 192.0.2.10/32 to any port 22 proto tcp comment 'UseSafeWeb admin SSH'
+ufw allow 80/tcp comment 'UseSafeWeb ACME HTTP-01'
+ufw allow 443/tcp comment 'UseSafeWeb DoH'
+ufw allow 853/tcp comment 'UseSafeWeb DoT'
+EOF
+      ;;
+    *) return 0 ;;
+  esac
+}
+configure_firewall
+if grep -Evq '^(status|status verbose|show added)$' /tmp/tsk0455-ufw-calls; then
+  cat /tmp/tsk0455-ufw-calls >&2
+  fail 'exact firewall state caused a mutating UFW command'
+fi
+pass 'exact firewall state is a no-op'
+
+# A broad or otherwise non-project UFW allow must fail closed, not be accepted because its port number is familiar.
+UFW_SCENARIO='overbroad'
+ufw() {
+  case "$*" in
+    'status')
+      cat <<'EOF'
+Status: active
+To                         Action      From
+--                         ------      ----
+22/tcp                     ALLOW IN    Anywhere
+80/tcp                     ALLOW IN    Anywhere
+443/tcp                    ALLOW IN    Anywhere
+853/tcp                    ALLOW IN    Anywhere
+EOF
+      ;;
+    'status verbose') printf '%s\n' 'Status: active' 'Default: deny (incoming), allow (outgoing), disabled (routed)' ;;
+    'show added')
+      cat <<'EOF'
+Added user rules (see 'ufw status' for running firewall):
+ufw allow 22/tcp
+ufw allow 80/tcp comment 'UseSafeWeb ACME HTTP-01'
+ufw allow 443/tcp comment 'UseSafeWeb DoH'
+ufw allow 853/tcp comment 'UseSafeWeb DoT'
+EOF
+      ;;
+    *) return 0 ;;
+  esac
+}
+set +e
+( configure_firewall ) >/tmp/tsk0455-test.out 2>/tmp/tsk0455-test.err
+over_rc=$?
+set -e
+[[ "$over_rc" == 50 ]] || { cat /tmp/tsk0455-test.err >&2; fail "over-broad SSH firewall rule was not refused with uncertain exit 50; rc=${over_rc}"; }
+pass 'over-broad firewall rule fails closed'
+unset -f ufw
 
 # Static evidence for idempotent no-op, failed-verification rollback and ambiguous-effect reconciliation.
 grep -Fq 'cmp -s' "$TARGET" || fail 'no-op comparison missing'
