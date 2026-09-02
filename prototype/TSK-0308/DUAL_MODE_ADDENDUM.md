@@ -1,6 +1,6 @@
 # TSK-0308 — Dual-Mode Design-System Addendum
 
-**Version:** 2.0.0-post-CR0008  
+**Version:** 2.0.1-post-CR0008-copy-refresh  
 **Date:** 2026-09-02 UTC  
 **Task:** TSK-0308 — Create the shared responsive design system for public and product surfaces  
 **Status:** current revalidation addendum; acceptance remains subject to independent VER-0308 and runtime reconciliation.
@@ -25,7 +25,7 @@ They are replaced by the bounded dual-mode rules below. No historical file is re
 
 1. **Accountless core remains complete.** Start setup, configuration, verification, Protection Map, troubleshooting, recovery and removal remain available without login.
 2. **Account use is optional and non-coercive.** Sign-in/manage-devices entry may be available but cannot be a prerequisite for core value.
-3. **Identity is not protection evidence.** Signed-in/session/device-ownership state never renders S1 `Verified` or substitutes for technical DNS/protection verification.
+3. **Identity is not protection evidence.** Signed-in/session/device-ownership state never creates the technical `protected/verified` state or its primary user-facing copy `Protection verified`; only qualifying technical evidence may do so.
 4. **No surveillance expansion.** No browsing/query/activity history, child account/profile, raw DNS administration, query log, arbitrary diagnostics or overall safety score is introduced.
 5. **Lifecycle operations stay distinct.** Logout, session revocation, device unlink/revoke, dashboard-device-record deletion, account deletion, anonymous-state reset and physical SafeWeb DNS removal are separate operations with separate truthful outcomes.
 6. **Provider/datastore failure preserves accountless continuation.** Auth/session/dashboard failure must expose a safe `Continue without signing in` / accountless route where the core journey is otherwise available.
@@ -67,7 +67,7 @@ Accountless setup remains task-first. An authenticated parent may additionally e
 **Purpose:** show the minimum parent-owned device records needed for lightweight management.  
 **Semantic base:** heading + list/cards + explicit per-device actions.  
 **Each row:** parent-recognisable label if approved, lifecycle state, protection-verification state only when separately evidenced, and one bounded next action.  
-**Required truth:** registered/owned/configured/verified remain distinct.  
+**Required truth:** registered/owned/configured/`protected/verified` remain distinct facts; visible protection copy follows current TSK-0320/TSK-0300 semantics rather than historical labels.  
 **Prohibited:** child profile/activity timeline, DNS query log, arbitrary AdGuard admin controls, overall safety score.
 
 ### DS-17 — `AccountLifecycleActions`
@@ -111,8 +111,9 @@ These files do not replace the approved candidate artifacts and do not create a 
 For current TSK-0308 acceptance, the effective shared responsive design system is:
 
 1. the historically approved TSK-0308 candidate for still-valid DS-01–DS-13 semantics;
-2. this addendum for CR-0006 dual-mode scope reconciliation;
+2. this addendum for CR-0006 dual-mode scope reconciliation and current protection-state-copy binding;
 3. current TSK-0300 shared tokens/primitives;
-4. current TSK-0309 dual-mode experience baseline.
+4. current TSK-0309 dual-mode experience baseline;
+5. current TSK-0320 protection-state semantics for visible protection-state copy.
 
 No identity reselection, token redesign, brand redesign or public deployment is performed by this addendum.
