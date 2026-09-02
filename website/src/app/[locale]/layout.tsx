@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import type { ReactNode } from 'react';
+import { Suspense, type ReactNode } from 'react';
+import { JourneyStateBoundary } from '@/components/journey-state-boundary';
 import { SiteShell } from '@/components/site-shell';
 import { getContent, getLocaleMeta, isLocale, locales } from '@/lib/i18n';
 import '../globals.css';
@@ -26,6 +27,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
     <html lang={locale} dir={meta.direction}>
       <body>
         <div data-locale-root lang={locale} dir={meta.direction}>
+          <Suspense fallback={null}><JourneyStateBoundary /></Suspense>
           <SiteShell locale={locale} common={content.common}>{children}</SiteShell>
         </div>
       </body>

@@ -97,14 +97,17 @@
   "start": {
     "kicker": "Accountless setup",
     "title": "Start without signing in",
-    "summary": "Choose the phone you are setting up. The current baseline uses URL routing only and stores no journey state.",
+    "summary": "Choose the phone you are setting up. SafeWeb keeps only minimal setup state in this browser tab so an unfinished setup can resume during the session; the state expires automatically.",
     "cards": [
       { "title": "What happens next", "body": "SafeWeb routes to the supported native phone safeguard, then the approved DNS setup instructions." },
       { "title": "What does not happen", "body": "Starting setup does not create an account, identify a child, or record browsing activity." }
     ],
     "noteTitle": "Accountless remains first-class",
     "noteBody": "Optional account continuity belongs to a later bounded feature slice and cannot become a prerequisite for core value.",
-    "primaryLabel": "Choose phone"
+    "primaryLabel": "Choose phone",
+    "resumeLabel": "Resume setup",
+    "resetLabel": "Start over",
+    "resumeNote": "This browser tab has an unfinished setup. Only controlled setup state is kept here; starting over deletes it immediately."
   },
   "route": {
     "kicker": "Setup",
