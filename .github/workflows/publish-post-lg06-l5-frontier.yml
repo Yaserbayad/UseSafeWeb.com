@@ -1,0 +1,164 @@
+name: Publish post-LG-06 L5 frontier
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/diagnostics/post-lg06-l5-frontier-trigger.txt']
+
+permissions:
+  contents: write
+
+jobs:
+  derive-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Derive guarded L5 frontier after independent LG-06 read-back
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv,re,subprocess
+          from collections import defaultdict,deque
+          from datetime import date
+          from pathlib import Path
+
+          W='Plans/Master/WBS/master-wbs.csv'
+          G='Plans/Master/RELATIONSHIP_INDEX.yaml'
+          GT='Plans/Master/Registers/GATES.md'
+          S='CURRENT_STATE.md'
+          RB='TSK_0052_LG06_POST_CR0008_CURRENT_FREEZE_READBACK_2026-09-02.md'
+          OUT='TSK_0052_POST_LG06_L5_FRONTIER_2026-09-02.md'
+          expected={
+            W:'b27a0c5df2f5636d8ed71051e9e26a68959a2616',
+            G:'c108d2c162bcea2ee4cc01def46d0487a9501032',
+            GT:'87cf9060954a82e1d5a092200d3c922f1986a5da',
+          }
+          def blob(p): return subprocess.check_output(['git','hash-object',p],text=True).strip()
+          for p,h in expected.items():
+              actual=blob(p); assert actual==h,f'hash drift {p}: {actual} != {h}'
+          assert Path(RB).exists(),'independent LG-06 read-back missing'
+          rb=Path(RB).read_text(encoding='utf-8')
+          assert 'LG06_REFRESH_DURABLE_READBACK=PASS' in rb
+          rb_blob=blob(RB)
+          state=Path(S).read_text(encoding='utf-8')
+          gate_heading='## TSK-0052 / LG-06 current accepted stable state — 2026-09-02 — POST-CR-0008 FREEZE REVALIDATION'
+          assert gate_heading in state,'current LG-06 runtime heading missing'
+          gate_section=state.split(gate_heading,1)[1]
+          for marker in ['**PASS**','ACC-0052 = PASS. VER-0052 = PASS. EVD-0052 = SATISFIED.','Unlock: internal L5 architecture/security/privacy/delivery-readiness work only.']:
+              assert marker in gate_section,marker
+          runtime_blob=blob(S)
+
+          with open(W,newline='',encoding='utf-8-sig') as f: rows=list(csv.DictReader(f))
+          by={r['Task_ID']:r for r in rows if r.get('Task_ID')}
+          order={r['Task_ID']:i for i,r in enumerate(rows) if r.get('Task_ID')}
+          sec=defaultdict(list)
+          for idx,m in enumerate(re.finditer(r'^(##|###) (TSK-\d{4})\b.*?(?=^(?:##|###) |\Z)',state,re.M|re.S)):
+              text=m.group(0); head=text.splitlines()[0]; dm=re.search(r'20\d{2}-\d{2}-\d{2}',head)
+              sec[m.group(2)].append({'pass':'**PASS' in text,'current':'current accepted' in head.lower(),'date':date.fromisoformat(dm.group(0)) if dm else None,'order':idx,'head':head})
+          current={t for t,ss in sec.items() if any(s['pass'] and s['current'] for s in ss)}
+          hist={t for t,ss in sec.items() if any(s['pass'] for s in ss)}
+          static={t for t,r in by.items() if (r.get('Execution_State') or '').strip()=='PASS'}
+          deps={}; children=defaultdict(set)
+          for t,r in by.items():
+              ds=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
+              deps[t]=ds
+              for d in ds: children[d].add(t)
+          def latest(t,cur=False):
+              ds=[s['date'] for s in sec.get(t,[]) if s['pass'] and s['date'] and (not cur or s['current'])]
+              return max(ds) if ds else None
+          def newer(t):
+              if t in current or t not in hist: return []
+              td=latest(t)
+              return [(d,latest(d,True)) for d in deps.get(t,[]) if latest(d,True) and (td is None or latest(d,True)>td)]
+          stale={t for t in hist if newer(t)}
+          effective=set(current)|{t for t in hist if t not in stale}|{t for t in static if t not in hist and t not in current}
+          changed=True
+          while changed:
+              changed=False
+              for t in list(effective):
+                  if t in current: continue
+                  if any(d not in effective for d in deps.get(t,[])):
+                      effective.remove(t); stale.add(t); changed=True
+          def desc(t):
+              seen=set(); q=deque(children.get(t,()))
+              while q:
+                  x=q.popleft()
+                  if x in seen: continue
+                  seen.add(x); q.extend(children.get(x,()))
+              return len(seen)
+          prio={'CRITICAL':4,'HIGH':3,'MEDIUM':2,'LOW':1}
+          candidates=[]
+          blocked=[]
+          for t,r in by.items():
+              if (r.get('Lifecycle_Stage') or '').strip()!='L5': continue
+              if (r.get('Action_Authority') or '').strip()!='AUTO_ALLOWED': continue
+              if (r.get('Plan_Status') or '').strip() in {'DEFERRED','NOT_APPLICABLE'}: continue
+              if t in effective: continue
+              missing=[d for d in deps.get(t,[]) if d not in effective]
+              record=(desc(t),prio.get((r.get('Priority') or '').strip(),0),order[t],t,r,missing)
+              if missing: blocked.append(record)
+              else: candidates.append(record)
+          candidates.sort(key=lambda x:(-x[0],-x[1],x[2],x[3]))
+          blocked.sort(key=lambda x:(-x[0],-x[1],x[2],x[3]))
+          def esc(v): return (v or '').replace('|','/').replace('\n',' ').strip() or 'NONE'
+          lines=[]
+          lines.append('# Post-LG-06 L5 Dependency-Ready Frontier — 2026-09-02')
+          lines.append('')
+          lines.append('**Status:** derived diagnostic evidence only; WBS/graph/runtime/gates remain authoritative.  ')
+          lines.append(f'**Runtime blob:** `{runtime_blob}`  ')
+          lines.append(f'**Independent LG-06 read-back blob:** `{rb_blob}`  ')
+          lines.append(f'**Current effective PASS count:** `{len(effective)}`  ')
+          lines.append(f'**Stale historical PASS count:** `{len(stale)}`  ')
+          lines.append(f'**Dependency-ready L5/AUTO_ALLOWED candidates:** `{len(candidates)}`  ')
+          lines.append(f'**Dependency-blocked L5/AUTO_ALLOWED candidates:** `{len(blocked)}`')
+          lines.append('')
+          lines.append('Ranking is dependency-chain reach first, then WBS priority, then WBS order/task ID. Trigger/precondition text is surfaced verbatim for semantic eligibility; this artifact does not itself waive a trigger, gate, human constraint, legal/privacy/security/platform condition, or source-validity check.')
+          lines.append('')
+          lines.append('## Dependency-ready candidates')
+          lines.append('')
+          lines.append('| Rank | Task | Descendants | Priority | Critical | Plan | Static state | Dependencies | Trigger | Preconditions | ACC | VER | Title |')
+          lines.append('| ---: | --- | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |')
+          for i,(dc,p,o,t,r,missing) in enumerate(candidates,1):
+              lines.append(f"| {i} | {t} | {dc} | {esc(r.get('Priority'))} | {esc(r.get('Critical_Path'))} | {esc(r.get('Plan_Status'))} | {esc(r.get('Execution_State'))} | {esc(';'.join(deps.get(t,[])))} | {esc(r.get('Trigger'))} | {esc(r.get('Preconditions'))} | {esc(r.get('Acceptance_ID'))} | {esc(r.get('Verification_ID'))} | {esc(r.get('Title'))} |")
+          lines.append('')
+          lines.append('## Dependency-blocked candidates')
+          lines.append('')
+          lines.append('| Task | Missing effective predecessors | Descendants | Priority | Trigger | Preconditions | Title |')
+          lines.append('| --- | --- | ---: | --- | --- | --- | --- |')
+          for dc,p,o,t,r,missing in blocked:
+              lines.append(f"| {t} | {esc(';'.join(missing))} | {dc} | {esc(r.get('Priority'))} | {esc(r.get('Trigger'))} | {esc(r.get('Preconditions'))} | {esc(r.get('Title'))} |")
+          lines.append('')
+          lines.append('`POST_LG06_L5_FRONTIER_DERIVATION=PASS`')
+          text='\n'.join(lines)+'\n'
+          out=Path(OUT)
+          if out.exists():
+              existing=out.read_text(encoding='utf-8')
+              if existing==text:
+                  print('POST_LG06_L5_FRONTIER_PUBLICATION=ALREADY_APPLIED')
+                  raise SystemExit(0)
+              raise AssertionError('frontier artifact already exists with different content')
+          out.write_text(text,encoding='utf-8')
+          print(f'POST_LG06_L5_READY_COUNT={len(candidates)}')
+          for i,(dc,p,o,t,r,missing) in enumerate(candidates,1):
+              print('READY|{}|{}|desc={}|priority={}|trigger={}|preconditions={}|title={}'.format(i,t,dc,esc(r.get('Priority')),esc(r.get('Trigger')),esc(r.get('Preconditions')),esc(r.get('Title'))))
+          print('POST_LG06_L5_FRONTIER_DERIVATION=PASS')
+          PY
+          changes="$(git status --porcelain)"
+          if [ -z "$changes" ]; then
+            echo 'POST_LG06_L5_FRONTIER_PUBLICATION=ALREADY_APPLIED'
+            exit 0
+          fi
+          test "$(printf '%s\n' "$changes" | sed '/^$/d' | wc -l)" -eq 1
+          printf '%s\n' "$changes" | grep -F 'TSK_0052_POST_LG06_L5_FRONTIER_2026-09-02.md'
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add TSK_0052_POST_LG06_L5_FRONTIER_2026-09-02.md
+          git commit -m 'audit: publish post-LG-06 L5 frontier'
+          git push origin HEAD:main
+          echo 'POST_LG06_L5_FRONTIER_PUBLICATION=PASS'
