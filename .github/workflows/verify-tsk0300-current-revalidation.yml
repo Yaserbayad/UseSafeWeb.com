@@ -163,7 +163,7 @@ jobs:
           status=P['status'].read_text(encoding='utf-8')
           for s in ['Verified','You confirmed this is set up','Action needed','Not covered','Status uncertain','Removed']:
               assert s in status, s
-          assert 'color alone' in status.lower() or 'not encoded by brand color' in status.lower()
+          assert 'brand color is not a state signal' in status.lower() and 'non-color-only reference' in status.lower()
           assert 'low-contrast' in readme.lower() and 'monochrome/off-white fallback' in readme
           print('TSK0300_ACCESSIBILITY_AND_STATE_SEMANTICS=PASS')
 
