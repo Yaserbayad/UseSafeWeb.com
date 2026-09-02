@@ -43,6 +43,7 @@ jobs:
             'TSK_0320_PROTECTION_STATE_MODEL_AND_COPY_RULES_2026-08-28.md':'1146f7622f434590dde1253d11f14fb6a87e19de',
             'TSK_0320_PROTECTION_STATE_MODEL_AND_COPY_RULES_EVIDENCE_2026-08-28.md':'93e32071ce111fddda7df826c3106f1eca3dfc07',
             'TSK_0321_ACCESSIBILITY_REVIEW_ACCEPTANCE_EVIDENCE_2026-08-29.md':'7ab9dd2467ca8ad755ef308c4b2ecade71023be8',
+            'TSK_0408_CURRENT_ACCEPTANCE_EVIDENCE_2026-09-01.md':'0bbf1d934ecd4a7693baf7de56362391e46dcf55',
           }
           def blob(p): return subprocess.check_output(['git','hash-object',p],text=True).strip()
           for p,sha in expected.items():
@@ -57,10 +58,8 @@ jobs:
           r=byid['TSK-0310']
           fields=['Task_ID','Lifecycle_Stage','Title','Plan_Status','Execution_State','Priority','Critical_Path','Dependencies','Dependency_Type','Trigger','Preconditions','Inputs','Output/Artifact','Acceptance_ID','Acceptance_Criteria','Verification_ID','Verification_Method','Evidence_ID','Evidence_Required','Primary_Owner','AI_Capability_A0_A4','Action_Authority','Execution_Instructions','Required_Tools_or_Access','Idempotency','Reversibility','Retry_Recovery','Escalation_Condition','Risk_Reference','Interface_Reference','Requirement_Reference','Source_Reference','Notes']
           for k in fields: print('ROW|'+k+'|'+(r.get(k) or ''))
-          assert r['Lifecycle_Stage']=='L4'
-          assert r['Priority']=='HIGH'
-          assert r['AI_Capability_A0_A4']=='A3'
-          assert r['Action_Authority']=='AUTO_ALLOWED'
+          assert r['Lifecycle_Stage']=='L4' and r['Priority']=='HIGH'
+          assert r['AI_Capability_A0_A4']=='A3' and r['Action_Authority']=='AUTO_ALLOWED'
           deps=[x.strip() for x in r['Dependencies'].split(';') if x.strip()]
           assert set(deps)=={'TSK-0318','TSK-0317','TSK-0320','TSK-0300'} and len(deps)==4
           assert (r['Acceptance_ID'],r['Verification_ID'],r['Evidence_ID'])==('ACC-0310','VER-0310','EVD-0310')
@@ -70,8 +69,6 @@ jobs:
           print('TSK0310_CURRENT_WBS_CONTRACT=PASS')
 
           rt=Path('CURRENT_STATE.md').read_text(encoding='utf-8')
-          # Preserve valid non-uniform historical/current task headings. Task sections are bounded by
-          # the next level-2/3 heading; acceptance is content-based, not heading-phrase-based.
           def task_sections(tid):
               pat=rf'^(##|###) {re.escape(tid)}\b.*?(?=^(?:##|###) |\Z)'
               return [m.group(0) for m in re.finditer(pat,rt,re.MULTILINE|re.DOTALL)]
@@ -105,9 +102,13 @@ jobs:
           e300=Path('TSK_0300_POST_CR0008_CURRENT_REVALIDATION_EVIDENCE_2026-09-02.md').read_text(encoding='utf-8').lower()
           assert 'tokens.css' in e300 and 'components.css' in e300 and 'pass' in e300
           e317=Path('TSK_0317_POST_CR0008_CURRENT_REVALIDATION_EVIDENCE_2026-09-02.md').read_text(encoding='utf-8').lower()
-          for concept in ['android','iphone','dns.usesafeweb.com','https://dns.usesafeweb.com/dns-query','configuration evidence','accountless']:
+          for concept in ['android','iphone','dns.usesafeweb.com','configuration evidence','accountless','doh','profile']:
               assert concept in e317, concept
+          e408=Path('TSK_0408_CURRENT_ACCEPTANCE_EVIDENCE_2026-09-01.md').read_text(encoding='utf-8').lower()
+          for concept in ['dns.usesafeweb.com','android','dot','apple','doh','server-url','verification','removal','fallback']:
+              assert concept in e408, concept
           print('TSK0310_NEW_PREDECESSOR_EVIDENCE_AVAILABLE=PASS')
+          print('TSK0310_ENDPOINT_AUTHORITY_BINDING=PASS')
 
           print('WBS_BLOB='+blob('Plans/Master/WBS/master-wbs.csv'))
           print('GRAPH_BLOB='+blob('Plans/Master/RELATIONSHIP_INDEX.yaml'))
