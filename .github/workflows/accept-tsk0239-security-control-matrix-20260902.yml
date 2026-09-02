@@ -1,0 +1,165 @@
+name: Accept TSK-0239 security privacy control matrix 2026-09-02
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/accept-tsk0239-security-control-matrix-20260902.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tsk0239-security-control-matrix-acceptance
+  cancel-in-progress: false
+
+jobs:
+  verify-and-accept:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Verify current authority, WBS contract and exact upstream artifacts
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import csv
+
+          root = Path('.')
+          state = (root/'CURRENT_STATE.md').read_text(encoding='utf-8')
+          manifest = (root/'Plans/Master/MANIFEST.yaml').read_text(encoding='utf-8')
+          layer5 = (root/'Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md').read_text(encoding='utf-8')
+          assert 'latest_change: CR-0009' in manifest
+          assert '### 5.3.8 Owner-external legal/compliance scope (DEC-0056 / CR-0009)' in layer5
+          assert 'Legal-scope items are **OWNER_EXTERNAL_SATISFIED**' in layer5
+          assert '## TSK-0485 current accepted stable state — 2026-09-01 — POST-CR-0008' in state
+          assert '`TSK-0485 — Perform end-to-end threat and abuse modeling`: **PASS**' in state
+          assert '## TSK-0239 current accepted stable state' not in state
+
+          with (root/'Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='') as f:
+              rows = list(csv.DictReader(f))
+          row = next(r for r in rows if r.get('Task_ID') == 'TSK-0239')
+          assert row.get('Lifecycle') == 'L5'
+          assert row.get('Action_Authority') == 'AUTO_ALLOWED'
+          assert row.get('AI_Capability_A0_A4') == 'A3'
+          vals = set((v or '').strip() for v in row.values())
+          assert 'TSK-0485; TSK-0240' in vals
+          assert 'ACC-0239' in vals and 'VER-0239' in vals and 'EVD-0239' in vals
+          assert any('Create security/privacy control implementation and verification matrix' in (v or '') for v in row.values())
+          PY
+          test "$(git hash-object TSK_0485_END_TO_END_THREAT_ABUSE_MODEL_2026-09-01.md)" = "373ac62ba1f244328e7d8e52ae6648d72e5a5ed7"
+          test "$(git hash-object TSK_0356_POST_CR0008_FIREBASE_AUTH_SERVER_SESSION_ARCHITECTURE_2026-09-02.md)" = "7dd47124db837ea4eaf6a06661788423d22f3c6e"
+          test "$(git hash-object TSK_0232_POST_CR0008_PARENT_DEVICE_OWNERSHIP_AUTHORIZATION_MODEL_2026-09-02.md)" = "30de2625f977e4d8017630c15de74ea19fde195c"
+          test "$(git hash-object TSK_0410_POST_CR0008_ALLOWLISTED_ADGUARD_ADAPTER_CLIENTID_LIFECYCLE_2026-09-02.md)" = "a0f98fbd69c49a5082c7853afc2487439b753c91"
+          test "$(git hash-object TSK_0234_POST_CR0008_PARTIAL_FAILURE_DELETION_MIGRATION_STATE_MACHINE_2026-09-02.md)" = "361ecdfa733a8a27f82616725e6d9b348ad57c1f"
+          test "$(git hash-object TSK_0486_AI_EXECUTED_OPERATIONS_SECURITY_CONTROL_2026-09-01.md)" = "ef2df08094f1e80ee592abcada145deaa8b600db"
+          test "$(git hash-object TSK_0487_ANONYMOUS_JOURNEY_THREAT_MODEL_2026-09-01.md)" = "daa96693e96bbcc749681b1f0264858d90b51244"
+          test "$(git hash-object TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md)" = "6b7a5095122c74ed9ec860b74408dab474576659"
+          test "$(git hash-object TSK_0409_SUPPORTED_DEVICE_NETWORK_VERIFICATION_BYPASS_MATRIX_2026-09-01.md)" = "3aa832777276115912e4f3990b30cb541c458f4f"
+          test "$(git hash-object TSK_0320_POST_CR0008_PROTECTION_STATE_MODEL_AND_COPY_RULES_2026-09-01.md)" = "bdc6bacc424669708f410466f3cfd5527f1c2b3c"
+          test "$(git hash-object infrastructure/adguard-server/TSK-0446-RECOVERY-SCOPE-CONTRACT.md)" = "18d998e2406e801c7ac08f4daa2e3b763ea9b523"
+          test "$(git hash-object TSK_0518_INDEPENDENT_RECOVERY_ACCEPTANCE_PLAN_2026-09-01.md)" = "9915f59e356c0d06a0c54ce0c9d4bb63f7e0b553"
+          test -d infrastructure/adguard-server/tsk-0413-bundle-v1
+
+      - name: Independently verify ACC-0239 matrix coverage and blocking semantics
+        id: verify
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('TSK_0239_SECURITY_PRIVACY_CONTROL_IMPLEMENTATION_VERIFICATION_MATRIX_2026-09-02.md')
+          text = p.read_text(encoding='utf-8')
+          rows = [ln for ln in text.splitlines() if re.match(r'^\| \*\*TM-\d{2} ', ln)]
+          assert len(rows) == 30, len(rows)
+          ids = []
+          for row in rows:
+              cells = [c.strip() for c in row.strip().strip('|').split('|')]
+              assert len(cells) == 9, (len(cells), row)
+              m = re.match(r'\*\*(TM-\d{2}) (Critical|High)', cells[0])
+              assert m, cells[0]
+              ids.append(m.group(1))
+              assert all(cells)
+              assert cells[-1] in {'DESIGN_BOUND / IMPLEMENTATION_PENDING','CONFIG_BASELINE_BOUND / RUNTIME_REVERIFY'}
+              assert 'LG-08' in cells[5] or 'LG-09' in cells[5]
+          assert ids == [f'TM-{i:02d}' for i in range(1,31)], ids
+          required = [
+              'Implementation owner', 'Current artifact/config authority', 'L6 implementation target',
+              'Verification method / evidence path', 'Release gate', 'Monitoring / detection',
+              'Failure response', 'Current status',
+              'TSK-0240 is `OWNER_EXTERNAL_SATISFIED`',
+              'not represented here as legal PASS',
+              'TSK-0048 must assign each row',
+              'TSK-0539 must bind every actionable SLI/threat signal',
+              'does not itself implement a control, close a vulnerability'
+          ]
+          for token in required:
+              assert token in text, token
+          for token in [
+              'ClientID never substitute for ownership authorization',
+              'only fresh qualifying technical evidence may produce `protected_verified`',
+              'persistent identifiable query/file logging and identifiable per-client statistics remain OFF/excluded',
+              'no production secret/token/private key in Git',
+              'ambiguous non-idempotent effects stop progression until reconciliation'
+          ]:
+              assert token in text, token
+          PY
+          test "$(git hash-object TSK_0239_SECURITY_PRIVACY_CONTROL_IMPLEMENTATION_VERIFICATION_MATRIX_2026-09-02.md)" = "674c21b4c169da4fb496617164ad68cfc6527fb4"
+          git diff --check
+          python3 Plans/Master/Tools/validate_master_plan.py
+          echo "artifact_blob=$(git hash-object TSK_0239_SECURITY_PRIVACY_CONTROL_IMPLEMENTATION_VERIFICATION_MATRIX_2026-09-02.md)" >> "$GITHUB_OUTPUT"
+
+      - name: Record stable runtime PASS without changing planning authority
+        env:
+          ARTIFACT_BLOB: ${{ steps.verify.outputs.artifact_blob }}
+          ARTIFACT_COMMIT: f1386b0af35b4f5b60134fcf2a9aefe13f466306
+          SOURCE_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from datetime import datetime, timezone
+          import os, re
+
+          p = Path('CURRENT_STATE.md')
+          text = p.read_text(encoding='utf-8')
+          assert '## TSK-0239 current accepted stable state — 2026-09-02 — POST-CR-0009' not in text
+          marker = '## CR-0007 current authority and execution boundary\n'
+          assert marker in text
+          section = f'''## TSK-0239 current accepted stable state — 2026-09-02 — POST-CR-0009\n\n`TSK-0239 — Create security/privacy control implementation and verification matrix`: **PASS** under current `ACC-0239 / VER-0239 / EVD-0239`, current `TSK-0485` PASS, and DEC-0056/CR-0009 owner-external treatment of the legal-only TSK-0240 predecessor.\n\n- Current WBS: L5 / MEDIUM / A3 / `AUTO_ALLOWED`; hard dependencies `TSK-0485; TSK-0240`. TSK-0485 is current durable PASS; TSK-0240 remains DEFERRED/WAITING and is `OWNER_EXTERNAL_SATISFIED` for sequencing only — no legal PASS/evidence is claimed.\n- Accepted matrix: `TSK_0239_SECURITY_PRIVACY_CONTROL_IMPLEMENTATION_VERIFICATION_MATRIX_2026-09-02.md`, version `1.0.0`, blob `{os.environ['ARTIFACT_BLOB']}`, publication commit `{os.environ['ARTIFACT_COMMIT']}`.\n- Independent GitHub Actions verification run/attempt `{os.environ['RUN_ID']} / {os.environ['RUN_ATTEMPT']}` verified exact upstream artifact blobs, current WBS contract, CR-0009 semantics, all 30 TM-01..TM-30 rows exactly once, required owner/location/verification/gate/monitoring/failure/status cells, global security/privacy invariants, `git diff --check`, and full modular master-plan validator PASS before this runtime mutation.\n- Every High/Critical control remains mapped to downstream L6 implementation and LG-08/LG-09 verification; this L5 matrix does not self-certify deployed controls. TSK-0048 must assign exact physical code/config locations in the implementation backlog, and TSK-0539 must bind privacy-safe runtime signals/alerts.\n- CR-0009 boundary is preserved: legal/regulatory/compliance conclusions are owner-external/not AI-verified; technical privacy engineering, auth/authz/CSRF/IDOR, ClientID isolation, deletion/recovery, no-history telemetry, secrets, supply chain, DNS abuse, protection truth, monitoring and rollback remain mandatory.\n- **Non-inference:** no control implementation, vulnerability closure, penetration-test result, RSK-0001/RSK-0007 closure, TSK-0539/TSK-0048/TSK-0049/LG-07 PASS, L6 build, production activation, publication, payment, market or launch authority is inferred from TSK-0239 PASS.\n\n### Queue status after TSK-0239 acceptance\n\nRecompute the residual L5 frontier from current WBS/graph/runtime/gates and DEC-0056 semantics. Direct successors may consume TSK-0239 only if their other current dependencies and own acceptance are independently satisfied.\n\n'''
+          text = text.replace(marker, section + marker, 1)
+          now = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
+          text = re.sub(r'\*\*Updated:\*\* [^\n]+', f'**Updated:** {now}', text, count=1)
+          p.write_text(text, encoding='utf-8')
+          PY
+          git diff --check
+          grep -F '## TSK-0239 current accepted stable state — 2026-09-02 — POST-CR-0009' CURRENT_STATE.md
+          grep -F 'all 30 TM-01..TM-30 rows exactly once' CURRENT_STATE.md
+          grep -F 'no legal PASS/evidence is claimed' CURRENT_STATE.md
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/accept-tsk0239-security-control-matrix-20260902.yml
+          git add CURRENT_STATE.md
+          git commit -m 'state: accept TSK-0239 security privacy control matrix'
+
+          git fetch origin main
+          if [ "$(git rev-parse origin/main)" != "${SOURCE_SHA}" ]; then
+            echo 'Main changed after TSK-0239 checkout; refusing ambiguous state publication.'
+            exit 1
+          fi
+          git push origin HEAD:main
+
+      - name: Exact remote read-back
+        run: |
+          git fetch origin main
+          git show origin/main:CURRENT_STATE.md | grep -F '## TSK-0239 current accepted stable state — 2026-09-02 — POST-CR-0009'
+          git show origin/main:CURRENT_STATE.md | grep -F 'all 30 TM-01..TM-30 rows exactly once'
+          git show origin/main:TSK_0239_SECURITY_PRIVACY_CONTROL_IMPLEMENTATION_VERIFICATION_MATRIX_2026-09-02.md | grep -F '## 7. Acceptance disposition'
+          echo "REMOTE_HEAD=$(git rev-parse origin/main)"
