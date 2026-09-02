@@ -1,4 +1,4 @@
-name: Temporary - TSK-0361 browser and WCAG acceptance rerun
+name: Temporary - TSK-0361 synthetic performance acceptance
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  browser-acceptance:
+  performance-acceptance:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
@@ -20,37 +20,37 @@ jobs:
           node-version: '22.23.2'
           cache: npm
           cache-dependency-path: website/package-lock.json
-      - name: Build verified application
+      - name: Build exact verified application
         shell: bash
         run: |
           set -euo pipefail
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
           test "$(git hash-object website/package-lock.json)" = '14f9a62607489f965b96d98cdf0d825a363cd8bc'
           cd website
           npm ci --no-fund --no-audit
           npm run lint
           npm run typecheck
           NEXT_TELEMETRY_DISABLED=1 npm run build
-      - name: Install exact ephemeral browser acceptance tooling
+      - name: Install exact ephemeral browser tooling
         shell: bash
         run: |
           set -euo pipefail
           cd website
-          npm install --no-save --no-package-lock --no-fund --no-audit playwright@1.62.1 axe-core@4.13.0
+          npm install --no-save --no-package-lock --no-fund --no-audit playwright@1.62.1
           test "$(node -p "require('./node_modules/playwright/package.json').version")" = '1.62.1'
-          test "$(node -p "require('./node_modules/axe-core/package.json').version")" = '4.13.0'
           npx playwright install --with-deps chromium
-      - name: Execute production browser acceptance
+      - name: Run bounded synthetic performance acceptance
         shell: bash
         run: |
           set -euo pipefail
           cd website
-          NEXT_TELEMETRY_DISABLED=1 npm start -- -p 3000 > /tmp/tsk0361-next.log 2>&1 &
+          NEXT_TELEMETRY_DISABLED=1 npm start -- -p 3000 > /tmp/tsk0361-perf-next.log 2>&1 &
           SERVER_PID=$!
-          trap 'kill "$SERVER_PID" 2>/dev/null || true; cat /tmp/tsk0361-next.log' EXIT
+          trap 'kill "$SERVER_PID" 2>/dev/null || true; cat /tmp/tsk0361-perf-next.log' EXIT
           for i in $(seq 1 60); do
             if curl --fail --silent --show-error http://127.0.0.1:3000/en-GB >/dev/null; then break; fi
             sleep 1
           done
           curl --fail --silent --show-error http://127.0.0.1:3000/en-GB >/dev/null
-          BASE_URL=http://127.0.0.1:3000 node tests/browser/tsk0361-browser.mjs
-          echo 'TSK0361_PRODUCTION_BROWSER_RUN=PASS'
+          BASE_URL=http://127.0.0.1:3000 node tests/performance/tsk0361-performance.mjs
+          echo 'TSK0361_SYNTHETIC_PERFORMANCE_RUN=PASS'
