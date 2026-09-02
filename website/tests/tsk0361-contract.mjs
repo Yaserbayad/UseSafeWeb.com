@@ -25,12 +25,9 @@ test('pins the approved Next.js application baseline without a local database', 
   assert.equal(pkg.dependencies?.['radix-ui'], '1.6.7');
   assert.equal(pkg.dependencies?.['@keystatic/core'], '0.6.9');
   assert.equal(pkg.dependencies?.['@keystatic/next'], '5.0.5');
-
   const allDependencies = Object.keys({ ...pkg.dependencies, ...pkg.devDependencies });
   const forbidden = ['prisma', '@prisma/client', 'sqlite', 'sqlite3', 'better-sqlite3', 'pg', 'postgres', 'mysql', 'mysql2', 'mongoose'];
-  for (const dependency of forbidden) {
-    assert.ok(!allDependencies.includes(dependency), `unexpected local database dependency: ${dependency}`);
-  }
+  for (const dependency of forbidden) assert.ok(!allDependencies.includes(dependency), `unexpected local database dependency: ${dependency}`);
 });
 
 test('pins the Next 16 compatible ESLint 9 line used by the verified build', () => {
@@ -66,11 +63,21 @@ test('implements locale-routed English, Turkish and Arabic public/start surfaces
   assert.match(i18n, /['"]tr['"]/);
   assert.match(i18n, /['"]ar['"]/);
   assert.match(i18n, /rtl/);
-
   read('src/app/[lang]/layout.tsx');
   read('src/app/[lang]/page.tsx');
   read('src/app/[lang]/start/page.tsx');
   read('src/proxy.ts');
+});
+
+test('does not hard-code English shared chrome into localized templates', () => {
+  const page = read('src/app/[lang]/page.tsx');
+  const layout = read('src/app/[lang]/layout.tsx');
+  const start = read('src/app/[lang]/start/page.tsx');
+  assert.doesNotMatch(page, />How it works</);
+  assert.doesNotMatch(page, />Protection Map</);
+  assert.doesNotMatch(page, />Truthful status, not a safety score</);
+  assert.doesNotMatch(layout, /<p>SafeWeb · First phone safety setup · No browsing-history product data\.<\/p>/);
+  assert.doesNotMatch(start, /<p className="sw-kicker">SafeWeb setup<\/p>/);
 });
 
 test('consumes the canonical SafeWeb design-system sources rather than inventing replacement brand values', () => {
@@ -86,7 +93,6 @@ test('integrates an accessible component library and browser-editable content ad
   const cmsClient = read('src/app/keystatic/keystatic.ts');
   read('src/app/keystatic/[[...params]]/page.tsx');
   const cmsApi = read('src/app/api/keystatic/[...params]/route.ts');
-
   assert.match(page, /radix-ui/);
   assert.match(cms, /@keystatic\/core/);
   assert.match(cms, /kind:\s*['"]local['"]/);
@@ -95,13 +101,7 @@ test('integrates an accessible component library and browser-editable content ad
 });
 
 test('preserves accountless-first truth and prohibited-data boundaries in public/start copy', () => {
-  const text = [
-    read('src/content/home/en.json'),
-    read('src/content/home/tr.json'),
-    read('src/content/home/ar.json'),
-    read('src/app/[lang]/start/page.tsx'),
-  ].join('\n').toLowerCase();
-
+  const text = [read('src/content/home/en.json'), read('src/content/home/tr.json'), read('src/content/home/ar.json'), read('src/app/[lang]/start/page.tsx')].join('\n').toLowerCase();
   assert.match(text, /without (an )?account|hesap olmadan|دون حساب/);
   assert.match(text, /browsing history|tarama geçmiş|سجل التصفح/);
   assert.doesNotMatch(text, /completely safe|fully protected|100% safe/);
