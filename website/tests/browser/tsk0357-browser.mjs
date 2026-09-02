@@ -16,6 +16,22 @@ async function stored(page) {
   return raw ? JSON.parse(raw) : null;
 }
 
+async function storedAtStep(page, step) {
+  await page.waitForFunction(
+    ({ key, expectedStep }) => {
+      const raw = sessionStorage.getItem(key);
+      if (!raw) return false;
+      try {
+        return JSON.parse(raw).journeyStep === expectedStep;
+      } catch {
+        return false;
+      }
+    },
+    { key: storageKey, expectedStep: step },
+  );
+  return stored(page);
+}
+
 await record('J0 journey is created only when setup begins and resumes within the same tab session', async () => {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await context.newPage();
@@ -29,7 +45,7 @@ await record('J0 journey is created only when setup begins and resumes within th
 
   await page.locator('a[href="/en-GB/setup/route"]').click();
   await page.waitForURL('**/en-GB/setup/route');
-  const route = await stored(page);
+  const route = await storedAtStep(page, 'route');
   assert.ok(route, 'setup route must create J0 state');
   assert.deepEqual(Object.keys(route).sort(), ['createdAt', 'hardExpiresAt', 'journeyStep', 'locale', 'schemaVersion', 'scope']);
   assert.match(route.scope, /^[0-9a-f]{32}$/);
@@ -40,7 +56,7 @@ await record('J0 journey is created only when setup begins and resumes within th
 
   await page.locator('a[href="/en-GB/setup/native?platform=android"]').click();
   await page.waitForURL('**/en-GB/setup/native?platform=android');
-  const native = await stored(page);
+  const native = await storedAtStep(page, 'native');
   assert.equal(native.scope, route.scope);
   assert.equal(native.hardExpiresAt, route.hardExpiresAt, 'navigation must not slide expiry');
   assert.equal(native.journeyStep, 'native');
@@ -49,7 +65,7 @@ await record('J0 journey is created only when setup begins and resumes within th
 
   await page.locator('a[href="/en-GB/setup/dns?platform=android"]').click();
   await page.waitForURL('**/en-GB/setup/dns?platform=android');
-  const dns = await stored(page);
+  const dns = await storedAtStep(page, 'dns');
   assert.equal(dns.scope, route.scope);
   assert.equal(dns.hardExpiresAt, route.hardExpiresAt);
   assert.equal(dns.journeyStep, 'dns');
@@ -68,7 +84,7 @@ await record('reset deletes immediately and malformed or expired state cannot be
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await context.newPage();
   await page.goto(`${base}/en-GB/setup/route`, { waitUntil: 'networkidle' });
-  assert.ok(await stored(page));
+  assert.ok(await storedAtStep(page, 'route'));
   await page.goto(`${base}/en-GB/start`, { waitUntil: 'networkidle' });
   await page.locator('[data-journey-reset]').click();
   assert.equal(await stored(page), null, 'reset must delete state synchronously');
@@ -111,7 +127,7 @@ await record('journey scope is distinct across independent browser sessions', as
     const context = await browser.newContext();
     const page = await context.newPage();
     await page.goto(`${base}/en-GB/setup/route`, { waitUntil: 'networkidle' });
-    const state = await stored(page);
+    const state = await storedAtStep(page, 'route');
     await context.close();
     assert.ok(state);
     return state.scope;
