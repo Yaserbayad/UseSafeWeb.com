@@ -51,14 +51,14 @@ export type CoreState = {
 
 export type CoreEvent =
   | { type: 'SELECT_DEVICE'; deviceFamily?: DeviceFamily }
-  | { type: 'CONTINUE_NATIVE' }
-  | { type: 'CONTINUE_DNS' }
-  | { type: 'VERIFICATION_RESULT' }
-  | { type: 'OPEN_TROUBLESHOOT' }
-  | { type: 'OPEN_RECOVERY' }
-  | { type: 'REMOVE_CONFIGURATION' }
-  | { type: 'RESTART_SETUP' }
-  | { type: 'COMPLETE' };
+  | { type: 'CONTINUE_NATIVE'; deviceFamily?: DeviceFamily }
+  | { type: 'CONTINUE_DNS'; deviceFamily?: DeviceFamily }
+  | { type: 'VERIFICATION_RESULT'; deviceFamily?: DeviceFamily }
+  | { type: 'OPEN_TROUBLESHOOT'; deviceFamily?: DeviceFamily }
+  | { type: 'OPEN_RECOVERY'; deviceFamily?: DeviceFamily }
+  | { type: 'REMOVE_CONFIGURATION'; deviceFamily?: DeviceFamily }
+  | { type: 'RESTART_SETUP'; deviceFamily?: DeviceFamily }
+  | { type: 'COMPLETE'; deviceFamily?: DeviceFamily };
 
 export type OptionalAccountState = {
   capabilityEnabled: boolean;
