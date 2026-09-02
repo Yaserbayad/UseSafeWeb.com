@@ -1,76 +1,23 @@
-name: Temporary - Accept TSK-0051 LG-07 readiness decision
+name: Retired - Accept TSK-0498 privacy-safe event contract v2
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/accept-tsk0498-privacy-safe-events-v2-20260901.yml'
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  accept-tsk0051:
+  verify-retired-state:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-      - name: Verify TSK-0051 LG-07 before state mutation
+      - uses: actions/checkout@v4
+      - name: Verify durable TSK-0498 acceptance without mutation
         shell: bash
         run: |
           set -euo pipefail
-          git fetch origin main
-          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
-          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
-          test "$(git hash-object Plans/Master/Registers/GATES.md)" = '87cf9060954a82e1d5a092200d3c922f1986a5da'
-          test "$(git hash-object TSK_0051_LG07_ARCHITECTURE_DELIVERY_READINESS_DECISION_2026-09-02.md)" = 'f3febe09b804163e47b96a1784512b8b12620628'
-          test "$(git hash-object Plans/Master/Tools/verify_tsk0051_lg07_readiness_20260902.py)" = '88185897babde6b76c8e49dbead65ac59bbd377b'
-          test "$(git hash-object TSK_0048_DEPENDENCY_ORDERED_VERTICAL_IMPLEMENTATION_BACKLOG_2026-09-02.md)" = '4463a818d15a9faa4e48363105bce92fe28e3450'
-          python3 Plans/Master/Tools/verify_tsk0051_lg07_readiness_20260902.py
+          grep -Fq '## TSK-0498 current accepted stable state — 2026-09-01 — POST-CR-0008' CURRENT_STATE.md
+          grep -Fq '`TSK-0498 — Define only decision-linked accountless journey, protection-state, self-service, reliability, channel, and cost events`: **PASS**' CURRENT_STATE.md
+          test "$(git hash-object TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md)" = '6b7a5095122c74ed9ec860b74408dab474576659'
+          grep -Fq '**Version:** 1.0.1' TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md
           python3 Plans/Master/Tools/validate_master_plan.py
-      - name: Append TSK-0051 and LG-07 PASS
-        shell: bash
-        env:
-          VERIFY_RUN_ID: '33664361566'
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          import os
-          from datetime import datetime, timezone
-          from pathlib import Path
-          p=Path('CURRENT_STATE.md'); text=p.read_text(encoding='utf-8-sig')
-          heading='## TSK-0051 / LG-07 current accepted stable state — 2026-09-02 — POST-TSK-0587'
-          if heading in text: raise SystemExit('TSK-0051 / LG-07 section already exists')
-          now=datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
-          lines=text.splitlines()
-          for i,line in enumerate(lines):
-              if line.startswith('**Updated:**'):
-                  lines[i]=f'**Updated:** {now}'; break
-          text='\n'.join(lines).rstrip()+'\n'
-          section=f'''\n{heading}\n\n`TSK-0051 — Decide LG-07 architecture and delivery readiness (legacy G-07)`: **PASS** under current `ACC-0051 / VER-0051 / EVD-0051`.\n\n`LG-07 — Architecture, Security, Privacy and Delivery Readiness`: **PASS** under the current gate contract and `AUTO_ALLOWED` authority.\n\n- Current normalized WBS blob `eb35f3b10356396c5117e3f47d0b0378953e2157`: TSK-0051 is L5 / A4 / `AUTO_ALLOWED`; direct dependencies `TSK-0587; TSK-0052; TSK-0049` are current durable PASS.\n- Gate register blob `87cf9060954a82e1d5a092200d3c922f1986a5da`: LG-07 accepts the smallest production-capable architecture and implementation plan on evidence-complete PASS and unlocks L6 build; it does not require L6 implementation to pre-exist.\n- Accepted decision artifact: `TSK_0051_LG07_ARCHITECTURE_DELIVERY_READINESS_DECISION_2026-09-02.md`, version `1.0.0`, blob `f3febe09b804163e47b96a1784512b8b12620628`, publication commit `efce7d639a349b92f8bfd93f67252163b137446d`.\n- Deterministic semantic verifier: `Plans/Master/Tools/verify_tsk0051_lg07_readiness_20260902.py`, blob `88185897babde6b76c8e49dbead65ac59bbd377b`.\n- Independent read-only GitHub Actions verification run `{os.environ['VERIFY_RUN_ID']} / 1`: **SUCCESS**; exact authoritative WBS/gate hashes, 20 current PASS evidence anchors, residual L5 frontier, `CP-LG07-01` integrated checkpoint semantics, backlog coverage, risk/cost/legal fences, full modular validator and L6 non-inference all PASS. Validator: 641 tasks, 858 dependency edges, 0 broken links, 0 generated missing task IDs.\n- Earlier read-only runs `33664072647` and `33664171090` failed only on presentation-sensitive verifier literals in the derived Markdown artifact; neither mutated runtime or revealed an acceptance failure. The accepted verifier normalizes presentation while retaining exact immutable hashes and authoritative WBS/gate-field assertions.\n- `CP-LG07-01` is an integrated implementation checkpoint over the accepted dependency-ordered TSK-0048 backlog, not a rewrite of slice/task order. Its exit requires both the complete accountless core and approved optional V1 Google sign-in/session, parent/device ownership persistence, dashboard/device management and account/device deletion/recovery boundary, with security/privacy/release evidence.\n- Current L5 technical/design evidence has no unresolved High/Critical architecture/control-plan gap. Open residual risks remain governed by downstream L6/LG-08/LG-09 controls, tests, recovery and operational evidence; contrary current evidence reopens affected PASS.\n- Owner-approved TSK-0587 envelope remains binding: zero incremental new development spend and zero contingency without a new owner decision; existing owner-provided/paid resources only within current entitlement/frozen architecture.\n- CR-0007/DEC-0054 remains binding: CI/ephemeral verification is allowed; no mandatory persistent staging or pilot lifecycle is reintroduced. CR-0009/DEC-0056 remains binding: legal/regulatory/compliance work is owner-external for sequencing only, with no legal PASS inferred.\n- **Non-inference:** LG-07 PASS does not mark any L6 implementation task PASS and does not prove target-environment security testing, deployment, production activation, real-user validation, spend, launch, or legal/compliance completion.\n\n### Queue status after TSK-0051 / LG-07 acceptance\n\n`TSK-0050 — Persist approved baselines and readiness decision in GitHub` is the remaining non-legal L5 successor and must be completed/read back before selecting actual L6 implementation work. `TSK-0240` remains owner-external under CR-0009 and is not selected as legal work.\n'''
-          p.write_text(text+section,encoding='utf-8')
-          PY
-          git diff --check
-          test "$(git status --porcelain | sed 's/^...//' | sort)" = 'CURRENT_STATE.md'
-      - name: Persist and read back
-        shell: bash
-        run: |
-          set -euo pipefail
-          SOURCE="$(git rev-parse HEAD)"
-          git fetch origin main
-          test "$(git rev-parse origin/main)" = "$SOURCE"
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add CURRENT_STATE.md
-          git commit -m 'state: accept TSK-0051 and LG-07 readiness'
-          C="$(git rev-parse HEAD)"; B="$(git rev-parse "$C:CURRENT_STATE.md")"
-          git push origin HEAD:main
-          git fetch origin main
-          test "$(git rev-parse origin/main)" = "$C"
-          test "$(git rev-parse "origin/main:CURRENT_STATE.md")" = "$B"
-          git show origin/main:CURRENT_STATE.md | grep -Fq '## TSK-0051 / LG-07 current accepted stable state — 2026-09-02 — POST-TSK-0587'
-          git show origin/main:CURRENT_STATE.md | grep -Fq '`LG-07 — Architecture, Security, Privacy and Delivery Readiness`: **PASS**'
-          echo "TSK0051_LG07_STATE_COMMIT=$C"
-          echo "TSK0051_LG07_STATE_BLOB=$B"
-          echo 'TSK0051_LG07_STATE_REMOTE_READBACK=PASS'
+          echo 'TSK0498_HISTORICAL_ACCEPT_WORKFLOW_RETIRED=PASS'
