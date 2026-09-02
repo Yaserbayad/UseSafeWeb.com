@@ -20,13 +20,13 @@
       <p>Each state below is identified by text plus its evidence or limitation. Brand color is not a state signal.</p>
     </section>
 
-    <section class="sw-status sw-copy" data-state="verified">
-      <div class="sw-status__label">Verified</div>
-      <p class="sw-status__evidence">SafeWeb verified this protection step is active on your current setup.</p>
+    <section class="sw-status sw-copy" data-state="protected/verified">
+      <div class="sw-status__label">Protection verified</div>
+      <p class="sw-status__evidence">UseSafeWeb verified this protection step for this setup.</p>
     </section>
-    <section class="sw-status sw-copy" data-state="parent-confirmed">
-      <div class="sw-status__label">You confirmed this is set up</div>
-      <p class="sw-status__evidence">SafeWeb has not independently verified this setting.</p>
+    <section class="sw-status sw-copy" data-state="configured/parent-confirmed">
+      <div class="sw-status__label">Setup confirmed</div>
+      <p class="sw-status__evidence">Protection has not yet been technically verified.</p>
     </section>
     <section class="sw-status sw-copy" data-state="action-needed">
       <div class="sw-status__label">Action needed</div>
@@ -34,15 +34,15 @@
     </section>
     <section class="sw-status sw-copy" data-state="not-covered">
       <div class="sw-status__label">Not covered</div>
-      <p class="sw-status__evidence">SafeWeb does not cover this on your current setup.</p>
+      <p class="sw-status__evidence">UseSafeWeb does not cover this on your current setup.</p>
     </section>
-    <section class="sw-status sw-copy" data-state="uncertain">
-      <div class="sw-status__label">Status uncertain</div>
-      <p class="sw-status__evidence">We can’t verify this protection right now. Check it before relying on this layer.</p>
+    <section class="sw-status sw-copy" data-state="uncertain/error">
+      <div class="sw-status__label">Protection status could not be verified</div>
+      <p class="sw-status__evidence">Retry verification or follow the troubleshooting steps before relying on this protection.</p>
     </section>
     <section class="sw-status sw-copy" data-state="removed">
       <div class="sw-status__label">Removed</div>
-      <p class="sw-status__evidence">This protection step is no longer active.</p>
+      <p class="sw-status__evidence">This setup is no longer enrolled through UseSafeWeb.</p>
     </section>
 
     <p class="sw-template-note">Non-color-only reference: these labels remain present in grayscale, high-contrast, screen-reader and color-vision-deficiency contexts.</p>
