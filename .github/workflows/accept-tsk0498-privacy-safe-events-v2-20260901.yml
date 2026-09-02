@@ -1,71 +1,23 @@
-name: Temporary - Accept TSK-0047 release checkpoint rollback plan
+name: Retired - Accept TSK-0498 privacy-safe event contract v2
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  accept-tsk0047:
+  verify-retired-state:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-      - name: Verify TSK-0047 before state mutation
+      - uses: actions/checkout@v4
+      - name: Verify durable TSK-0498 acceptance without mutation
         shell: bash
         run: |
           set -euo pipefail
-          git fetch origin main
-          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
-          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
-          test "$(git hash-object TSK_0047_RELEASE_CHECKPOINT_ROLLBACK_PLAN_2026-09-02.md)" = '00e4c57b2db0efdd23e213ac2078a435f24f0171'
-          test "$(git hash-object Plans/Master/Tools/verify_tsk0047_release_checkpoint_rollback_20260902.py)" = '3739809c3a8cf4a189ca00804a808bb3e5b72cc9'
-          python3 Plans/Master/Tools/verify_tsk0047_release_checkpoint_rollback_20260902.py
+          grep -Fq '## TSK-0498 current accepted stable state — 2026-09-01 — POST-CR-0008' CURRENT_STATE.md
+          grep -Fq '`TSK-0498 — Define only decision-linked accountless journey, protection-state, self-service, reliability, channel, and cost events`: **PASS**' CURRENT_STATE.md
+          test "$(git hash-object TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md)" = '6b7a5095122c74ed9ec860b74408dab474576659'
+          grep -Fq '**Version:** 1.0.1' TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md
           python3 Plans/Master/Tools/validate_master_plan.py
-      - name: Append TSK-0047 PASS
-        shell: bash
-        env:
-          VERIFY_RUN_ID: '33662280269'
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          import os
-          from datetime import datetime, timezone
-          from pathlib import Path
-          p=Path('CURRENT_STATE.md'); text=p.read_text(encoding='utf-8-sig')
-          heading='## TSK-0047 current accepted stable state — 2026-09-02 — POST-CR-0010'
-          if heading in text: raise SystemExit('TSK-0047 section already exists')
-          now=datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
-          lines=text.splitlines()
-          for i,line in enumerate(lines):
-              if line.startswith('**Updated:**'):
-                  lines[i]=f'**Updated:** {now}'; break
-          text='\n'.join(lines).rstrip()+'\n'
-          section=f'''\n{heading}\n\n`TSK-0047 — Define incremental environments, releases, checkpoints, and rollback plan`: **PASS** under current `ACC-0047 / VER-0047 / EVD-0047`.\n\n- Current normalized WBS blob `eb35f3b10356396c5117e3f47d0b0378953e2157`: L5 / A3 / `AUTO_ALLOWED`; sole hard dependency `TSK-0516` is current durable PASS.\n- Accepted artifact: `TSK_0047_RELEASE_CHECKPOINT_ROLLBACK_PLAN_2026-09-02.md`, version `1.0.0`, blob `00e4c57b2db0efdd23e213ac2078a435f24f0171`, publication commit `2860685bc82b0983191f484e3f14f26f544853c3`.\n- Corrected verifier `Plans/Master/Tools/verify_tsk0047_release_checkpoint_rollback_20260902.py`, blob `3739809c3a8cf4a189ca00804a808bb3e5b72cc9`; correction only broadened an equivalent non-goal phrase match after run `33662163912` failed on literal wording, with no acceptance failure or state mutation.\n- Independent GitHub Actions verification run `{os.environ['VERIFY_RUN_ID']} / 1`: **SUCCESS**; current WBS/dependency/authority, CR-0007 production-only lifecycle, CI/ephemeral verification, versioning/change flow, configuration migration, test gates, rollback triggers/procedure, evidence retention, privacy/security/non-goal and CR-0009 boundaries all pass. Full modular validator PASS.\n- CR-0007/DEC-0054 preserved: no mandatory persistent staging or pilot lifecycle is reintroduced; production remains the only active lifecycle environment after integrated readiness, subject to gates.\n- **Non-inference:** no L6 build, deployment, production activation, spend, LG-07 PASS or human-only decision is inferred.\n\n### Queue status after TSK-0047 acceptance\n\nRecompute the complete residual L5 frontier. `TSK-0587` may become eligible but remains `HUMAN_ONLY`; other independent `AUTO_ALLOWED` prerequisites must be completed before stopping if eligible.\n'''
-          p.write_text(text+section,encoding='utf-8')
-          PY
-          git diff --check
-          test "$(git status --porcelain | sed 's/^...//' | sort)" = 'CURRENT_STATE.md'
-      - name: Persist and read back
-        shell: bash
-        run: |
-          set -euo pipefail
-          SOURCE="$(git rev-parse HEAD)"
-          git fetch origin main
-          test "$(git rev-parse origin/main)" = "$SOURCE"
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add CURRENT_STATE.md
-          git commit -m 'state: accept TSK-0047 release checkpoint rollback plan'
-          C="$(git rev-parse HEAD)"; B="$(git rev-parse "$C:CURRENT_STATE.md")"
-          git push origin HEAD:main
-          git fetch origin main
-          test "$(git rev-parse origin/main)" = "$C"
-          test "$(git rev-parse "origin/main:CURRENT_STATE.md")" = "$B"
-          git show origin/main:CURRENT_STATE.md | grep -Fq '## TSK-0047 current accepted stable state — 2026-09-02 — POST-CR-0010'
-          echo "TSK0047_STATE_COMMIT=$C"
-          echo "TSK0047_STATE_BLOB=$B"
-          echo 'TSK0047_STATE_REMOTE_READBACK=PASS'
+          echo 'TSK0498_HISTORICAL_ACCEPT_WORKFLOW_RETIRED=PASS'
