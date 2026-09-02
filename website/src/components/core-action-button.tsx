@@ -1,6 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import type { MouseEvent } from 'react';
 import { advanceCoreSession, clearCoreSession } from '@/lib/core-session';
 import type { CoreEvent, DeviceFamily, Locale } from '@/lib/core-state-machine';
 
@@ -34,7 +36,8 @@ export function CoreActionButton({
   const router = useRouter();
   const dataProps = { [dataAttribute]: '' };
 
-  function advance() {
+  function advance(click: MouseEvent<HTMLAnchorElement>) {
+    click.preventDefault();
     const state = advanceCoreSession(window.sessionStorage, locale, deviceFamily, event, Date.now());
     if (!state) {
       clearCoreSession(window.sessionStorage);
@@ -45,13 +48,13 @@ export function CoreActionButton({
   }
 
   return (
-    <button
-      type="button"
+    <Link
+      href={href}
       className={secondary ? 'sw-button sw-button--secondary' : 'sw-button'}
       onClick={advance}
       {...dataProps}
     >
       {label}
-    </button>
+    </Link>
   );
 }
