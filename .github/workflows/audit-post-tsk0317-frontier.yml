@@ -1,0 +1,120 @@
+name: Audit post-TSK-0317 frontier
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/diagnostics/post-tsk0317-frontier-trigger.txt']
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out current main authority
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Compute current L4 AUTO_ALLOWED dependency frontier
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv, re, subprocess
+          from collections import defaultdict, deque
+          from pathlib import Path
+
+          WBS='Plans/Master/WBS/master-wbs.csv'
+          GRAPH='Plans/Master/RELATIONSHIP_INDEX.yaml'
+          RUNTIME='CURRENT_STATE.md'
+          expected={
+            WBS:'b27a0c5df2f5636d8ed71051e9e26a68959a2616',
+            GRAPH:'c108d2c162bcea2ee4cc01def46d0487a9501032',
+            RUNTIME:'2d2e3c9de8f247bcff4f54388002917127c55c24',
+          }
+          def blob(p): return subprocess.check_output(['git','hash-object',p],text=True).strip()
+          for p,sha in expected.items():
+              actual=blob(p); assert actual==sha,(p,actual,sha)
+
+          with open(WBS,newline='',encoding='utf-8-sig') as f: rows=list(csv.DictReader(f))
+          byid={r['Task_ID']:r for r in rows if r.get('Task_ID')}
+          runtime=Path(RUNTIME).read_text(encoding='utf-8')
+
+          # Current accepted-state headings are the strongest positive runtime signal.
+          current_pass=set()
+          for m in re.finditer(r'^## (TSK-\d{4}) current accepted stable state.*?(?=^## |\Z)',runtime,re.MULTILINE|re.DOTALL):
+              if '**PASS**' in m.group(0): current_pass.add(m.group(1))
+
+          # WBS PASS remains usable for unchanged rows, but CR-0006 explicitly names these
+          # historical account-exclusion-dependent acceptances as non-current unless refreshed.
+          explicit_superseded={'TSK-0333','TSK-0321','TSK-0309','TSK-0628'}
+          static_pass={tid for tid,r in byid.items() if (r.get('Execution_State') or '').strip()=='PASS'}
+          effective_pass=(current_pass | static_pass) - explicit_superseded
+          effective_pass |= current_pass  # a refreshed current heading overrides old supersession.
+
+          deps={}
+          children=defaultdict(set)
+          for tid,r in byid.items():
+              ds=[x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
+              deps[tid]=ds
+              for d in ds: children[d].add(tid)
+
+          def descendants(tid):
+              seen=set(); q=deque(children.get(tid,()))
+              while q:
+                  x=q.popleft()
+                  if x in seen: continue
+                  seen.add(x); q.extend(children.get(x,()))
+              return len(seen)
+
+          print('AUDIT_INPUT_WBS='+blob(WBS))
+          print('AUDIT_INPUT_GRAPH='+blob(GRAPH))
+          print('AUDIT_INPUT_RUNTIME='+blob(RUNTIME))
+          print('CURRENT_RUNTIME_PASS_COUNT='+str(len(current_pass)))
+          print('STATIC_WBS_PASS_COUNT='+str(len(static_pass)))
+          print('EXPLICIT_CR0006_SUPERSEDED='+','.join(sorted(explicit_superseded)))
+
+          for source in ['TSK-0300','TSK-0317']:
+              print('DIRECT_SUCCESSORS|{}|{}'.format(source,','.join(sorted(children.get(source,()))) or 'NONE'))
+
+          cands=[]
+          for tid,r in byid.items():
+              if (r.get('Lifecycle_Stage') or '').strip()!='L4': continue
+              if (r.get('Action_Authority') or '').strip()!='AUTO_ALLOWED': continue
+              if tid in effective_pass: continue
+              ds=deps[tid]
+              missing=[d for d in ds if d not in effective_pass]
+              complete=not missing
+              cands.append((complete,descendants(tid),tid,r,missing))
+
+          # Print all open L4 AUTO candidates, dependency-complete first, then descendant cone.
+          cands.sort(key=lambda x:(not x[0],-x[1],x[2]))
+          for complete,desc,tid,r,missing in cands:
+              print('CAND|{}|complete={}|desc={}|priority={}|a={}|plan={}|exec={}|deps={}|missing={}|acc={}|title={}'.format(
+                  tid,'YES' if complete else 'NO',desc,(r.get('Priority') or ''),(r.get('AI_Capability_A0_A4') or ''),
+                  (r.get('Plan_Status') or ''),(r.get('Execution_State') or ''),';'.join(deps[tid]) or 'NONE',
+                  ';'.join(missing) or 'NONE',(r.get('Acceptance_ID') or ''),(r.get('Title') or '').replace('|','/')))
+
+          ready=[x for x in cands if x[0]]
+          print('READY_COUNT='+str(len(ready)))
+          for rank,(complete,desc,tid,r,missing) in enumerate(ready,1):
+              print('READY|{}|{}|desc={}|priority={}|a={}|deps={}|acc={}|title={}'.format(
+                  rank,tid,desc,(r.get('Priority') or ''),(r.get('AI_Capability_A0_A4') or ''),
+                  ';'.join(deps[tid]) or 'NONE',(r.get('Acceptance_ID') or ''),(r.get('Title') or '').replace('|','/')))
+
+          # Surface the known likely post-completion rows in full regardless of readiness.
+          for tid in ['TSK-0307','TSK-0308','TSK-0310','TSK-0311','TSK-0309','TSK-0628']:
+              r=byid.get(tid)
+              if not r: continue
+              print('ROW|{}|stage={}|priority={}|a={}|authority={}|plan={}|exec={}|deps={}|acc={}|ver={}|evd={}|trigger={}|pre={}|inputs={}|title={}|notes={}'.format(
+                  tid,r.get('Lifecycle_Stage',''),r.get('Priority',''),r.get('AI_Capability_A0_A4',''),r.get('Action_Authority',''),
+                  r.get('Plan_Status',''),r.get('Execution_State',''),r.get('Dependencies',''),r.get('Acceptance_ID',''),
+                  r.get('Verification_ID',''),r.get('Evidence_ID',''),(r.get('Trigger') or '').replace('|','/'),
+                  (r.get('Preconditions') or '').replace('|','/'),(r.get('Inputs') or '').replace('|','/'),
+                  (r.get('Title') or '').replace('|','/'),(r.get('Notes') or '').replace('|','/')))
+
+          print('POST_TSK0317_FRONTIER_AUDIT=PASS')
+          PY
