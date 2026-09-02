@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T17:34:15Z
+**Updated:** 2026-09-02T17:38:44Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2845,3 +2845,18 @@ Recompute current L5 eligibility. Direct successor `TSK-0516` may execute only i
 ### Queue status after TSK-0516 acceptance
 
 `TSK-0047` is the direct successor and may execute if current gates/constraints remain satisfied.
+
+## TSK-0047 current accepted stable state — 2026-09-02 — POST-CR-0010
+
+`TSK-0047 — Define incremental environments, releases, checkpoints, and rollback plan`: **PASS** under current `ACC-0047 / VER-0047 / EVD-0047`.
+
+- Current normalized WBS blob `eb35f3b10356396c5117e3f47d0b0378953e2157`: L5 / A3 / `AUTO_ALLOWED`; sole hard dependency `TSK-0516` is current durable PASS.
+- Accepted artifact: `TSK_0047_RELEASE_CHECKPOINT_ROLLBACK_PLAN_2026-09-02.md`, version `1.0.0`, blob `00e4c57b2db0efdd23e213ac2078a435f24f0171`, publication commit `2860685bc82b0983191f484e3f14f26f544853c3`.
+- Corrected verifier `Plans/Master/Tools/verify_tsk0047_release_checkpoint_rollback_20260902.py`, blob `3739809c3a8cf4a189ca00804a808bb3e5b72cc9`; correction only broadened an equivalent non-goal phrase match after run `33662163912` failed on literal wording, with no acceptance failure or state mutation.
+- Independent GitHub Actions verification run `33662280269 / 1`: **SUCCESS**; current WBS/dependency/authority, CR-0007 production-only lifecycle, CI/ephemeral verification, versioning/change flow, configuration migration, test gates, rollback triggers/procedure, evidence retention, privacy/security/non-goal and CR-0009 boundaries all pass. Full modular validator PASS.
+- CR-0007/DEC-0054 preserved: no mandatory persistent staging or pilot lifecycle is reintroduced; production remains the only active lifecycle environment after integrated readiness, subject to gates.
+- **Non-inference:** no L6 build, deployment, production activation, spend, LG-07 PASS or human-only decision is inferred.
+
+### Queue status after TSK-0047 acceptance
+
+Recompute the complete residual L5 frontier. `TSK-0587` may become eligible but remains `HUMAN_ONLY`; other independent `AUTO_ALLOWED` prerequisites must be completed before stopping if eligible.
