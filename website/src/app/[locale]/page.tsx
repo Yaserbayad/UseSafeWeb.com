@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   if (!isLocale(locale)) return {};
   const content = getContent(locale);
-  return publicMetadata(locale, content.home.title, content.home.summary);
+  return publicMetadata(locale, '', content.home.title, content.home.summary);
 }
 
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {

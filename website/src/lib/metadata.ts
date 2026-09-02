@@ -3,16 +3,19 @@ import type { Locale } from '@/lib/i18n';
 
 const baseUrl = 'https://usesafeweb.com';
 
-export function publicMetadata(locale: Locale, title: string, description: string): Metadata {
+export function publicMetadata(locale: Locale, path: string, title: string, description: string): Metadata {
+  const suffix = path === '' ? '' : path.startsWith('/') ? path : `/${path}`;
+  const localizedUrl = (target: Locale) => `${baseUrl}/${target}${suffix}`;
+
   return {
     title,
     description,
     alternates: {
-      canonical: `${baseUrl}/${locale}`,
+      canonical: localizedUrl(locale),
       languages: {
-        'en-GB': `${baseUrl}/en-GB`,
-        'tr-TR': `${baseUrl}/tr-TR`,
-        ar: `${baseUrl}/ar`,
+        'en-GB': localizedUrl('en-GB'),
+        'tr-TR': localizedUrl('tr-TR'),
+        ar: localizedUrl('ar'),
       },
     },
     robots: { index: true, follow: true },

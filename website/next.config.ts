@@ -20,6 +20,15 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(process.cwd(), '..'),
   },
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/en-GB',
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [
       {
