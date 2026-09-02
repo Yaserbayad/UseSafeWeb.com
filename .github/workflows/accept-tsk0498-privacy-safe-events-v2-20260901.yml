@@ -1,23 +1,91 @@
-name: Retired - Accept TSK-0498 privacy-safe event contract v2
+name: Temporary - TSK-0358 runtime PASS sync
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - state/tsk-0358-pass-sync-20260902
+    paths:
+      - '.github/workflows/accept-tsk0498-privacy-safe-events-v2-20260901.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  verify-retired-state:
-    runs-on: ubuntu-latest
+  sync-runtime-state:
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - name: Verify durable TSK-0498 acceptance without mutation
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+      - name: Verify stale-write guards and accepted evidence
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq '## TSK-0498 current accepted stable state — 2026-09-01 — POST-CR-0008' CURRENT_STATE.md
-          grep -Fq '`TSK-0498 — Define only decision-linked accountless journey, protection-state, self-service, reliability, channel, and cost events`: **PASS**' CURRENT_STATE.md
-          test "$(git hash-object TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md)" = '6b7a5095122c74ed9ec860b74408dab474576659'
-          grep -Fq '**Version:** 1.0.1' TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = 'e2586f389a29524b23d105cd56acaa2a038b2b46'
+          git checkout -B main origin/main
+          test "$(git hash-object CURRENT_STATE.md)" = 'e3017079ecbdac1c9336dc143cc6adfea8f761d8'
+          ! grep -Fq '## TSK-0358 current accepted stable state' CURRENT_STATE.md
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
+          grep -Fq '## TSK-0320 current accepted stable state' CURRENT_STATE.md
+          grep -Fq '## TSK-0357 current accepted stable state' CURRENT_STATE.md
+          grep -Fq '## TSK-0361 current accepted stable state' CURRENT_STATE.md
           python3 Plans/Master/Tools/validate_master_plan.py
-          echo 'TSK0498_HISTORICAL_ACCEPT_WORKFLOW_RETIRED=PASS'
+      - name: Append only TSK-0358 runtime PASS state
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          path = Path('CURRENT_STATE.md')
+          text = path.read_text(encoding='utf-8')
+          if '## TSK-0358 current accepted stable state' in text:
+              raise SystemExit('TSK-0358 state already present')
+          now = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00', 'Z')
+          lines = text.splitlines()
+          for i, line in enumerate(lines):
+              if line.startswith('**Updated:**'):
+                  lines[i] = f'**Updated:** {now}'
+                  break
+          else:
+              raise SystemExit('CURRENT_STATE Updated header missing')
+          block = [
+              '## TSK-0358 current accepted stable state — 2026-09-02',
+              '',
+              '`TSK-0358 — Implement routing, setup, verification, Protection Map, troubleshooting, recovery/removal, and completion without mandatory login`: **PASS** under current `ACC-0358 / VER-0358 / EVD-0358`, current durable PASS dependencies `TSK-0320`, `TSK-0357`, and `TSK-0361`, and the active owner/accountless-first privacy fence.',
+              '',
+              '- Current WBS: **L6 / CRITICAL / A3 / AUTO_ALLOWED**.',
+              '- Durable implementation is canonical `main` commit `e2586f389a29524b23d105cd56acaa2a038b2b46`: browser/server application state-machine routing covers setup, verification, truthful Protection Map, troubleshooting, recovery/removal, restart and completion without mandatory login; accountless state inherits the bounded J0 scope/hard expiry and rejects malformed/expired/identity/history-bearing state.',
+              '- Optional-account entry/return/expiry/logout/dashboard routing exists only as a capability-gated state contract. The current owner fence remains non-activated: no `/account` or `/dashboard` product route, persistent account store, mandatory login, or protection-strengthening effect was introduced.',
+              '- Clean merged-main target-runtime verification: run `33693907580`, job `100458530863`: **SUCCESS** on Ubuntu 24.04 / Node 22.23.2 / Next.js production runtime / real Chromium; master-plan validation PASS; **22/22** contract tests PASS; lint has zero errors; typecheck and production build PASS; production/all dependency audits report **0 vulnerabilities**; `TSK0361_BROWSER_ACCEPTANCE=PASS`; `TSK0357_BROWSER_ACCEPTANCE=PASS`; `TSK0358_BROWSER_ACCEPTANCE=PASS`; `TSK0358_CLEAN_MAIN_ACCEPTANCE=PASS`.',
+              '- Supplemental exact-main acceptance: run `33697256795`, job `100468702948`: **SUCCESS**; directly executed enabled optional-account `ENTER`, `RETURN`, `DASHBOARD`, `EXPIRE`, and `LOGOUT` transitions against the merged TypeScript module while proving `coreRequiresLogin=false`, account ownership cannot manufacture technical verification, and the owner fence remains non-activated. Markers: `TSK0358_OPTIONAL_ACCOUNT_STATE_CONTRACT=PASS`, `TSK0358_OWNER_FENCE_NON_ACTIVATION=PASS`, `TSK0358_SUPPLEMENTAL_ACCEPTANCE=PASS`.',
+              '- Contract/authority diagnostic: run `33697144786`, job `100468359799`: **SUCCESS**; exact current WBS/ACC/VER/EVD loaded, all three dependencies confirmed current PASS, and the canonical master-plan validator passed.',
+              '- Recorded deviation/disposition: ESLint emitted one non-error `@typescript-eslint/no-unused-vars` warning for the intentionally non-operative `_accountState` parameter in `coreRequiresLogin`; the lint command passed, behavior is directly verified, and the warning does not weaken any ACC-0358 criterion.',
+              '- For `VER-0358`, the applicable target environment is the built Next.js application exercised in its production server runtime with a real browser; no public/production deployment or participant processing is inferred or claimed.',
+              '- **Non-inference:** this PASS does not activate persistent optional accounts/dashboard, prove `TSK-0455` target-host recovery, deploy any server, authorize production/public activation, participant processing, payment, market activation, launch, or any downstream task/gate PASS.',
+              '',
+              '### Queue effect',
+              '',
+              'Recompute the complete current L6 executable frontier from canonical WBS/graph/runtime/gates/risks/interfaces and Action Authority. `TSK-0455` remains non-PASS and non-executable until the owner-provided fresh Ubuntu 24.04 target host plus required DNS/TLS/monitoring access exists for mandatory `VER-0455` target-host execution.',
+          ]
+          path.write_text('\n'.join(lines).rstrip() + '\n\n' + '\n'.join(block) + '\n', encoding='utf-8')
+          PY
+          git diff --check
+          test "$(git diff --name-only)" = 'CURRENT_STATE.md'
+      - name: Persist main and verify remote read-back ref
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          test "$(git diff --cached --name-only)" = 'CURRENT_STATE.md'
+          git commit -m 'state: mark TSK-0358 PASS after clean-main acceptance'
+          new_sha="$(git rev-parse HEAD)"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$new_sha"
+          printf 'TSK0358_RUNTIME_PASS_SYNC=PASS\n'
+          printf 'state_commit=%s\n' "$new_sha"
