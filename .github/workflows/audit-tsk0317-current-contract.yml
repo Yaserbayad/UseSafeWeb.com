@@ -1,0 +1,54 @@
+name: Audit TSK-0317 current contract
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/diagnostics/tsk0317-contract-trigger.txt']
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out current main authority
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Print exact TSK-0317 current contract and eligibility inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv, re, subprocess
+          from pathlib import Path
+          def blob(p): return subprocess.check_output(['git','hash-object',p],text=True).strip()
+          assert blob('Plans/Master/WBS/master-wbs.csv')=='b27a0c5df2f5636d8ed71051e9e26a68959a2616'
+          assert blob('Plans/Master/RELATIONSHIP_INDEX.yaml')=='c108d2c162bcea2ee4cc01def46d0487a9501032'
+          assert blob('CURRENT_STATE.md')=='feb4b34a1860befed1ef52e5ebebb9eda6fd568c'
+          with open('Plans/Master/WBS/master-wbs.csv',newline='',encoding='utf-8-sig') as f:
+              rows=list(csv.DictReader(f))
+          byid={r['Task_ID']:r for r in rows if r.get('Task_ID')}
+          r=byid['TSK-0317']
+          fields=['Task_ID','Lifecycle_Stage','Title','Plan_Status','Execution_State','Priority','Dependencies','Dependency_Type','Trigger','Preconditions','Inputs','Output/Artifact','Acceptance_ID','Acceptance_Criteria','Verification_ID','Verification_Method','Evidence_ID','Evidence_Required','AI_Capability_A0_A4','Action_Authority','Execution_Instructions','Required_Tools_or_Access','Idempotency','Reversibility','Retry_Recovery','Escalation_Condition','Risk_Reference','Interface_Reference','Requirement_Reference','Source_Reference','Notes']
+          for k in fields:
+              print('ROW|'+k+'|'+(r.get(k) or ''))
+          assert r['Lifecycle_Stage']=='L4'
+          assert r['Priority']=='HIGH'
+          assert r['AI_Capability_A0_A4']=='A4'
+          assert r['Action_Authority']=='AUTO_ALLOWED'
+          assert r['Dependencies'].strip()=='TSK-0316'
+          assert (r['Acceptance_ID'],r['Verification_ID'],r['Evidence_ID'])==('ACC-0317','VER-0317','EVD-0317')
+          rt=Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          m=re.search(r'^## TSK-0316 current accepted stable state.*?(?=^## |\Z)',rt,re.MULTILINE|re.DOTALL)
+          assert m and '**PASS**' in m.group(0)
+          assert 'TSK_0316_POST_CR0008_DUAL_MODE_FRICTION_EVIDENCE_2026-09-02.md' in m.group(0)
+          print('TSK0316_CURRENT_PREDECESSOR=PASS')
+          print('TSK0317_CURRENT_CONTRACT_AUDIT=PASS')
+          print('WBS_BLOB='+blob('Plans/Master/WBS/master-wbs.csv'))
+          print('GRAPH_BLOB='+blob('Plans/Master/RELATIONSHIP_INDEX.yaml'))
+          print('RUNTIME_BLOB='+blob('CURRENT_STATE.md'))
+          PY
