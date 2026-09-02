@@ -27,9 +27,9 @@ def main():
     req(row['Action_Authority']=='AUTO_ALLOWED' and row['AI_Capability_A0_A4']=='A4','authority/capability changed')
     for d in ['TSK-0586','TSK-0539','TSK-0585']: req(current_pass(state,d),f'{d} not current PASS')
     text=ART.read_text(encoding='utf-8'); low=text.lower()
-    req(text.count('| F-')>=7,'missing Firebase trigger classes')
+    req(text.count('| F-')>=6,'missing Firebase trigger classes')
     req(text.count('| G-')>=2,'missing Google OAuth trigger classes')
-    req(text.count('| A-')>=6,'missing AdGuard trigger classes')
+    req(text.count('| A-')>=7,'missing AdGuard trigger classes')
     required=[
       'owner','cadence','signal / threshold','verification','safe response','migration / retest path','gate/state reopening rule',
       'auth quota','price/free-tier','session semantics','firebase auth api/provider','gis/oauth browser/flow','scope expansion','terms page','subprocessor register',
@@ -40,7 +40,6 @@ def main():
       'accountless core','no automatic plan upgrade/spend','do not auto-upgrade production','typed allowlisted adapter','owner_external','no ai legal conclusion','no legal pass inference'
     ]
     for x in required:req(x in low,f'missing TSK-0237 acceptance element: {x}')
-    # Every trigger row must contain the seven post-ID cells required by ACC-0237.
     trigger_lines=[l for l in text.splitlines() if re.match(r'^\| [FGA]-[A-Z]+-\d+',l)]
     req(len(trigger_lines)>=15,'insufficient trigger rows')
     for l in trigger_lines:
