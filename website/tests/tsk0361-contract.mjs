@@ -33,10 +33,20 @@ test('pins the approved Next.js application baseline without a local database', 
   }
 });
 
-test('pins the Next 16 compatible ESLint 9 maintenance line', () => {
+test('pins the Next 16 compatible ESLint 9 line used by the verified build', () => {
   const pkg = readJson('package.json');
   assert.equal(pkg.devDependencies?.eslint, '9.39.5');
   assert.equal(pkg.devDependencies?.['eslint-config-next'], '16.3.4');
+});
+
+test('pins a deterministic real-browser acceptance harness', () => {
+  const pkg = readJson('package.json');
+  assert.equal(pkg.devDependencies?.['@playwright/test'], '1.62.1');
+  assert.equal(pkg.devDependencies?.['@axe-core/playwright'], '4.13.0');
+  assert.equal(pkg.scripts?.['test:e2e'], 'playwright test');
+  read('playwright.config.ts');
+  read('tests/tsk0361-e2e.spec.ts');
+  read('package-lock.json');
 });
 
 test('uses the approved standalone self-hosting and repo-root Turbopack boundary', () => {
