@@ -145,7 +145,9 @@ require(current, [
 print("TSK0307_TRUTH_SAFETY_RECOVERY=PASS")
 
 assert "UseSafeWeb" in historical
-require(current, ["historical parent-facing copy uses the superseded visible name", "parent-facing product name is SafeWeb", "technical identifiers continue to use the usesafeweb.com domain"], "historical reconciliation")
+assert "historical parent-facing copy uses the superseded visible name" in norm(current)
+assert "Parent-facing product name is **SafeWeb** / **SafeWeb DNS**" in current
+assert "technical identifiers continue to use the `usesafeweb.com` domain" in current
 print("TSK0307_HISTORICAL_CURRENT_RECONCILIATION=PASS")
 
 require(current, ["does not distribute a production Apple profile", "does not implement account/session/dashboard behavior", "does not prove native-speaker/representative-parent comprehension", "public publication", "LG-06"], "non-inference")
