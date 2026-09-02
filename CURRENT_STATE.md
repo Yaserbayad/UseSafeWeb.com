@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T07:59:09Z
+**Updated:** 2026-09-02T08:04:09Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2686,3 +2686,24 @@ Recompute the current L5 frontier from canonical WBS/graph, runtime PASS evidenc
 ### Queue status after TSK-0410 acceptance
 
 Recompute the current L5 frontier from canonical WBS/graph, runtime PASS evidence, current official version evidence, gates, constraints/interfaces and Action Authority. Preserve all legal/material-action fences and do not infer TSK-0234 or LG-07 PASS.
+
+## TSK-0234 current accepted stable state — 2026-09-02 — POST-CR-0008 PARTIAL-FAILURE/DELETION/MIGRATION STATE MACHINE
+
+`TSK-0234 — Design auth, datastore and AdGuard partial-failure, deletion and migration flows`: **PASS** under current `ACC-0234 / VER-0234 / EVD-0234`, direct predecessors `TSK-0356; TSK-0232; TSK-0410`, DEC-0053/CR-0006 optional-account authority and DEC-0055/CR-0008 proportional-evidence authority.
+
+- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L5 / MEDIUM / A3 / `AUTO_ALLOWED`; all three direct predecessors are current durable PASS.
+- Accepted artifact: `TSK_0234_POST_CR0008_PARTIAL_FAILURE_DELETION_MIGRATION_STATE_MACHINE_2026-09-02.md`, version `1.0.0-post-CR0008`, blob `361ecdfa733a8a27f82616725e6d9b348ad57c1f`, publication commit `c904a932b3c91721880783720f2d8b86a4580c93`.
+- `VER-0234`: current Project-Governor/API/security reviewer inspection against the WBS/ACC/VER/EVD contract and current TSK-0356/0232/0410 predecessors found every applicable ACC-0234 element present and no contradictory current evidence.
+- Cross-system terminal success requires durable minimum operation provenance plus agreement between current local ownership/state and every required observed external effect. Ambiguous effects are reconciliation states, never blind-retry or success permission.
+- Firebase/provider uncertainty grants zero account-only authority while the independently healthy accountless core remains available. Datastore unavailable before durable operation persistence causes zero consequential AdGuard/provider mutation.
+- External mutation success followed by lost/failed local finalization is recovered by re-observing the same durable operation; it does not generate a second device/ClientID or replay the effect blindly. Stale `row_version` cannot overwrite newer owner intent.
+- AdGuard admin outage, data-plane outage, stale ClientID, duplicate create, partial update/rotation and partial delete each have distinct fail-closed outcomes. Stored account/binding state never overrides current technical protection evidence.
+- Device/account deletion preserves minimum reconciliation authority until required AdGuard/provider effects are definitely disposed; server-side deletion never claims physical device-profile removal.
+- Future provider migration is not currently activated. If later authorized, it preserves internal `parent_id` only after strong old/new identity proof, never merges by email/ClientID and keeps ambiguity in migration/recovery pending. Schema expansion reopens the owning data/ownership contracts.
+- Future service decommission is separately consequential/owner-controlled. The state machine defines safe ordering but authorizes no shutdown or public impact.
+- No failure/recovery path may expose raw AdGuard admin controls, shared-password fallback, query logs, identifiable per-client statistics, browsing history, provider/session bearer values or cross-parent access.
+- `RSK-0001` remains OPEN. No datastore implementation, provider/AdGuard mutation, failure test execution, migration/decommission action, legal/backup completion, `LG-07`, L6 build or public activation is inferred.
+
+### Queue status after TSK-0234 acceptance
+
+Recompute the current L5 frontier from canonical WBS/graph, runtime PASS evidence, current gates, constraints/interfaces and Action Authority. Preserve every legal/material-action fence; do not infer LG-07 PASS or select work from numbering alone.
