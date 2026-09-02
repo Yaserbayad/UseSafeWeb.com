@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>SafeWeb — TSK-0308 dual-mode design-system reference</title>
+  <link rel="stylesheet" href="../../brand/system/TSK-0300/tokens.css">
+  <link rel="stylesheet" href="../../brand/system/TSK-0300/components.css">
+  <link rel="stylesheet" href="candidate.css">
+  <link rel="stylesheet" href="dual-mode-addendum.css">
+</head>
+<body>
+  <header class="sw-shell sw-header">
+    <img class="sw-logo sw-brand-token" src="../../brand/identity/TSK-0301/safeweb-wordmark-primary.svg" alt="SafeWeb">
+    <nav class="sw-ds-utility-nav" aria-label="Reference navigation">
+      <a href="#setup">Start setup</a>
+      <a href="#account">Sign in / Manage devices</a>
+      <a href="#limits">Limits</a>
+    </nav>
+  </header>
+
+  <main class="sw-shell sw-stack">
+    <section class="sw-ds-public-layout" aria-labelledby="public-title">
+      <div class="sw-stack">
+        <p class="sw-kicker">Public-to-product entry</p>
+        <h1 class="sw-title" id="public-title">Set up SafeWeb without an account</h1>
+        <p class="sw-copy">The core setup, verification, Protection Map, troubleshooting, recovery and removal journey remains available without signing in.</p>
+        <div class="sw-ds-actions sw-ds-account-entry" id="setup">
+          <a class="sw-button" href="#accountless-core">Start setup</a>
+          <a class="sw-button sw-button--secondary" href="#account">Sign in / Manage devices</a>
+        </div>
+        <p class="sw-muted">Sign-in is optional for core setup and does not verify DNS protection.</p>
+      </div>
+      <aside class="sw-callout" id="limits" aria-labelledby="limits-title">
+        <h2 id="limits-title">What this does not show</h2>
+        <p>No browsing or DNS-query history, child activity/profile, raw AdGuard administration, query log, or overall safety score is part of this design system.</p>
+      </aside>
+    </section>
+
+    <section class="sw-panel sw-stack" id="accountless-core" aria-labelledby="core-title">
+      <h2 id="core-title">Accountless core remains first-class</h2>
+      <p>Continue through platform routing, DNS setup and technical verification without creating or signing into an account.</p>
+      <div class="sw-ds-state-grid" data-layout="three">
+        <article class="sw-ds-state-item">
+          <h3>Phone</h3>
+          <p class="sw-ds-state-item__label">You confirmed this is set up</p>
+          <p class="sw-ds-state-item__evidence">Configuration confirmation is not system verification.</p>
+        </article>
+        <article class="sw-ds-state-item">
+          <h3>Internet</h3>
+          <p class="sw-ds-state-item__label">Verified</p>
+          <p class="sw-ds-state-item__evidence">A qualifying technical check supplied the evidence for this layer.</p>
+        </article>
+        <article class="sw-ds-state-item">
+          <h3>Service</h3>
+          <p class="sw-ds-state-item__label">Status uncertain</p>
+          <p class="sw-ds-state-item__evidence">Evidence is insufficient; no optimistic fallback is shown.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="sw-ds-dashboard" data-layout="supporting-column" id="account" aria-labelledby="account-title">
+      <div class="sw-stack">
+        <p class="sw-kicker">Optional parent account</p>
+        <h2 id="account-title">Manage devices</h2>
+
+        <section class="sw-ds-session-status" aria-labelledby="session-title">
+          <h3 id="session-title">Session status: Signed in</h3>
+          <p>Signed in describes account/session state only. It does not mean SafeWeb DNS or any Protection Map layer is verified.</p>
+          <div class="sw-ds-actions">
+            <button class="sw-button sw-button--secondary" type="button">Sign out</button>
+          </div>
+        </section>
+
+        <section class="sw-ds-session-status" aria-labelledby="provider-title">
+          <h3 id="provider-title">Sign-in provider unavailable</h3>
+          <p>Account features cannot be reached right now. Core SafeWeb setup remains available without signing in.</p>
+          <div class="sw-ds-actions">
+            <button class="sw-button sw-button--secondary" type="button">Retry sign in</button>
+            <a class="sw-button" href="#accountless-core">Continue without signing in</a>
+          </div>
+        </section>
+
+        <section aria-labelledby="devices-title">
+          <h3 id="devices-title">Your device records</h3>
+          <ul class="sw-ds-device-list">
+            <li class="sw-ds-device-row">
+              <div class="sw-ds-device-row__meta">
+                <strong>Family phone</strong>
+                <span>Ownership: Registered to this parent account</span>
+                <span>Configuration: Present</span>
+                <span>Protection verification: Status uncertain</span>
+              </div>
+              <div class="sw-ds-actions">
+                <button class="sw-button sw-button--secondary" type="button">Check protection</button>
+                <button class="sw-button sw-button--quiet" type="button">Unlink device</button>
+              </div>
+            </li>
+            <li class="sw-ds-device-row">
+              <div class="sw-ds-device-row__meta">
+                <strong>Tablet</strong>
+                <span>Ownership: Registered to this parent account</span>
+                <span>Configuration: Not confirmed</span>
+                <span>Protection verification: Not covered</span>
+              </div>
+              <div class="sw-ds-actions">
+                <button class="sw-button sw-button--secondary" type="button">Open setup guidance</button>
+                <button class="sw-button sw-button--quiet" type="button">Delete device record</button>
+              </div>
+            </li>
+          </ul>
+        </section>
+      </div>
+
+      <aside class="sw-callout" aria-labelledby="account-boundary-title">
+        <h3 id="account-boundary-title">Account boundary</h3>
+        <p>Device ownership, session state, configuration and technical protection verification are separate facts. Account data never substitutes for technical evidence.</p>
+      </aside>
+    </section>
+
+    <section class="sw-ds-account-lifecycle" aria-labelledby="lifecycle-title">
+      <h2 id="lifecycle-title">Account and device lifecycle actions</h2>
+      <p>Each operation has a separate effect and terminal truth. Completing one must not claim another was completed.</p>
+      <div class="sw-ds-actions">
+        <button class="sw-button sw-button--secondary" type="button">Sign out</button>
+        <button class="sw-button sw-button--secondary" type="button">Unlink device</button>
+        <button class="sw-button sw-button--secondary" type="button">Delete device record</button>
+        <button class="sw-button sw-button--secondary" type="button">Delete account</button>
+        <button class="sw-button sw-button--secondary" type="button">Reset anonymous web state</button>
+        <button class="sw-button sw-button--secondary" type="button">Remove SafeWeb DNS</button>
+      </div>
+      <p class="sw-muted">Deleting the account does not remove SafeWeb DNS from a device. Removing SafeWeb DNS does not delete the account, device record, or anonymous web state.</p>
+    </section>
+
+    <section class="sw-panel sw-stack" dir="rtl" lang="ar" aria-labelledby="rtl-title">
+      <h2 id="rtl-title">مرجع تخطيط من اليمين إلى اليسار</h2>
+      <p>يظل إعداد الحماية الأساسي متاحًا بدون تسجيل الدخول، بينما تظل إدارة الأجهزة الاختيارية منفصلة عن حالة التحقق التقني.</p>
+      <div class="sw-ds-account-entry">
+        <div class="sw-ds-actions">
+          <button class="sw-button" type="button">بدء الإعداد</button>
+          <button class="sw-button sw-button--secondary" type="button">تسجيل الدخول / إدارة الأجهزة</button>
+        </div>
+        <code class="sw-ds-tech">dns.usesafeweb.com</code>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
