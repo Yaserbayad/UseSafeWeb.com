@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T08:04:09Z
+**Updated:** 2026-09-02T08:26:51Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2707,3 +2707,24 @@ Recompute the current L5 frontier from canonical WBS/graph, runtime PASS evidenc
 ### Queue status after TSK-0234 acceptance
 
 Recompute the current L5 frontier from canonical WBS/graph, runtime PASS evidence, current gates, constraints/interfaces and Action Authority. Preserve every legal/material-action fence; do not infer LG-07 PASS or select work from numbering alone.
+
+## TSK-0586 current accepted stable state — 2026-09-02 — POST-CR-0008 PRE-DEVELOPMENT COST BASELINE
+
+`TSK-0586 — Build pre-development infrastructure and operating cost baseline`: **PASS** under current `ACC-0586 / VER-0586 / EVD-0586`, current direct predecessor `TSK-0236`, DEC-0053/CR-0006 optional-account authority and DEC-0055/CR-0008 proportional-evidence authority.
+
+- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L5 / MEDIUM / A3 / `AUTO_ALLOWED`; direct dependency exactly `TSK-0236`, which is current durable PASS.
+- Accepted artifact: `TSK_0586_PREDEVELOPMENT_INFRASTRUCTURE_OPERATING_COST_BASELINE_2026-09-02.md`, version `1.0.0-post-CR0008`, blob `4e244c35ff7b954b88fc38868eab7c084dcbb27f`, publication commit `af2f096b74ea27b3775ecf0165bfff85021ccf54`.
+- `VER-0586`: current Project-Governor/finance reviewer inspection against the WBS/ACC/VER/EVD contract, TSK-0236, TSK-0585, current requirements/constraints/interfaces/risks and exact GitHub artifact found every applicable ACC-0586 element present and no contradictory current evidence.
+- Current exact Azure/runtime monthly total is **UNCONFIRMED** because canonical evidence does not contain the exact Azure VM/disk/public-IP SKUs, invoice, egress tier, selected datastore or selected paid secrets/monitoring/CI products. No amount is invented.
+- The accountless core has no authentication-service dependency and therefore no authentication-service fee. Under current CR-0006 optional-account scope, the initial base Firebase Google/social route retains TSK-0585's dated `$0` authentication-service-fee assumption; Identity Platform, SMS/phone auth and paid auth variants are not activated or priced as current services.
+- AdGuard Home self-hosted software licence fee is `$0` under the current TSK-0585 official-source review; no separate AdGuard Home API subscription fee is evidenced. This does not imply zero infrastructure cost or remove GPL/legal review triggers.
+- Low/base/high scenarios are source-bound equations/envelopes, **not forecasts**. They separate DNS/Azure infrastructure, web/application, optional persistence/operations and vendor-fee components; every unknown component identifies the exact evidence required before a numeric total is valid.
+- CON-0004 remains intact: Azure control-plane provisioning/configuration is owner-managed; this task performs/authorizes no resize, resource creation, region expansion or spend. Material spend/new contracts retain their current human authority.
+- GTM discretionary budget is excluded from infrastructure cost. Fixed supporter prices are product constraints, not assumed revenue. No fundraising program is authorized under REQ-0081/CON-0013.
+- `RSK-0005` sustainability/support-load risk remains OPEN; `RSK-0001` legal/privacy readiness remains OPEN. No production support volume, wage/opportunity-cost rate, supporter conversion, revenue, real-user load or paid-provider activation is inferred.
+- **Non-inference:** no Azure budget approval, datastore/provider selection, paid authentication/payment activation, LG-07, L6 build, production activation, participant processing or launch PASS is inferred from TSK-0586.
+- `TSK-0587` may consume TSK-0586 only after fresh eligibility recomputation against its other hard dependency and HUMAN_ONLY authority. `TSK-0237` may consume TSK-0586 only after its other current dependencies are satisfied.
+
+### Queue status after TSK-0586 acceptance
+
+Recompute the entire residual L5 frontier from canonical WBS/graph, runtime PASS evidence, gates, constraints/interfaces and Action Authority. Preserve the owner-deferred legal/privacy chain, Azure/material-spend fences and HUMAN_ONLY boundaries; do not infer LG-07 or any successor PASS from numbering alone.
