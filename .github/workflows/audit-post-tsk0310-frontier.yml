@@ -28,7 +28,7 @@ jobs:
           from datetime import date
           from pathlib import Path
           WBS='Plans/Master/WBS/master-wbs.csv'; GRAPH='Plans/Master/RELATIONSHIP_INDEX.yaml'; RUNTIME='CURRENT_STATE.md'
-          expected={WBS:'b27a0c5df2f5636d8ed71051e9e26a68959a2616',GRAPH:'c108d2c162bcea2ee4cc01def46d0487a9501032',RUNTIME:'db1f55f6d78e2408bab515fa6bcddd0c6cb5ac20'}
+          expected={WBS:'b27a0c5df2f5636d8ed71051e9e26a68959a2616',GRAPH:'c108d2c162bcea2ee4cc01def46d0487a9501032',RUNTIME:'b0e320a862eaf83b3fea11e565b42621608578eb'}
           def blob(p): return subprocess.check_output(['git','hash-object',p],text=True).strip()
           for p,sha in expected.items(): assert blob(p)==sha,(p,blob(p),sha)
           with open(WBS,newline='',encoding='utf-8-sig') as f: rows=list(csv.DictReader(f))
@@ -78,10 +78,10 @@ jobs:
           print('AUDIT_INPUT_WBS='+blob(WBS)); print('AUDIT_INPUT_GRAPH='+blob(GRAPH)); print('AUDIT_INPUT_RUNTIME='+blob(RUNTIME)); print('READY_COUNT='+str(len(ready)))
           for rank,(desc,tid,r,missing,mode,newer) in enumerate(ready,1):
               print('READY|{}|{}|mode={}|desc={}|priority={}|critical={}|deps={}|newer_current_deps={}|acc={}|title={}'.format(rank,tid,mode,desc,r.get('Priority',''),r.get('Critical_Path',''),';'.join(deps[tid]) or 'NONE',';'.join(f'{d}@{dt}' for d,dt in newer) or 'NONE',r.get('Acceptance_ID',''),(r.get('Title') or '').replace('|','/')))
-          for tid in ['TSK-0538','TSK-0497','TSK-0308','TSK-0307','TSK-0311','TSK-0044','TSK-0353','TSK-0352','TSK-0297']:
+          for tid in ['TSK-0497','TSK-0308','TSK-0307','TSK-0311','TSK-0044','TSK-0353','TSK-0352','TSK-0297']:
               r=byid.get(tid)
               if not r: continue
               reval,newer=needs_revalidation(tid)
               print('ROW|{}|stage={}|priority={}|critical={}|a={}|authority={}|plan={}|exec={}|deps={}|acc={}|ver={}|evd={}|trigger={}|pre={}|inputs={}|artifact={}|acceptance={}|verification={}|evidence={}|newer_current_deps={}|risk={}|interfaces={}|requirements={}|sources={}|title={}|notes={}'.format(tid,r.get('Lifecycle_Stage',''),r.get('Priority',''),r.get('Critical_Path',''),r.get('AI_Capability_A0_A4',''),r.get('Action_Authority',''),r.get('Plan_Status',''),r.get('Execution_State',''),r.get('Dependencies',''),r.get('Acceptance_ID',''),r.get('Verification_ID',''),r.get('Evidence_ID',''),(r.get('Trigger') or '').replace('|','/'),(r.get('Preconditions') or '').replace('|','/'),(r.get('Inputs') or '').replace('|','/'),(r.get('Output/Artifact') or '').replace('|','/'),(r.get('Acceptance_Criteria') or '').replace('|','/'),(r.get('Verification_Method') or '').replace('|','/'),(r.get('Evidence_Required') or '').replace('|','/'),';'.join(f'{d}@{dt}' for d,dt in newer) or 'NONE',(r.get('Risk_Reference') or '').replace('|','/'),(r.get('Interface_Reference') or '').replace('|','/'),(r.get('Requirement_Reference') or '').replace('|','/'),(r.get('Source_Reference') or '').replace('|','/'),(r.get('Title') or '').replace('|','/'),(r.get('Notes') or '').replace('|','/')))
-          print('POST_TSK0484_FRONTIER_AUDIT=PASS')
+          print('POST_TSK0538_FRONTIER_AUDIT=PASS')
           PY
