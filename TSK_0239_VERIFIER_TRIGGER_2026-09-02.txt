@@ -1,1 +1,1 @@
-TSK-0239 registered verifier trigger. This file is temporary and must be removed by the acceptance carrier after successful verification.
+TSK-0239 registered verifier trigger, attempt 2 after exact Markdown-token verifier correction. This file is temporary and must be removed by the acceptance carrier after successful verification.
