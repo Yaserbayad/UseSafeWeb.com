@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-01T23:48:14Z
+**Updated:** 2026-09-02T00:03:38Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2141,3 +2141,24 @@ Recompute the current executable frontier from canonical WBS/graph, strict curre
 ### Queue status after corrected post-CR-0008 TSK-0299 acceptance
 
 Recompute current eligibility from canonical WBS/graph, current semantic PASS validity and gates. Verify TSK-0302/TSK-0301 current dependency validity and compare any open brand-chain requalification against reopened TSK-0316 under governing selection rules. Preserve current TSK-0485 and synchronized TSK-0318/TSK-0319 sections unchanged.
+## TSK-0301 current accepted stable state — 2026-09-02 — POST-CR-0008 CURRENT DEPENDENCY REVALIDATION
+
+`TSK-0301 — Finalize logo system, typography, color, imagery, iconography, visual language, and layout principles`: **PASS** under current `ACC-0301 / VER-0301 / EVD-0301`, current direct predecessors `TSK-0302` and corrected `TSK-0299`, the existing Project Owner identity approval, and CR-0008 Action Authority normalization.
+
+- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L4 / HIGH / A3 / `AUTO_ALLOWED`; dependencies exactly `TSK-0302; TSK-0299`.
+- Current revalidation artifact `TSK_0301_POST_CR0008_CURRENT_DEPENDENCY_REVALIDATION_2026-09-01.md`, blob `12c5de46b5ca880752d6f244e9bc2320e9689fa3`, publication commit `b103eaec21c92851a64396d5cef95d568ddee875`.
+- Current durable acceptance evidence `TSK_0301_POST_CR0008_CURRENT_REVALIDATION_EVIDENCE_2026-09-02.md`, blob `c8935b9cfebe06fe1260b04d7af3c84318a6b5e0`, publication commit `6aac9580976d24cb4f6bc41fd4a1106ff24a72d2`.
+- Successful independent read-only VER-0301 v2: workflow `.github/workflows/verify-tsk0301-current-revalidation-v2.yml`, blob `21b362de5342832e14e2bfa1d08d0d700e4293c1`; run/job `33573469599 / 100072230006`: **SUCCESS** with `contents: read`.
+- The earlier run/job `33573390907 / 100071992638` is diagnostic-only: it failed solely because an over-broad verifier assertion rejected the standard W3C SVG namespace URL; no governed artifact/state changed and v2 corrected only the verifier shape.
+- Project Owner identity approval remains unchanged: `TSK_0301_OWNER_IDENTITY_APPROVAL_2026-08-29.md`, blob `66f4b545c03571649a8baa4c0fe3d1df564b5949`; visible brand remains exactly `SafeWeb`, Concept A wordmark-first, `Safe` dark green `#173F35`, `Web` maroon `#7A2E36`.
+- Identity specification remains unchanged: `brand/identity/TSK-0301/README.md`, blob `b8ffd2ed234465a238558a7b94e56274de49696a`.
+- Editable master blobs remain unchanged: primary `f93958e3e4a16f9056693072c1b9b8b31fcda852`; inverse `c38709e4239a2d36b340b4d9d630df85a17bb494`; monochrome `ef9b6e0d52926f24c7e81bccb4489569067b852f`; monogram `49f20bae1d92bb04f125e988cb4cc3ea8a822b9e`.
+- Current TSK-0302 predecessor remains valid for visual-direction acceptance. Corrected current TSK-0299 explicitly preserves this owner-approved identity and uses `SafeWeb` as visible brand copy; no identity reselection is required or authorized.
+- ACC-0301 remains proven: one owner-approved system; editable/versioned masters; small/mobile/mono/contrast/readability acceptance with mandatory high-contrast fallback for the low-contrast maroon-on-dark-green display combination; no visual safety guarantee.
+- CR-0006 optional account/lightweight dashboard does not require identity redesign. The same SafeWeb identity applies across accountless setup and optional account/dashboard surfaces while product-state truth remains separate from brand colour.
+- The historical `### TSK-0301 accepted stable state` remains historical evidence for unchanged facts and is superseded as current dependency proof by this section.
+- **Non-inference:** no TSK-0300, LG-06, behavioral validation, legal/privacy completion, implementation/build, provider acceptance, publication, payment, market activation, production behavior or launch PASS is inferred.
+
+### Queue status after current TSK-0301 revalidation
+
+Recompute current eligibility from canonical WBS/graph and runtime evidence. TSK-0316 remains a known CR-0006 dual-mode friction requalification candidate but must be independently rechecked against all other current eligible work before execution. Preserve corrected TSK-0299, TSK-0485, TSK-0318 and TSK-0319 accepted states unchanged.
