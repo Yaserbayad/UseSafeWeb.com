@@ -35,7 +35,6 @@ jobs:
           python3 - <<'PY'
           from datetime import datetime, timezone
           from pathlib import Path
-
           path = Path('CURRENT_STATE.md')
           text = path.read_text(encoding='utf-8')
           if '## TSK-0357 current accepted stable state' in text:
@@ -48,28 +47,29 @@ jobs:
                   break
           else:
               raise SystemExit('CURRENT_STATE Updated header missing')
-          text = '\n'.join(lines).rstrip() + '\n\n'
-          text += '''## TSK-0357 current accepted stable state — 2026-09-02
-
-`TSK-0357 — Implement privacy-minimal anonymous journey state, expiry, deletion, and safe resume behavior`: **PASS** under current `ACC-0357 / VER-0357 / EVD-0357`, current `TSK-0354` dependency evidence, and the active CR-0006 / CR-0007 / CR-0010 authority.
-
-- Action authority: **A3 / AUTO_ALLOWED**.
-- Implementation is the privacy-minimal **J0-only** browser-session path: `website/src/lib/journey-state.ts`, `website/src/components/journey-state-boundary.tsx`, and `website/src/components/journey-resume-panel.tsx`, with no server-side J1 persistence route or new production dependency.
-- Stored state is exact-field controlled setup state only, scoped by a fresh 128-bit random browser-session value, uses non-sliding expiry, rejects and deletes malformed/unknown/expired state, supports immediate user reset/deletion, and derives resume URLs only from validated locale/device/setup enums. Identity, account, child, browsing/query/domain history, diagnostics and free text are not stored.
-- Durable implementation merge: PR `#59`, squash commit `7d586ff866c4407a28d08da82623707e2892eaf5` on canonical `main`.
-- Feature exact-head verification: run `33690892293`, job `100449138836`: **SUCCESS** with current contracts/build/audits, `TSK0361_BROWSER_ACCEPTANCE=PASS`, `TSK0357_BROWSER_ACCEPTANCE=PASS`, and persisted-head acceptance.
-- Clean merged-main verification: run `33691337912`, job `100450509549`: **SUCCESS**; verifier parent pinned to merge commit `7d586ff866c4407a28d08da82623707e2892eaf5` and changed only the temporary verifier workflow; master-plan validation PASS; **16/16** contract tests PASS; lint PASS; Next.js typecheck/production build PASS; production/all dependency audits report **0 vulnerabilities**; `TSK0361_BROWSER_ACCEPTANCE=PASS`; `TSK0357_BROWSER_ACCEPTANCE=PASS`; `TSK0357_CLEAN_MAIN_ACCEPTANCE=PASS`.
-- The temporary workflow carrier was restored on the feature branch before merge and is not part of the merged product diff.
-- **Non-inference:** this PASS does not prove or authorize TSK-0455 target-host recovery acceptance, production activation, participant processing, account persistence/J1 server state, launch, market activation, or any downstream task/gate PASS.
-
-### Queue effect
-
-`TSK-0358` may now consume this current accepted TSK-0357 state subject to its own remaining dependencies, gates, authority, and acceptance contract. `TSK-0455` remains non-PASS pending its mandatory fresh target-host `VER-0455` evidence.
-'''
+          block = [
+              '## TSK-0357 current accepted stable state — 2026-09-02',
+              '',
+              '`TSK-0357 — Implement privacy-minimal anonymous journey state, expiry, deletion, and safe resume behavior`: **PASS** under current `ACC-0357 / VER-0357 / EVD-0357`, current `TSK-0354` dependency evidence, and the active CR-0006 / CR-0007 / CR-0010 authority.',
+              '',
+              '- Action authority: **A3 / AUTO_ALLOWED**.',
+              '- Implementation is the privacy-minimal **J0-only** browser-session path: `website/src/lib/journey-state.ts`, `website/src/components/journey-state-boundary.tsx`, and `website/src/components/journey-resume-panel.tsx`, with no server-side J1 persistence route or new production dependency.',
+              '- Stored state is exact-field controlled setup state only, scoped by a fresh 128-bit random browser-session value, uses non-sliding expiry, rejects and deletes malformed/unknown/expired state, supports immediate user reset/deletion, and derives resume URLs only from validated locale/device/setup enums. Identity, account, child, browsing/query/domain history, diagnostics and free text are not stored.',
+              '- Durable implementation merge: PR `#59`, squash commit `7d586ff866c4407a28d08da82623707e2892eaf5` on canonical `main`.',
+              '- Feature exact-head verification: run `33690892293`, job `100449138836`: **SUCCESS** with current contracts/build/audits, `TSK0361_BROWSER_ACCEPTANCE=PASS`, `TSK0357_BROWSER_ACCEPTANCE=PASS`, and persisted-head acceptance.',
+              '- Clean merged-main verification: run `33691337912`, job `100450509549`: **SUCCESS**; verifier parent pinned to merge commit `7d586ff866c4407a28d08da82623707e2892eaf5` and changed only the temporary verifier workflow; master-plan validation PASS; **16/16** contract tests PASS; lint PASS; Next.js typecheck/production build PASS; production/all dependency audits report **0 vulnerabilities**; `TSK0361_BROWSER_ACCEPTANCE=PASS`; `TSK0357_BROWSER_ACCEPTANCE=PASS`; `TSK0357_CLEAN_MAIN_ACCEPTANCE=PASS`.',
+              '- The temporary workflow carrier was restored on the feature branch before merge and is not part of the merged product diff.',
+              '- **Non-inference:** this PASS does not prove or authorize TSK-0455 target-host recovery acceptance, production activation, participant processing, account persistence/J1 server state, launch, market activation, or any downstream task/gate PASS.',
+              '',
+              '### Queue effect',
+              '',
+              '`TSK-0358` may now consume this current accepted TSK-0357 state subject to its own remaining dependencies, gates, authority, and acceptance contract. `TSK-0455` remains non-PASS pending its mandatory fresh target-host `VER-0455` evidence.',
+          ]
+          text = '\n'.join(lines).rstrip() + '\n\n' + '\n'.join(block) + '\n'
           path.write_text(text, encoding='utf-8')
           PY
           git diff --check
-          git diff -- CURRENT_STATE.md
+          test "$(git diff --name-only)" = 'CURRENT_STATE.md'
       - name: Persist main and verify remote read-back ref
         shell: bash
         run: |
