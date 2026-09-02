@@ -10,6 +10,7 @@ const json = (path) => JSON.parse(read(path));
 const requiredFiles = [
   'package.json',
   'tsconfig.json',
+  'next-env.d.ts',
   'next.config.ts',
   'eslint.config.mjs',
   'src/app/layout.tsx',
