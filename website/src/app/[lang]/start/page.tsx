@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { isLocale, type Locale } from "@/lib/i18n";
+import { isLocale, sharedCopy, type Locale } from "@/lib/i18n";
 
 const copy: Record<Locale, { title: string; intro: string; accountless: string; legend: string; iphone: string; android: string; continue: string; selected: string; back: string }> = {
   en: { title: "Start first-phone safety setup", intro: "Begin with the phone you are setting up. SafeWeb keeps this core path available without an account.", accountless: "No account, payment card, child name, or browsing history is required for the core setup.", legend: "Which phone are you setting up?", iphone: "iPhone", android: "Android phone", continue: "Continue", selected: "Phone type selected. The next guided phone-settings step follows from this accountless start state.", back: "Back to overview" },
@@ -14,11 +14,12 @@ export default async function StartPage({ params, searchParams }: { params: Prom
   const { platform } = await searchParams;
   const selected = platform === "iphone" || platform === "android" ? platform : undefined;
   const text = copy[lang];
+  const ui = sharedCopy[lang];
 
   return (
     <main id="main-content" className="sw-stack">
       <div className="sw-copy sw-stack">
-        <p className="sw-kicker">SafeWeb setup</p>
+        <p className="sw-kicker">{ui.setupKicker}</p>
         <h1 className="sw-title">{text.title}</h1>
         <p>{text.intro}</p>
         <div className="sw-callout"><strong>{text.accountless}</strong></div>
