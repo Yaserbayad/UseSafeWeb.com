@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T04:05:48Z
+**Updated:** 2026-09-02T04:18:20Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2477,5 +2477,25 @@ Recompute the executable frontier from canonical WBS/graph, current runtime evid
 - **Non-inference:** this is L4 NFR-definition PASS only; it does not activate Firebase/Google, implement accounts/sessions/datastore/AdGuard integration, authorize real-user processing, create legal compliance, pass a lifecycle gate, publish, activate a market, launch or infer successor PASS.
 
 ### Queue status after current TSK-0353 acceptance
+
+Recompute the executable frontier from canonical WBS/graph, current runtime evidence, artifact-specific current-validity, gates and Action Authority. Preserve valid non-uniform historical PASS records unless current evidence materially invalidates them.
+
+
+## TSK-0585 current accepted stable state — 2026-09-02 — AUTH VENDOR COST/LICENCE/TERMS REVIEW
+
+`TSK-0585 — Verify authentication free tier, AdGuard licence/API cost, vendor terms and exit triggers`: **PASS** under current `ACC-0585 / VER-0585 / EVD-0585` and current predecessors TSK-0045 / TSK-0353 / TSK-0044.
+
+- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L4 / MEDIUM / A3 / `AUTO_ALLOWED`; dependencies exactly `TSK-0045; TSK-0353; TSK-0044`.
+- Current dated artifact `TSK_0585_CURRENT_AUTH_VENDOR_COST_TERMS_EXIT_REVIEW_2026-09-02.md`, blob `101fb63ed4367b514a36f5a07ee271be7cd7a5c3`, publication commit `fd8b89ef42509a092c17a0e140cc8236472cda1c`.
+- Durable evidence `TSK_0585_CURRENT_VENDOR_COST_TERMS_REVIEW_EVIDENCE_2026-09-02.md`, blob `eb5128c1b0538b393770e9020095427571333659`, publication commit `38a83bccfdc4eefd3e9008b0171e331f563e1825`.
+- Independent read-only live-source VER-0585: final wrapper blob `49251cf0cec47c59ff51e7c99210c684c1d92de1`, workflow blob `23d5e7033bf63c24c3c85a0cfc4a18cd65a2ca58`, run/job `33590152982 / 100122320757`, conclusion **SUCCESS**.
+- Current auth-cost fact: planned Google/social Firebase Authentication has a current no-cost Spark path; Identity Platform remains optional with explicit Spark/Blaze thresholds; current V1 has no SMS path. This is not a zero-total-service-cost claim.
+- Current processing-location fact: Firebase Authentication is currently documented by Firebase as US-only. Legal/transfer acceptability remains unresolved and is not inferred.
+- Current AdGuard fact: official AdGuard Home materials describe the self-hosted project as free/open-source GPL-3.0 with REST/OpenAPI integration; no separate AdGuard Home API subscription/per-call fee is evidenced by the reviewed official self-hosted project materials. Infrastructure and GPL/legal questions remain separate.
+- Firebase/AdGuard pricing, terms, location, licence/API, threshold, legal/privacy, provider and infrastructure-cost re-review/exit triggers are explicit in the accepted artifact.
+- **ACC-0585 = PASS. VER-0585 = PASS. EVD-0585 = SATISFIED.**
+- **Non-inference:** no vendor activation, paid-plan purchase, contract/legal approval, infrastructure purchase, software deployment, participant processing, market activation, lifecycle gate or successor PASS is inferred.
+
+### Queue status after current TSK-0585 acceptance
 
 Recompute the executable frontier from canonical WBS/graph, current runtime evidence, artifact-specific current-validity, gates and Action Authority. Preserve valid non-uniform historical PASS records unless current evidence materially invalidates them.
