@@ -1,23 +1,44 @@
-name: Retired - Accept TSK-0498 privacy-safe event contract v2
+name: Temporary - Generate and verify TSK-0048 vertical backlog
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  verify-retired-state:
+  generate-verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Verify durable TSK-0498 acceptance without mutation
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Generate and validate backlog
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq '## TSK-0498 current accepted stable state — 2026-09-01 — POST-CR-0008' CURRENT_STATE.md
-          grep -Fq '`TSK-0498 — Define only decision-linked accountless journey, protection-state, self-service, reliability, channel, and cost events`: **PASS**' CURRENT_STATE.md
-          test "$(git hash-object TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md)" = '6b7a5095122c74ed9ec860b74408dab474576659'
-          grep -Fq '**Version:** 1.0.1' TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md
+          python3 Plans/Master/Tools/generate_tsk0048_vertical_backlog_20260902.py
+          python3 Plans/Master/Tools/verify_tsk0048_vertical_backlog_20260902.py
           python3 Plans/Master/Tools/validate_master_plan.py
-          echo 'TSK0498_HISTORICAL_ACCEPT_WORKFLOW_RETIRED=PASS'
+          git diff --check
+          test "$(git status --porcelain | sed 's/^...//' | sort)" = 'TSK_0048_DEPENDENCY_ORDERED_VERTICAL_IMPLEMENTATION_BACKLOG_2026-09-02.md'
+      - name: Persist artifact and read back
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$(git rev-parse HEAD)"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add TSK_0048_DEPENDENCY_ORDERED_VERTICAL_IMPLEMENTATION_BACKLOG_2026-09-02.md
+          git commit -m 'plan: publish TSK-0048 vertical implementation backlog'
+          C="$(git rev-parse HEAD)"
+          B="$(git rev-parse "$C:TSK_0048_DEPENDENCY_ORDERED_VERTICAL_IMPLEMENTATION_BACKLOG_2026-09-02.md")"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$C"
+          test "$(git rev-parse "origin/main:TSK_0048_DEPENDENCY_ORDERED_VERTICAL_IMPLEMENTATION_BACKLOG_2026-09-02.md")" = "$B"
+          echo "TSK0048_ARTIFACT_COMMIT=$C"
+          echo "TSK0048_ARTIFACT_BLOB=$B"
+          echo 'TSK0048_ARTIFACT_REMOTE_READBACK=PASS'
