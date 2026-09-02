@@ -120,9 +120,12 @@ try {
   const aPhone = page.locator('.sw-status').filter({ hasText: 'Phone' });
   const aInternet = page.locator('.sw-status').filter({ hasText: 'Internet' });
   const aService = page.locator('.sw-status').filter({ hasText: 'Service' });
-  ok(await aPhone.getAttribute('data-evidence-state') === 'parent-confirmed', 'android-map:phone-parent-confirmed');
-  ok(await aInternet.getAttribute('data-evidence-state') === 'verified', 'android-map:internet-verified');
+  ok(await aPhone.getAttribute('data-evidence-state') === 'configured/parent-confirmed', 'android-map:phone-parent-confirmed');
+  ok(await aInternet.getAttribute('data-evidence-state') === 'protected/verified', 'android-map:internet-verified');
   ok(await aService.getAttribute('data-evidence-state') === 'not-covered', 'android-map:service-not-covered');
+  ok((await aPhone.innerText()).includes('Setup confirmed'), 'android-map:phone-current-label');
+  ok((await aPhone.innerText()).includes('Protection has not yet been technically verified.'), 'android-map:phone-current-limitation');
+  ok((await aInternet.innerText()).includes('Protection verified'), 'android-map:internet-current-label');
   ok((await page.locator('body').innerText()).includes('evidence map, not a safety score'), 'android-map:no-safety-score');
 
   await page.locator('[data-action="REMOVE_DNS"]').click();
@@ -149,8 +152,8 @@ try {
   const iInternet = page.locator('.sw-status').filter({ hasText: 'Internet' });
   const iService = page.locator('.sw-status').filter({ hasText: 'Service' });
   ok(await iPhone.getAttribute('data-evidence-state') === 'action-needed', 'iphone-map:phone-action-needed-preserved');
-  ok(await iInternet.getAttribute('data-evidence-state') === 'verified', 'iphone-map:internet-verified');
-  ok(await iService.getAttribute('data-evidence-state') === 'parent-confirmed', 'iphone-map:service-parent-confirmed');
+  ok(await iInternet.getAttribute('data-evidence-state') === 'protected/verified', 'iphone-map:internet-verified');
+  ok(await iService.getAttribute('data-evidence-state') === 'configured/parent-confirmed', 'iphone-map:service-parent-confirmed');
 
   await reset(page, 'unsupported-reset');
   await start(page, 'other', 'NATIVE_CONFIRMED', 'unsupported');
@@ -167,7 +170,7 @@ try {
   await screen(page, 'verify', 'negative-action-needed:retry');
   await page.locator('[data-action="VERIFY_RESULT"][data-result="uncertain"]').click();
   await screen(page, 'troubleshooting', 'negative-uncertain');
-  ok((await page.locator('h1').innerText()).trim() === 'Status uncertain', 'negative-uncertain:label');
+  ok((await page.locator('h1').innerText()).trim() === 'Protection status could not be verified', 'negative-uncertain:label');
   await page.locator('[data-action="RETRY_AFTER_CHANGE"]').click();
   await screen(page, 'verify', 'negative-uncertain:retry');
   await page.locator('[data-action="VERIFY_RESULT"][data-result="not-covered"]').click();
