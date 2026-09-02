@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "1.0.0",
+  "defaultLocale": "en-GB",
+  "supportedLocales": ["en-GB", "tr-TR", "ar"],
+  "locales": {
+    "en-GB": { "language": "English", "region": "GB", "direction": "ltr", "fallback": null, "status": "baseline", "marketActivation": false, "contentVersion": "1.0.0", "owner": "UX/Content" },
+    "tr-TR": { "language": "Türkçe", "region": "TR", "direction": "ltr", "fallback": "en-GB", "status": "provisional", "marketActivation": false, "contentVersion": "1.0.0-provisional", "owner": "UX/Content" },
+    "ar": { "language": "العربية", "region": null, "direction": "rtl", "fallback": "en-GB", "status": "provisional", "marketActivation": false, "contentVersion": "1.0.0-provisional", "owner": "UX/Content" }
+  }
+}
