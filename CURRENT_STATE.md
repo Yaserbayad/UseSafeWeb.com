@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T05:03:34Z
+**Updated:** 2026-09-02T05:16:23Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2563,3 +2563,24 @@ Refresh direct successor evidence where the corrected predecessor is material, i
 ### Queue status after refreshed TSK-0310 reacceptance
 
 Recompute current eligibility from canonical WBS/graph, current runtime evidence, gates and Action Authority. Preserve valid non-uniform historical PASS records unless current evidence actually invalidates them; do not infer a successor solely from TSK-0310 completion.
+
+## TSK-0308 current accepted stable state — 2026-09-02 — POST-TSK-0300 PROTECTION-COPY CORRECTION REVALIDATION
+
+`TSK-0308 — Create the shared responsive design system for public and product surfaces`: **PASS** under current `ACC-0308 / VER-0308 / EVD-0308`, current direct predecessors TSK-0309 and corrected TSK-0300, current TSK-0320 protection-state semantics, and preserved owner-approved responsive/design-system provenance.
+
+- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L4 / HIGH / A3 / `AUTO_ALLOWED`; hard dependencies exactly `TSK-0309; TSK-0300`.
+- Correction artifact `TSK_0308_POST_TSK0300_COPY_CORRECTION_REVALIDATION_2026-09-02.md`, blob `76d652481a993469aaf175c08893e829ee01dad7`, publication commit `51d039c9d97f2ff48a048201ef9b23673021ebfa`.
+- Durable correction evidence `TSK_0308_POST_TSK0300_COPY_CORRECTION_EVIDENCE_2026-09-02.md`, blob `959c1f47d600fefbceb2f569ed5c7c606beae48f`, publication commit `1f65c0d817f7b016103926f72f5e8fe10f8fb2d9`.
+- Corrected active addendum blob `86461ef4baac27cf4cfd906f7ed464781186e78d`; corrected rendered reference blob `7e522e23e43d04da3facf53747ad9b245e66ef62`.
+- Current visible protection-state examples now use `configured/parent-confirmed` / `Setup confirmed`, `protected/verified` / `Protection verified`, `uncertain/error` / `Protection status could not be verified`, and current `Not covered`; S2 explicitly says `Protection has not yet been technically verified.`
+- The active reference no longer presents `You confirmed this is set up`, `Verified`, or `Status uncertain` as current primary state labels.
+- Corrected TSK-0300 predecessor evidence blob `a3e39896b67098ced321cb9e4b82c65c440806e4` and independent run/job `33592292946 / 100128578252` are bound directly.
+- Independent read-only VER-0308: script blob `3c364d588fd4d89407c2db8223cf4fe34f0b865f`, workflow blob `f35da0b77340e68b3247eb1a547c11ba02a6faa4`, run/job `33593810379 / 100133049388`, conclusion **SUCCESS**.
+- Rendered current checks: 320/768/1024/1440 PASS; `TSK0308_COPY_BROWSER_CURRENT_STATE_COPY=PASS`; accountless-primary/optional-account-secondary/provider-fallback/identity-protection/lifecycle/RTL/focus/no-overflow/console checks PASS; `TSK0308_COPY_RENDERED_ACCEPTANCE=PASS`; `TSK0308_COPY_SOURCE_UNCHANGED=PASS`.
+- Preserved unchanged: historical DS-01–DS-13 candidate/CSS/reference/map/trace/evidence, dual-mode additive CSS, shared TSK-0300 tokens/components, SafeWeb identity, DS-14–DS-17 architecture, responsive/accessibility/localization and lifecycle/privacy boundaries.
+- **ACC-0308 = PASS. VER-0308 = PASS. EVD-0308 = SATISFIED.**
+- **Non-inference:** no authentication/session/datastore implementation, legal/privacy completion, real-user processing, publication/payment/market/production/launch action, lifecycle-gate PASS or successor PASS is inferred.
+
+### Queue status after corrected TSK-0308 reacceptance
+
+Recompute the executable frontier from canonical WBS/graph, current runtime evidence, artifact-specific current-validity checks, gates and Action Authority. Preserve unrelated current/historical PASS only where current evidence remains valid.
