@@ -1,14 +1,21 @@
 {
   "schema": "usesafeweb.brand-assets.v1",
-  "guideline_version": "1.0.0",
+  "guideline_version": "2.0.0",
   "status": "provisional_internal_l4",
   "owner": "Brand",
-  "generated_date": "2026-08-29",
+  "generated_date": "2026-09-02",
+  "supersedes": {
+    "guideline_version": "1.0.0",
+    "readme_blob": "89e915678e85f7f301e8fa4b05c335cd803dd9d4",
+    "manifest_blob": "11e26ee46ebb60762c085513e50f8e40ec1f4854",
+    "reason": "Current TSK-0320 protection-state copy and CR-0006 dual-mode TSK-0300 public/product/status source bindings supersede the v1 active-output contract; approved identity masters, tokens/components, font policy and deprecation rules remain compatible."
+  },
   "authority_sources": [
     {
-      "role": "brand_strategy",
+      "role": "brand_strategy_compatible_scope",
       "path": "TSK_0298_EVIDENCE_GROUNDED_BRAND_STRATEGY_2026-08-29.md",
-      "blob": "73d8587ef9bb37d92b44f102d5a33545b416c44b"
+      "blob": "73d8587ef9bb37d92b44f102d5a33545b416c44b",
+      "binding_scope": "Still-compatible brand role, promise, non-surveillance positioning and prohibited-expression principles only; historical sequencing/account-scope text cannot override current CR-0005/CR-0006/CR-0007/CR-0008 authority."
     },
     {
       "role": "identity_rules",
@@ -18,17 +25,47 @@
     {
       "role": "shared_brand_system",
       "path": "brand/system/TSK-0300/README.md",
-      "blob": "4baa67f565c14c3034fca47bb5fad0b9ff71b091"
+      "blob": "a54a2b653720160261b034149cadff62bc399102"
+    },
+    {
+      "role": "shared_brand_system_current_evidence",
+      "path": "TSK_0300_POST_CR0008_PROTECTION_COPY_CORRECTION_EVIDENCE_2026-09-02.md",
+      "blob": "a3e39896b67098ced321cb9e4b82c65c440806e4"
+    },
+    {
+      "role": "verbal_claims",
+      "path": "TSK_0299_POST_CR0008_DUAL_MODE_VERBAL_SYSTEM_2026-09-01.md",
+      "blob": "ff30500b933b9ecc92325659d49ea4e671d296d2"
+    },
+    {
+      "role": "protection_state_semantics",
+      "path": "TSK_0320_POST_CR0008_PROTECTION_STATE_MODEL_AND_COPY_RULES_2026-09-01.md",
+      "blob": "bdc6bacc424669708f410466f3cfd5527f1c2b3c"
+    }
+  ],
+  "superseded_authority_bindings": [
+    {
+      "role": "shared_brand_system",
+      "path": "brand/system/TSK-0300/README.md",
+      "blob": "4baa67f565c14c3034fca47bb5fad0b9ff71b091",
+      "replacement_blob": "a54a2b653720160261b034149cadff62bc399102",
+      "reason": "Pre-dual-mode/pre-protection-copy-correction shared-system binding."
     },
     {
       "role": "verbal_claims",
       "path": "TSK_0299_PROVISIONAL_VERBAL_SYSTEM_2026-08-29.md",
-      "blob": "a4ff2314ff02c407249e8b5d4d6b9600b89403b3"
+      "blob": "a4ff2314ff02c407249e8b5d4d6b9600b89403b3",
+      "replacement_path": "TSK_0299_POST_CR0008_DUAL_MODE_VERBAL_SYSTEM_2026-09-01.md",
+      "replacement_blob": "ff30500b933b9ecc92325659d49ea4e671d296d2",
+      "reason": "Account-exclusion-dependent and stale protection-state wording superseded."
     },
     {
       "role": "protection_state_semantics",
       "path": "TSK_0320_PROTECTION_STATE_MODEL_AND_COPY_RULES_2026-08-28.md",
-      "blob": "1146f7622f434590dde1253d11f14fb6a87e19de"
+      "blob": "1146f7622f434590dde1253d11f14fb6a87e19de",
+      "replacement_path": "TSK_0320_POST_CR0008_PROTECTION_STATE_MODEL_AND_COPY_RULES_2026-09-01.md",
+      "replacement_blob": "bdc6bacc424669708f410466f3cfd5527f1c2b3c",
+      "reason": "Primary state IDs/copy and current dual-mode evidence semantics superseded the historical binding."
     }
   ],
   "identity_assets": [
@@ -105,13 +142,13 @@
     {
       "id": "surface.product",
       "path": "brand/system/TSK-0300/templates/product.html",
-      "blob": "169acf5c8fc2c1f841111b99b8da1cfb6e9c5836",
+      "blob": "872920b6f7af6561a1015e1d8fea55dcf95f1249",
       "status": "ACTIVE"
     },
     {
       "id": "surface.public",
       "path": "brand/system/TSK-0300/templates/public.html",
-      "blob": "0146960a0f5b2abfe2458f0210ed750f0147d3b9",
+      "blob": "309f6a1f38474f78cd8a241aad3028fd495f9b8e",
       "status": "ACTIVE"
     },
     {
@@ -123,7 +160,7 @@
     {
       "id": "surface.status",
       "path": "brand/system/TSK-0300/templates/status.html",
-      "blob": "f4f3b32957c978fe9ea00704bd285a20e3c56aef",
+      "blob": "8f9971edfc87b2da8174330b9b4be68338a96fb4",
       "status": "ACTIVE"
     }
   ],
@@ -145,14 +182,33 @@
     "allow_new_use_of_deprecated": false,
     "silent_delete": false
   },
+  "current_semantic_rules": {
+    "protection_state_primary_copy": [
+      "Protection verified",
+      "Setup confirmed",
+      "Action needed",
+      "Not covered",
+      "Protection status could not be verified",
+      "Removed"
+    ],
+    "setup_confirmed_supporting_copy": "Protection has not yet been technically verified.",
+    "accountless_core_required": true,
+    "optional_account_continuity": true,
+    "account_or_device_ownership_is_protection_evidence": false,
+    "automatic_anonymous_to_account_linkage": false,
+    "browsing_query_activity_history_allowed": false,
+    "child_accounts_allowed": false,
+    "unrestricted_customer_dns_admin_allowed": false
+  },
   "non_inference": [
     "real-parent validation",
     "native-speaker validation",
     "legal/privacy completion",
-    "build readiness",
+    "integrated build readiness",
     "public-release readiness",
     "payment activation",
     "market activation",
+    "production behavior",
     "launch readiness",
     "RSK-0002 closure"
   ]
