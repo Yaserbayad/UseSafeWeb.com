@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T18:18:53Z
+**Updated:** 2026-09-02T21:37:29Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2950,3 +2950,20 @@ LG-07 and all non-legal L5 readiness work are complete. Recompute the full curre
 ### Queue status after TSK-0454 acceptance
 
 Recompute the full current L6 frontier. TSK-0455 remains non-executable until its required owner-provided fresh Ubuntu 24.04 Azure host plus DNS/TLS/monitoring access exists; select the highest-priority genuinely executable remaining `AUTO_ALLOWED` task.
+
+## TSK-0361 current accepted stable state — 2026-09-02 — POST-LG-07 PUBLIC WEBSITE IMPLEMENTATION
+
+`TSK-0361 — Implement the public/customer website from approved IA, brand, content, accessibility, performance, SEO, privacy, and conversion requirements`: **PASS** under current `ACC-0361 / VER-0361 / EVD-0361`.
+
+- Current normalized WBS blob `eb35f3b10356396c5117e3f47d0b0378953e2157`: L6 / HIGH / A3 / `AUTO_ALLOWED`; hard dependencies `TSK-0354`, `TSK-0308`, and `TSK-0307` are current durable PASS and LG-07 is current durable PASS.
+- Implementation merged through PR `#58`; squash merge commit `c4a0e041fbb285f09fbbd257d58f9b03669df039`. The canonical `/website` baseline is one TypeScript + Next.js application using Next.js `16.3.3`, React/ReactDOM `19.2.8`, and ESLint `9.39.5` with deterministic lockfile `14f9a62607489f965b96d98cdf0d825a363cd8bc`.
+- Original real-browser diagnostic run/job `33676915612 / 100403845229` failed on two exact defects: normal routes lacked `Strict-Transport-Security`, and missing/invalid `platform` setup URLs returned HTTP 200 instead of 404. The correction adds global HSTS `max-age=63072000` without includeSubDomains/preload expansion and fails closed through App Router 404 handling unless `platform` is exactly `android` or `iphone`.
+- Final pre-merge branch acceptance run/job `33685314060 / 100431277608`: **SUCCESS**, including contract, locked install, lint, typecheck, production build, zero-vulnerability full/production audits, exact browser-tool pins, real-browser functional/negative/accessibility/security/SEO/locale/RTL acceptance, and synthetic performance.
+- Independent merged-`main` verification phase in Actions run `33685892467` passed before this state mutation: contract tests 9/9; canonical repository/master-plan validation; locked install; lint; typecheck; production build; full and production dependency audits with 0 vulnerabilities; Playwright `1.62.1` + axe-core `4.13.0`; `TSK0361_BROWSER_ACCEPTANCE=PASS`; `TSK0361_PERFORMANCE_ACCEPTANCE=PASS`.
+- Merged-main synthetic lab performance: browser `151.0.7922.34`; sample count `30`; navigation p95 `46.8 ms`; p99 `245.7 ms`; max LCP `196.0 ms`; max CLS `0.0000`; representative interaction event upper bound `16.0 ms`. This is synthetic lab evidence only; no field-p75, 99.9% operational-SLO, or live-load-envelope claim is inferred.
+- Acceptance coverage includes mobile/desktop critical routes; English, Turkish, and Arabic with RTL; keyboard behavior; automated WCAG 2.2 AA checks on representative pages; truthful security/SEO/noindex boundaries; no-premature-claims checks; and strict invalid-state 404 behavior. The implementation consumes the approved shared design system and externalized versioned content. No separate CMS product is selected by current architecture, so no CMS vendor integration is fabricated; no unnecessary local database, analytics transport, mandatory login, browsing/query/activity history, or browser admin secret is introduced.
+- **Non-inference:** no target-host deployment, production activation, public launch, participant processing, payment activation, optional-account/dashboard completion, legal/compliance PASS, or real-world availability/SLO evidence is inferred.
+
+### Queue status after TSK-0361 acceptance
+
+Recompute the complete current L6 executable frontier from canonical WBS/graph, current runtime PASS evidence, gates, risks, interfaces, Action Authority and unresolved material-action fences. Do not infer the next task from historical order alone.
