@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       - name: Verify TSK-0049
         run: |
           python3 Plans/Master/Tools/verify_tsk0049_lg07_approval_component_20260902.py
