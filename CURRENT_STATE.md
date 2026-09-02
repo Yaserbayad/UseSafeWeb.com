@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T05:26:20Z
+**Updated:** 2026-09-02T07:43:27Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2607,3 +2607,22 @@ Recompute the executable frontier from canonical WBS/graph, current runtime evid
 ### Queue status after current TSK-0297 reacceptance
 
 Recompute the next eligible frontier from canonical WBS/graph, lifecycle/gates, current runtime evidence, current artifact validity and Action Authority. Preserve valid non-uniform historical PASS records unless current evidence actually invalidates them.
+
+## TSK-0236 current accepted stable state — 2026-09-02 — POST-CR-0008 CAPACITY MODEL
+
+`TSK-0236 — Create pilot and initial-launch capacity model`: **PASS** under current `ACC-0236 / VER-0236 / EVD-0236`, current direct predecessors `TSK-0046; TSK-0411`, current `LG-06` PASS, `DEC-0054/CR-0007` production-only lifecycle semantics, and `DEC-0055/CR-0008` proportional-evidence authority.
+
+- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L5 / MEDIUM / A3 / `AUTO_ALLOWED`; hard dependencies exactly `TSK-0046; TSK-0411`, both current durable PASS.
+- Accepted artifact: `TSK_0236_POST_CR0008_PILOT_INITIAL_LAUNCH_CAPACITY_MODEL_2026-09-02.md`, version `1.0.0-post-CR0008`, blob `bd2816ebf60ce6b160d5dbe3e303ca2faf96aeaf`, publication commit `c69cfa355721e5be413201f8a64675485d5f79f4`.
+- `VER-0236`: current Project-Governor read-back/reviewer inspection against the exact WBS/ACC/VER/EVD contract, current TSK-0046 performance/capacity NFR, current TSK-0411 DNS topology, current constraints/interfaces and the exact GitHub artifact/commit found every applicable ACC-0236 element present and no contradictory current evidence.
+- The model separates DNS, accountless-web and optional-account workloads; defines symbolic expected-load and concurrency inputs; requires at least 2x verified sustained capacity over each approved expected peak; numeric `C_verified`/headroom remain **UNPROVEN** until production-representative controlled synthetic evidence exists.
+- Governed scenarios reconcile inherited `pilot` wording to the first bounded live-production validation/ramp only after `LG-09` and every actually applicable prerequisite; no separate pilot/staging environment, real-user load, future cohort/query volume or public-ramp number is invented.
+- Bottlenecks, privacy-safe measurements, current CPU/memory/filesystem/latency/correctness/abuse/dependency review thresholds, vertical/horizontal options, and objective retest/re-architecture triggers are explicit. Hard security/privacy/filtering/authorization/truth/recovery controls may not be weakened to obtain a capacity result.
+- Azure control-plane provisioning/configuration remains owner-managed under `CON-0004`; the model identifies possible evidence-driven scale actions but performs/authorizes no resize, new resource, spend, region or US-node action.
+- `RSK-0001` and the owner-deferred UK representative/ICO/legal condition remain OPEN/unresolved; no legal completion or real-participant/public activation is inferred.
+- `TSK-0586` may consume TSK-0236 as a satisfied hard dependency only after fresh eligibility recomputation against all of its other current dependencies, gates and Action Authority.
+- **Non-inference:** no production load test, numeric supported-load claim, infrastructure scaling, `LG-07`, L6 build, `LG-08`, `LG-09`, participant processing, public production activation, market activation, payment or launch PASS is inferred from this L5 capacity-model acceptance.
+
+### Queue status after TSK-0236 acceptance
+
+Recompute the current L5 frontier from canonical WBS/graph, current runtime PASS evidence, gates, constraints/interfaces, executor availability and Action Authority. Preserve every unresolved material-action fence and do not infer the next task from numbering alone.
