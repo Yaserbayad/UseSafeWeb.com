@@ -1,0 +1,142 @@
+name: Verify TSK-0484 current security NFR revalidation
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/diagnostics/tsk0484-verify-trigger.txt']
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out current main authority
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify current TSK-0484 acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv, re, subprocess
+          from pathlib import Path
+
+          expected={
+            'Plans/Master/WBS/master-wbs.csv':'b27a0c5df2f5636d8ed71051e9e26a68959a2616',
+            'Plans/Master/RELATIONSHIP_INDEX.yaml':'c108d2c162bcea2ee4cc01def46d0487a9501032',
+            'CURRENT_STATE.md':'a09b3c3a9dece3ec19c21d5bf5f1fdd2f004b482',
+            'TSK_0484_POST_CR0008_SECURITY_ABUSE_NFR_REVALIDATION_2026-09-02.md':'285ee390499190137e8aac0fed976975fb79ed80',
+            'TSK_0484_SECURITY_ABUSE_RESISTANCE_NFR_2026-08-28.md':'ebd146f88f51cae67b9515fb94133bcd74c8cf28',
+            'TSK_0484_SECURITY_ABUSE_RESISTANCE_NFR_EVIDENCE_2026-08-28.md':'15ad7e97f13210737e014499820690c30232a952',
+            'TSK_0230_PRIVACY_DATA_MINIMISATION_RETENTION_DELETION_NFRS_2026-09-01.md':'eda85b062a3a7ba29544de35a8a813c9790092f2',
+            'TSK_0485_END_TO_END_THREAT_ABUSE_MODEL_2026-09-01.md':'373ac62ba1f244328e7d8e52ae6648d72e5a5ed7',
+          }
+          def blob(p): return subprocess.check_output(['git','hash-object',p],text=True).strip()
+          for p,sha in expected.items():
+              assert Path(p).exists(), f'missing {p}'
+              actual=blob(p); assert actual==sha, f'hash drift {p}: {actual} != {sha}'
+          print('TSK0484_IMMUTABLE_INPUT_HASHES=PASS')
+
+          with open('Plans/Master/WBS/master-wbs.csv',newline='',encoding='utf-8-sig') as f: rows=list(csv.DictReader(f))
+          byid={r['Task_ID']:r for r in rows if r.get('Task_ID')}
+          r=byid['TSK-0484']
+          assert r['Lifecycle_Stage']=='L4' and r['Priority']=='MEDIUM'
+          assert r['AI_Capability_A0_A4']=='A3' and r['Action_Authority']=='AUTO_ALLOWED'
+          assert r['Dependencies'].strip()=='TSK-0230'
+          assert (r['Acceptance_ID'],r['Verification_ID'],r['Evidence_ID'])==('ACC-0484','VER-0484','EVD-0484')
+          acc=r['Acceptance_Criteria'].lower()
+          assert all(x in acc for x in ['identified threats','measurable controls','verification','public resolver abuse','user-data security'])
+          print('TSK0484_CURRENT_WBS_CONTRACT=PASS')
+
+          runtime=Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          def task_sections(tid):
+              return [m.group(0) for m in re.finditer(rf'^(##|###) {re.escape(tid)}\b.*?(?=^(?:##|###) |\Z)',runtime,re.MULTILINE|re.DOTALL)]
+          assert any('**PASS' in s for s in task_sections('TSK-0230'))
+          assert 'Current product scope is dual-mode Version 1: accountless core plus optional parent account/session/minimum ownership persistence/lightweight dashboard/device management.' in runtime
+          print('TSK0484_CURRENT_DEPENDENCY_AND_SCOPE=PASS')
+
+          old=Path('TSK_0484_SECURITY_ABUSE_RESISTANCE_NFR_2026-08-28.md').read_text(encoding='utf-8')
+          old_lower=old.lower()
+          assert 'account/authentication system' in old_lower
+          assert 'persistent customer datastore' in old_lower
+          assert 'reopens tsk-0484 before implementation/release' in old_lower
+          print('TSK0484_HISTORICAL_SELF_REOPEN_TRIGGER=PASS')
+
+          threat=Path('TSK_0485_END_TO_END_THREAT_ABUSE_MODEL_2026-09-01.md').read_text(encoding='utf-8')
+          for tb in ['TB-WEB','TB-ANON','TB-AUTH','TB-OWN','TB-ADG','TB-DNS','TB-OPS','TB-CI','TB-EXT','TB-REC']:
+              assert tb in threat, tb
+          threat_ids=set(re.findall(r'\| (TM-\d{2}) \|',threat))
+          assert threat_ids=={f'TM-{n:02d}' for n in range(1,31)}, sorted(threat_ids)
+          for token in ['parent authentication/ownership and `ClientID` never substitute for object authorization or technical protection verification','persistent identifiable DNS query/file logging is OFF','no browsing/query/activity-history product store','CONTROL PLAN DEFINED; IMPLEMENTATION/RETEST REQUIRED']:
+              assert token in threat, token
+          print('TSK0484_CURRENT_30_THREAT_10_BOUNDARY_MODEL=PASS')
+
+          p230=Path('TSK_0230_PRIVACY_DATA_MINIMISATION_RETENTION_DELETION_NFRS_2026-09-01.md').read_text(encoding='utf-8').lower()
+          for token in ['optional parent account','server-managed session metadata','parent/device ownership','adguard clientid','no identifiable browsing history','accountless and optional-account state are separate domains','deletion operations are truthful and separate']:
+              assert token in p230, token
+          print('TSK0484_CURRENT_PRIVACY_BOUNDARY=PASS')
+
+          a=Path('TSK_0484_POST_CR0008_SECURITY_ABUSE_NFR_REVALIDATION_2026-09-02.md').read_text(encoding='utf-8')
+          al=a.lower()
+          for token in [
+              'resolver abuse and user-data/application security are separate domains',
+              'accountless core remains independent',
+              'authentication is not authorization',
+              'clientid is never a credential or authorization token',
+              'account/device presence is never protection evidence',
+              'no browsing/query/activity-history store',
+              'anonymous and account domains stay separate',
+              'high/critical active-release paths are release-blocking',
+          ]: assert token in al, token
+          print('TSK0484_CURRENT_SECURITY_INVARIANTS=PASS')
+
+          nfr_rows=re.findall(r'^\| (SEC-[A-Z]+-\d{2}) \| ([^\n]+)$',a,re.MULTILINE)
+          ids={x[0] for x in nfr_rows}
+          required={
+            'SEC-RES-01','SEC-RES-02','SEC-WEB-01','SEC-WEB-02','SEC-AUTH-01','SEC-SESS-01','SEC-AUTHZ-01','SEC-DATA-01',
+            'SEC-PROV-01','SEC-ADG-01','SEC-PRIV-01','SEC-ANON-01','SEC-TRUTH-01','SEC-CI-01','SEC-REC-01','SEC-GUIDE-01'
+          }
+          assert ids==required, (ids,required)
+          for nid,row in nfr_rows:
+              assert re.search(r'TM-\d{2}',row), nid+' missing threat mapping'
+              assert 'TB-' in row, nid+' missing boundary mapping'
+              cells=[c.strip() for c in row.split('|')]
+              assert len(cells)>=4 and len(cells[-1])>=25, nid+' missing measurable verification'
+          print('TSK0484_16_NFR_THREAT_CONTROL_VERIFICATION_MAP=PASS')
+
+          for source in [
+            'https://owasp.org/www-project-application-security-verification-standard/',
+            'https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html',
+            'https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html',
+            'https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html',
+            'https://firebase.google.com/docs/auth/admin/verify-id-tokens',
+            'https://firebase.google.com/docs/auth/admin/manage-cookies',
+            'https://firebase.google.com/docs/auth/admin/manage-sessions',
+            'https://github.com/AdguardTeam/AdGuardHome/wiki/Configuration',
+          ]: assert source in a, source
+          print('TSK0484_CURRENT_SOURCE_BINDINGS=PASS')
+
+          r353=byid['TSK-0353']; r352=byid['TSK-0352']
+          assert r353['Action_Authority']=='AUTO_ALLOWED' and 'Firebase/Google token verification' in r353['Acceptance_Criteria']
+          assert r352['Action_Authority']=='AUTO_ALLOWED' and 'allowlisted server-side client' in r352['Acceptance_Criteria']
+          assert 'TSK-0353 remains responsible' in a and 'TSK-0352 remains responsible' in a
+          assert 'TSK-0484 does not infer TSK-0353 PASS' in a
+          print('TSK0484_DOWNSTREAM_OWNERSHIP_BOUNDARY=PASS')
+
+          assertions=set(re.findall(r'(?m)^(\d+)\. ',a))
+          assert set(map(str,range(1,17))).issubset(assertions)
+          assert '**ACC-0484 current candidate: PASS pending independent current VER-0484.**' in a
+          assert 'does not mark TSK-0352 or TSK-0353 PASS' in a
+          print('TSK0484_CURRENT_ACCEPTANCE_ASSERTIONS=PASS')
+          subprocess.check_call(['git','diff','--check'])
+          print('TSK0484_CURRENT_ACC=PASS')
+          print('WBS_BLOB='+blob('Plans/Master/WBS/master-wbs.csv'))
+          print('GRAPH_BLOB='+blob('Plans/Master/RELATIONSHIP_INDEX.yaml'))
+          print('RUNTIME_BLOB='+blob('CURRENT_STATE.md'))
+          print('ARTIFACT_BLOB='+blob('TSK_0484_POST_CR0008_SECURITY_ABUSE_NFR_REVALIDATION_2026-09-02.md'))
+          PY
