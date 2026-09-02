@@ -99,7 +99,7 @@ def verify() -> str:
         'Failure response',
         'Current status',
         'TSK-0240 is `OWNER_EXTERNAL_SATISFIED`',
-        'not represented here as legal PASS',
+        'is **not** represented here as legal PASS',
         'TSK-0048 must assign each row',
         'TSK-0539 must bind every actionable SLI/threat signal',
         'does not itself implement a control, close a vulnerability',
