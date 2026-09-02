@@ -1,4 +1,4 @@
-name: Temporary - Reconcile TSK-0358 acceptance contract
+name: Temporary - Complete TSK-0358 acceptance proof
 
 on:
   push:
@@ -11,13 +11,16 @@ permissions:
   contents: read
 
 jobs:
-  inspect-tsk0358:
+  verify-tsk0358-gap:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - name: Verify isolation and print exact TSK-0358 authority
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22.23.2
+      - name: Verify isolation, authority and dormant optional-account transitions
         shell: bash
         run: |
           set -euo pipefail
@@ -26,46 +29,27 @@ jobs:
           test "$(git merge-base HEAD origin/main)" = 'e2586f389a29524b23d105cd56acaa2a038b2b46'
           test "$(git diff --name-only origin/main...HEAD)" = '.github/workflows/accept-tsk0498-privacy-safe-events-v2-20260901.yml'
           python3 Plans/Master/Tools/validate_master_plan.py
-          python3 - <<'PY'
-          import csv, json, re
-          from pathlib import Path
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { readFileSync } from 'node:fs';
+          import { stripTypeScriptTypes } from 'node:module';
 
-          root = Path('.')
-          with (root / 'Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='') as f:
-              rows = list(csv.DictReader(f))
-          matches = [r for r in rows if r.get('Task_ID') == 'TSK-0358']
-          if len(matches) != 1:
-              raise SystemExit(f'TSK-0358: expected one exact row, got {len(matches)}')
-          row = matches[0]
-          print('TSK0358_ROW=' + json.dumps(row, ensure_ascii=False, sort_keys=True))
-          deps = sorted(set(re.findall(r'TSK-\d{4}', row.get('Dependencies', ''))))
-          print('TSK0358_DEPS=' + ';'.join(deps))
+          const source = readFileSync('website/src/lib/core-state-machine.ts', 'utf8');
+          const js = stripTypeScriptTypes(source, { mode: 'strip' });
+          const api = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
 
-          state = (root / 'CURRENT_STATE.md').read_text(encoding='utf-8')
-          print('TSK0358_RUNTIME_PASS=' + ('YES' if '## TSK-0358 current accepted stable state' in state else 'NO'))
-          for dep in deps:
-              print('DEP_' + dep.replace('-', '') + '_PASS=' + ('YES' if f'## {dep} current accepted stable state' in state else 'NO'))
-
-          needles = ('TSK-0358','ACC-0358','VER-0358','EVD-0358')
-          paths = [
-              root / 'Plans/Master/Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md',
-              root / 'Plans/Master/RELATIONSHIP_INDEX.yaml',
-              root / 'Plans/Master/Registers/GATES.md',
-              root / 'Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md',
-              root / 'Plans/Master/Registers/INTERFACES.md',
-              root / 'Plans/Master/Registers/RISKS.md',
-              root / 'Plans/Master/Registers/DECISIONS_TRIGGERS.md',
-              root / 'Plans/Master/Registers/CONSTRAINTS.md',
-              root / 'Plans/Master/Registers/REQUIREMENTS.md',
-          ]
-          for path in paths:
-              if not path.exists():
-                  continue
-              for i, line in enumerate(path.read_text(encoding='utf-8').splitlines(), 1):
-                  if any(n in line for n in needles):
-                      print(f'AUTH_MATCH={path}:{i}:{line}')
-          for i, line in enumerate(state.splitlines(), 1):
-              if 'TSK-0358' in line:
-                  print(f'STATE_MATCH={i}:{line}')
-          print('TSK0358_CONTRACT_DIAG=PASS')
-          PY
+          assert.deepEqual(api.optionalAccountTransition({ capabilityEnabled: true, status: 'unavailable' }, 'ENTER'), { capabilityEnabled: true, status: 'entry', route: '/account' });
+          assert.deepEqual(api.optionalAccountTransition({ capabilityEnabled: true, status: 'entry' }, 'RETURN'), { capabilityEnabled: true, status: 'authenticated', route: '/dashboard' });
+          assert.deepEqual(api.optionalAccountTransition({ capabilityEnabled: true, status: 'authenticated' }, 'DASHBOARD'), { capabilityEnabled: true, status: 'authenticated', route: '/dashboard' });
+          assert.deepEqual(api.optionalAccountTransition({ capabilityEnabled: true, status: 'authenticated' }, 'EXPIRE'), { capabilityEnabled: true, status: 'expired', route: '/account' });
+          assert.deepEqual(api.optionalAccountTransition({ capabilityEnabled: true, status: 'authenticated' }, 'LOGOUT'), { capabilityEnabled: true, status: 'logged-out', route: null });
+          assert.deepEqual(api.optionalAccountTransition({ capabilityEnabled: true, status: 'logged-out' }, 'DASHBOARD'), { capabilityEnabled: true, status: 'logged-out', route: '/account' });
+          assert.equal(api.coreRequiresLogin({ capabilityEnabled: true, status: 'authenticated' }), false);
+          assert.equal(api.evaluateProtection({ coverage: 'covered', configured: true, technical: null, action: null, uncertainty: null, removal: null, accountOwned: true }).state, 'configured/parent-confirmed');
+          console.log('TSK0358_OPTIONAL_ACCOUNT_STATE_CONTRACT=PASS');
+          NODE
+          test ! -e website/src/app/'[locale]'/account
+          test ! -e website/src/app/'[locale]'/dashboard
+          ! grep -R -E --exclude='tsk0358.test.mjs' --exclude='core-state-machine.ts' 'optionalAccountTransition\(' website/src
+          printf 'TSK0358_OWNER_FENCE_NON_ACTIVATION=PASS\n'
+          printf 'TSK0358_SUPPLEMENTAL_ACCEPTANCE=PASS\n'
