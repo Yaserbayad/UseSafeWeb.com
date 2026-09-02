@@ -1,0 +1,131 @@
+name: Verify TSK-0308 post-copy correction
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/diagnostics/tsk0308-post-copy-trigger.txt']
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Run robust structural VER-0308
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/verify_tsk0308_post_copy_correction.py
+      - name: Install isolated Playwright Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/tsk0308-copy-pw
+          cd /tmp/tsk0308-copy-pw
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund playwright@1.62.0
+          npx playwright install --with-deps chromium
+      - name: Run rendered corrected dual-mode reference verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/tsk0308-copy-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4173/prototype/TSK-0308/dual-mode-reference.html >/dev/null; then ready=1; break; fi
+            sleep 0.25
+          done
+          if [ "$ready" != "1" ]; then cat /tmp/tsk0308-copy-http.log; exit 1; fi
+          NODE_PATH=/tmp/tsk0308-copy-pw/node_modules node <<'NODE'
+          const { chromium } = require('playwright');
+          (async () => {
+            const browser = await chromium.launch({headless: true});
+            const errors = [];
+            const external = [];
+            const viewports = [320, 768, 1024, 1440];
+            try {
+              for (const width of viewports) {
+                const context = await browser.newContext({ viewport: { width, height: 1100 } });
+                const page = await context.newPage();
+                page.on('console', msg => { if (msg.type() === 'error') errors.push(`console:${width}:${msg.text()}`); });
+                page.on('pageerror', err => errors.push(`page:${width}:${err.message}`));
+                page.on('request', req => {
+                  const u = new URL(req.url());
+                  if (!['127.0.0.1','localhost'].includes(u.hostname)) external.push(req.url());
+                });
+                await page.goto('http://127.0.0.1:4173/prototype/TSK-0308/dual-mode-reference.html', {waitUntil:'networkidle'});
+                const result = await page.evaluate(() => {
+                  const body = document.body;
+                  const setup = document.querySelector('#setup');
+                  const start = setup && [...setup.querySelectorAll('a,button')].find(el => el.textContent.trim() === 'Start setup');
+                  const signIn = setup && [...setup.querySelectorAll('a,button')].find(el => el.textContent.trim() === 'Sign in / Manage devices');
+                  const fallback = [...document.querySelectorAll('a,button')].find(el => el.textContent.trim() === 'Continue without signing in');
+                  const life = ['Sign out','Unlink device','Delete device record','Delete account','Reset anonymous web state','Remove SafeWeb DNS'];
+                  const allText = body.innerText;
+                  const lower = allText.toLowerCase();
+                  const rtl = document.querySelector('[dir="rtl"]');
+                  const cards = [...document.querySelectorAll('[data-evidence-state]')].map(el => ({
+                    state: el.getAttribute('data-evidence-state'),
+                    text: el.innerText
+                  }));
+                  return {
+                    noOverflow: body.scrollWidth <= window.innerWidth + 1,
+                    startPrimary: !!start && !start.classList.contains('sw-button--secondary'),
+                    signInSecondary: !!signIn && signIn.classList.contains('sw-button--secondary'),
+                    fallback: !!fallback,
+                    optionalText: lower.includes('sign-in is optional for core setup'),
+                    identityTruth: lower.includes('signed in describes account/session state only') && lower.includes('does not mean safeweb dns') && lower.includes('technical protection verification'),
+                    lifecycle: life.every(label => [...document.querySelectorAll('a,button')].some(el => el.textContent.trim() === label)),
+                    accountDeleteDnsTruth: lower.includes('deleting the account does not remove safeweb dns') && lower.includes('removing safeweb dns does not delete the account'),
+                    noSurveillance: lower.includes('no browsing or dns-query history') && lower.includes('raw adguard administration') && lower.includes('overall safety score'),
+                    rtl: !!rtl && getComputedStyle(rtl).direction === 'rtl' && rtl.scrollWidth <= rtl.clientWidth + 1,
+                    deviceRows: document.querySelectorAll('.sw-ds-device-row').length >= 2,
+                    setupConfirmed: cards.some(x => x.state === 'configured/parent-confirmed' && x.text.includes('Setup confirmed') && x.text.includes('Protection has not yet been technically verified.')),
+                    protectionVerified: cards.some(x => x.state === 'protected/verified' && x.text.includes('Protection verified')),
+                    uncertain: cards.some(x => x.state === 'uncertain/error' && x.text.includes('Protection status could not be verified')),
+                    noStalePrimary: !allText.includes('You confirmed this is set up') && !allText.includes('Status uncertain') && !cards.some(x => /^Verified\b/m.test(x.text)),
+                    deviceUncertainCurrent: lower.includes('protection verification: protection status could not be verified')
+                  };
+                });
+                for (const [key, value] of Object.entries(result)) {
+                  if (!value) throw new Error(`VIEWPORT_${width}_${key}=FAIL`);
+                }
+                await page.keyboard.press('Tab');
+                const focus = await page.evaluate(() => {
+                  const el = document.activeElement;
+                  const cs = getComputedStyle(el);
+                  return {tag: el && el.tagName, outline: cs.outlineStyle, width: parseFloat(cs.outlineWidth || '0')};
+                });
+                if (!focus.tag || focus.tag === 'BODY' || focus.outline === 'none' || !(focus.width > 0)) throw new Error(`VIEWPORT_${width}_FOCUS_VISIBLE=FAIL`);
+                console.log(`TSK0308_COPY_VIEWPORT_${width}=PASS`);
+                await context.close();
+              }
+              if (errors.length) throw new Error(`browser errors: ${errors.join(' | ')}`);
+              if (external.length) throw new Error(`external requests: ${external.join(' | ')}`);
+              console.log('TSK0308_COPY_BROWSER_NO_OVERFLOW=PASS');
+              console.log('TSK0308_COPY_BROWSER_ACCOUNTLESS_PRIMARY=PASS');
+              console.log('TSK0308_COPY_BROWSER_OPTIONAL_ACCOUNT_SECONDARY=PASS');
+              console.log('TSK0308_COPY_BROWSER_CURRENT_STATE_COPY=PASS');
+              console.log('TSK0308_COPY_BROWSER_PROVIDER_FALLBACK=PASS');
+              console.log('TSK0308_COPY_BROWSER_IDENTITY_PROTECTION_SEPARATION=PASS');
+              console.log('TSK0308_COPY_BROWSER_LIFECYCLE_SEPARATION=PASS');
+              console.log('TSK0308_COPY_BROWSER_RTL=PASS');
+              console.log('TSK0308_COPY_BROWSER_FOCUS=PASS');
+              console.log('TSK0308_COPY_BROWSER_CONSOLE=PASS');
+              console.log('TSK0308_COPY_RENDERED_ACCEPTANCE=PASS');
+            } finally {
+              await browser.close();
+            }
+          })().catch(err => { console.error(err); process.exit(1); });
+          NODE
+          git diff --check
+          git diff --exit-code -- prototype/TSK-0308 brand/system/TSK-0300 brand/identity/TSK-0301
+          echo 'TSK0308_COPY_SOURCE_UNCHANGED=PASS'
