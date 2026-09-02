@@ -1,96 +1,23 @@
-name: Temporary - Accept TSK-0454 canonical source structure
+name: Retired - Accept TSK-0498 privacy-safe event contract v2
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/accept-tsk0498-privacy-safe-events-v2-20260901.yml'
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  accept-tsk0454:
+  verify-retired-state:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-      - name: Verify TSK-0454 before state mutation
+      - uses: actions/checkout@v4
+      - name: Verify durable TSK-0498 acceptance without mutation
         shell: bash
         run: |
           set -euo pipefail
-          git fetch origin main
-          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
-          git merge-base --is-ancestor 3c2cd8e2f042111dabd1ec50d1b12a0acc48a451 HEAD
-          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
-          test "$(git hash-object tests/repository-structure/verify_structure.py)" = 'ae2444df35bcf3c967800709b35a0366924e55e0'
-          python3 - <<'PY'
-          import csv,re
-          from pathlib import Path
-          rows=list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='')))
-          r=next(x for x in rows if x['Task_ID']=='TSK-0454')
-          assert r['Lifecycle_Stage']=='L6'
-          assert r['Dependencies'].strip()=='TSK-0050'
-          assert r['Action_Authority']=='AUTO_ALLOWED' and r['AI_Capability_A0_A4']=='A3'
-          assert r['Acceptance_ID']=='ACC-0454' and r['Verification_ID']=='VER-0454' and r['Evidence_ID']=='EVD-0454'
-          acc=r['Acceptance_Criteria'].lower()
-          for x in ['clean checkout','/website','/infrastructure/adguard-server','ownership','generated files','artifact locations','secret exclusions','no duplicate authority']:
-              assert x in acc, x
-          state=Path('CURRENT_STATE.md').read_text(encoding='utf-8-sig')
-          pats=[r'^##+\s+TSK-0050\s+current accepted stable state[^\n]*$']
-          starts=[]
-          for p in pats: starts += [m.start() for m in re.finditer(p,state,re.M|re.I)]
-          assert starts, 'TSK-0050 current section missing'
-          s=max(starts); e=state.find('\n## ',s+3); e=len(state) if e<0 else e
-          assert '**PASS**' in state[s:e], 'TSK-0050 not current PASS'
-          assert '`LG-07 — Architecture, Security, Privacy and Delivery Readiness`: **PASS**' in state
-          PY
-          python3 tests/repository-structure/verify_structure.py
+          grep -Fq '## TSK-0498 current accepted stable state — 2026-09-01 — POST-CR-0008' CURRENT_STATE.md
+          grep -Fq '`TSK-0498 — Define only decision-linked accountless journey, protection-state, self-service, reliability, channel, and cost events`: **PASS**' CURRENT_STATE.md
+          test "$(git hash-object TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md)" = '6b7a5095122c74ed9ec860b74408dab474576659'
+          grep -Fq '**Version:** 1.0.1' TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md
           python3 Plans/Master/Tools/validate_master_plan.py
-          git diff --check
-      - name: Append TSK-0454 PASS
-        shell: bash
-        env:
-          VERIFY_RUN_ID: '33666317227'
-          RED_GREEN_RUN_ID: '33665697962'
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          import os
-          from datetime import datetime, timezone
-          from pathlib import Path
-          p=Path('CURRENT_STATE.md'); text=p.read_text(encoding='utf-8-sig')
-          heading='## TSK-0454 current accepted stable state — 2026-09-02 — POST-LG-07 SOURCE STRUCTURE'
-          if heading in text: raise SystemExit('TSK-0454 section already exists')
-          now=datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
-          lines=text.splitlines()
-          for i,line in enumerate(lines):
-              if line.startswith('**Updated:**'):
-                  lines[i]=f'**Updated:** {now}'; break
-          text='\n'.join(lines).rstrip()+'\n'
-          section=f'''\n{heading}\n\n`TSK-0454 — Create approved source, infrastructure, configuration, test, and documentation structure`: **PASS** under current `ACC-0454 / VER-0454 / EVD-0454`.\n\n- Current normalized WBS blob `eb35f3b10356396c5117e3f47d0b0378953e2157`: L6 / A3 / `AUTO_ALLOWED`; sole dependency `TSK-0050` is current durable PASS and LG-07 is current durable PASS.\n- Implementation merged through PR `#57`; merge commit `3c2cd8e2f042111dabd1ec50d1b12a0acc48a451`. Scope is canonical source/infrastructure/config/test/docs ownership only; it does not implement the Next.js application or TSK-0455 target-host deployment.\n- Canonical structure verifier: `tests/repository-structure/verify_structure.py`, blob `ae2444df35bcf3c967800709b35a0366924e55e0`.\n- TDD evidence run `{os.environ['RED_GREEN_RUN_ID']}`: initial branch attempt failed as expected on the first missing canonical file (`.gitignore`); subsequent GREEN runs passed after the minimum structure was implemented; post-review GREEN passed after removing an unnecessary `website/public/README.md` runtime/public asset.\n- Independent clean-`main` verification run `{os.environ['VERIFY_RUN_ID']}`: **SUCCESS**. It verified canonical `/website`, `/infrastructure/adguard-server`, `/tests`, `/docs`, ownership/authority boundaries, generated-file locations, secret exclusions, no tracked runtime secret-like paths, `git diff --check`, and the full modular master-plan validator: 641 tasks / 858 dependency edges / 0 broken links / 0 generated missing task IDs.\n- Pre-merge five-axis review found and resolved one required issue: documentation was not left under the future Next.js `public/` runtime-static directory. Final PR diff contains 10 structure/test/documentation files and no workflow, planning-authority, runtime-state, application-behavior, dependency-version, Azure-control-plane or production changes.\n- Single-authority invariant is explicit: `Plans/Master/` remains planning authority and `CURRENT_STATE.md` remains volatile runtime authority; no duplicate task/gate/state store was created.\n- Secret boundary is explicit: environment-specific values, credentials, tokens and private keys remain outside Git; generated dependency/build/coverage output is ignored.\n- **Non-inference:** no TSK-0357/TSK-0361/TSK-0395/TSK-0455 implementation, target-host execution, deployment, production activation, participant processing, new spend, launch or legal/compliance PASS is inferred.\n\n### Queue status after TSK-0454 acceptance\n\nRecompute the full current L6 frontier. TSK-0455 remains non-executable until its required owner-provided fresh Ubuntu 24.04 Azure host plus DNS/TLS/monitoring access exists; select the highest-priority genuinely executable remaining `AUTO_ALLOWED` task.\n'''
-          p.write_text(text+section,encoding='utf-8')
-          PY
-          git diff --check
-          test "$(git status --porcelain | sed 's/^...//' | sort)" = 'CURRENT_STATE.md'
-      - name: Persist and read back
-        shell: bash
-        run: |
-          set -euo pipefail
-          SOURCE="$(git rev-parse HEAD)"
-          git fetch origin main
-          test "$(git rev-parse origin/main)" = "$SOURCE"
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add CURRENT_STATE.md
-          git commit -m 'state: accept TSK-0454 canonical source structure'
-          C="$(git rev-parse HEAD)"; B="$(git rev-parse "$C:CURRENT_STATE.md")"
-          git push origin HEAD:main
-          git fetch origin main
-          test "$(git rev-parse origin/main)" = "$C"
-          test "$(git rev-parse "origin/main:CURRENT_STATE.md")" = "$B"
-          git show origin/main:CURRENT_STATE.md | grep -Fq '## TSK-0454 current accepted stable state — 2026-09-02 — POST-LG-07 SOURCE STRUCTURE'
-          echo "TSK0454_STATE_COMMIT=$C"
-          echo "TSK0454_STATE_BLOB=$B"
-          echo 'TSK0454_STATE_REMOTE_READBACK=PASS'
+          echo 'TSK0498_HISTORICAL_ACCEPT_WORKFLOW_RETIRED=PASS'
