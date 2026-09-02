@@ -1,23 +1,71 @@
-name: Retired - Accept TSK-0498 privacy-safe event contract v2
+name: Temporary - Reconcile TSK-0455 and TSK-0456 contracts
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - diag/tsk0455-contract-reconcile-20260902b
+    paths:
+      - '.github/workflows/accept-tsk0498-privacy-safe-events-v2-20260901.yml'
 
 permissions:
   contents: read
 
 jobs:
-  verify-retired-state:
-    runs-on: ubuntu-latest
+  inspect-contracts:
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - name: Verify durable TSK-0498 acceptance without mutation
+      - uses: actions/checkout@v6
+      - name: Verify isolation and print exact contracts
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq '## TSK-0498 current accepted stable state — 2026-09-01 — POST-CR-0008' CURRENT_STATE.md
-          grep -Fq '`TSK-0498 — Define only decision-linked accountless journey, protection-state, self-service, reliability, channel, and cost events`: **PASS**' CURRENT_STATE.md
-          test "$(git hash-object TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md)" = '6b7a5095122c74ed9ec860b74408dab474576659'
-          grep -Fq '**Version:** 1.0.1' TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = 'e2586f389a29524b23d105cd56acaa2a038b2b46'
+          test "$(git merge-base HEAD origin/main)" = 'e2586f389a29524b23d105cd56acaa2a038b2b46'
+          test "$(git diff --name-only origin/main...HEAD)" = '.github/workflows/accept-tsk0498-privacy-safe-events-v2-20260901.yml'
           python3 Plans/Master/Tools/validate_master_plan.py
-          echo 'TSK0498_HISTORICAL_ACCEPT_WORKFLOW_RETIRED=PASS'
+          python3 - <<'PY'
+          import csv, json, re
+          from pathlib import Path
+
+          root = Path('.')
+          with (root / 'Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='') as f:
+              rows = list(csv.DictReader(f))
+          for task_id in ('TSK-0455', 'TSK-0456'):
+              matches = [r for r in rows if r.get('Task_ID') == task_id]
+              if len(matches) != 1:
+                  raise SystemExit(f'{task_id}: expected one exact row, got {len(matches)}')
+              row = matches[0]
+              print(task_id.replace('-', '') + '_ROW=' + json.dumps(row, ensure_ascii=False, sort_keys=True))
+              deps = sorted(set(re.findall(r'TSK-\d{4}', row.get('Dependencies', ''))))
+              print(task_id.replace('-', '') + '_DEPS=' + ';'.join(deps))
+
+          state = (root / 'CURRENT_STATE.md').read_text(encoding='utf-8')
+          for task_id in ('TSK-0455', 'TSK-0456'):
+              print(task_id.replace('-', '') + '_RUNTIME_PASS=' + ('YES' if f'## {task_id} current accepted stable state' in state else 'NO'))
+          for dep in sorted(set(re.findall(r'TSK-\d{4}', next(r for r in rows if r.get('Task_ID') == 'TSK-0455').get('Dependencies','')))):
+              print('DEP_' + dep.replace('-', '') + '_PASS=' + ('YES' if f'## {dep} current accepted stable state' in state else 'NO'))
+
+          needles = ('TSK-0455','ACC-0455','VER-0455','EVD-0455','TSK-0456','ACC-0456','VER-0456','EVD-0456')
+          paths = [
+              root / 'Plans/Master/Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md',
+              root / 'Plans/Master/RELATIONSHIP_INDEX.yaml',
+              root / 'Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md',
+              root / 'Plans/Master/Registers/INTERFACES.md',
+              root / 'Plans/Master/Registers/RISKS.md',
+              root / 'Plans/Master/Registers/DECISIONS_TRIGGERS.md',
+              root / 'Plans/Master/Registers/CONSTRAINTS.md',
+              root / 'Plans/Master/Registers/REQUIREMENTS.md',
+          ]
+          for path in paths:
+              if not path.exists():
+                  continue
+              for i, line in enumerate(path.read_text(encoding='utf-8').splitlines(), 1):
+                  if any(n in line for n in needles):
+                      print(f'AUTH_MATCH={path}:{i}:{line}')
+
+          for i, line in enumerate(state.splitlines(), 1):
+              if 'TSK-0455' in line or 'TSK-0456' in line:
+                  print(f'STATE_MATCH={i}:{line}')
+          print('TSK0455_CONTRACT_DIAG=PASS')
+          PY
