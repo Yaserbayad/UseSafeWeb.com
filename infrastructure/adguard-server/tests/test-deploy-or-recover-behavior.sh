@@ -9,7 +9,7 @@ SECRETS="${TEST_ROOT}/secrets"
 CONFIG="${TEST_ROOT}/recovery.env"
 LOCK='/run/lock/usesafeweb-adguard-recovery.lock'
 
-fail() { printf 'FAIL  %s\n' "$*" >&2; exit 1; }
+test_fail() { printf 'FAIL  %s\n' "$*" >&2; exit 1; }
 pass() { printf 'PASS  %s\n' "$*"; }
 expect_exit() {
   local expected="$1"; shift
@@ -17,7 +17,7 @@ expect_exit() {
   "$@" >/tmp/tsk0455-test.out 2>/tmp/tsk0455-test.err
   local rc=$?
   set -e
-  [[ "$rc" == "$expected" ]] || { cat /tmp/tsk0455-test.err >&2; fail "expected exit $expected, got $rc: $*"; }
+  [[ "$rc" == "$expected" ]] || { cat /tmp/tsk0455-test.err >&2; test_fail "expected exit $expected, got $rc: $*"; }
 }
 write_valid_config() {
   cat >"$CONFIG" <<EOF
@@ -42,8 +42,8 @@ cleanup() {
 }
 trap cleanup EXIT
 
-[[ "$(id -u)" == 0 ]] || fail 'behavior test must run as root on ephemeral CI'
-[[ -x "$TARGET" ]] || fail 'target missing'
+[[ "$(id -u)" == 0 ]] || test_fail 'behavior test must run as root on ephemeral CI'
+[[ -x "$TARGET" ]] || test_fail 'target missing'
 
 # Sourcing is required for deterministic unit tests and must never execute main.
 # shellcheck disable=SC1090
@@ -52,9 +52,9 @@ source "$TARGET"
 a=0
 flaky() { a=$((a + 1)); (( a >= 3 )); }
 sleep() { :; }
-retry_transient 3 flaky || fail 'bounded retry did not reconcile third-attempt success'
+retry_transient 3 flaky || test_fail 'bounded retry did not reconcile third-attempt success'
 unset -f sleep
-[[ "$a" == 3 ]] || fail 'bounded retry attempted an unexpected number of times'
+[[ "$a" == 3 ]] || test_fail 'bounded retry attempted an unexpected number of times'
 pass 'bounded transient retry'
 
 install -d -m 0700 -o root -g root "$SECRETS" /run/lock
@@ -64,7 +64,7 @@ printf '%s\n' 'ops@example.invalid' >"${SECRETS}/acme.email"
 chown root:root "${SECRETS}/"*; chmod 0600 "${SECRETS}/"*
 write_valid_config
 
-"$TARGET" --check --config "$CONFIG" | grep -Fxq 'TSK0455_CHECK=PASS' || fail 'valid read-only preflight did not pass'
+"$TARGET" --check --config "$CONFIG" | grep -Fxq 'TSK0455_CHECK=PASS' || test_fail 'valid read-only preflight did not pass'
 pass 'valid read-only preflight'
 
 expect_exit 10 "$TARGET" --unknown
@@ -109,8 +109,8 @@ noop_out="$(
 )"
 noop_rc=$?
 set -e
-[[ "$noop_rc" == 0 ]] || fail "verified-compliant apply did not no-op; rc=${noop_rc}; output=${noop_out}"
-grep -Fxq 'TSK0455_APPLY_NOOP=PASS' <<<"$noop_out" || fail 'verified-compliant apply did not emit stable no-op evidence'
+[[ "$noop_rc" == 0 ]] || test_fail "verified-compliant apply did not no-op; rc=${noop_rc}; output=${noop_out}"
+grep -Fxq 'TSK0455_APPLY_NOOP=PASS' <<<"$noop_out" || test_fail 'verified-compliant apply did not emit stable no-op evidence'
 pass 'verified second apply is mutation-free no-op'
 
 # Firewall reconciliation must not append rules or rewrite defaults when exact state is already present.
@@ -156,7 +156,7 @@ EOF
 configure_firewall
 if grep -Evq '^(status|status verbose|show added)$' /tmp/tsk0455-ufw-calls; then
   cat /tmp/tsk0455-ufw-calls >&2
-  fail 'exact firewall state caused a mutating UFW command'
+  test_fail 'exact firewall state caused a mutating UFW command'
 fi
 pass 'exact firewall state is a no-op'
 
@@ -192,16 +192,16 @@ set +e
 ( configure_firewall ) >/tmp/tsk0455-test.out 2>/tmp/tsk0455-test.err
 over_rc=$?
 set -e
-[[ "$over_rc" == 50 ]] || { cat /tmp/tsk0455-test.err >&2; fail "over-broad SSH firewall rule was not refused with uncertain exit 50; rc=${over_rc}"; }
+[[ "$over_rc" == 50 ]] || { cat /tmp/tsk0455-test.err >&2; test_fail "over-broad SSH firewall rule was not refused with uncertain exit 50; rc=${over_rc}"; }
 pass 'over-broad firewall rule fails closed'
 unset -f ufw
 
 # Static evidence for idempotent no-op, failed-verification rollback and ambiguous-effect reconciliation.
-grep -Fq 'cmp -s' "$TARGET" || fail 'no-op comparison missing'
-grep -Fq 'trap on_error ERR' "$TARGET" || fail 'failed-verification rollback trap missing'
-grep -Fq 'rollback' "$TARGET" || fail 'rollback implementation missing'
-grep -Fq 'certificate issuance outcome uncertain; reconcile before retry' "$TARGET" || fail 'ambiguous cert effect reconciliation missing'
-grep -Fq 'different or unrecognized AdGuard Home installation exists; refusing overwrite' "$TARGET" || fail 'unsupported installed-version guard missing'
+grep -Fq 'cmp -s' "$TARGET" || test_fail 'no-op comparison missing'
+grep -Fq 'trap on_error ERR' "$TARGET" || test_fail 'failed-verification rollback trap missing'
+grep -Fq 'rollback' "$TARGET" || test_fail 'rollback implementation missing'
+grep -Fq 'certificate issuance outcome uncertain; reconcile before retry' "$TARGET" || test_fail 'ambiguous cert effect reconciliation missing'
+grep -Fq 'different or unrecognized AdGuard Home installation exists; refusing overwrite' "$TARGET" || test_fail 'unsupported installed-version guard missing'
 pass 'idempotency/rollback/ambiguous-effect guards'
 
 printf 'TSK0455_BEHAVIOR_CONTRACT=PASS\n'
