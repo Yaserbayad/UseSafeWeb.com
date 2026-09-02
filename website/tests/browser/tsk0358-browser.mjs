@@ -1,0 +1,112 @@
+import assert from 'node:assert/strict';
+import { chromium } from 'playwright';
+
+const base = process.env.BASE_URL ?? 'http://127.0.0.1:3000';
+const coreKey = 'usesafeweb:core:v1';
+const browser = await chromium.launch({ headless: true });
+const failures = [];
+
+function record(label, fn) {
+  return Promise.resolve().then(fn).catch((error) => failures.push(`${label}: ${error.stack ?? error}`));
+}
+
+async function coreState(page) {
+  const raw = await page.evaluate((key) => sessionStorage.getItem(key), coreKey);
+  return raw ? JSON.parse(raw) : null;
+}
+
+await record('complete accountless core reaches truthful Protection Map without login or server persistence', async () => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  const mutations = [];
+  page.on('request', (request) => {
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method())) mutations.push(`${request.method()} ${request.url()}`);
+  });
+
+  await page.goto(`${base}/en-GB/start`, { waitUntil: 'networkidle' });
+  assert.equal(await page.locator('a[href*="login"],a[href*="account"],a[href*="signin"]').count(), 0, 'core start must not require or promote login');
+  await page.locator('a[href="/en-GB/setup/route"]').click();
+  await page.locator('a[href="/en-GB/setup/native?platform=android"]').click();
+  await page.locator('[data-core-continue-native]').click();
+  await page.waitForURL('**/en-GB/setup/dns?platform=android');
+  await page.locator('[data-core-continue-dns]').click();
+  await page.waitForURL('**/en-GB/verify?platform=android');
+  await page.locator('[data-core-view-protection]').click();
+  await page.waitForURL('**/en-GB/protection?platform=android');
+
+  const state = await coreState(page);
+  assert.ok(state);
+  assert.equal(state.phase, 'protection');
+  assert.equal(state.loginRequired, false);
+  assert.equal('email' in state || 'accountId' in state || 'history' in state || 'query' in state || 'domain' in state, false);
+  assert.deepEqual(mutations, [], `accountless core must not create server persistence: ${mutations.join(' | ')}`);
+
+  const cards = page.locator('[data-protection-state]');
+  assert.equal(await cards.count(), 3);
+  assert.equal(await cards.nth(0).getAttribute('data-protection-state'), 'configured/parent-confirmed');
+  assert.equal(await cards.nth(1).getAttribute('data-protection-state'), 'uncertain/error');
+  assert.equal(await cards.nth(2).getAttribute('data-protection-state'), 'not-covered');
+  assert.equal(await page.locator('[data-protection-state="protected/verified"]').count(), 0, 'no qualifying E1 exists in TSK-0358');
+  assert.match(await page.textContent('body'), /Protection has not yet been technically verified\./);
+  assert.match(await page.textContent('body'), /Protection status could not be verified/);
+
+  await page.locator('[data-core-troubleshoot]').click();
+  await page.waitForURL('**/en-GB/troubleshoot?platform=android');
+  await page.locator('[data-core-recover]').click();
+  await page.waitForURL('**/en-GB/recover?platform=android');
+  await page.locator('[data-core-remove]').click();
+  await page.waitForURL('**/en-GB/removed?platform=android');
+  assert.equal((await coreState(page)).phase, 'removed');
+  await context.close();
+});
+
+await record('completion is accountless and optional account capability stays explicitly deferred', async () => {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.goto(`${base}/en-GB/setup/route`, { waitUntil: 'networkidle' });
+  await page.locator('a[href="/en-GB/setup/native?platform=iphone"]').click();
+  await page.locator('[data-core-continue-native]').click();
+  await page.locator('[data-core-continue-dns]').click();
+  await page.locator('[data-core-view-protection]').click();
+  await page.locator('[data-core-complete]').click();
+  await page.waitForURL('**/en-GB/complete?platform=iphone');
+  assert.equal((await coreState(page)).phase, 'complete');
+  const account = page.locator('[data-account-capability]');
+  assert.equal(await account.getAttribute('data-account-capability'), 'deferred');
+  assert.equal(await page.locator('a[href*="dashboard"],a[href*="login"],a[href*="signin"]').count(), 0);
+  assert.match(await page.textContent('body'), /Setup complete/);
+  await context.close();
+});
+
+await record('lost or expired core state fails closed to accountless route instead of fabricating progress', async () => {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.goto(`${base}/en-GB/protection?platform=android`, { waitUntil: 'domcontentloaded' });
+  await page.waitForURL('**/en-GB/setup/route');
+  assert.equal(await coreState(page), null);
+
+  await page.evaluate((key) => {
+    sessionStorage.setItem(key, JSON.stringify({
+      schemaVersion: 1,
+      scope: 'ab'.repeat(16),
+      createdAt: 1,
+      hardExpiresAt: 2,
+      locale: 'en-GB',
+      phase: 'protection',
+      loginRequired: false,
+      deviceFamily: 'android',
+    }));
+  }, coreKey);
+  await page.goto(`${base}/en-GB/protection?platform=android`, { waitUntil: 'domcontentloaded' });
+  await page.waitForURL('**/en-GB/setup/route');
+  assert.equal(await coreState(page), null, 'expired core state must be deleted');
+  await context.close();
+});
+
+await browser.close();
+if (failures.length) {
+  console.error(`TSK0358_BROWSER_FAILURES=${failures.length}`);
+  for (const failure of failures) console.error(`---\n${failure}`);
+  process.exit(1);
+}
+console.log('TSK0358_BROWSER_ACCEPTANCE=PASS');
