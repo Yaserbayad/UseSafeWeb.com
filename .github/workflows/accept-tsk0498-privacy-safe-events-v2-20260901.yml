@@ -31,7 +31,6 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-
           updates = {
               'en-GB.json': {
                   'old_summary': '"summary": "Choose the phone you are setting up. The current baseline uses URL routing only and stores no journey state."',
@@ -52,7 +51,6 @@ jobs:
                   'new_tail': '"primaryLabel": "اختر الهاتف",\n    "resumeLabel": "متابعة الإعداد",\n    "resetLabel": "البدء من جديد",\n    "resumeNote": "توجد عملية إعداد غير مكتملة في علامة تبويب المتصفح هذه. لا تُحفظ هنا إلا حالة إعداد محدودة؛ والبدء من جديد يحذفها فورًا."\n  }',
               },
           }
-
           root = Path('website/src/content')
           for name, values in updates.items():
               path = root / name
@@ -67,14 +65,13 @@ jobs:
                   text = text.replace(values['old_tail'], values['new_tail'])
               path.write_text(text, encoding='utf-8')
           PY
-      - name: Verify authority and repository structure
+      - name: Verify authority
         shell: bash
         run: |
           set -euo pipefail
           test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
           test "$(git hash-object website/package-lock.json)" = '14f9a62607489f965b96d98cdf0d825a363cd8bc'
           python3 Plans/Master/Tools/validate_master_plan.py
-          node website/tests/contract/repo-structure.mjs
           git diff --check
       - name: Locked install and contract tests
         shell: bash
