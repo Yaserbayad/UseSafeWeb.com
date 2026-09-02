@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T05:16:23Z
+**Updated:** 2026-09-02T05:26:20Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2584,3 +2584,26 @@ Recompute current eligibility from canonical WBS/graph, current runtime evidence
 ### Queue status after corrected TSK-0308 reacceptance
 
 Recompute the executable frontier from canonical WBS/graph, current runtime evidence, artifact-specific current-validity checks, gates and Action Authority. Preserve unrelated current/historical PASS only where current evidence remains valid.
+
+## TSK-0297 current accepted stable state — 2026-09-02 — POST-CR-0008 CURRENT BRAND-GUIDELINES REVALIDATION
+
+`TSK-0297 — Publish concise brand guidelines, source/editable asset library, versioning, ownership, and usage rules`: **PASS** under current `ACC-0297 / VER-0297 / EVD-0297`, corrected current predecessor TSK-0300, current TSK-0299/TSK-0320 semantic authority and preserved owner-approved SafeWeb identity/system sources.
+
+- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L4 / MEDIUM / A3 / `AUTO_ALLOWED`; hard dependency exactly `TSK-0300`.
+- Current guideline `brand/guidelines/TSK-0297/README.md`, version `2.0.0`, blob `e79121fd95932a6f4b2550f5f05b84c6e9c7aeac`, update commit `113f9de234f14f85b8d14a29e929e32bc565989d`.
+- Current manifest `brand/guidelines/TSK-0297/ASSET_MANIFEST.json`, blob `c31eb9674eee9cf330b1af4764088f51e9c398fe`, update commit `280f68a13e3d965887ae59edba66718c3d4c1c7f`.
+- Current revalidation artifact `TSK_0297_POST_CR0008_CURRENT_BRAND_GUIDELINES_REVALIDATION_2026-09-02.md`, blob `7e472d3373fa226584dcea358ed3215f40aa2e7b`, publication commit `2729255c22ddf8860ec6af43e59025eca47676e4`.
+- Durable evidence `TSK_0297_POST_CR0008_CURRENT_BRAND_GUIDELINES_EVIDENCE_2026-09-02.md`, blob `0415b7c6719712de33822e991dd0882096c0a030`, publication commit `32ed3d27242dd46f2ea1323969f5231a286dd17a`.
+- Corrected TSK-0300 predecessor evidence blob `a3e39896b67098ced321cb9e4b82c65c440806e4` and independent run/job `33592292946 / 100128578252` are bound directly.
+- Independent read-only VER-0297: verifier blob `ccdb8e65177777500cc2bbe80a68ebff0b3a6a49`, workflow blob `cd5bfb7b6bbb96b18a2ccdfc677787df056f11e2`, run/job `33594493974 / 100135082837`, conclusion **SUCCESS**.
+- All 18 currently selectable manifest authority/identity/implementation/template paths were recomputed from current `main` and matched exactly; current public/product/status sources are bound to their dual-mode/copy-corrected blobs.
+- Current state copy is `Protection verified`, `Setup confirmed`, `Action needed`, `Not covered`, `Protection status could not be verified`, `Removed`, with the S2 limitation `Protection has not yet been technically verified.`
+- v1 package/source bindings are retained only as superseded provenance; actual asset deprecation remains traceable through the explicit `ACTIVE` / `DEPRECATED` contract and required replacement/reason/date/authorizing evidence.
+- Identity masters, shared TSK-0300 tokens/components, help/partner/social sources, palette and typography stack remain unchanged. No font binary is packaged or selectable.
+- Accountless core remains complete; optional account continuity is non-coercive; account/session/device ownership is not protection evidence; no automatic anonymous-to-account linkage or browsing/query/activity history is introduced.
+- **ACC-0297 = PASS. VER-0297 = PASS. EVD-0297 = SATISFIED.**
+- **Non-inference:** no identity redesign, implementation/build, legal/privacy completion, real-user/native-speaker validation, publication/payment/market/production/launch action, lifecycle-gate PASS or successor PASS is inferred.
+
+### Queue status after current TSK-0297 reacceptance
+
+Recompute the next eligible frontier from canonical WBS/graph, lifecycle/gates, current runtime evidence, current artifact validity and Action Authority. Preserve valid non-uniform historical PASS records unless current evidence actually invalidates them.
