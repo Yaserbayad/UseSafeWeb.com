@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T04:52:02Z
+**Updated:** 2026-09-02T05:03:34Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2541,3 +2541,25 @@ Recompute the executable frontier from canonical WBS/graph, current runtime evid
 ### Queue status after corrected TSK-0300 reacceptance
 
 Refresh direct successor evidence where the corrected predecessor is material, including TSK-0310, before recomputing the executable frontier. Preserve all unrelated current PASS states unless current evidence independently contradicts them.
+
+## TSK-0310 current accepted stable state — 2026-09-02 — POST-TSK-0300 PROTECTION-COPY CORRECTION REVALIDATION
+
+`TSK-0310 — Build the representative mobile-first public-to-setup prototype before production implementation`: **PASS** under current `ACC-0310 / VER-0310 / EVD-0310`, all four current direct predecessors, corrected TSK-0300 protection-state semantics, refreshed TSK-0317 proof, current TSK-0318 scope and current TSK-0320 state/copy authority.
+
+- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L4 / HIGH / A3 / `AUTO_ALLOWED`; hard dependencies exactly `TSK-0318; TSK-0317; TSK-0320; TSK-0300`.
+- Current revalidation artifact `TSK_0310_POST_TSK0300_COPY_CORRECTION_CURRENT_REVALIDATION_2026-09-02.md`, blob `24c8e3cdf059fc62a3df1fe8119b959246c216f6`, publication commit `4c7da17cc9077b17eef025081e55012cad0bff20`.
+- Durable evidence `TSK_0310_POST_TSK0300_COPY_CORRECTION_CURRENT_REVALIDATION_EVIDENCE_2026-09-02.md`, blob `34d119334e07a5d6ffe63fb893bb741d3aa0c775`, publication commit `684d7b1b6f435b4f5865f61fb6d52f7b9e1e87e3`.
+- Corrected TSK-0300 predecessor is current PASS at runtime commit `93fea25db8c1b6fd70a8fd45e0ff531cf33ea2e1`; evidence blob `a3e39896b67098ced321cb9e4b82c65c440806e4` and independent run/job `33592292946 / 100128578252` are bound directly.
+- Refreshed TSK-0317 predecessor evidence blob `cd001f3ce391634e38ef0c89934cb34f4f347401`; final run/job `33576615158 / 100081874297` SUCCESS.
+- Corrected prototype source: model `cb35f7dbc46ba5d19da18fb09429b59e097e0492`, app `a235993d5abcaac550b6c01978792092012afb00`, browser verifier `5f68400a8bfb063853304e937f744e1ee71032e7`; unchanged index/CSS/shared tokens/components/SafeWeb identity remain preserved.
+- Current six-state primary semantics are represented by `protected/verified`, `configured/parent-confirmed`, `action-needed`, `not-covered`, `uncertain/error`, `removed`, with current TSK-0320 copy including `Protection verified`, `Setup confirmed`, and `Protection status could not be verified`.
+- Independent read-only VER-0310 workflow blob `41e96e2df5c94cf8c7a2a75e6c69ab13f59400c7`; final run/job `33592936750 / 100130472136`: **SUCCESS**.
+- Fresh rendered result: `BROWSER_ACCEPTANCE_CHECKS=221`; `BROWSER_ACCEPTANCE=PASS`; `TSK0310_REFRESH_RENDERED_ACCEPTANCE=PASS`; source-unchanged proof PASS.
+- The first refreshed run `33592798757 / 100130059983` is retained as diagnostic verifier-format failure only: it stopped before browser execution because it searched for `667/667` instead of the exact TSK-0321 markers `A11Y_CHECKS=667`, `A11Y_FAILURES=0`, `A11Y_ACCEPTANCE_FAILURES=0`; no product assertion failed and no product/runtime mutation occurred.
+- Preserved boundary: TSK-0310 remains the representative accountless public-to-setup core prototype. Current TSK-0318 owns the separate optional-account/dashboard IA branch; no login/dashboard implementation is inferred here.
+- **ACC-0310 = PASS. VER-0310 = PASS. EVD-0310 = SATISFIED.**
+- **Non-inference:** no authentication/provider implementation, persistence schema, integrated production build, legal/privacy completion, behavioral/user validation, participant/publication/payment/market/production/launch action, lifecycle-gate PASS or successor PASS is inferred.
+
+### Queue status after refreshed TSK-0310 reacceptance
+
+Recompute current eligibility from canonical WBS/graph, current runtime evidence, gates and Action Authority. Preserve valid non-uniform historical PASS records unless current evidence actually invalidates them; do not infer a successor solely from TSK-0310 completion.
