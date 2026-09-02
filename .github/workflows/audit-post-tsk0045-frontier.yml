@@ -1,4 +1,4 @@
-name: Audit post-refreshed-TSK-0310 current L4 frontier
+name: Audit post-corrected-TSK-0308 current L4 frontier
 
 on:
   pull_request:
@@ -27,8 +27,8 @@ jobs:
           from datetime import date
           from pathlib import Path
           W='Plans/Master/WBS/master-wbs.csv'; G='Plans/Master/RELATIONSHIP_INDEX.yaml'; S='CURRENT_STATE.md'
-          E={W:'b27a0c5df2f5636d8ed71051e9e26a68959a2616',G:'c108d2c162bcea2ee4cc01def46d0487a9501032',S:'960f8449943552a6c7a8b747b0d9b072f8eaa507'}
-          MATERIAL_INVALID={'TSK-0308'}
+          E={W:'b27a0c5df2f5636d8ed71051e9e26a68959a2616',G:'c108d2c162bcea2ee4cc01def46d0487a9501032',S:'f12f87cec9993f811d25d5f2f34b9996c4497c67'}
+          MATERIAL_INVALID=set()
           def blob(p): return subprocess.check_output(['git','hash-object',p],text=True).strip()
           for p,h in E.items(): assert blob(p)==h,(p,blob(p),h)
           with open(W,newline='',encoding='utf-8-sig') as f: rows=list(csv.DictReader(f))
@@ -85,5 +85,5 @@ jobs:
               if t in by:
                   r=by[t]; missing=[d for d in deps[t] if d not in effective]
                   print('ROW|{}|material_invalid={}|effective={}|hist={}|current={}|static={}|deps={}|missing={}|acceptance={}|title={}'.format(t,t in MATERIAL_INVALID,t in effective,t in hist,t in current,t in static,r.get('Dependencies',''),';'.join(missing) or 'NONE',(r.get('Acceptance_Criteria') or '').replace('|','/'),(r.get('Title') or '').replace('|','/')))
-          print('POST_REFRESHED_TSK0310_FRONTIER_AUDIT=PASS')
+          print('POST_CORRECTED_TSK0308_FRONTIER_AUDIT=PASS')
           PY
