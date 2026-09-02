@@ -1,118 +1,13 @@
-name: Audit TSK-0310 current revalidation
+name: Retired TSK-0310 current-contract audit
 
 on:
-  pull_request:
-    branches: [main]
-    paths: ['.github/diagnostics/tsk0310-current-audit-trigger.txt']
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  audit:
+  retired:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out current main authority
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Audit exact current TSK-0310 contract and immutable inputs
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          import csv, re, subprocess
-          from pathlib import Path
-
-          expected={
-            'Plans/Master/WBS/master-wbs.csv':'b27a0c5df2f5636d8ed71051e9e26a68959a2616',
-            'Plans/Master/RELATIONSHIP_INDEX.yaml':'c108d2c162bcea2ee4cc01def46d0487a9501032',
-            'CURRENT_STATE.md':'2d2e3c9de8f247bcff4f54388002917127c55c24',
-            'TSK_0310_RENDERED_BROWSER_ACCEPTANCE_EVIDENCE_2026-08-29.md':'02b34756862a62091908e60d32b490059a84a67c',
-            'prototype/TSK-0310/index.html':'5d80dfdefb52042bc34468723354fefd325285e4',
-            'prototype/TSK-0310/model.mjs':'01343273fd09c3c12d26f0c0eb1ae9a2fce10c91',
-            'prototype/TSK-0310/app.mjs':'a4a0aff8848f8541e2581e333efbf48767c9f0ff',
-            'prototype/TSK-0310/prototype.css':'004b0b34c0e5d94e3eacbeae25710284ef9a7886',
-            'brand/system/TSK-0300/tokens.css':'cd7d9a7cd5109e1ff0baa76532495dfd7a27a70f',
-            'brand/system/TSK-0300/components.css':'831e92a74b6dda04252d93242cb33bd491a02381',
-            'TSK_0300_POST_CR0008_CURRENT_REVALIDATION_EVIDENCE_2026-09-02.md':'efaf7c80c1723208569b13ba4e725b2e7cad8d1a',
-            'TSK_0317_POST_CR0008_CURRENT_REVALIDATION_EVIDENCE_2026-09-02.md':'cd001f3ce391634e38ef0c89934cb34f4f347401',
-            'TSK_0318_POST_CR0008_DUAL_MODE_PUBLIC_PRODUCT_SETUP_IA_2026-09-01.md':'975e2e7a8e85e9408e0bbbc2be226f3fdd012db3',
-            'TSK_0320_PROTECTION_STATE_MODEL_AND_COPY_RULES_2026-08-28.md':'1146f7622f434590dde1253d11f14fb6a87e19de',
-            'TSK_0320_PROTECTION_STATE_MODEL_AND_COPY_RULES_EVIDENCE_2026-08-28.md':'93e32071ce111fddda7df826c3106f1eca3dfc07',
-            'TSK_0321_ACCESSIBILITY_REVIEW_ACCEPTANCE_EVIDENCE_2026-08-29.md':'7ab9dd2467ca8ad755ef308c4b2ecade71023be8',
-            'TSK_0408_CURRENT_ACCEPTANCE_EVIDENCE_2026-09-01.md':'0bbf1d934ecd4a7693baf7de56362391e46dcf55',
-          }
-          def blob(p): return subprocess.check_output(['git','hash-object',p],text=True).strip()
-          for p,sha in expected.items():
-              assert Path(p).exists(), f'missing {p}'
-              actual=blob(p)
-              assert actual==sha, f'hash drift {p}: {actual} != {sha}'
-          print('TSK0310_IMMUTABLE_INPUT_HASHES=PASS')
-
-          with open('Plans/Master/WBS/master-wbs.csv',newline='',encoding='utf-8-sig') as f:
-              rows=list(csv.DictReader(f))
-          byid={r['Task_ID']:r for r in rows if r.get('Task_ID')}
-          r=byid['TSK-0310']
-          fields=['Task_ID','Lifecycle_Stage','Title','Plan_Status','Execution_State','Priority','Critical_Path','Dependencies','Dependency_Type','Trigger','Preconditions','Inputs','Output/Artifact','Acceptance_ID','Acceptance_Criteria','Verification_ID','Verification_Method','Evidence_ID','Evidence_Required','Primary_Owner','AI_Capability_A0_A4','Action_Authority','Execution_Instructions','Required_Tools_or_Access','Idempotency','Reversibility','Retry_Recovery','Escalation_Condition','Risk_Reference','Interface_Reference','Requirement_Reference','Source_Reference','Notes']
-          for k in fields: print('ROW|'+k+'|'+(r.get(k) or ''))
-          assert r['Lifecycle_Stage']=='L4' and r['Priority']=='HIGH'
-          assert r['AI_Capability_A0_A4']=='A3' and r['Action_Authority']=='AUTO_ALLOWED'
-          deps=[x.strip() for x in r['Dependencies'].split(';') if x.strip()]
-          assert set(deps)=={'TSK-0318','TSK-0317','TSK-0320','TSK-0300'} and len(deps)==4
-          assert (r['Acceptance_ID'],r['Verification_ID'],r['Evidence_ID'])==('ACC-0310','VER-0310','EVD-0310')
-          acc=r['Acceptance_Criteria'].lower()
-          for concept in ['discovery','routing','native safeguard','dns setup','verification','external service','protection map','troubleshooting','recovery','removal','limitations']:
-              assert concept in acc, concept
-          print('TSK0310_CURRENT_WBS_CONTRACT=PASS')
-
-          rt=Path('CURRENT_STATE.md').read_text(encoding='utf-8')
-          def task_sections(tid):
-              pat=rf'^(##|###) {re.escape(tid)}\b.*?(?=^(?:##|###) |\Z)'
-              return [m.group(0) for m in re.finditer(pat,rt,re.MULTILINE|re.DOTALL)]
-          def pass_sections(tid): return [s for s in task_sections(tid) if '**PASS' in s]
-          for tid in deps:
-              assert pass_sections(tid), f'no durable PASS section for {tid}'
-              print('CURRENT_PREDECESSOR_PASS|'+tid+'|PASS')
-
-          s318='\n'.join(pass_sections('TSK-0318')).lower()
-          assert 'tsk-0310' in s318 and 'own current acc' in s318 and 'optional account/dashboard branch' in s318
-          print('TSK0318_TSK0310_SCOPE_PRESERVATION=PASS')
-
-          s321='\n'.join(pass_sections('TSK-0321'))
-          assert '004b0b34c0e5d94e3eacbeae25710284ef9a7886' in s321
-          assert '218/218' in s321 and 'TSK0310_RENDERED_REACCEPTANCE=PASS' in s321
-          assert '667/667' in s321 and 'TSK0321_AUTHORITATIVE_ACCESSIBILITY_REVIEW=PASS' in s321
-          print('TSK0310_CURRENT_ACCESSIBILITY_REMEDIATION=PASS')
-
-          hist=Path('TSK_0310_RENDERED_BROWSER_ACCEPTANCE_EVIDENCE_2026-08-29.md').read_text(encoding='utf-8')
-          for concept in ['BROWSER_ACCEPTANCE_CHECKS=218','BROWSER_ACCEPTANCE=PASS','RENDERED_ACCEPTANCE=PASS','Functional — PASS','Negative — PASS','Configuration — PASS','Security / privacy — PASS','Rollback / recovery — PASS','ACC-0310 = PASS','VER-0310 = PASS','EVD-0310 = SATISFIED']:
-              assert concept in hist, concept
-          print('TSK0310_HISTORICAL_RENDERED_EVIDENCE=PASS')
-
-          idx=Path('prototype/TSK-0310/index.html').read_text(encoding='utf-8')
-          assert '../../brand/system/TSK-0300/tokens.css' in idx
-          assert '../../brand/system/TSK-0300/components.css' in idx
-          assert '../../brand/identity/TSK-0301/safeweb-wordmark-primary.svg' in idx
-          assert '<title>SafeWeb — Internal mobile-first prototype</title>' in idx
-          print('TSK0310_CURRENT_SAFEWEB_SHARED_SYSTEM_BINDING=PASS')
-
-          e300=Path('TSK_0300_POST_CR0008_CURRENT_REVALIDATION_EVIDENCE_2026-09-02.md').read_text(encoding='utf-8').lower()
-          assert 'tokens.css' in e300 and 'components.css' in e300 and 'pass' in e300
-          e317=Path('TSK_0317_POST_CR0008_CURRENT_REVALIDATION_EVIDENCE_2026-09-02.md').read_text(encoding='utf-8').lower()
-          for concept in ['android','iphone','dns.usesafeweb.com','configuration evidence','accountless','doh','profile']:
-              assert concept in e317, concept
-          e408=Path('TSK_0408_CURRENT_ACCEPTANCE_EVIDENCE_2026-09-01.md').read_text(encoding='utf-8').lower()
-          for concept in ['dns.usesafeweb.com','android','dot','apple','doh','server-url','verification','removal','fallback']:
-              assert concept in e408, concept
-          print('TSK0310_NEW_PREDECESSOR_EVIDENCE_AVAILABLE=PASS')
-          print('TSK0310_ENDPOINT_AUTHORITY_BINDING=PASS')
-
-          print('WBS_BLOB='+blob('Plans/Master/WBS/master-wbs.csv'))
-          print('GRAPH_BLOB='+blob('Plans/Master/RELATIONSHIP_INDEX.yaml'))
-          print('RUNTIME_BLOB='+blob('CURRENT_STATE.md'))
-          print('CURRENT_CSS_BLOB='+blob('prototype/TSK-0310/prototype.css'))
-          print('TSK0310_CURRENT_CONTRACT_AUDIT=PASS')
-          PY
+      - run: echo 'Retired after durable TSK-0310 current revalidation acceptance.'
