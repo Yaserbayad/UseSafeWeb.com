@@ -1,4 +1,4 @@
-name: Temporary - TSK-0455 deployment recovery TDD
+name: Temporary - TSK-0455 exact-head verification
 
 on:
   push:
@@ -11,172 +11,19 @@ on:
       - '.github/workflows/accept-tsk0498-privacy-safe-events-v2-20260901.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  tsk0455-contract:
+  tsk0455-exact-head:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
-        with:
-          ref: feature/tsk-0455-ubuntu-deploy-recover-20260902
-          fetch-depth: 0
-      - name: Apply bounded corrections under proven RED contracts
+      - name: Verify exact persisted TSK-0455 source and authority
         shell: bash
         run: |
           set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path('infrastructure/adguard-server/deploy_or_recover.sh')
-          t=p.read_text(encoding='utf-8')
-
-          old_firewall='''check_existing_firewall_conflicts() {
-            local line
-            ufw status 2>/dev/null | while IFS= read -r line; do
-              [[ "$line" == *ALLOW* ]] || continue
-              if [[ "$line" == *'22/tcp'* || "$line" == *'80/tcp'* || "$line" == *'443/tcp'* || "$line" == *'853/tcp'* ]]; then continue; fi
-              printf 'unexpected UFW allow rule: %s\\n' "$line" >&2
-              exit 51
-            done || fail "$EXIT_UNCERTAIN" 'unexpected pre-existing firewall allow rule; refusing destructive reset'
-          }
-
-          configure_firewall() {
-            check_existing_firewall_conflicts
-            ufw default deny incoming >/dev/null
-            ufw default allow outgoing >/dev/null
-            ufw allow from "${CFG[ADMIN_SSH_CIDR]}" to any port 22 proto tcp comment 'UseSafeWeb admin SSH' >/dev/null
-            ufw allow 80/tcp comment 'UseSafeWeb ACME HTTP-01' >/dev/null
-            ufw allow 443/tcp comment 'UseSafeWeb DoH' >/dev/null
-            ufw allow 853/tcp comment 'UseSafeWeb DoT' >/dev/null
-            ufw --force enable >/dev/null
-          }
-          '''
-          new_firewall='''ufw_added_rule_bases() {
-            local added line base
-            added="$(ufw show added 2>/dev/null)" || return 1
-            while IFS= read -r line; do
-              [[ "$line" == ufw\\ * ]] || continue
-              base="${line%% comment *}"
-              printf '%s\\n' "$base"
-            done <<<"$added"
-          }
-
-          ufw_rule_count() {
-            local expected="$1" added line count=0
-            added="$(ufw_added_rule_bases)" || return 1
-            while IFS= read -r line; do
-              [[ "$line" == "$expected" ]] && count=$((count + 1))
-            done <<<"$added"
-            printf '%s\\n' "$count"
-          }
-
-          check_existing_firewall_conflicts() {
-            local expected_ssh added line expected count
-            expected_ssh="ufw allow from ${CFG[ADMIN_SSH_CIDR]} to any port 22 proto tcp"
-            added="$(ufw_added_rule_bases)" || fail "$EXIT_UNCERTAIN" 'cannot inspect existing UFW rules safely'
-            while IFS= read -r line; do
-              [[ -z "$line" ]] && continue
-              case "$line" in
-                "$expected_ssh"|'ufw allow 80/tcp'|'ufw allow 443/tcp'|'ufw allow 853/tcp') ;;
-                *) fail "$EXIT_UNCERTAIN" "unexpected pre-existing UFW rule; refusing destructive reset: $line" ;;
-              esac
-            done <<<"$added"
-            for expected in "$expected_ssh" 'ufw allow 80/tcp' 'ufw allow 443/tcp' 'ufw allow 853/tcp'; do
-              count="$(ufw_rule_count "$expected")" || fail "$EXIT_UNCERTAIN" 'cannot count existing UFW rules safely'
-              (( count <= 1 )) || fail "$EXIT_UNCERTAIN" "duplicate UFW rule requires manual reconciliation: $expected"
-            done
-          }
-
-          verify_firewall_state() {
-            [[ "${CFG[ENABLE_UFW]}" == 'true' ]] || return 0
-            local verbose expected_ssh expected count
-            verbose="$(ufw status verbose 2>/dev/null)" || return 1
-            grep -Fxq 'Status: active' <<<"$verbose" || return 1
-            grep -Eq '^Default: deny \\(incoming\\), allow \\(outgoing\\),' <<<"$verbose" || return 1
-            ( check_existing_firewall_conflicts ) >/dev/null 2>&1 || return 1
-            expected_ssh="ufw allow from ${CFG[ADMIN_SSH_CIDR]} to any port 22 proto tcp"
-            for expected in "$expected_ssh" 'ufw allow 80/tcp' 'ufw allow 443/tcp' 'ufw allow 853/tcp'; do
-              count="$(ufw_rule_count "$expected")" || return 1
-              [[ "$count" == '1' ]] || return 1
-            done
-          }
-
-          configure_firewall() {
-            local verbose expected_ssh count
-            if verify_firewall_state; then
-              log 'UFW firewall already matches exact expected policy; no change'
-              return 0
-            fi
-            check_existing_firewall_conflicts
-            verbose="$(ufw status verbose 2>/dev/null || true)"
-            if ! grep -Eq '^Default: deny \\(incoming\\),' <<<"$verbose"; then ufw default deny incoming >/dev/null; fi
-            if ! grep -Eq '^Default: .*allow \\(outgoing\\),' <<<"$verbose"; then ufw default allow outgoing >/dev/null; fi
-            expected_ssh="ufw allow from ${CFG[ADMIN_SSH_CIDR]} to any port 22 proto tcp"
-            count="$(ufw_rule_count "$expected_ssh")" || fail "$EXIT_UNCERTAIN" 'cannot inspect SSH UFW rule safely'
-            if [[ "$count" == '0' ]]; then ufw allow from "${CFG[ADMIN_SSH_CIDR]}" to any port 22 proto tcp comment 'UseSafeWeb admin SSH' >/dev/null; fi
-            count="$(ufw_rule_count 'ufw allow 80/tcp')" || fail "$EXIT_UNCERTAIN" 'cannot inspect ACME UFW rule safely'
-            if [[ "$count" == '0' ]]; then ufw allow 80/tcp comment 'UseSafeWeb ACME HTTP-01' >/dev/null; fi
-            count="$(ufw_rule_count 'ufw allow 443/tcp')" || fail "$EXIT_UNCERTAIN" 'cannot inspect DoH UFW rule safely'
-            if [[ "$count" == '0' ]]; then ufw allow 443/tcp comment 'UseSafeWeb DoH' >/dev/null; fi
-            count="$(ufw_rule_count 'ufw allow 853/tcp')" || fail "$EXIT_UNCERTAIN" 'cannot inspect DoT UFW rule safely'
-            if [[ "$count" == '0' ]]; then ufw allow 853/tcp comment 'UseSafeWeb DoT' >/dev/null; fi
-            grep -Fxq 'Status: active' <<<"$verbose" || ufw --force enable >/dev/null
-            verify_firewall_state || fail "$EXIT_VERIFY" 'UFW firewall did not reconcile to exact expected policy'
-          }
-          '''
-          if old_firewall in t:
-              t=t.replace(old_firewall,new_firewall)
-          elif new_firewall not in t:
-              raise SystemExit('firewall implementation shape changed unexpectedly')
-
-          old_verify='''  [[ -f "$PROFILE_DEST_FIXED" ]] || fail "$EXIT_VERIFY" 'approved profile artifact missing'
-            [[ -d "$BACKUP_DIR_FIXED" && "$(stat -c '%a' "$BACKUP_DIR_FIXED")" == '700' ]] || fail "$EXIT_VERIFY" 'backup directory is not root-only 0700'
-            if [[ "${CFG[ENABLE_UFW]}" == 'true' ]]; then ufw status | grep -q '^Status: active' || fail "$EXIT_VERIFY" 'UFW is not active'; fi
-            log 'Verification PASS: exact version/config/privacy/listener/TLS/profile/firewall baseline observed'
-          '''
-          new_verify='''  [[ -f "$PROFILE_DEST_FIXED" && ! -L "$PROFILE_DEST_FIXED" ]] || fail "$EXIT_VERIFY" 'approved profile artifact missing or symlinked'
-            cmp -s "$PROFILE_SOURCE" "$PROFILE_DEST_FIXED" || fail "$EXIT_VERIFY" 'approved profile artifact content mismatch'
-            [[ -d "$BACKUP_DIR_FIXED" && "$(stat -c '%a' "$BACKUP_DIR_FIXED")" == '700' ]] || fail "$EXIT_VERIFY" 'backup directory is not root-only 0700'
-            systemctl is-enabled --quiet usesafeweb-dns-verify.timer && systemctl is-active --quiet usesafeweb-dns-verify.timer || fail "$EXIT_VERIFY" 'verification timer not enabled/active'
-            verify_firewall_state || fail "$EXIT_VERIFY" 'UFW firewall state does not match exact expected policy'
-            log 'Verification PASS: exact version/config/privacy/listener/TLS/profile/firewall baseline observed'
-          '''
-          if old_verify in t:
-              t=t.replace(old_verify,new_verify)
-          elif new_verify not in t:
-              raise SystemExit('verify implementation shape changed unexpectedly')
-
-          old_apply='''apply_state() {
-            APPLY_ACTIVE=1; snapshot_for_rollback; trap on_error ERR
-          '''
-          new_apply='''apply_state() {
-            if ( verify_state >/dev/null 2>&1 ); then
-              log 'Apply no-op: current target already satisfies exact accepted state'
-              printf 'TSK0455_APPLY_NOOP=PASS\\n'
-              return 0
-            fi
-            APPLY_ACTIVE=1; snapshot_for_rollback; trap on_error ERR
-          '''
-          if old_apply in t:
-              t=t.replace(old_apply,new_apply)
-          elif new_apply not in t:
-              raise SystemExit('apply implementation shape changed unexpectedly')
-          p.write_text(t,encoding='utf-8')
-
-          tp=Path('infrastructure/adguard-server/tests/test-deploy-or-recover-behavior.sh')
-          tt=tp.read_text(encoding='utf-8')
-          old="""# Firewall reconciliation must not append rules or rewrite defaults when exact state is already present.\nUFW_SCENARIO='exact'\n"""
-          new="""# Firewall reconciliation must not append rules or rewrite defaults when exact state is already present.\nCFG[ENABLE_UFW]='true'\nCFG[ADMIN_SSH_CIDR]='192.0.2.10/32'\nUFW_SCENARIO='exact'\n"""
-          if old in tt:
-              tt=tt.replace(old,new)
-          elif new not in tt:
-              raise SystemExit('behavior firewall fixture shape changed unexpectedly')
-          tp.write_text(tt,encoding='utf-8')
-          PY
-      - name: Verify current authority and static contract
-        shell: bash
-        run: |
-          set -euo pipefail
+          test "$(git hash-object infrastructure/adguard-server/deploy_or_recover.sh)" = '37f0b092b559db2d516b52718e814e08d1f96545'
+          test "$(git hash-object infrastructure/adguard-server/tests/test-deploy-or-recover-behavior.sh)" = 'e74cbd49c9cb25fb2a58bd99d23da4b803a29683'
           test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
           test "$(git hash-object infrastructure/adguard-server/TSK-0445-DEPLOYMENT-RECOVERY-SCRIPT-DESIGN.md)" = '5d2cc5730f313813e2ffb4ce8741f5e07d7af27c'
           test "$(git hash-object infrastructure/adguard-server/TSK-0446-RECOVERY-SCOPE-CONTRACT.md)" = '18d998e2406e801c7ac08f4daa2e3b763ea9b523'
@@ -192,25 +39,11 @@ jobs:
           shellcheck -S error infrastructure/adguard-server/deploy_or_recover.sh infrastructure/adguard-server/tests/test-deploy-or-recover-contract.sh infrastructure/adguard-server/tests/test-deploy-or-recover-behavior.sh
           ! grep -R -E -- '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----|AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9_]{30,}' infrastructure/adguard-server/deploy_or_recover.sh infrastructure/adguard-server/tests
           git diff --check
-      - name: Run safe negative and parser behavior tests
+      - name: Run persisted safe negative and idempotency behavior tests
         shell: bash
         run: |
           set -euo pipefail
           sudo bash infrastructure/adguard-server/tests/test-deploy-or-recover-behavior.sh
           git diff --check
-      - name: Persist GREEN corrections only after tests pass
-        shell: bash
-        run: |
-          set -euo pipefail
-          changed="$(git status --porcelain | sed 's/^...//' | sort)"
-          expected=$'infrastructure/adguard-server/deploy_or_recover.sh\ninfrastructure/adguard-server/tests/test-deploy-or-recover-behavior.sh'
-          if [[ -z "$changed" ]]; then
-            echo 'TSK0455_NO_PENDING_CORRECTION=PASS'
-            exit 0
-          fi
-          test "$changed" = "$expected"
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add infrastructure/adguard-server/deploy_or_recover.sh infrastructure/adguard-server/tests/test-deploy-or-recover-behavior.sh
-          git commit -m 'fix: harden TSK-0455 firewall and apply idempotency'
-          git push origin HEAD:feature/tsk-0455-ubuntu-deploy-recover-20260902
+          test -z "$(git status --porcelain)"
+          printf 'TSK0455_EXACT_HEAD_SOURCE_ACCEPTANCE=PASS\n'
