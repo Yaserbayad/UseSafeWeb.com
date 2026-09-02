@@ -1,0 +1,180 @@
+name: Verify TSK-0317 current revalidation
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/diagnostics/tsk0317-verify-trigger.txt']
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out current main authority
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify current TSK-0317 acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv, hashlib, re, subprocess
+          from pathlib import Path
+
+          expected={
+            'wbs':('Plans/Master/WBS/master-wbs.csv','b27a0c5df2f5636d8ed71051e9e26a68959a2616'),
+            'graph':('Plans/Master/RELATIONSHIP_INDEX.yaml','c108d2c162bcea2ee4cc01def46d0487a9501032'),
+            'runtime':('CURRENT_STATE.md','feb4b34a1860befed1ef52e5ebebb9eda6fd568c'),
+            'artifact':('TSK_0317_POST_CR0008_CURRENT_PLATFORM_PATH_REVALIDATION_2026-09-02.md','37173d2f9cb970a7b5e6a83af90c8f868f9fbfa8'),
+            'historical':('TSK_0317_PLATFORM_INSTALL_VERIFICATION_REMOVAL_RECOVERY_DESIGN_CANDIDATE_2026-08-28.md','d44daf376d0e8ed1d5839cc3b6b2ac10d090828d'),
+            'e0316':('TSK_0316_POST_CR0008_DUAL_MODE_FRICTION_EVIDENCE_2026-09-02.md','aaaa68119c21d76bc29d04e54443c23ce808bebc'),
+            'e0299':('TSK_0299_POST_CR0008_CORRECTED_ACCEPTANCE_EVIDENCE_2026-09-01.md','9d48add06fee14aef76f82a876a61cc88ce59440'),
+            'e0408':('TSK_0408_CURRENT_ACCEPTANCE_EVIDENCE_2026-09-01.md','0bbf1d934ecd4a7693baf7de56362391e46dcf55'),
+            'm0409':('TSK_0409_SUPPORTED_DEVICE_NETWORK_VERIFICATION_BYPASS_MATRIX_2026-09-01.md','3aa832777276115912e4f3990b30cb541c458f4f'),
+          }
+          P={k:Path(v[0]) for k,v in expected.items()}
+          def blob(p): return subprocess.check_output(['git','hash-object',str(p)],text=True).strip()
+          for k,(name,sha) in expected.items():
+              assert P[k].exists(), f'missing {k}: {name}'
+              actual=blob(P[k]); assert actual==sha, f'{k} hash mismatch {actual} != {sha}'
+          print('TSK0317_IMMUTABLE_INPUT_HASHES=PASS')
+
+          with P['wbs'].open(newline='',encoding='utf-8-sig') as f: rows=list(csv.DictReader(f))
+          byid={r['Task_ID']:r for r in rows if r.get('Task_ID')}
+          r=byid['TSK-0317']
+          assert (r['Lifecycle_Stage'],r['Priority'],r['AI_Capability_A0_A4'],r['Action_Authority'])==('L4','HIGH','A4','AUTO_ALLOWED')
+          assert r['Dependencies'].strip()=='TSK-0316'
+          assert (r['Acceptance_ID'],r['Verification_ID'],r['Evidence_ID'])==('ACC-0317','VER-0317','EVD-0317')
+          assert 'Automatic profile/config is used only where reliable' in r['Acceptance_Criteria']
+          assert 'fallbacks use canonical endpoint/profile guidance' in r['Acceptance_Criteria']
+          assert 'OS asymmetry and limitations are explicit' in r['Acceptance_Criteria']
+          print('TSK0317_CURRENT_WBS_CONTRACT=PASS')
+
+          rt=P['runtime'].read_text(encoding='utf-8')
+          s316=re.search(r'^## TSK-0316 current accepted stable state.*?(?=^## |\Z)',rt,re.MULTILINE|re.DOTALL)
+          assert s316 and '**PASS**' in s316.group(0) and 'TSK_0316_POST_CR0008_DUAL_MODE_FRICTION_EVIDENCE_2026-09-02.md' in s316.group(0)
+          print('TSK0316_CURRENT_PREDECESSOR=PASS')
+
+          protected=[
+            '## TSK-0299 current accepted stable state — 2026-09-01 — POST-CR-0008 CORRECTED OWNER-IDENTITY BINDING',
+            '## TSK-0485 current accepted stable state',
+            '## TSK-0318 current accepted stable state',
+            '## TSK-0319 current accepted stable state',
+            '## TSK-0301 current accepted stable state — 2026-09-02 — POST-CR-0008 CURRENT DEPENDENCY REVALIDATION',
+            '## TSK-0316 current accepted stable state — 2026-09-02 — POST-CR-0008 DUAL-MODE FRICTION REQUALIFICATION',
+            '## TSK-0300 current accepted stable state — 2026-09-02 — POST-CR-0008 CURRENT DEPENDENCY REVALIDATION',
+          ]
+          def section(text,prefix):
+              m=re.search(r'^'+re.escape(prefix)+r'.*$',text,re.MULTILINE); assert m, prefix
+              n=re.search(r'^## ',text[m.end():],re.MULTILINE)
+              end=m.end()+n.start() if n else len(text)
+              return text[m.start():end]
+          for h in protected:
+              s=section(rt,h); assert '**PASS**' in s
+              print('PROTECTED_SECTION_SHA256|{}|{}'.format(h,hashlib.sha256(s.encode()).hexdigest()))
+          print('TSK0317_PROTECTED_RUNTIME_INPUTS=PASS')
+
+          old=P['historical'].read_text(encoding='utf-8')
+          for s in ['**A1 / HUMAN_ONLY**','**CANDIDATE / HUMAN DECISION REQUIRED / NOT PASS**','The HUMAN_ONLY reviewer','Remove UseSafeWeb DNS']:
+              assert s in old, s
+          print('HISTORICAL_TSK0317_PROCEDURAL_NAMING_STALENESS=PASS')
+
+          e316=P['e0316'].read_text(encoding='utf-8')
+          for s in ['complete accountless core remains the lowest-friction safe path','optional parent account/sign-in/session/dashboard/device management occurs only after explicit parent choice','managed-device persistence is minimum bounded continuity','Ambiguous consequential effects are reconciled before replay']:
+              assert s in e316, s
+          print('TSK0317_CURRENT_FRICTION_PREDECESSOR_SEMANTICS=PASS')
+
+          e299=P['e0299'].read_text(encoding='utf-8')
+          assert 'visible brand/product token: `SafeWeb`' in e299
+          assert 'generic parent-facing DNS feature/CTA language uses `SafeWeb DNS`' in e299
+          assert 'generic `UseSafeWeb` without `.com` is prohibited as brand copy' in e299
+          print('TSK0317_CURRENT_SAFEWEB_NAMING_AUTHORITY=PASS')
+
+          e408=P['e0408'].read_text(encoding='utf-8')
+          for s in ['canonical resolver hostname `dns.usesafeweb.com`','Android native DoT-by-hostname behavior','Apple DoH profile/Server-URL behavior','truthful verification/removal/fallback rules']:
+              assert s in e408, s
+          m409=P['m0409'].read_text(encoding='utf-8')
+          for s in ['Android **Private DNS provider hostname** using `dns.usesafeweb.com`','Apple DoH profile/Server-URL mechanism','Configuration evidence is never technical protection evidence','VPN or DNS-changing security/privacy app','iCloud Private Relay','Browser/app custom encrypted resolver','User intentionally removes the approved UseSafeWeb DNS mechanism']:
+              assert s in m409, s
+          print('TSK0317_CURRENT_ENDPOINT_AND_CONFLICT_AUTHORITY=PASS')
+
+          a=P['artifact'].read_text(encoding='utf-8')
+          for s in [
+            '**Lifecycle / Priority / Authority:** L4 / HIGH / A4 / AUTO_ALLOWED',
+            'No owner action is required for this current bounded design/revalidation task.',
+            '**Route, do not ask protocol questions.**',
+            '**Accountless core remains complete.**',
+            '**Optional account is orthogonal continuity.**',
+            '**Verification owns the protection claim.**',
+            '**No silent downgrade.**',
+            '**Retry is evidence-driven.**',
+          ]: assert s in a, s
+          print('TSK0317_CURRENT_INVARIANTS=PASS')
+
+          android=[
+            'Present the exact technical hostname `dns.usesafeweb.com`.',
+            'Do not append a port or show the Apple DoH URL in the normal Android provider-hostname field.',
+            'The parent performs the OS-required paste/entry/save action.',
+            'opening/changing the Android system Private DNS control;',
+            'Run the approved controlled verifier automatically where technically feasible',
+            'Offer `Remove SafeWeb DNS` from help/recovery',
+            'Do not silently use plaintext while presenting SafeWeb as active.',
+          ]
+          for s in android: assert s in a, s
+          print('TSK0317_ANDROID_FUNCTIONAL_NEGATIVE_ROLLBACK_DESIGN=PASS')
+
+          apple=[
+            'TSK-0317 does not itself fabricate or publish a `.mobileconfig` file.',
+            '`https://dns.usesafeweb.com/dns-query`',
+            'Installation/authorization remains an explicit iOS/user action in Settings.',
+            'do not instruct the user to weaken security merely to make SafeWeb green',
+            'profile removal remain explicit user/OS actions',
+            'Profile presence, successful download, account/session state, dashboard presence or parent confirmation is insufficient for `Verified`.',
+            'Treat profile removal as removal of the profile-owned SafeWeb DNS configuration; do not claim unrelated account/device data was deleted.',
+          ]
+          for s in apple: assert s in a, s
+          print('TSK0317_APPLE_FUNCTIONAL_NEGATIVE_ROLLBACK_DESIGN=PASS')
+
+          for s in [
+            'https://support.google.com/android/answer/9654714',
+            'https://developer.android.com/about/versions/pie/android-9.0-changes-28',
+            'https://support.apple.com/102400',
+            'https://support.apple.com/guide/iphone/install-or-remove-configuration-profiles-iph6c493b19/ios',
+            'https://support.apple.com/guide/deployment/dns-settings-payload-settings-dep86469ba99/web',
+          ]: assert s in a, s
+          print('TSK0317_CURRENT_OFFICIAL_SOURCE_BINDINGS=PASS')
+
+          for s in [
+            'Platform setup never requires login.',
+            'Sign-in does not automatically migrate J0/J1 into account/device state.',
+            'A managed-device record is not a child identity and not current DNS verification.',
+            'Removing SafeWeb DNS does not itself delete an account/device record or anonymous state.',
+            'Provider outage blocks account-only functions only; accountless verification/removal remains available.',
+          ]: assert s in a, s
+          print('TSK0317_DUAL_MODE_SEPARATION=PASS')
+
+          for s in ['`Start setup`','`Copy DNS hostname`','`Get SafeWeb profile`','`Check protection`','`Remove SafeWeb DNS`']:
+              assert s in a, s
+          for stale in ['`UseSafeWeb DNS`','`Get UseSafeWeb profile`','`Turn on UseSafeWeb`']:
+              assert stale in a and 'Do not use generic visible-brand copy' in a
+          print('TSK0317_SAFEWEB_PARENT_FACING_VOCABULARY=PASS')
+
+          for n in range(1,23):
+              assert re.search(r'^'+str(n)+r'\.',a,re.MULTILINE), f'missing assertion {n}'
+          print('TSK0317_22_DETERMINISTIC_ASSERTIONS=PASS')
+          assert 'no new install technology' in a
+          assert 'Candidate disposition: ACC-0317 current PASS pending independent VER-0317' in a
+          print('TSK0317_REVALIDATION_SCOPE=PASS')
+
+          subprocess.check_call(['git','diff','--check'])
+          print('TSK0317_CURRENT_ACC=PASS')
+          print('WBS_BLOB='+blob(P['wbs']))
+          print('GRAPH_BLOB='+blob(P['graph']))
+          print('RUNTIME_BLOB='+blob(P['runtime']))
+          print('ARTIFACT_BLOB='+blob(P['artifact']))
+          PY
