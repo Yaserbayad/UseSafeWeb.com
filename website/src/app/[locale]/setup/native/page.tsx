@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { CoreActionButton } from '@/components/core-action-button';
 import { SetupPage, operationalMetadata } from '@/components/setup-page';
 import { getContent, isLocale } from '@/lib/i18n';
 
@@ -26,10 +27,18 @@ export default async function Page({
       summary={platform === 'iphone' ? c.native.iphoneBody : c.native.androidBody}
       noteTitle={c.native.noteTitle}
       noteBody={c.native.noteBody}
-      actions={[
-        { href: `/${locale}/setup/dns?platform=${platform}`, label: c.native.continueLabel },
-        { href: `/${locale}/compatibility`, label: c.native.supportLabel, secondary: true },
-      ]}
-    />
+      actions={[{ href: `/${locale}/compatibility`, label: c.native.supportLabel, secondary: true }]}
+    >
+      <div className="sw-actions">
+        <CoreActionButton
+          locale={locale}
+          deviceFamily={platform}
+          event={{ type: 'CONTINUE_NATIVE' }}
+          href={`/${locale}/setup/dns?platform=${platform}`}
+          label={c.native.continueLabel}
+          dataAttribute="data-core-continue-native"
+        />
+      </div>
+    </SetupPage>
   );
 }
