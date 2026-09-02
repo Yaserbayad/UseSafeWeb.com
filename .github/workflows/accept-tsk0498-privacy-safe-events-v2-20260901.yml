@@ -1,22 +1,71 @@
-name: Temporary - Verify TSK-0516 master acceptance plan
+name: Temporary - Accept TSK-0516 master verification plan
 
 on:
   push:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  verify-tsk0516:
+  accept-tsk0516:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Verify TSK-0516 plan
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Verify TSK-0516 before state mutation
         shell: bash
         run: |
           set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
           test "$(git hash-object TSK_0516_MASTER_VERIFICATION_ACCEPTANCE_TEST_PLAN_2026-09-02.md)" = '68e1a104339d402550b178506f82a111b3155118'
           test "$(git hash-object Plans/Master/Tools/verify_tsk0516_master_verification_plan_20260902.py)" = 'fe0708d48a6795c74756ab4ffaa074bdb6c1101b'
           python3 Plans/Master/Tools/verify_tsk0516_master_verification_plan_20260902.py
           python3 Plans/Master/Tools/validate_master_plan.py
+      - name: Append TSK-0516 PASS
+        shell: bash
+        env:
+          VERIFY_RUN_ID: '33661808152'
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+          p=Path('CURRENT_STATE.md'); text=p.read_text(encoding='utf-8-sig')
+          heading='## TSK-0516 current accepted stable state — 2026-09-02 — POST-CR-0010'
+          if heading in text: raise SystemExit('TSK-0516 section already exists')
+          now=datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
+          lines=text.splitlines()
+          for i,line in enumerate(lines):
+              if line.startswith('**Updated:**'):
+                  lines[i]=f'**Updated:** {now}'; break
+          text='\n'.join(lines).rstrip()+'\n'
+          section=f'''\n{heading}\n\n`TSK-0516 — Create master verification and acceptance test plan`: **PASS** under current `ACC-0516 / VER-0516 / EVD-0516`.\n\n- Current normalized WBS blob `eb35f3b10356396c5117e3f47d0b0378953e2157`: L5 / A3 / `AUTO_ALLOWED`; sole hard dependency `TSK-0048` is current durable PASS.\n- Accepted artifact: `TSK_0516_MASTER_VERIFICATION_ACCEPTANCE_TEST_PLAN_2026-09-02.md`, version `1.0.0`, blob `68e1a104339d402550b178506f82a111b3155118`, publication commit `10124cb884b07f85dfa9d787df1a7a655f830ed9`.\n- Deterministic verifier `Plans/Master/Tools/verify_tsk0516_master_verification_plan_20260902.py`, blob `fe0708d48a6795c74756ab4ffaa074bdb6c1101b`.\n- Independent read-only GitHub Actions verification run `{os.environ['VERIFY_RUN_ID']} / 1`: **SUCCESS**; 32 unique VAT cases cover accountless/optional-account happy and negative paths, provider/session/CSRF/IDOR isolation, ownership/ClientID lifecycle, DNS/config/Protection Map, deletion/recovery, privacy/security/accessibility, CI/rollback/recovery/observability and non-goal regression. Full master-plan validator PASS.\n- Evidence rules preserve synthetic/privacy-safe fixtures, release-specific proof, blocking Critical/High and severity-1/2 failures, and independent evidence where canonical security/privacy/recovery acceptance requires it.\n- **Non-inference:** this is verification-plan readiness only. No VAT case execution, L6 task PASS, LG-07 PASS, build/deployment/production/spend or human approval is inferred.\n\n### Queue status after TSK-0516 acceptance\n\n`TSK-0047` is the direct successor and may execute if current gates/constraints remain satisfied.\n'''
+          p.write_text(text+section,encoding='utf-8')
+          PY
+          git diff --check
+          test "$(git status --porcelain | sed 's/^...//' | sort)" = 'CURRENT_STATE.md'
+      - name: Persist and read back
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE="$(git rev-parse HEAD)"
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$SOURCE"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: accept TSK-0516 master verification plan'
+          C="$(git rev-parse HEAD)"; B="$(git rev-parse "$C:CURRENT_STATE.md")"
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$C"
+          test "$(git rev-parse "origin/main:CURRENT_STATE.md")" = "$B"
+          git show origin/main:CURRENT_STATE.md | grep -Fq '## TSK-0516 current accepted stable state — 2026-09-02 — POST-CR-0010'
+          echo "TSK0516_STATE_COMMIT=$C"
+          echo "TSK0516_STATE_BLOB=$B"
+          echo 'TSK0516_STATE_REMOTE_READBACK=PASS'
