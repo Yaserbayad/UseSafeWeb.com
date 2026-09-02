@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T17:45:07Z
+**Updated:** 2026-09-02T17:51:23Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2876,3 +2876,20 @@ Recompute the complete residual L5 frontier. `TSK-0587` may become eligible but 
 ### Queue status after TSK-0237 acceptance
 
 Recompute the complete residual L5 frontier. Stop only if every remaining eligible item is legal-external, dependency-blocked, or HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED.
+
+## TSK-0587 current accepted stable state — 2026-09-02 — OWNER-APPROVED RESOURCE/COST/TOOL ENVELOPE
+
+`TSK-0587 — Approve development resource, cost, and tool envelope`: **PASS** under current `ACC-0587 / VER-0587 / EVD-0587` and explicit Project Owner approval.
+
+- Current normalized WBS blob `eb35f3b10356396c5117e3f47d0b0378953e2157`: L5 / A1 / `HUMAN_ONLY`; dependencies `TSK-0586; TSK-0047` are current durable PASS.
+- Prepared decision packet: `TSK_0587_OWNER_DECISION_PACKET_2026-09-02.md`, blob `88d3a57e79a69ed07210770a5bbb72e20d8c4dee`, publication commit `b717e97bbfd5a35eb0db5b4f678f9ac3a72e1907`.
+- Explicit owner approval evidence: `TSK_0587_OWNER_APPROVAL_EVIDENCE_2026-09-02.md`, blob `22c035bff361dcea8b915b940db088fcdb1f3931`, publication commit `d7cf614e172c884e8763fef79cc7356851fbc853`; owner instruction: `Approve TSK-0587 recommended envelope.`
+- Approved limit: zero incremental new recurring or one-time development spend without a new owner decision; existing owner-provided/paid resources may be used within existing entitlement/frozen architecture. Approved contingency: zero.
+- Cost review cadence: before paid activation, at material lifecycle gates, monthly after measurable production recurring cost begins, and earlier on applicable TSK-0237 vendor price/quota triggers.
+- Explicit gaps remain non-guessed: existing Azure/runtime/domain/tool costs and implementation-bounded datastore/secrets/monitoring choices remain unconfirmed until real source/selection evidence exists; any required new spend returns to the owner before activation.
+- Independent GitHub Actions acceptance run `33663629268`: exact WBS/dependency/action-authority contract, immutable decision/approval blobs, resource/cost source-or-gap coverage, approved limit/contingency/cadence, critical-gap disposition, and full master-plan validator all PASS before this state mutation.
+- **Non-inference:** no paid action, vendor upgrade, L6 build, deployment, production activation, launch, legal/compliance conclusion, TSK-0051 or LG-07 PASS is inferred.
+
+### Queue status after TSK-0587 acceptance
+
+Recompute current authority. `TSK-0051` becomes dependency-eligible only if `TSK-0052` and `TSK-0049` remain current PASS and its complete LG-07 acceptance is independently proven.
