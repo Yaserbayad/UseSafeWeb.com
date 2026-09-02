@@ -1,0 +1,61 @@
+name: Verify TSK-0045 current revalidation v3
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/diagnostics/tsk0045-current-verifier-trigger.txt']
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify TSK-0045 structurally
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv,re,subprocess
+          from pathlib import Path
+          E={'Plans/Master/WBS/master-wbs.csv':'b27a0c5df2f5636d8ed71051e9e26a68959a2616','Plans/Master/RELATIONSHIP_INDEX.yaml':'c108d2c162bcea2ee4cc01def46d0487a9501032','CURRENT_STATE.md':'60364cebcdf91f052311a40e3af83f6c984fb18f','TSK_0045_POST_CR0008_DUAL_MODE_MAINTAINABILITY_DEPLOYMENT_COST_NFR_REVALIDATION_2026-09-02.md':'0df1b4747afea4521e4e98b0728c83750ed2b547','TSK_0045_MAINTAINABILITY_DEPLOYMENT_COST_CONTROL_NFR_2026-08-28.md':'cec8ba92151318cc399586ea230ccc399eea6e8b','TSK_0045_MAINTAINABILITY_DEPLOYMENT_COST_CONTROL_NFR_EVIDENCE_2026-08-28.md':'e8f79871379288e5595cdeef0deb3a1997b3e223','TSK_0314_POST_CR0008_CURRENT_REVALIDATION_EVIDENCE_2026-09-02.md':'924d93313eed32daf5811650758fef2955fad738'}
+          def blob(p): return subprocess.check_output(['git','hash-object',p],text=True).strip()
+          def req(text,items,label):
+              miss=[i for i in items if i not in text]
+              if miss: raise AssertionError(f'{label} missing: {miss}')
+          for p,h in E.items(): assert Path(p).exists() and blob(p)==h,(p,blob(p),h)
+          print('TSK0045_V3_INPUT_HASHES=PASS')
+          with open('Plans/Master/WBS/master-wbs.csv',newline='',encoding='utf-8-sig') as f: rows=list(csv.DictReader(f))
+          r=next(x for x in rows if x.get('Task_ID')=='TSK-0045')
+          assert (r['Lifecycle_Stage'],r['Priority'],r['AI_Capability_A0_A4'],r['Action_Authority'])==('L4','MEDIUM','A3','AUTO_ALLOWED')
+          assert [x.strip() for x in r['Dependencies'].split(';') if x.strip()]==['TSK-0314']
+          assert (r['Acceptance_ID'],r['Verification_ID'],r['Evidence_ID'])==('ACC-0045','VER-0045','EVD-0045')
+          req(r['Acceptance_Criteria'].lower(),['repeatable deployment','versioning','rollback','documentation ownership','dependency update cadence','cost tagging','budgets','monthly cost-report'],'ACC-0045')
+          print('TSK0045_V3_WBS=PASS')
+          state=Path('CURRENT_STATE.md').read_text(encoding='utf-8'); m=re.search(r'^## TSK-0314 current accepted stable state.*?(?=^## |\Z)',state,re.M|re.S)
+          assert m and '**PASS**' in m.group(0) and '924d93313eed32daf5811650758fef2955fad738' in m.group(0)
+          print('TSK0045_V3_PREDECESSOR=PASS')
+          doc=Path('TSK_0045_POST_CR0008_DUAL_MODE_MAINTAINABILITY_DEPLOYMENT_COST_NFR_REVALIDATION_2026-09-02.md').read_text(encoding='utf-8'); low=doc.lower()
+          assert len([x for x in doc.splitlines() if x.startswith('## ')])>=17
+          req(low,['github `main`','direct ubuntu host','future web/account application','accountless core','auth-provider','datastore','owner-provided azure vm/control-plane','routine reversible technical deployment','already-budgeted','material/unbudgeted spend'],'deployment/authority')
+          req(low,['source pin','target guard','pre-state capture','target read-back','regression','evidence publication','runtime reconciliation','ambiguous consequential side effects are reconciled before replay','no mandatory staging/pilot environment','lg-09'],'deployment sequence')
+          assert 'semver' in low or 'semantic versioning' in low
+          req(low,['git commit sha','schema/application version','target/environment identity','generated outputs never outrank','rollback is designed before mutation','datastore schema','session/token/provider','ownership/authorization','account/device deletion','accountless-core continuity'],'version/rollback')
+          print('TSK0045_V3_DEPLOY_VERSION_ROLLBACK=PASS')
+          req(low,['at least weekly','at least monthly','security advisories','adguard/nginx','future web/auth/datastore'],'cadence')
+          req(low,['project=usesafeweb','component=dns|webapp|auth|datastore|backup|monitoring|shared','not implicitly inherited','usage records','8–24 hours','understand-cost-mgt-data','enable-tag-inheritance'],'cost tags')
+          req(low,['unfrozen','actual >=50%','actual >=80%','actual >=100%','forecast >=100%','monitoring/accountability evidence'],'budgets')
+          s=re.search(r'## 12\. Monthly cost-report inputs\n(.*?)(?=\n## 13\.)',doc,re.S); assert s and len(re.findall(r'^\d+\.',s.group(1),re.M))>=15
+          req(s.group(1).lower(),['billing scope','actual','unfrozen','forecast','environment','component','untagged','anomal','evidence/export timestamp'],'monthly report')
+          print('TSK0045_V3_COST_CONTROLS=PASS')
+          req(low,['tsk-0314','accessibility/browser/device support','tsk-0046/0538','no dns/browsing/activity history','does not deploy/resize/create/delete azure resources'],'preservation/non-inference')
+          hist=Path('TSK_0045_MAINTAINABILITY_DEPLOYMENT_COST_CONTROL_NFR_2026-08-28.md').read_text(encoding='utf-8').lower(); req(hist,['repeatable deployment contract','rollback contract','dependency update cadence','cost-attribution tag contract','monthly cost-report inputs'],'historical')
+          print('TSK0045_V3_HISTORICAL_CURRENT_RECONCILIATION=PASS')
+          print('TSK0045_CURRENT_ACC=PASS'); print('TSK0045_CURRENT_VER=PASS'); print('TSK0045_CURRENT_EVD_READY=PASS'); print('TSK0045_CURRENT_REVALIDATION=PASS')
+          PY
