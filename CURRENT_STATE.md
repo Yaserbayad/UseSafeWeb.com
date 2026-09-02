@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T01:36:33Z
+**Updated:** 2026-09-02T02:02:22Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2298,5 +2298,24 @@ Recompute the executable frontier from canonical WBS/graph, current runtime evid
 - **Non-inference:** L4 reliability/observability/recovery/service-level NFR definition PASS only; no telemetry implementation, backend/collector, HA, auth/provider/datastore implementation, production SLO attainment, target-environment incident/recovery evidence, public SLA, later task/gate, participant, publication, payment, market activation or launch PASS is inferred.
 
 ### Queue status after current TSK-0538 revalidation
+
+Recompute the executable frontier from canonical WBS/graph, current runtime evidence, artifact-specific change/reopen semantics, gates and Action Authority. Preserve valid non-uniform historical PASS records where current evidence still proves unchanged acceptance.
+## TSK-0046 current accepted stable state — 2026-09-02 — POST-CR-0008 DUAL-MODE PERFORMANCE/CAPACITY NFR REVALIDATION
+
+`TSK-0046 — Define performance and capacity NFRs`: **PASS** under current `ACC-0046 / VER-0046 / EVD-0046`, current direct predecessor TSK-0538, `DEC-0053/CR-0006` dual-mode Version-1 scope and `DEC-0054/CR-0007` production-only lifecycle semantics.
+
+- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L4 / MEDIUM / A3 / `AUTO_ALLOWED`; dependency exactly `TSK-0538`.
+- Current artifact `TSK_0046_POST_CR0008_DUAL_MODE_PERFORMANCE_CAPACITY_NFR_REVALIDATION_2026-09-02.md`, version `2.0.0-post-CR0008`, blob `8e72d542b68de6f7f5c8c375b63b6229c6d15529`, publication commit `0fbc382c94850fb02376c6f3105a1ea499fa7398`.
+- Current durable evidence `TSK_0046_POST_CR0008_CURRENT_REVALIDATION_EVIDENCE_2026-09-02.md`, blob `0d01804887723c76edc2a8426dfa00585944b84b`, publication commit `be64170b8d542936ff7b38ff752cfffb889e4132`.
+- Independent read-only VER-0046 final verifier script blob `340ed4864cf6c63f8c163bb5852a9f16f7de4aa3`, workflow blob `22707f3ee628c2421a5707fdc7ec09b365309d98`; run/job `33581514882 / 100096620942`: **SUCCESS** with `contents: read`.
+- Earlier v1/v2 verifier runs `33581329346 / 100096056039` and `33581430881 / 100096368646` are diagnostic-only prose-predicate failures; neither mutated governed state or changed the accepted artifact.
+- Historical TSK-0046 proof remains valid for the 2× capacity margin, controlled synthetic DoH/DoT/TLS/filter correctness methodology, p50/p95/p99 evidence, security/privacy/rate-limit invariants, degradation behavior and early capacity-review triggers. Historical CR-0003/separate-pilot sequencing is superseded.
+- The inherited WBS phrase `expected pilot load` now maps to the bounded first live-production validation/ramp envelope after LG-09 and all actually applicable prerequisites. Current real-user load before LG-09 is zero; no future cohort/adoption/query-volume number is fabricated.
+- DNS, accountless-web and optional-account/session/dashboard/device load models are distinct. Optional account/provider/datastore failure must not block or be misreported as failure of a healthy accountless core.
+- Current TSK-0538 provisional internal service targets are preserved. Capacity tests must retain DNS/accountless correctness, authorization, session/ownership isolation, privacy, reconciliation and protection-state truthfulness; no throughput result may be obtained by weakening a hard control.
+- Current first-party web.dev review on 2026-09-02 retains Core Web Vitals good thresholds LCP <=2.5s, INP <=200ms and CLS <=0.1 at p75; soft-navigation evidence is bound to exact browser/navigation semantics and synthetic/lab evidence is not mislabeled as field compliance.
+- **Non-inference:** L4 NFR-definition PASS only. No real-user/load authorization, production stress test, infrastructure resize/HA/new paid monitoring, web/app/auth implementation, provider/datastore architecture, legal/privacy completion, participant/publication/payment/market/launch, gate or successor PASS is inferred.
+
+### Queue status after current TSK-0046 revalidation
 
 Recompute the executable frontier from canonical WBS/graph, current runtime evidence, artifact-specific change/reopen semantics, gates and Action Authority. Preserve valid non-uniform historical PASS records where current evidence still proves unchanged acceptance.
