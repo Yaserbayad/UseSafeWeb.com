@@ -1,4 +1,4 @@
-name: Temporary - TSK-0358 browser RED after type-safe engine
+name: Temporary - TSK-0358 full acceptance
 
 on:
   push:
@@ -6,96 +6,77 @@ on:
       - feature/tsk-0358-accountless-core-state-machine-20260902
     paths:
       - 'website/**'
+      - 'Plans/Master/**'
       - '.github/workflows/accept-tsk0498-privacy-safe-events-v2-20260901.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  red-browser:
+  tsk0358-acceptance:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
-        with:
-          ref: feature/tsk-0358-accountless-core-state-machine-20260902
-          fetch-depth: 0
       - uses: actions/setup-node@v6
         with:
           node-version: 22.23.2
           cache: npm
           cache-dependency-path: website/package-lock.json
-      - name: Apply narrow TypeScript narrowing correction
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path('website/src/lib/core-state-machine.ts')
-          t=p.read_text(encoding='utf-8')
-          old="""export type CoreEvent =
-            | { type: 'SELECT_DEVICE'; deviceFamily?: DeviceFamily }
-            | { type: 'CONTINUE_NATIVE' }
-            | { type: 'CONTINUE_DNS' }
-            | { type: 'VERIFICATION_RESULT' }
-            | { type: 'OPEN_TROUBLESHOOT' }
-            | { type: 'OPEN_RECOVERY' }
-            | { type: 'REMOVE_CONFIGURATION' }
-            | { type: 'RESTART_SETUP' }
-            | { type: 'COMPLETE' };
-          """
-          new="""export type CoreEvent =
-            | { type: 'SELECT_DEVICE'; deviceFamily?: DeviceFamily }
-            | { type: 'CONTINUE_NATIVE'; deviceFamily?: DeviceFamily }
-            | { type: 'CONTINUE_DNS'; deviceFamily?: DeviceFamily }
-            | { type: 'VERIFICATION_RESULT'; deviceFamily?: DeviceFamily }
-            | { type: 'OPEN_TROUBLESHOOT'; deviceFamily?: DeviceFamily }
-            | { type: 'OPEN_RECOVERY'; deviceFamily?: DeviceFamily }
-            | { type: 'REMOVE_CONFIGURATION'; deviceFamily?: DeviceFamily }
-            | { type: 'RESTART_SETUP'; deviceFamily?: DeviceFamily }
-            | { type: 'COMPLETE'; deviceFamily?: DeviceFamily };
-          """
-          if new not in t:
-              if t.count(old) != 1: raise SystemExit('unexpected CoreEvent shape')
-              t=t.replace(old,new)
-          p.write_text(t,encoding='utf-8')
-          PY
-      - name: Verify engine logic and production build
+      - name: Verify authority and clean source
         shell: bash
         run: |
           set -euo pipefail
           test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
+          test "$(git hash-object website/package-lock.json)" = '14f9a62607489f965b96d98cdf0d825a363cd8bc'
+          python3 Plans/Master/Tools/validate_master_plan.py
+          git diff --check
+          test -z "$(git status --porcelain)"
+      - name: Locked install and contract tests
+        shell: bash
+        run: |
+          set -euo pipefail
           cd website
           npm ci --no-fund --no-audit
-          node --test tests/contract/tsk0358.test.mjs
+          npm run test:contract
+      - name: Lint, typecheck, and production build
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd website
+          npm run lint
+          npm run typecheck
           NEXT_TELEMETRY_DISABLED=1 npm run build
-      - name: Persist only the proven engine type correction
-        shell: bash
-        run: |
-          set -euo pipefail
-          changed="$(git status --porcelain | sed 's/^...//' | sort)"
-          test "$changed" = 'website/src/lib/core-state-machine.ts'
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add website/src/lib/core-state-machine.ts
-          git commit -m 'fix: make TSK-0358 event union type-safe'
-          git push origin HEAD:feature/tsk-0358-accountless-core-state-machine-20260902
-      - name: Install exact browser tooling
+      - name: Dependency and version verification
         shell: bash
         run: |
           set -euo pipefail
           cd website
-          npm install --no-save --no-package-lock --no-fund --no-audit playwright@1.62.1
+          npm audit --omit=dev --audit-level=high
+          npm audit --audit-level=high
+          test "$(node -p "require('./package.json').dependencies.next")" = '16.3.3'
+          test "$(node -p "require('./package.json').dependencies.react")" = '19.2.8'
+          test "$(node -p "require('./package.json').dependencies['react-dom']")" = '19.2.8'
+      - name: Install exact ephemeral browser tooling
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd website
+          npm install --no-save --no-package-lock --no-fund --no-audit playwright@1.62.1 axe-core@4.13.0
           npx playwright install --with-deps chromium
-      - name: Prove browser orchestration remains RED before UI implementation
+      - name: Real-browser regression and TSK-0358 acceptance
         shell: bash
         run: |
           set -euo pipefail
           cd website
-          NEXT_TELEMETRY_DISABLED=1 npm start -- -p 3000 > /tmp/tsk0358-red.log 2>&1 &
+          NEXT_TELEMETRY_DISABLED=1 npm start -- -p 3000 > /tmp/tsk0358-accept.log 2>&1 &
           SERVER_PID=$!
-          trap 'kill "$SERVER_PID" 2>/dev/null || true; cat /tmp/tsk0358-red.log' EXIT
+          trap 'kill "$SERVER_PID" 2>/dev/null || true; cat /tmp/tsk0358-accept.log' EXIT
           for i in $(seq 1 60); do
             if curl --fail --silent --show-error http://127.0.0.1:3000/en-GB/start >/dev/null; then break; fi
             sleep 1
           done
+          BASE_URL=http://127.0.0.1:3000 node tests/browser/tsk0361-browser.mjs
+          BASE_URL=http://127.0.0.1:3000 node tests/browser/tsk0357-browser.mjs
           BASE_URL=http://127.0.0.1:3000 node tests/browser/tsk0358-browser.mjs
+          test -z "$(git status --porcelain)"
+          printf 'TSK0358_FULL_ACCEPTANCE=PASS\n'
