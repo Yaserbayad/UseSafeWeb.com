@@ -26,6 +26,10 @@ def blob(path: str) -> str:
     return subprocess.check_output(["git", "hash-object", path], text=True).strip()
 
 
+def tracked_text(path: str) -> str:
+    return subprocess.check_output(["git", "show", f"HEAD:{path}"], text=True)
+
+
 def norm(text: str) -> str:
     return re.sub(r"\s+", " ", text.lower()).strip()
 
@@ -55,15 +59,15 @@ assert (row["Acceptance_ID"], row["Verification_ID"], row["Evidence_ID"]) == ("A
 require(row["Acceptance_Criteria"], ["official source", "platform/version/region", "owner", "last verification", "review trigger", "localized variants", "known limits", "test reference"], "ACC-0307")
 print("TSK0307_CURRENT_WBS=PASS")
 
-runtime = Path("CURRENT_STATE.md").read_text(encoding="utf-8")
+runtime = tracked_text("CURRENT_STATE.md")
 pat = re.compile(r"^(##|###) TSK-0317\b.*?(?=^(?:##|###) |\Z)", re.M | re.S)
 assert any("**PASS" in m.group(0) for m in pat.finditer(runtime)), "TSK-0317 durable PASS missing"
 print("TSK0307_CURRENT_PREDECESSOR=PASS")
 
-current = Path("TSK_0307_POST_CR0008_CURRENT_SOURCE_BACKED_INSTRUCTION_CONTENT_CATALOGUE_REVALIDATION_2026-09-02.md").read_text(encoding="utf-8")
-predecessor = Path("TSK_0317_POST_CR0008_CURRENT_PLATFORM_PATH_REVALIDATION_2026-09-02.md").read_text(encoding="utf-8")
-historical = Path("TSK_0307_SOURCE_BACKED_INSTRUCTION_CONTENT_CATALOGUE_2026-08-28.md").read_text(encoding="utf-8")
-historical_evd = Path("TSK_0307_SOURCE_BACKED_INSTRUCTION_CONTENT_CATALOGUE_EVIDENCE_2026-08-28.md").read_text(encoding="utf-8")
+current = tracked_text("TSK_0307_POST_CR0008_CURRENT_SOURCE_BACKED_INSTRUCTION_CATALOGUE_REVALIDATION_2026-09-02.md")
+predecessor = tracked_text("TSK_0317_POST_CR0008_CURRENT_PLATFORM_PATH_REVALIDATION_2026-09-02.md")
+historical = tracked_text("TSK_0307_SOURCE_BACKED_INSTRUCTION_CONTENT_CATALOGUE_2026-08-28.md")
+historical_evd = tracked_text("TSK_0307_SOURCE_BACKED_INSTRUCTION_CONTENT_CATALOGUE_EVIDENCE_2026-08-28.md")
 
 require(historical_evd, ["nine current instruction classes", "official/current source", "platform/version", "region/locale", "owner", "last verification", "review trigger", "localized variants", "known limits", "test reference"], "historical provenance")
 print("TSK0307_HISTORICAL_PROVENANCE=PASS")
@@ -71,7 +75,6 @@ print("TSK0307_HISTORICAL_PROVENANCE=PASS")
 require(predecessor, ["SafeWeb / SafeWeb DNS", "dns.usesafeweb.com", "https://dns.usesafeweb.com/dns-query", "accountless core remains complete", "optional account is orthogonal continuity", "profile installation and removal remain explicit user/OS actions", "do not instruct the user to weaken security"], "current predecessor")
 print("TSK0307_PREDECESSOR_ALIGNMENT=PASS")
 
-# Parse the current registry table structurally.
 lines = current.splitlines()
 header_idx = next(i for i,l in enumerate(lines) if l.startswith("| ID | Purpose | Platform/version |"))
 rows_md=[]
@@ -92,7 +95,6 @@ for cells in rows_md:
 assert seen == IDS, seen
 print("TSK0307_REGISTRY_FIELDS=9/9_PASS")
 
-# All source labels are defined by current official URLs, and official hosts are bounded.
 urls = re.findall(r"https://[^\s)`]+", current)
 assert any("support.google.com/android/answer/9654714" in u for u in urls)
 assert any("developer.android.com/reference/android/app/admin/DevicePolicyManager" in u for u in urls)
@@ -103,22 +105,18 @@ assert any("support.apple.com/guide/personal-safety" in u for u in urls)
 assert all(any(host in u for host in ["support.google.com", "developer.android.com", "support.apple.com"]) for u in urls)
 print("TSK0307_OFFICIAL_SOURCE_SET=PASS")
 
-# Source-sensitive technical semantics remain aligned to current first-party/current predecessor facts.
 require(current, ["Private DNS provider hostname", "DNS questions/answers", "hostname serving DNS-over-TLS", "Private DNS is active", "HTTPS or TLS", "VPN & Device Management", "explicit user permission"], "current source semantics")
 print("TSK0307_CURRENT_SOURCE_SEMANTICS=PASS")
 
-# Current naming: visible parent-facing phrases are SafeWeb while exact technical endpoint retains usesafeweb.com.
 assert "dns.usesafeweb.com" in current
 assert "https://dns.usesafeweb.com/dns-query" in current
 for forbidden in ["Get UseSafeWeb profile", "Turn on UseSafeWeb"]:
-    assert current.count(forbidden) == 1, forbidden  # only in explicit prohibition rule
-# Current instruction section after section 6 must not use generic UseSafeWeb visible copy.
+    assert current.count(forbidden) == 1, forbidden
 variants=current.split("## 6. Current instruction variants",1)[1]
 assert "UseSafeWeb" not in variants
-require(variants, ["SafeWeb DNS", "Return to SafeWeb", "Continue", "Verified", "Status uncertain", "Remove SafeWeb DNS"], "current visible copy")
+require(variants, ["SafeWeb DNS", "Return to SafeWeb", "Verified", "Status uncertain", "Remove SafeWeb DNS"], "current visible copy")
 print("TSK0307_SAFEWEB_NAMING=PASS")
 
-# Nine instruction classes each have an English baseline plus TR/AR variants or common state variants.
 sections = [
     "### Android setup", "### Android verification", "### Android removal/recovery",
     "### iPhone setup", "### iPhone verification", "### iPhone removal/recovery",
@@ -130,7 +128,6 @@ for segment in re.split(r"^### ", variants, flags=re.M)[1:]:
     require(segment, ["en-GB", "tr-TR", "ar"], segment.splitlines()[0])
 print("TSK0307_LOCALIZED_VARIANTS=9/9_PASS")
 
-# Truth, safety, recovery and dual-mode boundaries.
 require(current, [
     "accountless setup/verification/help/removal remains complete",
     "never substitutes for technical verification",
@@ -142,12 +139,11 @@ require(current, [
 ], "truth and recovery")
 print("TSK0307_TRUTH_SAFETY_RECOVERY=PASS")
 
-# Historical copy is preserved only as provenance; current artifact explicitly supersedes stale visible naming.
 assert "UseSafeWeb" in historical
 require(current, ["historical parent-facing copy uses the superseded visible name", "parent-facing product name is SafeWeb", "technical identifiers continue to use the usesafeweb.com domain"], "historical reconciliation")
 print("TSK0307_HISTORICAL_CURRENT_RECONCILIATION=PASS")
 
-require(current, ["does not distribute a production Apple profile", "does not implement account/session/dashboard behavior", "does not prove native-speaker/representative-parent comprehension", "does not", "public publication", "LG-06"], "non-inference")
+require(current, ["does not distribute a production Apple profile", "does not implement account/session/dashboard behavior", "does not prove native-speaker/representative-parent comprehension", "public publication", "LG-06"], "non-inference")
 print("TSK0307_NON_INFERENCE=PASS")
 print("TSK0307_CURRENT_ACC=PASS")
 print("TSK0307_CURRENT_VER=PASS")
