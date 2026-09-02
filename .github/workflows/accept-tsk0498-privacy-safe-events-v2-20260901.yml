@@ -1,23 +1,30 @@
-name: Retired - Accept TSK-0498 privacy-safe event contract v2
+name: Temporary - TSK-0455 deployment recovery TDD
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - feature/tsk-0455-ubuntu-deploy-recover-20260902
+    paths:
+      - 'infrastructure/adguard-server/**'
+      - 'Plans/Master/WBS/master-wbs.csv'
+      - 'Plans/Master/Tools/validate_master_plan.py'
+      - '.github/workflows/accept-tsk0498-privacy-safe-events-v2-20260901.yml'
 
 permissions:
   contents: read
 
 jobs:
-  verify-retired-state:
-    runs-on: ubuntu-latest
+  tsk0455-contract:
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - name: Verify durable TSK-0498 acceptance without mutation
+      - uses: actions/checkout@v6
+      - name: Verify current authority and TSK-0455 contract
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq '## TSK-0498 current accepted stable state — 2026-09-01 — POST-CR-0008' CURRENT_STATE.md
-          grep -Fq '`TSK-0498 — Define only decision-linked accountless journey, protection-state, self-service, reliability, channel, and cost events`: **PASS**' CURRENT_STATE.md
-          test "$(git hash-object TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md)" = '6b7a5095122c74ed9ec860b74408dab474576659'
-          grep -Fq '**Version:** 1.0.1' TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
+          test "$(git hash-object infrastructure/adguard-server/TSK-0445-DEPLOYMENT-RECOVERY-SCRIPT-DESIGN.md)" = '5d2cc5730f313813e2ffb4ce8741f5e07d7af27c'
+          test "$(git hash-object infrastructure/adguard-server/TSK-0446-RECOVERY-SCOPE-CONTRACT.md)" = '18d998e2406e801c7ac08f4daa2e3b763ea9b523'
+          test "$(git hash-object infrastructure/adguard-server/tsk-0413-bundle-v1/bundle.json)" = 'f0735e6a508f16de7a9c4510cc2893b972c1786c'
           python3 Plans/Master/Tools/validate_master_plan.py
-          echo 'TSK0498_HISTORICAL_ACCEPT_WORKFLOW_RETIRED=PASS'
+          bash infrastructure/adguard-server/tests/test-deploy-or-recover-contract.sh
