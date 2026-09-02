@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T03:23:11Z
+**Updated:** 2026-09-02T03:32:45Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2415,5 +2415,25 @@ Recompute the executable frontier from canonical WBS/graph, current runtime evid
 - **Non-inference:** internal L4 instruction/content definition only; no production Apple profile distribution, account/session/dashboard implementation, representative-parent/native-speaker proof, legal/privacy completion, publication, participant processing, payment/market activation, LG-06, launch or successor PASS is inferred.
 
 ### Queue status after current TSK-0307 revalidation
+
+Recompute the executable frontier from canonical WBS/graph, current runtime evidence, artifact-specific current-validity, gates and Action Authority. Preserve valid non-uniform historical PASS records unless current evidence materially invalidates them.
+
+
+## TSK-0311 current accepted stable state — 2026-09-02 — POST-CR-0008 DUAL-MODE LOCALIZATION/CONTENT ARCHITECTURE REVALIDATION
+
+`TSK-0311 — Define translation keys/files, locale metadata, plural/date rules, content ownership, localized instruction variants, and fallback behavior`: **PASS** under current `ACC-0311 / VER-0311 / EVD-0311`, current direct predecessor TSK-0318, current dual-mode Version-1 IA and current source-backed TSK-0307 instruction authority.
+
+- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L4 / HIGH / A3 / `AUTO_ALLOWED`; dependency exactly `TSK-0318`.
+- Current revalidation artifact `TSK_0311_POST_CR0008_DUAL_MODE_LOCALIZATION_CONTENT_ARCHITECTURE_REVALIDATION_2026-09-02.md`, version `2.0.0-post-CR0008`, blob `4f702a61bfccad385be83c1a37a753cdeb1d8b43`, publication commit `f47c8cddca8906cd4b78640de8f76065c4bc92fa`.
+- Durable acceptance evidence `TSK_0311_POST_CR0008_CURRENT_REVALIDATION_EVIDENCE_2026-09-02.md`, blob `563c63df5b34034a30d8587f1cff5fe76457c623`, publication commit `77d3ef29ea5eab4a7491ad2f48ef2677e0ae58fb`.
+- Historical TSK-0311 architecture/evidence remain immutable provenance for the still-valid en-GB/tr-TR/ar locale model, externalized semantic keys, deterministic fallback, source-backed instruction binding, CLDR/Unicode-equivalent plural/number/date behavior, RTL/bidi isolation, accessibility, ownership, privacy and schema/content versioning. Its old accountless-only surface inventory is superseded for current acceptance.
+- Current architecture adds `account`, `session`, `dashboard`, `device-management` and `account-lifecycle` namespaces to the preserved core namespaces and defines current keys for optional account entry/fallback, auth/session results, dashboard/device state, reverify/reinstall/replace/revoke/delete, account deletion, anonymous-state reset and DNS-removal consequence separation.
+- Current truth rules preserve optional-account non-coercion, accountless fallback, identity/ownership versus technical-verification separation, distinct destructive operations, no J0/J1 automatic linkage, no surveillance expansion and exact SafeWeb/technical-endpoint handling.
+- Current TSK-0307 remains the single source-backed owner for platform setup/verification/removal/recovery instructions; localization binds current instruction IDs and cannot silently retain stale copied platform text.
+- Independent read-only VER-0311: verifier script blob `7908f574aeffbe7b19c51670a2dee5b49cee08ce`; workflow blob `b5e1dc4d6e34cca83f289e3bca0a0095488abaec`; run/job `33587275544 / 100113936593`; conclusion **SUCCESS**. Verification proved 13/13 namespaces, 21/21 representative dual-mode keys and 18/18 current implementation test assertions.
+- **ACC-0311 = PASS. VER-0311 = PASS. EVD-0311 = SATISFIED.**
+- **Non-inference:** L4 localization/content architecture PASS only; no production locale files, Turkish/Arabic linguistic certification, native-speaker/representative-parent validation, market activation, auth/session/dashboard/device implementation, legal/privacy completion, publication, participant processing, payment, LG-06, launch or successor PASS is inferred.
+
+### Queue status after current TSK-0311 revalidation
 
 Recompute the executable frontier from canonical WBS/graph, current runtime evidence, artifact-specific current-validity, gates and Action Authority. Preserve valid non-uniform historical PASS records unless current evidence materially invalidates them.
