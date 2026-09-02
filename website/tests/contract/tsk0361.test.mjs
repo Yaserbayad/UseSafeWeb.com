@@ -10,6 +10,7 @@ const json = (path) => JSON.parse(read(path));
 
 const requiredFiles = [
   'package.json',
+  'package-lock.json',
   'tsconfig.json',
   'next.config.ts',
   'eslint.config.mjs',
@@ -43,14 +44,20 @@ test('TSK-0361 production baseline files exist', () => {
   for (const path of requiredFiles) assert.equal(existsSync(resolve(root, path)), true, `missing ${path}`);
 });
 
-test('framework versions and scripts follow the verified Next 16.3.3 scaffold', () => {
+test('framework versions, scripts, and lockfile are deterministic', () => {
   const pkg = json('package.json');
+  const lock = json('package-lock.json');
   assert.equal(pkg.private, true);
   assert.equal(pkg.dependencies.next, '16.3.3');
   assert.equal(pkg.dependencies.react, '19.2.8');
   assert.equal(pkg.dependencies['react-dom'], '19.2.8');
+  assert.equal(pkg.devDependencies.eslint, '9.39.5');
+  assert.equal(pkg.devDependencies['eslint-config-next'], '16.3.3');
   for (const name of ['dev', 'build', 'start', 'lint', 'typecheck', 'test:contract']) assert.ok(pkg.scripts[name], `missing script ${name}`);
   assert.match(pkg.scripts.typecheck, /next typegen\s*&&\s*tsc --noEmit/);
+  assert.deepEqual(lock.packages[''].dependencies, pkg.dependencies);
+  assert.equal(lock.packages[''].devDependencies.eslint, '9.39.5');
+  assert.equal(lock.packages[''].devDependencies['eslint-config-next'], '16.3.3');
   const dependencyNames = Object.keys({ ...(pkg.dependencies ?? {}), ...(pkg.devDependencies ?? {}) });
   const forbiddenDb = ['prisma', '@prisma/client', 'drizzle-orm', 'better-sqlite3', 'sqlite3', 'pg', 'mysql', 'mysql2', 'mongodb', 'mongoose'];
   for (const name of forbiddenDb) assert.equal(dependencyNames.includes(name), false, `unnecessary database dependency ${name}`);
