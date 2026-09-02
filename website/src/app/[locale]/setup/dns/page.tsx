@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { CoreActionButton } from '@/components/core-action-button';
 import { SetupPage, operationalMetadata } from '@/components/setup-page';
 import { getContent, isLocale } from '@/lib/i18n';
 
@@ -28,7 +29,7 @@ export default async function Page({
       noteTitle={c.dns.noteTitle}
       noteBody={c.dns.noteBody}
       actions={[
-        { href: `/${locale}/help`, label: c.dns.helpLabel },
+        { href: `/${locale}/help`, label: c.dns.helpLabel, secondary: true },
         { href: `/${locale}/setup/route`, label: c.dns.backLabel, secondary: true },
       ]}
     >
@@ -42,6 +43,16 @@ export default async function Page({
         </ol>
       )}
       {isIphone && <p className="sw-technical">{c.common.dohUrl}</p>}
+      <div className="sw-actions">
+        <CoreActionButton
+          locale={locale}
+          deviceFamily={platform}
+          event={{ type: 'CONTINUE_DNS' }}
+          href={`/${locale}/verify?platform=${platform}`}
+          label="I saved this DNS setting — check protection"
+          dataAttribute="data-core-continue-dns"
+        />
+      </div>
     </SetupPage>
   );
 }
