@@ -1,28 +1,23 @@
-name: Temporary - TDD TSK-0454 source structure branch
+name: Retired - Accept TSK-0498 privacy-safe event contract v2
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/accept-tsk0498-privacy-safe-events-v2-20260901.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  verify-tsk0454-branch:
+  verify-retired-state:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-      - name: Verify current TSK-0454 feature branch
+      - uses: actions/checkout@v4
+      - name: Verify durable TSK-0498 acceptance without mutation
         shell: bash
         run: |
           set -euo pipefail
-          git fetch origin 'feature/tsk-0454-source-structure-20260902:refs/remotes/origin/feature/tsk-0454-source-structure-20260902'
-          git checkout --detach refs/remotes/origin/feature/tsk-0454-source-structure-20260902
-          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
-          python3 tests/repository-structure/verify_structure.py
+          grep -Fq '## TSK-0498 current accepted stable state — 2026-09-01 — POST-CR-0008' CURRENT_STATE.md
+          grep -Fq '`TSK-0498 — Define only decision-linked accountless journey, protection-state, self-service, reliability, channel, and cost events`: **PASS**' CURRENT_STATE.md
+          test "$(git hash-object TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md)" = '6b7a5095122c74ed9ec860b74408dab474576659'
+          grep -Fq '**Version:** 1.0.1' TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md
           python3 Plans/Master/Tools/validate_master_plan.py
-          git diff --check
+          echo 'TSK0498_HISTORICAL_ACCEPT_WORKFLOW_RETIRED=PASS'
