@@ -1,23 +1,30 @@
-name: Retired - Accept TSK-0498 privacy-safe event contract v2
+name: Temporary - Read exact TSK-0237 and TSK-0587 contracts
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
-  verify-retired-state:
+  read-contracts:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify durable TSK-0498 acceptance without mutation
+      - name: Emit exact WBS rows and current PASS deps
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq '## TSK-0498 current accepted stable state — 2026-09-01 — POST-CR-0008' CURRENT_STATE.md
-          grep -Fq '`TSK-0498 — Define only decision-linked accountless journey, protection-state, self-service, reliability, channel, and cost events`: **PASS**' CURRENT_STATE.md
-          test "$(git hash-object TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md)" = '6b7a5095122c74ed9ec860b74408dab474576659'
-          grep -Fq '**Version:** 1.0.1' TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md
+          python3 - <<'PY'
+          import csv,re
+          from pathlib import Path
+          rows=list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='')))
+          state=Path('CURRENT_STATE.md').read_text(encoding='utf-8-sig')
+          for tid in ['TSK-0237','TSK-0587','TSK-0051','TSK-0052']:
+              r=next(x for x in rows if x['Task_ID']==tid)
+              print('TASK='+tid)
+              for k in ['Lifecycle_Stage','Title','Plan_Status','Priority','Dependencies','Acceptance_ID','Acceptance_Criteria','Verification_ID','Verification_Method','Evidence_ID','Evidence_Required','Primary_Owner','AI_Capability_A0_A4','Action_Authority','Risk_Reference','Cost/Budget','Notes']:
+                  print(k+'='+(r.get(k) or '').replace('\n',' '))
+          PY
           python3 Plans/Master/Tools/validate_master_plan.py
-          echo 'TSK0498_HISTORICAL_ACCEPT_WORKFLOW_RETIRED=PASS'
