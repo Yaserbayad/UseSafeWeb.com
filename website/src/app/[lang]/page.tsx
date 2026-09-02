@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Accordion } from "radix-ui";
 import { getHomeContent } from "@/lib/content";
-import { isLocale, type Locale } from "@/lib/i18n";
+import { isLocale, sharedCopy, type Locale } from "@/lib/i18n";
 
 const steps: Record<Locale, Array<{ title: string; body: string }>> = {
   en: [
@@ -26,6 +26,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
   const content = await getHomeContent(lang);
+  const ui = sharedCopy[lang];
 
   return (
     <main id="main-content" className="sw-stack">
@@ -36,7 +37,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
           <p className="sw-copy">{content.intro}</p>
           <div className="usw-hero-actions">
             <Link className="sw-button" href={`/${lang}/start`}>{content.ctaLabel}</Link>
-            <a className="sw-button sw-button--secondary" href="#how-it-works">How it works</a>
+            <a className="sw-button sw-button--secondary" href="#how-it-works">{ui.howItWorks}</a>
           </div>
           <div className="usw-trust-note">
             <p><strong>{content.accountless}</strong></p>
@@ -45,21 +46,21 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
           </div>
         </div>
         <aside className="sw-panel" aria-labelledby="protection-map-heading">
-          <p className="sw-kicker">Protection Map</p>
-          <h2 id="protection-map-heading">Truthful status, not a safety score</h2>
+          <p className="sw-kicker">{ui.protectionMap}</p>
+          <h2 id="protection-map-heading">{ui.protectionMapTitle}</h2>
           <div className="sw-stack">
-            <span className="sw-status__label">Protection verified</span>
-            <span className="sw-status__label">Setup confirmed</span>
-            <span className="sw-status__label">Action needed</span>
-            <span className="sw-status__label">Not covered</span>
+            <span className="sw-status__label">{ui.protectionVerified}</span>
+            <span className="sw-status__label">{ui.setupConfirmed}</span>
+            <span className="sw-status__label">{ui.actionNeeded}</span>
+            <span className="sw-status__label">{ui.notCovered}</span>
           </div>
         </aside>
       </section>
 
       <section id="how-it-works" className="sw-stack" aria-labelledby="how-title">
         <div>
-          <p className="sw-kicker">Three focused areas</p>
-          <h2 id="how-title">Phone → Internet → Services</h2>
+          <p className="sw-kicker">{ui.threeAreas}</p>
+          <h2 id="how-title">{ui.journeyTitle}</h2>
         </div>
         <div className="usw-grid usw-grid--3">
           {steps[lang].map((step, index) => (
