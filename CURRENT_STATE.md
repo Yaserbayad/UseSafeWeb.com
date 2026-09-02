@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T02:02:22Z
+**Updated:** 2026-09-02T02:15:14Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2319,3 +2319,22 @@ Recompute the executable frontier from canonical WBS/graph, current runtime evid
 ### Queue status after current TSK-0046 revalidation
 
 Recompute the executable frontier from canonical WBS/graph, current runtime evidence, artifact-specific change/reopen semantics, gates and Action Authority. Preserve valid non-uniform historical PASS records where current evidence still proves unchanged acceptance.
+## TSK-0314 current accepted stable state — 2026-09-02 — POST-CR-0008 DUAL-MODE ACCESSIBILITY/BROWSER/DEVICE NFR REVALIDATION
+
+`TSK-0314 — Define accessibility, responsive, browser, OS, and device support NFRs`: **PASS** under current `ACC-0314 / VER-0314 / EVD-0314`, current direct predecessor TSK-0046, `DEC-0053/CR-0006` dual-mode scope and `DEC-0054/CR-0007` production-only lifecycle semantics.
+
+- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L4 / MEDIUM / A4 / `AUTO_ALLOWED`; dependency exactly `TSK-0046`.
+- Current artifact `TSK_0314_POST_CR0008_DUAL_MODE_ACCESSIBILITY_BROWSER_DEVICE_NFR_REVALIDATION_2026-09-02.md`, version `2.0.0-post-CR0008`, blob `e193abd8398d2c91bc113dfc88ad605e67b475f6`, publication commit `71cfd0c44512808232f6ea6a019dd1b5ca3dd967`.
+- Current durable evidence `TSK_0314_POST_CR0008_CURRENT_REVALIDATION_EVIDENCE_2026-09-02.md`, blob `924d93313eed32daf5811650758fef2955fad738`, publication commit `62147a0011966e9fed162a45ed35f0b9dd1b56a1`.
+- Independent read-only VER-0314 workflow blob `7a74e23fc573d953e9e035f46310fdc8517b9a75`; run/job `33582350458 / 100099089873`: **SUCCESS** with `contents: read`.
+- Earlier runs `33582215492 / 100098677323` and `33582284284 / 100098891745` are diagnostic-only verifier wording failures; they did not mutate governed state or change the accepted artifact.
+- WCAG 2.2 AA remains the target; keyboard/focus, screen-reader semantics, 200% resize, 320 CSS px reflow, contrast, target-size, reduced-motion, responsive/RTL and four-tier testing requirements remain binding for implemented critical public/product flows.
+- Approved optional sign-in/session/dashboard/device/account-lifecycle surfaces receive the same accessibility, localization and support-state obligations as the accountless core; account/login/dashboard state cannot upgrade technical protection evidence.
+- Release-time browser/OS support remains evidence-driven. Current 2026-09-02 source snapshot records Chrome 152 Stable, Firefox 155 Release, Edge 152 Stable with 153 not yet Stable, iOS/iPadOS 26.6.1, macOS 26.6.2/Safari 26.6.1, and the August 2026 Android bulletin as the latest published Android bulletin on this date. Exact release versions must be refreshed at each release boundary.
+- Web UI support remains separate from DNS setup/mechanism support and from current Protection Map verification state.
+- Current TSK-0046 performance/capacity requirements cannot trade away accessibility correctness or support-state truthfulness.
+- **Non-inference:** L4 NFR-definition PASS only; no implemented WCAG conformance, assistive-technology execution, real-user accessibility evidence, public support promise, DNS support expansion, implementation/build, legal/privacy completion, participant/publication/payment/market/launch, gate or successor PASS is inferred.
+
+### Queue status after current TSK-0314 revalidation
+
+Recompute the executable frontier from canonical WBS/graph, current runtime evidence, artifact-specific current-validity, gates and Action Authority. Preserve valid non-uniform historical PASS records unless current evidence materially invalidates them.
