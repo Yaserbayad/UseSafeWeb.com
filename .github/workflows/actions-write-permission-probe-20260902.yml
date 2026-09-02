@@ -1,0 +1,18 @@
+name: Actions contents-write permission probe 2026-09-02
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/actions-write-permission-probe-20260902.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Prove write-capable job scheduling only
+        run: echo ACTIONS_CONTENTS_WRITE_JOB_SCHEDULING=PASS
