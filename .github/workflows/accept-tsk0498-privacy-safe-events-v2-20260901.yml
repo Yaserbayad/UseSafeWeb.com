@@ -1,23 +1,121 @@
-name: Retired - Accept TSK-0498 privacy-safe event contract v2
+name: Diagnostic - Post TSK-0361 L6 frontier
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - diag/post-tsk0361-l6-frontier-20260902
+    paths:
+      - '.github/workflows/accept-tsk0498-privacy-safe-events-v2-20260901.yml'
 
 permissions:
   contents: read
 
 jobs:
-  verify-retired-state:
-    runs-on: ubuntu-latest
+  derive-frontier:
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - name: Verify durable TSK-0498 acceptance without mutation
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Derive current L6 AUTO_ALLOWED dependency frontier
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq '## TSK-0498 current accepted stable state — 2026-09-01 — POST-CR-0008' CURRENT_STATE.md
-          grep -Fq '`TSK-0498 — Define only decision-linked accountless journey, protection-state, self-service, reliability, channel, and cost events`: **PASS**' CURRENT_STATE.md
-          test "$(git hash-object TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md)" = '6b7a5095122c74ed9ec860b74408dab474576659'
-          grep -Fq '**Version:** 1.0.1' TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md
+          git fetch origin main
+          git merge-base --is-ancestor origin/main HEAD
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
           python3 Plans/Master/Tools/validate_master_plan.py
-          echo 'TSK0498_HISTORICAL_ACCEPT_WORKFLOW_RETIRED=PASS'
+          python3 - <<'PY'
+          import csv, re
+          from pathlib import Path
+
+          state = Path('CURRENT_STATE.md').read_text(encoding='utf-8-sig')
+          with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='') as f:
+              rows = list(csv.DictReader(f))
+          by_id = {(r.get('Task_ID') or '').strip(): r for r in rows if (r.get('Task_ID') or '').strip()}
+
+          heading_re = re.compile(r'^##+\s+(TSK-\d{4})\s+current accepted stable state[^\n]*$', re.M | re.I)
+          matches = list(heading_re.finditer(state))
+          latest = {}
+          for i, m in enumerate(matches):
+              start = m.start()
+              end = matches[i + 1].start() if i + 1 < len(matches) else len(state)
+              latest[m.group(1).upper()] = state[start:end]
+          pass_ids = set()
+          for tid, section in latest.items():
+              lead = '\n'.join(section.splitlines()[:8])
+              if re.search(rf'`?{re.escape(tid)}\b[^\n]*:\s*\*\*PASS\*\*', lead, re.I):
+                  pass_ids.add(tid)
+
+          assert 'TSK-0361' in pass_ids
+          for tid in ('TSK-0354', 'TSK-0308', 'TSK-0307', 'TSK-0320'):
+              assert tid in pass_ids, tid
+          assert '`LG-07 — Architecture, Security, Privacy and Delivery Readiness`: **PASS**' in state
+
+          def deps(r):
+              return [x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
+
+          l6 = [r for r in rows if (r.get('Lifecycle_Stage') or '').strip() == 'L6']
+          candidates = []
+          for r in l6:
+              tid = (r.get('Task_ID') or '').strip()
+              if not tid or tid in pass_ids:
+                  continue
+              if (r.get('Action_Authority') or '').strip() != 'AUTO_ALLOWED':
+                  continue
+              missing = [d for d in deps(r) if d not in pass_ids]
+              if not missing:
+                  candidates.append(r)
+
+          priority_rank = {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3}
+          def successor_pressure(tid):
+              critical = high = total = 0
+              for s in l6:
+                  sid = (s.get('Task_ID') or '').strip()
+                  if not sid or sid in pass_ids or tid not in deps(s):
+                      continue
+                  others = [d for d in deps(s) if d != tid and d not in pass_ids]
+                  if not others:
+                      total += 1
+                      p = (s.get('Priority') or '').strip()
+                      critical += p == 'CRITICAL'
+                      high += p == 'HIGH'
+              return critical, high, total
+
+          candidates.sort(key=lambda r: (
+              -successor_pressure((r.get('Task_ID') or '').strip())[0],
+              -successor_pressure((r.get('Task_ID') or '').strip())[1],
+              priority_rank.get((r.get('Priority') or '').strip(), 9),
+              (r.get('Task_ID') or '').strip(),
+          ))
+
+          print(f'RUNTIME_PASS_COUNT={len(pass_ids)}')
+          print(f'L6_ROW_COUNT={len(l6)}')
+          print(f'L6_STRICT_DEPENDENCY_READY_COUNT={len(candidates)}')
+          for r in candidates:
+              tid = (r.get('Task_ID') or '').strip()
+              c, h, t = successor_pressure(tid)
+              print('FRONTIER|' + '|'.join([
+                  tid,
+                  (r.get('Priority') or '').strip(),
+                  (r.get('AI_Capability_A0_A4') or '').strip(),
+                  (r.get('Action_Authority') or '').strip(),
+                  ','.join(deps(r)) or '-',
+                  f'unlocks_critical={c}',
+                  f'unlocks_high={h}',
+                  f'unlocks_total={t}',
+                  (r.get('Task_Name') or r.get('Title') or r.get('Task') or r.get('Objective') or '').replace('|','/').strip(),
+              ]))
+
+          # Show exact dependency state around the likely accountless-core chain.
+          for tid in ('TSK-0357','TSK-0358','TSK-0359','TSK-0360','TSK-0362','TSK-0363'):
+              r = by_id[tid]
+              missing = [d for d in deps(r) if d not in pass_ids]
+              print(f'CHAIN|{tid}|priority={(r.get("Priority") or "").strip()}|deps={",".join(deps(r))}|missing={",".join(missing) or "NONE"}|authority={(r.get("Action_Authority") or "").strip()}')
+
+          assert candidates, 'No strict L6 dependency-ready AUTO_ALLOWED candidate found'
+          assert (candidates[0].get('Task_ID') or '').strip() == 'TSK-0357', [(r.get('Task_ID') or '').strip() for r in candidates[:10]]
+          print('SELECTED_BY_DEPENDENCY_PRESSURE=TSK-0357')
+          PY
+          git diff --check
+          test -z "$(git status --porcelain)"
