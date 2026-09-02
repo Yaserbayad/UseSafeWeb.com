@@ -127,7 +127,7 @@ def verify() -> str:
         '`0` — do not collect','`<=24h`','`<=30d`','Unknown fields fail telemetry schema validation',
         'Never use request/correlation ID, trace/span ID, identity, ClientID, raw URL, DNS/domain/query, error text or timestamp as a metric label',
         'All latency metrics are histograms','p50/p95/p99',
-        'Nginx access logging','No user/device/client/domain drill-down exists',
+        'No user/device/client/domain drill-down exists',
         'Tracing is **disabled by default','successful-request sampling is capped at `<=1%`',
         '`PAGE`','`TICKET`','missing telemetry is `unknown/blind`, never healthy',
         '`PR-01 FIELD_ALLOWLIST`','`PR-02 CARDINALITY`','`PR-03 NO_HISTORY_NO_SECRET`',
