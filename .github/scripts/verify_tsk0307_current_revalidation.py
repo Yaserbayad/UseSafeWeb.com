@@ -96,14 +96,16 @@ for cells in rows_md:
 assert seen == IDS, seen
 print("TSK0307_REGISTRY_FIELDS=9/9_PASS")
 
-urls = re.findall(r"https://[^\s)`]+", current)
-assert any("support.google.com/android/answer/9654714" in u for u in urls)
-assert any("developer.android.com/reference/android/app/admin/DevicePolicyManager" in u for u in urls)
-assert any("developer.android.com/reference/android/net/LinkProperties" in u for u in urls)
-assert any("support.apple.com/guide/deployment/dns-settings" in u for u in urls)
-assert any("support.apple.com/guide/iphone/install-or-remove-configuration-profiles" in u for u in urls)
-assert any("support.apple.com/guide/personal-safety" in u for u in urls)
-assert all(any(host in u for host in ["support.google.com", "developer.android.com", "support.apple.com"]) for u in urls)
+source_review = current.split("## 2. Current official-source review — 2026-09-02",1)[1].split("## 3. Current project sources",1)[0]
+source_urls = re.findall(r"https://[^\s)`]+", source_review)
+assert len(source_urls) == 6, source_urls
+assert any("support.google.com/android/answer/9654714" in u for u in source_urls)
+assert any("developer.android.com/reference/android/app/admin/DevicePolicyManager" in u for u in source_urls)
+assert any("developer.android.com/reference/android/net/LinkProperties" in u for u in source_urls)
+assert any("support.apple.com/guide/deployment/dns-settings" in u for u in source_urls)
+assert any("support.apple.com/guide/iphone/install-or-remove-configuration-profiles" in u for u in source_urls)
+assert any("support.apple.com/guide/personal-safety" in u for u in source_urls)
+assert all(any(host in u for host in ["support.google.com", "developer.android.com", "support.apple.com"]) for u in source_urls)
 print("TSK0307_OFFICIAL_SOURCE_SET=PASS")
 
 require(current, ["Private DNS provider hostname", "DNS questions/answers", "hostname serving DNS-over-TLS", "Private DNS is active", "HTTPS or TLS", "VPN & Device Management", "explicit user permission"], "current source semantics")
