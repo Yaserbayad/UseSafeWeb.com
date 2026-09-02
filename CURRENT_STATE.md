@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T04:18:20Z
+**Updated:** 2026-09-02T04:31:27Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2497,5 +2497,27 @@ Recompute the executable frontier from canonical WBS/graph, current runtime evid
 - **Non-inference:** no vendor activation, paid-plan purchase, contract/legal approval, infrastructure purchase, software deployment, participant processing, market activation, lifecycle gate or successor PASS is inferred.
 
 ### Queue status after current TSK-0585 acceptance
+
+Recompute the executable frontier from canonical WBS/graph, current runtime evidence, artifact-specific current-validity, gates and Action Authority. Preserve valid non-uniform historical PASS records unless current evidence materially invalidates them.
+
+
+## TSK-0352 current accepted stable state — 2026-09-02 — PERSISTENT CLIENTID/API/LIFECYCLE CONTRACT
+
+`TSK-0352 — Specify AdGuard API, persistent ClientID, privacy and lifecycle contract`: **PASS** under current `ACC-0352 / VER-0352 / EVD-0352`, current direct predecessors TSK-0041 / TSK-0142, and the frozen AdGuard Home v0.107.79 API boundary.
+
+- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L4 / MEDIUM / A3 / `AUTO_ALLOWED`; dependencies exactly `TSK-0041; TSK-0142`.
+- Current artifact `TSK_0352_POST_CR0008_ADGUARD_PERSISTENT_CLIENTID_API_LIFECYCLE_CONTRACT_2026-09-02.md`, version `1.0.0-post-CR0008`, blob `e5cbbcac2f42810527717549482765b6b1ad72c1`, publication commit `d5bf580f5d416539f9c176c2cec9aa65c69fa8aa`.
+- Durable evidence `TSK_0352_POST_CR0008_CURRENT_CONTRACT_EVIDENCE_2026-09-02.md`, blob `4353991a443e162ce8ec3a9b1090c6ed9778a196`, publication commit `bf9545aa79ccdc4b69e7a30b74ace3dc0f114b3a`.
+- Independent read-only VER-0352: base script blob `43a4013967c8066ba2c1f79d68a512c49cf9aef3`, final wrapper blob `11640b9b0c99c0a19440eda7987f3dcd32474539`, workflow blob `3c3832a66ed03d5cbe5ac8f163b1ae0a97abdfcd`, run/job `33590945044 / 100124642037`, conclusion **SUCCESS**.
+- Accepted API boundary: private server-side exact client search/add/update/delete only; no generic customer `/control` proxy and no browser/admin credential exposure.
+- Accepted ClientID boundary: server-generated 26-character lowercase base32 random identifier, collision-checked, identity-independent and never an authorization token or technical protection proof.
+- Accepted privacy boundary: persistent clients explicitly set `ignore_querylog=true` and `ignore_statistics=true` while the global no-history/no-statistics baseline remains independently required.
+- Accepted direct DoH route: `https://dns.usesafeweb.com/dns-query/{client_id}`; accountless route remains without persistent ClientID.
+- Lifecycle create/search/update/rotation/delete requires current parent/device authorization, exact read-back, datastore + AdGuard terminal agreement, no blind ambiguous mutation replay and state-based rollback/reconciliation.
+- Version/API/ClientID/privacy-field drift reopens the affected integration; v0.108+ behavior is not silently imported.
+- **ACC-0352 = PASS. VER-0352 = PASS. EVD-0352 = SATISFIED.**
+- **Non-inference:** this is L4 contract-definition PASS only; it does not deploy the adapter, call live AdGuard, create/update/delete a client, activate account/auth/datastore services, authorize real-user processing, pass a lifecycle gate, publish, launch or infer successor PASS.
+
+### Queue status after current TSK-0352 acceptance
 
 Recompute the executable frontier from canonical WBS/graph, current runtime evidence, artifact-specific current-validity, gates and Action Authority. Preserve valid non-uniform historical PASS records unless current evidence materially invalidates them.
