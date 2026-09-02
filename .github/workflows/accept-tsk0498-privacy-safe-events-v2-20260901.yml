@@ -21,7 +21,7 @@ jobs:
         with:
           ref: feature/tsk-0455-ubuntu-deploy-recover-20260902
           fetch-depth: 0
-      - name: Apply bounded production corrections under proven RED contracts
+      - name: Apply bounded corrections under proven RED contracts
         shell: bash
         run: |
           set -euo pipefail
@@ -161,8 +161,17 @@ jobs:
               t=t.replace(old_apply,new_apply)
           elif new_apply not in t:
               raise SystemExit('apply implementation shape changed unexpectedly')
-
           p.write_text(t,encoding='utf-8')
+
+          tp=Path('infrastructure/adguard-server/tests/test-deploy-or-recover-behavior.sh')
+          tt=tp.read_text(encoding='utf-8')
+          old="""# Firewall reconciliation must not append rules or rewrite defaults when exact state is already present.\nUFW_SCENARIO='exact'\n"""
+          new="""# Firewall reconciliation must not append rules or rewrite defaults when exact state is already present.\nCFG[ENABLE_UFW]='true'\nCFG[ADMIN_SSH_CIDR]='192.0.2.10/32'\nUFW_SCENARIO='exact'\n"""
+          if old in tt:
+              tt=tt.replace(old,new)
+          elif new not in tt:
+              raise SystemExit('behavior firewall fixture shape changed unexpectedly')
+          tp.write_text(tt,encoding='utf-8')
           PY
       - name: Verify current authority and static contract
         shell: bash
@@ -189,18 +198,19 @@ jobs:
           set -euo pipefail
           sudo bash infrastructure/adguard-server/tests/test-deploy-or-recover-behavior.sh
           git diff --check
-      - name: Persist GREEN production corrections only after tests pass
+      - name: Persist GREEN corrections only after tests pass
         shell: bash
         run: |
           set -euo pipefail
           changed="$(git status --porcelain | sed 's/^...//' | sort)"
+          expected=$'infrastructure/adguard-server/deploy_or_recover.sh\ninfrastructure/adguard-server/tests/test-deploy-or-recover-behavior.sh'
           if [[ -z "$changed" ]]; then
             echo 'TSK0455_NO_PENDING_CORRECTION=PASS'
             exit 0
           fi
-          test "$changed" = 'infrastructure/adguard-server/deploy_or_recover.sh'
+          test "$changed" = "$expected"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add infrastructure/adguard-server/deploy_or_recover.sh
+          git add infrastructure/adguard-server/deploy_or_recover.sh infrastructure/adguard-server/tests/test-deploy-or-recover-behavior.sh
           git commit -m 'fix: harden TSK-0455 firewall and apply idempotency'
           git push origin HEAD:feature/tsk-0455-ubuntu-deploy-recover-20260902
