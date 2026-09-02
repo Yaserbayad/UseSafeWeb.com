@@ -1,0 +1,1 @@
+TSK-0239 registered verifier trigger. This file is temporary and must be removed by the acceptance carrier after successful verification.
