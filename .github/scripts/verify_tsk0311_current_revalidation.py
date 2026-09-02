@@ -66,7 +66,6 @@ historical_evd = tracked("TSK_0311_LOCALIZATION_CONTENT_ARCHITECTURE_EVIDENCE_20
 current = tracked("TSK_0311_POST_CR0008_DUAL_MODE_LOCALIZATION_CONTENT_ARCHITECTURE_REVALIDATION_2026-09-02.md")
 current_instructions = tracked("TSK_0307_POST_CR0008_CURRENT_SOURCE_BACKED_INSTRUCTION_CATALOGUE_REVALIDATION_2026-09-02.md")
 
-# Historical architecture remains valid provenance for the unchanged localization mechanics.
 for heading in [
     "## 2. Locale baseline", "## 3. Externalized file model", "## 4. Key taxonomy",
     "## 5. Source-backed instruction binding", "## 6. Locale manifest", "## 7. Fallback contract",
@@ -77,7 +76,6 @@ for heading in [
 require(historical_evd, ["English baseline externalized", "Turkish/Arabic not blocked", "fallback deterministic and testable", "content versioning testable", "plural/date/number rules", "instruction variants bound", "accessibility/localization", "privacy boundary"], "historical evidence")
 print("TSK0311_HISTORICAL_PROVENANCE=PASS")
 
-# The current predecessor really introduces the optional account/session/dashboard/device lifecycle surfaces.
 require(ia, [
     "Sign in / Manage devices", "optional parent-account and lightweight dashboard",
     "/account/sign-in", "/account/auth-result", "dashboard", "Add device", "reverify",
@@ -86,19 +84,16 @@ require(ia, [
 ], "current TSK-0318 dual-mode surfaces")
 print("TSK0311_DUAL_MODE_IA_INPUT=PASS")
 
-# The historical scope was explicitly accountless and therefore incomplete for the current IA.
 require(historical, ["provisional accountless first-phone product", "accountless setup"], "historical accountless scope")
 require(current, ["stale only where", "optional parent-account/session/dashboard/device-lifecycle surfaces", "preserves the historical architecture", "extends the key/file/ownership/test model"], "current scope reconciliation")
 print("TSK0311_SCOPE_RECONCILIATION=PASS")
 
-# Current locale manifest contract: three locales, direction/status/fallback/marketActivation/version/owner fields.
 locale_table = current.split("## 3. Preserved locale baseline and manifest contract", 1)[1].split("## 4. Current externalized file model", 1)[0]
 for locale in ["`en-GB`", "`tr-TR`", "`ar`"]:
     assert locale in locale_table
 require(locale_table, ["LTR", "RTL", "baseline", "provisional", "marketActivation=false", "contentVersion", "lastVerified", "owner"], "locale manifest")
 print("TSK0311_LOCALE_MANIFEST=PASS")
 
-# File-model namespace coverage includes the old core plus all current account/session/dashboard/device lifecycle namespaces.
 file_model = current.split("## 4. Current externalized file model",1)[1].split("## 5. Preserved semantic key model",1)[0]
 for namespace in [
     "common.json", "navigation.json", "setup.json", "verification.json", "protection-map.json",
@@ -109,7 +104,6 @@ for namespace in [
 require(file_model, ["no user-facing production sentence", "auth/session message", "dashboard/device-management label", "destructive lifecycle consequence"], "externalized current file model")
 print("TSK0311_EXTERNALIZED_NAMESPACES=13/13_PASS")
 
-# Parse representative current key tables and ensure the current IA categories are actually represented.
 key_section = current.split("## 6. Current dual-mode key inventory",1)[1].split("## 7. Current truth and separation rules",1)[0]
 required_keys = [
     "navigation.sign_in_manage_devices", "account.entry.continue_without_account",
@@ -126,7 +120,6 @@ for key in required_keys:
     assert f"`{key}`" in key_section, key
 print(f"TSK0311_DUAL_MODE_KEY_COVERAGE={len(required_keys)}/{len(required_keys)}_PASS")
 
-# Core semantic safety/truth requirements are explicitly localized, not inferred from generic fallback.
 truth = current.split("## 7. Current truth and separation rules",1)[1].split("## 8. Source-backed instruction binding remains single-authority",1)[0]
 require(truth, [
     "Optional account is optional", "Accountless fallback remains explicit",
@@ -135,13 +128,11 @@ require(truth, [
 ], "dual-mode truth")
 print("TSK0311_DUAL_MODE_TRUTH=PASS")
 
-# Current source-backed instruction authority remains single-owner and current.
 require(current_instructions, ["nine instruction classes", "SafeWeb", "dns.usesafeweb.com", "2026-09-02"], "current TSK-0307")
 instruction_binding = current.split("## 8. Source-backed instruction binding remains single-authority",1)[1].split("## 9. Deterministic fallback contract",1)[0]
-require(instruction_binding, ["nine TSK-0307 instruction IDs", "cannot silently retain an older instruction string", "not added to the TSK-0307 instruction catalogue unless it is genuinely platform/source-owned"], "instruction binding")
+require(instruction_binding, ["nine TSK-0307 instruction IDs", "cannot silently retain an older instruction string", "TSK-0307 instruction catalogue", "genuinely platform/source-owned"], "instruction binding")
 print("TSK0311_CURRENT_INSTRUCTION_BINDING=PASS")
 
-# Fallback, locale formatting, RTL/accessibility, ownership and versioning remain testable and include new critical account copy.
 fallback = current.split("## 9. Deterministic fallback contract",1)[1].split("## 10. Plural/number/date/time rules",1)[0]
 require(fallback, ["exact requested locale", "en-GB", "missing-key failure", "destructive-operation consequence", "machine translation"], "fallback")
 formatting = current.split("## 10. Plural/number/date/time rules",1)[1].split("## 11. RTL and accessibility",1)[0]
@@ -155,7 +146,6 @@ versioning = current.split("## 13. Schema/content versioning",1)[1].split("## 14
 require(versioning, ["localization schema version", "per-locale content bundle semantic version", "minor-compatible schema/content expansion", "without removing the still-valid accountless keys"], "versioning")
 print("TSK0311_FALLBACK_FORMATTING_A11Y_OWNERSHIP_VERSIONING=PASS")
 
-# Current test assertions must cover the complete dual-mode addition, not only historical core assertions.
 tests = current.split("## 14. Current testable acceptance assertions",1)[1].split("## 15. Acceptance reconciliation",1)[0]
 numbered = re.findall(r"^\d+\. ", tests, re.M)
 assert len(numbered) == 18, len(numbered)
@@ -167,7 +157,6 @@ require(tests, [
 ], "current test assertions")
 print("TSK0311_TEST_ASSERTIONS=18/18_PASS")
 
-# ACC and non-inference are explicit.
 acceptance = current.split("## 15. Acceptance reconciliation",1)[1].split("## 16. Non-inference",1)[0]
 require(acceptance, ["English semantic baseline remains externalized", "full current dual-mode IA", "Turkish/Arabic remain structurally unblocked", "fallback remains deterministic", "Content/schema versioning remains independently testable"], "acceptance reconciliation")
 non_inference = current.split("## 16. Non-inference",1)[1]
