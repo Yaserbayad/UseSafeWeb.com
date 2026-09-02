@@ -1,23 +1,22 @@
-name: Retired - Accept TSK-0498 privacy-safe event contract v2
+name: Temporary - Verify TSK-0047 release checkpoint rollback plan
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
-  verify-retired-state:
+  verify-tsk0047:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify durable TSK-0498 acceptance without mutation
+      - name: Verify TSK-0047 plan
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq '## TSK-0498 current accepted stable state — 2026-09-01 — POST-CR-0008' CURRENT_STATE.md
-          grep -Fq '`TSK-0498 — Define only decision-linked accountless journey, protection-state, self-service, reliability, channel, and cost events`: **PASS**' CURRENT_STATE.md
-          test "$(git hash-object TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md)" = '6b7a5095122c74ed9ec860b74408dab474576659'
-          grep -Fq '**Version:** 1.0.1' TSK_0498_PRIVACY_SAFE_DECISION_LINKED_EVENT_CONTRACT_2026-09-01.md
+          test "$(git hash-object TSK_0047_RELEASE_CHECKPOINT_ROLLBACK_PLAN_2026-09-02.md)" = '00e4c57b2db0efdd23e213ac2078a435f24f0171'
+          test "$(git hash-object Plans/Master/Tools/verify_tsk0047_release_checkpoint_rollback_20260902.py)" = '1778971a17bfe6a99a1ecf19096b0e8d7993153f'
+          python3 Plans/Master/Tools/verify_tsk0047_release_checkpoint_rollback_20260902.py
           python3 Plans/Master/Tools/validate_master_plan.py
-          echo 'TSK0498_HISTORICAL_ACCEPT_WORKFLOW_RETIRED=PASS'
