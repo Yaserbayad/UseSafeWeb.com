@@ -16,13 +16,15 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          fetch-depth: 2
+          fetch-depth: 0
       - name: Print exact TSK-0358 authority and dependency evidence
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD^)" = '21d6a75d674b99a03ed4056a629fc1695835d687'
-          test "$(git diff --name-only HEAD^ HEAD)" = '.github/workflows/accept-tsk0498-privacy-safe-events-v2-20260901.yml'
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = '21d6a75d674b99a03ed4056a629fc1695835d687'
+          test "$(git merge-base HEAD origin/main)" = '21d6a75d674b99a03ed4056a629fc1695835d687'
+          test "$(git diff --name-only origin/main...HEAD)" = '.github/workflows/accept-tsk0498-privacy-safe-events-v2-20260901.yml'
           python3 Plans/Master/Tools/validate_master_plan.py
           python3 - <<'PY'
           import csv, json, re
