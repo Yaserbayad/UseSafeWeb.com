@@ -1,0 +1,107 @@
+name: Sync TSK-0234 current state
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/sync-tsk0234-current-state.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-current-state-write
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out current main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Guard, append, commit, and push stable checkpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifact='TSK_0234_POST_CR0008_PARTIAL_FAILURE_DELETION_MIGRATION_STATE_MACHINE_2026-09-02.md'
+          expected_artifact_blob='361ecdfa733a8a27f82616725e6d9b348ad57c1f'
+          expected_state_blob='ed36b30f7287ac08aeebcdc777ddd1f66c5ee8a2'
+          marker='## TSK-0234 current accepted stable state — 2026-09-02 — POST-CR-0008 PARTIAL-FAILURE/DELETION/MIGRATION STATE MACHINE'
+
+          test "$(git hash-object "$artifact")" = "$expected_artifact_blob"
+          if grep -Fqx "$marker" CURRENT_STATE.md; then
+            echo 'TSK0234_RUNTIME_ALREADY_PRESENT=PASS'
+            exit 0
+          fi
+          test "$(git hash-object CURRENT_STATE.md)" = "$expected_state_blob"
+
+          python3 - <<'PY'
+          from datetime import datetime, timezone
+          from pathlib import Path
+          p = Path('CURRENT_STATE.md')
+          lines = p.read_text(encoding='utf-8').splitlines()
+          stamp = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+          for i, line in enumerate(lines):
+              if line.startswith('**Updated:**'):
+                  lines[i] = f'**Updated:** {stamp}'
+                  break
+          else:
+              raise SystemExit('CURRENT_STATE Updated field not found')
+          p.write_text('\n'.join(lines).rstrip() + '\n', encoding='utf-8')
+          print(f'CURRENT_STATE_UPDATED={stamp}')
+          PY
+
+          cat >> CURRENT_STATE.md <<'EOF'
+
+          ## TSK-0234 current accepted stable state — 2026-09-02 — POST-CR-0008 PARTIAL-FAILURE/DELETION/MIGRATION STATE MACHINE
+
+          `TSK-0234 — Design auth, datastore and AdGuard partial-failure, deletion and migration flows`: **PASS** under current `ACC-0234 / VER-0234 / EVD-0234`, direct predecessors `TSK-0356; TSK-0232; TSK-0410`, DEC-0053/CR-0006 optional-account authority and DEC-0055/CR-0008 proportional-evidence authority.
+
+          - Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L5 / MEDIUM / A3 / `AUTO_ALLOWED`; all three direct predecessors are current durable PASS.
+          - Accepted artifact: `TSK_0234_POST_CR0008_PARTIAL_FAILURE_DELETION_MIGRATION_STATE_MACHINE_2026-09-02.md`, version `1.0.0-post-CR0008`, blob `361ecdfa733a8a27f82616725e6d9b348ad57c1f`, publication commit `c904a932b3c91721880783720f2d8b86a4580c93`.
+          - `VER-0234`: current Project-Governor/API/security reviewer inspection against the WBS/ACC/VER/EVD contract and current TSK-0356/0232/0410 predecessors found every applicable ACC-0234 element present and no contradictory current evidence.
+          - Cross-system terminal success requires durable minimum operation provenance plus agreement between current local ownership/state and every required observed external effect. Ambiguous effects are reconciliation states, never blind-retry or success permission.
+          - Firebase/provider uncertainty grants zero account-only authority while the independently healthy accountless core remains available. Datastore unavailable before durable operation persistence causes zero consequential AdGuard/provider mutation.
+          - External mutation success followed by lost/failed local finalization is recovered by re-observing the same durable operation; it does not generate a second device/ClientID or replay the effect blindly. Stale `row_version` cannot overwrite newer owner intent.
+          - AdGuard admin outage, data-plane outage, stale ClientID, duplicate create, partial update/rotation and partial delete each have distinct fail-closed outcomes. Stored account/binding state never overrides current technical protection evidence.
+          - Device/account deletion preserves minimum reconciliation authority until required AdGuard/provider effects are definitely disposed; server-side deletion never claims physical device-profile removal.
+          - Future provider migration is not currently activated. If later authorized, it preserves internal `parent_id` only after strong old/new identity proof, never merges by email/ClientID and keeps ambiguity in migration/recovery pending. Schema expansion reopens the owning data/ownership contracts.
+          - Future service decommission is separately consequential/owner-controlled. The state machine defines safe ordering but authorizes no shutdown or public impact.
+          - No failure/recovery path may expose raw AdGuard admin controls, shared-password fallback, query logs, identifiable per-client statistics, browsing history, provider/session bearer values or cross-parent access.
+          - `RSK-0001` remains OPEN. No datastore implementation, provider/AdGuard mutation, failure test execution, migration/decommission action, legal/backup completion, `LG-07`, L6 build or public activation is inferred.
+
+          ### Queue status after TSK-0234 acceptance
+
+          Recompute the current L5 frontier from canonical WBS/graph, runtime PASS evidence, current gates, constraints/interfaces and Action Authority. Preserve every legal/material-action fence; do not infer LG-07 PASS or select work from numbering alone.
+          EOF
+
+          grep -Fqx "$marker" CURRENT_STATE.md
+          git diff --check
+          changes="$(git status --porcelain)"
+          test "$(printf '%s\n' "$changes" | sed '/^$/d' | wc -l)" -eq 1
+          printf '%s\n' "$changes" | grep -Fx ' M CURRENT_STATE.md'
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: accept TSK-0234 partial-failure state machine'
+          git push origin HEAD:main
+          echo 'TSK0234_RUNTIME_WRITE=PASS'
+
+      - name: Remote read-back
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git show origin/main:CURRENT_STATE.md | grep -F '## TSK-0234 current accepted stable state — 2026-09-02 — POST-CR-0008 PARTIAL-FAILURE/DELETION/MIGRATION STATE MACHINE'
+          git show origin/main:CURRENT_STATE.md | grep -F '`TSK-0234 — Design auth, datastore and AdGuard partial-failure, deletion and migration flows`: **PASS**'
+          git show origin/main:CURRENT_STATE.md | grep -F 'No datastore implementation, provider/AdGuard mutation, failure test execution, migration/decommission action, legal/backup completion, `LG-07`, L6 build or public activation is inferred.'
+          echo "REMOTE_STATE_BLOB=$(git rev-parse origin/main:CURRENT_STATE.md)"
+          echo "REMOTE_HEAD=$(git rev-parse origin/main)"
