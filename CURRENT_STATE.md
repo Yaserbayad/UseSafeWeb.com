@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T00:03:38Z
+**Updated:** 2026-09-02T00:09:23Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2162,3 +2162,28 @@ Recompute current eligibility from canonical WBS/graph, current semantic PASS va
 ### Queue status after current TSK-0301 revalidation
 
 Recompute current eligibility from canonical WBS/graph and runtime evidence. TSK-0316 remains a known CR-0006 dual-mode friction requalification candidate but must be independently rechecked against all other current eligible work before execution. Preserve corrected TSK-0299, TSK-0485, TSK-0318 and TSK-0319 accepted states unchanged.
+## TSK-0316 current accepted stable state — 2026-09-02 — POST-CR-0008 DUAL-MODE FRICTION REQUALIFICATION
+
+`TSK-0316 — Define a friction budget and challenge every click, field, choice, confirmation, account, and manual step`: **PASS** under current `ACC-0316 / VER-0316 / EVD-0316`, current TSK-0315 dual-mode predecessor, DEC-0053/CR-0006, DEC-0054/CR-0007, and DEC-0055/CR-0008.
+
+- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L4 / HIGH / A3 / `AUTO_ALLOWED`; dependency exactly `TSK-0315`.
+- Current artifact `TSK_0316_POST_CR0008_DUAL_MODE_FRICTION_BUDGET_2026-09-02.md`, version `2.0.0-post-cr0008`, blob `27f1b6de7924ceba713f9aed9ffc90df9a31efe5`, publication commit `8af4b735cd0e9013c21cf8faa1b63d6f1a99015c`.
+- Current durable evidence `TSK_0316_POST_CR0008_DUAL_MODE_FRICTION_EVIDENCE_2026-09-02.md`, blob `aaaa68119c21d76bc29d04e54443c23ce808bebc`, publication commit `6b52b2471e0f7a2f6edf3897b8df8b5c252c472a`.
+- Independent read-only VER-0316 workflow `.github/workflows/verify-tsk0316-post-cr0008.yml`, blob `c4948995ad5fde72c827d588132ec5aa7ff1dd09`; run/job `33574008442 / 100073872441`: **SUCCESS** with `contents: read`.
+- Current predecessor TSK-0315 is durable PASS under `TSK_0315_POST_CR0007_DUAL_MODE_END_TO_END_SERVICE_BLUEPRINT_2026-08-31.md`, blob `97cf09f294c757f80ad5c0fbe6110ed8d471159c`.
+- Historical accountless-only TSK-0316 remains compatible evidence only for unchanged minimisation principles; it is superseded for current acceptance because CR-0006 added optional account/session/dashboard/device-management scope.
+- The current friction budget challenges all 25 current TSK-0315 stages and uses seven reason classes covering irreducible decisions, platform/security actions, evidence interactions, conditional routing, optional account continuity, consequential lifecycle actions, and recovery/help.
+- Complete accountless setup/verification/Protection Map/help/removal/recovery remains first-class and can finish/exit without login. Optional account continuity occurs only after explicit choice or already-authenticated account-only use.
+- Successful sign-in does not automatically link/import/promote/extend J0/J1 or create a managed-device record; valid session suppresses redundant sign-in; dashboard empty/list is output rather than mandatory form friction.
+- Managed-device persistence remains minimum bounded continuity and is not a child profile, browsing-history domain or technical protection-verification signal.
+- Logout, unlink/revoke, device-record deletion, account deletion, anonymous reset and physical SafeWeb DNS removal remain distinct operations with explicit object/consequence semantics.
+- Ambiguous consequential effects are reconciled before replay; equivalent failures do not loop without changed condition/new evidence.
+- Platform/security actions and evidence interactions that cannot truthfully be automated remain explicit. Unsupported silent-install/one-click/complete-safety claims are prohibited.
+- Parent-facing generic naming uses `SafeWeb` / `SafeWeb DNS`; `UseSafeWeb.com` and `dns.usesafeweb.com` appear only when they are actual technical identifiers.
+- No browsing/query/activity history, raw AdGuard admin/control surface, mandatory child account/profile or analytics/marketing field is introduced by the friction budget.
+- `RSK-0002` remains OPEN/non-blocking before L8; no representative-parent usability/comprehension is inferred.
+- **Non-inference:** L4 friction-design PASS only; no TSK-0317, LG-06, provider/auth architecture, persistent schema/storage, implementation/build, legal/privacy completion, publication, payment, production behavior or launch PASS is inferred.
+
+### Queue status after current TSK-0316 requalification
+
+Recompute the next executable frontier from canonical WBS/graph, current runtime PASS evidence, lifecycle/gates, action authority and latest owner instruction. Do not infer TSK-0317 or any other successor PASS solely from TSK-0316 completion. Preserve corrected TSK-0299, TSK-0485, TSK-0318, TSK-0319 and current TSK-0301 accepted states unchanged.
