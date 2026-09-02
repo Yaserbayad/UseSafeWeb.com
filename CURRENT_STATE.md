@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T17:38:44Z
+**Updated:** 2026-09-02T17:45:07Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2860,3 +2860,19 @@ Recompute current L5 eligibility. Direct successor `TSK-0516` may execute only i
 ### Queue status after TSK-0047 acceptance
 
 Recompute the complete residual L5 frontier. `TSK-0587` may become eligible but remains `HUMAN_ONLY`; other independent `AUTO_ALLOWED` prerequisites must be completed before stopping if eligible.
+
+## TSK-0237 current accepted stable state — 2026-09-02 — POST-CR-0010 / CURRENT-VENDOR-SOURCES
+
+`TSK-0237 — Define Firebase/Auth and AdGuard API version, price, terms and compatibility monitoring triggers`: **PASS** under current `ACC-0237 / VER-0237 / EVD-0237`.
+
+- Current normalized WBS blob `eb35f3b10356396c5117e3f47d0b0378953e2157`: L5 / A4 / `AUTO_ALLOWED`; dependencies `TSK-0586; TSK-0539; TSK-0585` are current durable PASS.
+- Accepted artifact: `TSK_0237_VENDOR_VERSION_PRICE_TERMS_COMPATIBILITY_MONITORING_TRIGGERS_2026-09-02.md`, version `1.0.0`, blob `4eae7703238a603885da93cf816e61b43726efe1`, publication commit `f1b3d482a3285b8606b0adad84a3ba8e1c635752`.
+- Corrected deterministic verifier: `Plans/Master/Tools/verify_tsk0237_vendor_monitoring_20260902.py`, blob `d5806fb8d2d50519b57d82abb605a8f8aa74feae`. Initial read-only run `33662826121` failed only on an overcounted Firebase-prefix assertion (expected 7; complete matrix contains 6 Firebase + 2 Google OAuth + 7 AdGuard = 15 triggers); no acceptance failure or state mutation occurred.
+- Independent GitHub Actions verification run `33662918882 / 1`: **SUCCESS**; verifies owners/cadence/signals/thresholds, official source baseline, quota/price/session/provider/OAuth/scope/terms/subprocessor/OpenAPI/release/default/security/license/platform triggers, safe responses, migration/retest paths, and gate/state reopening rules. Full modular validator PASS.
+- Current official-source baseline was refreshed on 2026-09-02 from Firebase Authentication/pricing/limits/session/terms, Google Cloud subprocessors, Google Identity/OAuth, and AdGuard Home OpenAPI/changelog/releases/security sources cited in the artifact.
+- CR-0009/DEC-0056 preserved: terms/subprocessor/license changes are detected and routed, but no AI legal interpretation, legal evidence, legal approval, transfer conclusion or legal PASS is inferred.
+- **Non-inference:** no vendor upgrade, plan upgrade, spend, production action, L6 implementation, LG-07 PASS, or HUMAN_ONLY resource approval is inferred.
+
+### Queue status after TSK-0237 acceptance
+
+Recompute the complete residual L5 frontier. Stop only if every remaining eligible item is legal-external, dependency-blocked, or HUMAN_ONLY/HUMAN_APPROVAL_REQUIRED.
