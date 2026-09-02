@@ -72,7 +72,8 @@ historical_evd = tracked_text("TSK_0307_SOURCE_BACKED_INSTRUCTION_CONTENT_CATALO
 require(historical_evd, ["nine current instruction classes", "official/current source", "platform/version", "region/locale", "owner", "last verification", "review trigger", "localized variants", "known limits", "test reference"], "historical provenance")
 print("TSK0307_HISTORICAL_PROVENANCE=PASS")
 
-require(predecessor, ["SafeWeb / SafeWeb DNS", "dns.usesafeweb.com", "https://dns.usesafeweb.com/dns-query", "accountless core remains complete", "optional account is orthogonal continuity", "profile installation and removal remain explicit user/OS actions", "do not instruct the user to weaken security"], "current predecessor")
+require(predecessor, ["dns.usesafeweb.com", "https://dns.usesafeweb.com/dns-query", "accountless core remains complete", "optional account is orthogonal continuity", "profile installation and removal remain explicit user/OS actions", "do not instruct the user to weaken security"], "current predecessor")
+assert "`SafeWeb`" in predecessor and "`SafeWeb DNS`" in predecessor
 print("TSK0307_PREDECESSOR_ALIGNMENT=PASS")
 
 lines = current.splitlines()
