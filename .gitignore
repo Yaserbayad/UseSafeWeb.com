@@ -4,6 +4,8 @@ node_modules/
 dist/
 coverage/
 *.log
+next-env.d.ts
+*.tsbuildinfo
 
 # Local environment and secret material
 .env
