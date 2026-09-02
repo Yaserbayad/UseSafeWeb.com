@@ -1,4 +1,4 @@
-import { createJourney, transition, stateCopy, SCREEN } from './model.mjs';
+import { createJourney, transition, stateCopy, SCREEN, EVIDENCE_STATE } from './model.mjs';
 
 const app = document.querySelector('#app');
 let journey = createJourney();
@@ -78,7 +78,7 @@ function verify() {
   return `<section class="prototype-screen" data-screen="verify">
     <p class="sw-kicker">Verification</p>
     <h1>Check the current protection path</h1>
-    <p>Configuration presence or parent confirmation alone cannot produce <strong>Verified</strong>. A future implementation must use the approved controlled verifier.</p>
+    <p>Configuration presence or parent confirmation alone cannot produce <strong>Protection verified</strong>. A future implementation must use the approved controlled verifier.</p>
     <fieldset class="prototype-test-controls">
       <legend>Internal prototype outcome controls</legend>
       <p class="prototype-meta">These controls simulate verifier outcomes for design coverage; they are not a production verifier.</p>
@@ -124,7 +124,7 @@ function protectionMap() {
 
 function troubleshooting() {
   const copy = stateCopy(journey.dnsState);
-  const retry = [ 'action-needed', 'uncertain' ].includes(journey.dnsState)
+  const retry = [EVIDENCE_STATE.ACTION_NEEDED, EVIDENCE_STATE.UNCERTAIN].includes(journey.dnsState)
     ? actionButton('Recheck after the relevant condition changed', 'RETRY_AFTER_CHANGE', 'data-changed-condition="true"')
     : '';
   return `<section class="prototype-screen" data-screen="troubleshooting">
@@ -173,7 +173,7 @@ function limitations() {
     <h1>Know what is not covered or cannot be verified</h1>
     <ul class="prototype-limits">
       <li>Unsupported or unaccepted device families are not given speculative client workarounds.</li>
-      <li>Managed/locked DNS or profile controls may be Not covered or Status uncertain.</li>
+      <li>Managed/locked DNS or profile controls may be Not covered, or their protection status may not be verifiable.</li>
       <li>VPN, iCloud Private Relay, browser/app custom DNS, captive portals, and network transport blocks can change or obscure the effective path.</li>
       <li>Parent confirmation and profile/settings presence do not equal system verification.</li>
       <li>No layer compensates for another uncovered layer unless current evidence directly proves it.</li>
