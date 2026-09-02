@@ -1,4 +1,4 @@
-name: Temporary - TSK-0357 RED acceptance
+name: Temporary - TSK-0357 integration acceptance
 
 on:
   push:
@@ -6,64 +6,138 @@ on:
       - feature/tsk-0357-anonymous-journey-state-20260902
     paths:
       - 'website/**'
-      - 'Plans/Master/WBS/master-wbs.csv'
+      - 'Plans/Master/**'
       - '.github/workflows/accept-tsk0498-privacy-safe-events-v2-20260901.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  red-contract:
+  tsk0357-acceptance:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: feature/tsk-0357-anonymous-journey-state-20260902
+          fetch-depth: 0
       - uses: actions/setup-node@v6
         with:
           node-version: 22.23.2
           cache: npm
           cache-dependency-path: website/package-lock.json
-      - name: Prove TSK-0357 unit contract is RED before implementation
+      - name: Apply bounded locale-copy correction
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          updates = {
+              'en-GB.json': {
+                  'old_summary': '"summary": "Choose the phone you are setting up. The current baseline uses URL routing only and stores no journey state."',
+                  'new_summary': '"summary": "Choose the phone you are setting up. SafeWeb keeps only minimal setup state in this browser tab so an unfinished setup can resume during the session; the state expires automatically."',
+                  'old_tail': '"primaryLabel": "Choose phone"\n  }',
+                  'new_tail': '"primaryLabel": "Choose phone",\n    "resumeLabel": "Resume setup",\n    "resetLabel": "Start over",\n    "resumeNote": "This browser tab has an unfinished setup. Only controlled setup state is kept here; starting over deletes it immediately."\n  }',
+              },
+              'tr-TR.json': {
+                  'old_summary': '"summary": "Kuracağınız telefonu seçin. Bu temel sürüm yalnızca URL yönlendirmesi kullanır ve yolculuk durumu saklamaz."',
+                  'new_summary': '"summary": "Kurulum yaptığınız telefonu seçin. SafeWeb, tamamlanmamış kuruluma bu oturum içinde devam edebilmeniz için yalnızca bu tarayıcı sekmesinde asgari kurulum durumunu tutar; durum otomatik olarak sona erer."',
+                  'old_tail': '"primaryLabel": "Telefonu seç"\n  }',
+                  'new_tail': '"primaryLabel": "Telefonu seç",\n    "resumeLabel": "Kuruluma devam et",\n    "resetLabel": "Baştan başla",\n    "resumeNote": "Bu tarayıcı sekmesinde tamamlanmamış bir kurulum var. Burada yalnızca kontrollü kurulum durumu tutulur; baştan başlamak bunu hemen siler."\n  }',
+              },
+              'ar.json': {
+                  'old_summary': '"summary": "اختر الهاتف الذي تريد إعداده. يستخدم هذا الأساس توجيه URL فقط ولا يخزن حالة الرحلة."',
+                  'new_summary': '"summary": "اختر الهاتف الذي تقوم بإعداده. يحتفظ SafeWeb فقط بالحد الأدنى من حالة الإعداد داخل علامة تبويب المتصفح هذه لكي تتمكن من متابعة إعداد غير مكتمل خلال الجلسة؛ وتنتهي صلاحية الحالة تلقائيًا."',
+                  'old_tail': '"primaryLabel": "اختر الهاتف"\n  }',
+                  'new_tail': '"primaryLabel": "اختر الهاتف",\n    "resumeLabel": "متابعة الإعداد",\n    "resetLabel": "البدء من جديد",\n    "resumeNote": "توجد عملية إعداد غير مكتملة في علامة تبويب المتصفح هذه. لا تُحفظ هنا إلا حالة إعداد محدودة؛ والبدء من جديد يحذفها فورًا."\n  }',
+              },
+          }
+
+          root = Path('website/src/content')
+          for name, values in updates.items():
+              path = root / name
+              text = path.read_text(encoding='utf-8')
+              if values['new_summary'] not in text:
+                  if text.count(values['old_summary']) != 1:
+                      raise SystemExit(f'{name}: expected exactly one stale summary')
+                  text = text.replace(values['old_summary'], values['new_summary'])
+              if values['new_tail'] not in text:
+                  if text.count(values['old_tail']) != 1:
+                      raise SystemExit(f'{name}: expected exactly one start tail')
+                  text = text.replace(values['old_tail'], values['new_tail'])
+              path.write_text(text, encoding='utf-8')
+          PY
+      - name: Verify authority and repository structure
         shell: bash
         run: |
           set -euo pipefail
           test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
-          cd website
-          npm ci --no-fund --no-audit
-          node --test tests/contract/tsk0357.test.mjs
-
-  red-browser:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22.23.2
-          cache: npm
-          cache-dependency-path: website/package-lock.json
-      - name: Build unchanged baseline
+          test "$(git hash-object website/package-lock.json)" = '14f9a62607489f965b96d98cdf0d825a363cd8bc'
+          python3 Plans/Master/Tools/validate_master_plan.py
+          node website/tests/contract/repo-structure.mjs
+          git diff --check
+      - name: Locked install and contract tests
         shell: bash
         run: |
           set -euo pipefail
           cd website
           npm ci --no-fund --no-audit
+          npm run test:contract
+      - name: Lint, typecheck, and production build
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd website
+          npm run lint
+          npm run typecheck
           NEXT_TELEMETRY_DISABLED=1 npm run build
+      - name: Dependency and version verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd website
+          npm audit --omit=dev --audit-level=high
+          npm audit --audit-level=high
+          test "$(node -p "require('./package.json').dependencies.next")" = '16.3.3'
+          test "$(node -p "require('./package.json').dependencies.react")" = '19.2.8'
+          test "$(node -p "require('./package.json').dependencies['react-dom']")" = '19.2.8'
       - name: Install exact ephemeral browser tooling
         shell: bash
         run: |
           set -euo pipefail
           cd website
-          npm install --no-save --no-package-lock --no-fund --no-audit playwright@1.62.1
+          npm install --no-save --no-package-lock --no-fund --no-audit playwright@1.62.1 axe-core@4.13.0
           npx playwright install --with-deps chromium
-      - name: Prove TSK-0357 browser contract is RED before implementation
+      - name: Real-browser regression and TSK-0357 acceptance
         shell: bash
         run: |
           set -euo pipefail
           cd website
-          NEXT_TELEMETRY_DISABLED=1 npm start -- -p 3000 > /tmp/tsk0357-red.log 2>&1 &
+          NEXT_TELEMETRY_DISABLED=1 npm start -- -p 3000 > /tmp/tsk0357-accept.log 2>&1 &
           SERVER_PID=$!
-          trap 'kill "$SERVER_PID" 2>/dev/null || true; cat /tmp/tsk0357-red.log' EXIT
+          trap 'kill "$SERVER_PID" 2>/dev/null || true; cat /tmp/tsk0357-accept.log' EXIT
           for i in $(seq 1 60); do
             if curl --fail --silent --show-error http://127.0.0.1:3000/en-GB/start >/dev/null; then break; fi
             sleep 1
           done
+          BASE_URL=http://127.0.0.1:3000 node tests/browser/tsk0361-browser.mjs
           BASE_URL=http://127.0.0.1:3000 node tests/browser/tsk0357-browser.mjs
+          printf 'TSK0357_INTEGRATION_ACCEPTANCE=PASS\n'
+      - name: Persist locale copy only after full acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object website/package-lock.json)" = '14f9a62607489f965b96d98cdf0d825a363cd8bc'
+          git diff --check
+          changed="$(git status --porcelain | sed 's/^...//' | sort)"
+          expected=$'website/src/content/ar.json\nwebsite/src/content/en-GB.json\nwebsite/src/content/tr-TR.json'
+          if [[ -z "$changed" ]]; then
+            echo 'TSK0357_LOCALE_COPY_ALREADY_PERSISTED=PASS'
+            exit 0
+          fi
+          test "$changed" = "$expected"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add website/src/content/ar.json website/src/content/en-GB.json website/src/content/tr-TR.json
+          git commit -m 'feat: add TSK-0357 resume and reset copy'
+          git push origin HEAD:feature/tsk-0357-anonymous-journey-state-20260902
