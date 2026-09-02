@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T10:34:06Z
+**Updated:** 2026-09-02T10:50:31Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -49,6 +49,21 @@
 ### Queue status after CR-0009 reconciliation
 
 Recompute the residual L5 frontier from current WBS/graph, gates, runtime PASS evidence and DEC-0056 semantics; execute the highest-priority genuinely eligible non-legal AUTO_ALLOWED task.
+
+## TSK-0239 current accepted stable state — 2026-09-02 — POST-CR-0009
+
+`TSK-0239 — Create security/privacy control implementation and verification matrix`: **PASS** under current `ACC-0239 / VER-0239 / EVD-0239`, current `TSK-0485` PASS, and DEC-0056/CR-0009 owner-external treatment of the legal-only TSK-0240 predecessor.
+
+- Current WBS: L5 / MEDIUM / A3 / `AUTO_ALLOWED`; hard dependencies `TSK-0485; TSK-0240`. TSK-0485 is current durable PASS; TSK-0240 remains DEFERRED/WAITING and is `OWNER_EXTERNAL_SATISFIED` for sequencing only — no legal PASS/evidence is claimed.
+- Accepted matrix: `TSK_0239_SECURITY_PRIVACY_CONTROL_IMPLEMENTATION_VERIFICATION_MATRIX_2026-09-02.md`, version `1.0.0`, blob `674c21b4c169da4fb496617164ad68cfc6527fb4`, publication commit `f1386b0af35b4f5b60134fcf2a9aefe13f466306`.
+- Independent GitHub Actions verification run/attempt `33621524294 / 1`, source commit `e61d57d690782b338b0b69f4ba43eb7d2793b6d7`, verified exact upstream artifact blobs, current WBS contract, CR-0009 semantics, all 30 TM-01..TM-30 rows exactly once, required owner/location/verification/gate/monitoring/failure/status cells, global security/privacy invariants, `git diff --check`, and full modular master-plan validator PASS before this runtime mutation.
+- Every High/Critical control remains mapped to downstream L6 implementation and LG-08/LG-09 verification; this L5 matrix does not self-certify deployed controls. TSK-0048 must assign exact physical code/config locations in the implementation backlog, and TSK-0539 must bind privacy-safe runtime signals/alerts.
+- CR-0009 boundary is preserved: legal/regulatory/compliance conclusions are owner-external/not AI-verified; technical privacy engineering, auth/authz/CSRF/IDOR, ClientID isolation, deletion/recovery, no-history telemetry, secrets, supply chain, DNS abuse, protection truth, monitoring and rollback remain mandatory.
+- **Non-inference:** no control implementation, vulnerability closure, penetration-test result, RSK-0001/RSK-0007 closure, TSK-0539/TSK-0048/TSK-0049/LG-07 PASS, L6 build, production activation, publication, payment, market or launch authority is inferred from TSK-0239 PASS.
+
+### Queue status after TSK-0239 acceptance
+
+Recompute the residual L5 frontier from current WBS/graph/runtime/gates and DEC-0056 semantics. Direct successors may consume TSK-0239 only if their other current dependencies and own acceptance are independently satisfied.
 
 ## CR-0007 current authority and execution boundary
 
