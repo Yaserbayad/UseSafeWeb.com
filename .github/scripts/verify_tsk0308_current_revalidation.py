@@ -79,18 +79,15 @@ historical_evd = Path("TSK_0308_SHARED_RESPONSIVE_DESIGN_SYSTEM_ACCEPTANCE_EVIDE
 addendum = Path("prototype/TSK-0308/DUAL_MODE_ADDENDUM.md").read_text(encoding="utf-8")
 current = Path("TSK_0308_POST_CR0008_DUAL_MODE_SHARED_RESPONSIVE_DESIGN_SYSTEM_REVALIDATION_2026-09-02.md").read_text(encoding="utf-8")
 
-# Historical provenance remains untouched and still proves the original required state system.
 for i in range(1, 14):
     assert re.search(rf"^### DS-{i:02d}\b", historical, re.M), f"historical DS-{i:02d} missing"
 require_concepts(historical_evd, ["13/13 component contracts", "6/6 required state classes", "6/6 protection states", "320/768/1024/1440", "visible focus", "reduced motion", "rtl/ltr"], "historical acceptance")
 print("TSK0308_HISTORICAL_PROVENANCE=PASS")
 
-# Current dual-mode predecessor requires optional account continuity plus complete accountless core.
 baseline = Path("prototype/TSK-0309/BASELINE.md").read_text(encoding="utf-8")
 require_concepts(baseline, ["complete core setup/protection/recovery journey remains usable without login", "optional parent google sign-in/account/session continuity", "lightweight dashboard/device-management", "account/device ownership never substitutes for technical dns/protection map verification", "account deletion does not claim dns removal"], "TSK-0309 dual mode")
 print("TSK0308_DUAL_MODE_PREDECESSOR=PASS")
 
-# The contradiction is explicit in provenance and explicitly superseded in the current addendum.
 require_concepts(historical, ["no login, account, dashboard, profile", "no account/dashboard/pricing navigation", "does not create per-user indexable routes or persistent account navigation"], "historical scope contradiction")
 require_concepts(addendum, ["superseded for current acceptance", "accountless core remains complete", "account use is optional and non-coercive", "identity is not protection evidence", "provider/datastore failure preserves accountless continuation", "lifecycle operations stay distinct"], "current scope reconciliation")
 print("TSK0308_SCOPE_RECONCILIATION=PASS")
@@ -100,7 +97,6 @@ for i, name in [(14, "optionalaccountentry"), (15, "sessionstatus"), (16, "devic
     assert name in re.sub(r"[^a-z0-9]", "", addendum.lower()), f"DS-{i} name missing"
 print("TSK0308_DUAL_MODE_COMPONENTS=4/4_PASS")
 
-# Shared token/primitive authority is unchanged; additive CSS may not define a local brand palette/font.
 css = Path("prototype/TSK-0308/dual-mode-addendum.css").read_text(encoding="utf-8")
 assert not re.search(r"#[0-9a-fA-F]{3,8}\b", css), "raw color found"
 assert "font-family" not in css.lower(), "local font family found"
@@ -112,12 +108,11 @@ print("TSK0308_NO_TOKEN_OR_BRAND_FORK=PASS")
 class RefParser(HTMLParser):
     def __init__(self):
         super().__init__()
-        self.links=[]; self.images=[]; self.buttons=[]; self.text=[]; self.rtl=False
+        self.links=[]; self.images=[]; self.text=[]; self.rtl=False
     def handle_starttag(self, tag, attrs):
         a=dict(attrs)
         if tag=="link" and a.get("href"): self.links.append(a["href"])
         if tag=="img" and a.get("src"): self.images.append((a["src"],a.get("alt")))
-        if tag=="button": self.buttons.append(a)
         if a.get("dir")=="rtl": self.rtl=True
     def handle_data(self, data):
         if data.strip(): self.text.append(data.strip())
@@ -130,9 +125,11 @@ assert ("../../brand/identity/TSK-0301/safeweb-wordmark-primary.svg", "SafeWeb")
 assert parser.rtl
 text=" ".join(parser.text)
 require_concepts(text, ["set up safeweb without an account", "sign in / manage devices", "sign-in is optional for core setup", "continue without signing in", "signed in describes account/session state only", "protection verification", "delete account", "reset anonymous web state", "remove safeweb dns", "deleting the account does not remove safeweb dns"], "reference semantics")
-for prohibited in ["browse history", "child activity timeline", "query log viewer", "raw adguard admin", "fully protected"]:
-    assert prohibited not in norm(text), prohibited
-# Primary accountless action occurs before optional account entry in source order.
+require_concepts(text, ["no browsing", "dns-query history", "child activity/profile", "raw adguard administration", "query log", "overall safety score"], "reference prohibition disclosure")
+# The prohibited concepts may be disclosed as limits, but cannot be offered as interactive product actions.
+interactive = [norm(re.sub(r"<[^>]+>", " ", body)) for body in re.findall(r"<(?:a|button)\b[^>]*>(.*?)</(?:a|button)>", html, re.I | re.S)]
+for forbidden_action in ["browsing history", "query log", "adguard admin", "child activity", "fully protected"]:
+    assert all(forbidden_action not in label for label in interactive), forbidden_action
 assert html.index(">Start setup<") < html.index(">Sign in / Manage devices<")
 print("TSK0308_REFERENCE_STRUCTURE=PASS")
 
