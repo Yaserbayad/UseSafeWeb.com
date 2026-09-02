@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
-      - name: Verify current authority and TSK-0455 contract
+      - name: Verify current authority and static contract
         shell: bash
         run: |
           set -euo pipefail
@@ -27,4 +27,20 @@ jobs:
           test "$(git hash-object infrastructure/adguard-server/TSK-0446-RECOVERY-SCOPE-CONTRACT.md)" = '18d998e2406e801c7ac08f4daa2e3b763ea9b523'
           test "$(git hash-object infrastructure/adguard-server/tsk-0413-bundle-v1/bundle.json)" = 'f0735e6a508f16de7a9c4510cc2893b972c1786c'
           python3 Plans/Master/Tools/validate_master_plan.py
+          bash -n infrastructure/adguard-server/deploy_or_recover.sh
           bash infrastructure/adguard-server/tests/test-deploy-or-recover-contract.sh
+      - name: Shell quality and secret scan
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v shellcheck >/dev/null || { sudo apt-get update -qq; sudo apt-get install -y -qq shellcheck; }
+          shellcheck -S error infrastructure/adguard-server/deploy_or_recover.sh infrastructure/adguard-server/tests/test-deploy-or-recover-contract.sh infrastructure/adguard-server/tests/test-deploy-or-recover-behavior.sh
+          ! grep -R -E -- '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----|AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9_]{30,}' infrastructure/adguard-server/deploy_or_recover.sh infrastructure/adguard-server/tests
+          git diff --check
+      - name: Run safe negative and parser behavior tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo bash infrastructure/adguard-server/tests/test-deploy-or-recover-behavior.sh
+          git diff --check
+          test -z "$(git status --porcelain)"
