@@ -94,7 +94,6 @@ jobs:
               print('PROTECTED_SECTION_SHA256|{}|{}'.format(h,hashlib.sha256(s.encode()).hexdigest()))
           print('TSK0300_PROTECTED_RUNTIME_INPUTS=PASS')
 
-          # Prove the owner-approved identity and its exact masters were not redesigned or reselected.
           ident=P['identity'].read_text(encoding='utf-8')
           e301=P['e0301'].read_text(encoding='utf-8')
           e299=P['e0299'].read_text(encoding='utf-8')
@@ -106,7 +105,6 @@ jobs:
           print('TSK0300_IDENTITY_REDESIGN_REQUIRED=NO')
           print('TSK0300_IDENTITY_RESELECTION_REQUIRED=NO')
 
-          # Core token/component architecture remains byte-identical to the historical accepted package.
           tokens=P['tokens'].read_text(encoding='utf-8')
           components=P['components'].read_text(encoding='utf-8')
           assert tokens.count('--sw-brand-green:')==1
@@ -155,7 +153,7 @@ jobs:
           print('TSK0300_DUAL_MODE_PUBLIC_PRODUCT_REFERENCE=PASS')
 
           ia=P['ia0318'].read_text(encoding='utf-8')
-          for s in ['Optional account is visible but not coercive.','Public **Sign in / Manage devices**','**Finish without account**','Dashboard presence is not protection proof.','No automatic J0/J1 linkage']:
+          for s in ['Optional account is visible but not coercive.','Public **Sign in / Manage devices**','**Finish without account**','Dashboard presence is not protection proof.','J0/J1 accountless state is never automatically joined, promoted, copied or extended by account sign-in']:
               assert s in ia, s
           e316=P['e0316'].read_text(encoding='utf-8')
           for s in ['complete accountless core remains the lowest-friction safe path','optional parent account/sign-in/session/dashboard/device management occurs only after explicit parent choice','valid sessions suppress redundant sign-in','managed-device persistence is minimum bounded continuity']:
