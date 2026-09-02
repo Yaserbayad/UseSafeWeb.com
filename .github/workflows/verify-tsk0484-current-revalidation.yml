@@ -60,11 +60,10 @@ jobs:
           assert 'Current product scope is dual-mode Version 1: accountless core plus optional parent account/session/minimum ownership persistence/lightweight dashboard/device management.' in runtime
           print('TSK0484_CURRENT_DEPENDENCY_AND_SCOPE=PASS')
 
-          old=Path('TSK_0484_SECURITY_ABUSE_RESISTANCE_NFR_2026-08-28.md').read_text(encoding='utf-8')
-          old_lower=old.lower()
-          assert 'account/authentication system' in old_lower
-          assert 'persistent customer datastore' in old_lower
-          assert 'reopens tsk-0484 before implementation/release' in old_lower
+          old=Path('TSK_0484_SECURITY_ABUSE_RESISTANCE_NFR_2026-08-28.md').read_text(encoding='utf-8').lower()
+          assert 'account/authentication system' in old
+          assert 'persistent customer datastore' in old
+          assert 'reopens tsk-0484' in old and 'before implementation/release' in old
           print('TSK0484_HISTORICAL_SELF_REOPEN_TRIGGER=PASS')
 
           threat=Path('TSK_0485_END_TO_END_THREAT_ABUSE_MODEL_2026-09-01.md').read_text(encoding='utf-8')
@@ -72,7 +71,7 @@ jobs:
               assert tb in threat, tb
           threat_ids=set(re.findall(r'\| (TM-\d{2}) \|',threat))
           assert threat_ids=={f'TM-{n:02d}' for n in range(1,31)}, sorted(threat_ids)
-          for token in ['parent authentication/ownership and `ClientID` never substitute for object authorization or technical protection verification','persistent identifiable DNS query/file logging is OFF','no browsing/query/activity-history product store','CONTROL PLAN DEFINED; IMPLEMENTATION/RETEST REQUIRED']:
+          for token in ['parent authentication/ownership and `ClientID` never substitute for object authorization or technical protection verification','persistent identifiable DNS query/file logging remains OFF','no browsing/query/activity-history product store','CONTROL PLAN DEFINED; IMPLEMENTATION/RETEST REQUIRED']:
               assert token in threat, token
           print('TSK0484_CURRENT_30_THREAT_10_BOUNDARY_MODEL=PASS')
 
