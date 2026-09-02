@@ -4,13 +4,13 @@ import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '../..');
+const repoRoot = resolve(root, '..');
 const read = (path) => readFileSync(resolve(root, path), 'utf8');
 const json = (path) => JSON.parse(read(path));
 
 const requiredFiles = [
   'package.json',
   'tsconfig.json',
-  'next-env.d.ts',
   'next.config.ts',
   'eslint.config.mjs',
   'src/app/layout.tsx',
@@ -50,9 +50,16 @@ test('framework versions and scripts follow the verified Next 16.3.3 scaffold', 
   assert.equal(pkg.dependencies.react, '19.2.8');
   assert.equal(pkg.dependencies['react-dom'], '19.2.8');
   for (const name of ['dev', 'build', 'start', 'lint', 'typecheck', 'test:contract']) assert.ok(pkg.scripts[name], `missing script ${name}`);
+  assert.match(pkg.scripts.typecheck, /next typegen\s*&&\s*tsc --noEmit/);
   const dependencyNames = Object.keys({ ...(pkg.dependencies ?? {}), ...(pkg.devDependencies ?? {}) });
   const forbiddenDb = ['prisma', '@prisma/client', 'drizzle-orm', 'better-sqlite3', 'sqlite3', 'pg', 'mysql', 'mysql2', 'mongodb', 'mongoose'];
   for (const name of forbiddenDb) assert.equal(dependencyNames.includes(name), false, `unnecessary database dependency ${name}`);
+});
+
+test('generated Next and TypeScript metadata stay outside version control', () => {
+  const ignore = readFileSync(resolve(repoRoot, '.gitignore'), 'utf8');
+  assert.match(ignore, /^next-env\.d\.ts$/m);
+  assert.match(ignore, /^\*\.tsbuildinfo$/m);
 });
 
 test('locale manifest keeps English canonical and Turkish/Arabic provisional without market activation', () => {
