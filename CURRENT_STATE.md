@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T07:43:27Z
+**Updated:** 2026-09-02T07:49:27Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2626,3 +2626,22 @@ Recompute the next eligible frontier from canonical WBS/graph, lifecycle/gates, 
 ### Queue status after TSK-0236 acceptance
 
 Recompute the current L5 frontier from canonical WBS/graph, current runtime PASS evidence, gates, constraints/interfaces, executor availability and Action Authority. Preserve every unresolved material-action fence and do not infer the next task from numbering alone.
+
+## TSK-0356 current accepted stable state — 2026-09-02 — POST-CR-0008 AUTH/SESSION ARCHITECTURE
+
+`TSK-0356 — Select and freeze the initial authentication and server-session architecture`: **PASS** under current `ACC-0356 / VER-0356 / EVD-0356`, direct predecessors `TSK-0235; TSK-0585`, `DEC-0053/CR-0006`, `DEC-0054/CR-0007`, `DEC-0055/CR-0008`, current REQ-0040 and security/privacy constraints.
+
+- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: L5 / MEDIUM / A3 / `AUTO_ALLOWED`; both direct predecessors are current durable PASS.
+- Accepted artifact: `TSK_0356_POST_CR0008_FIREBASE_AUTH_SERVER_SESSION_ARCHITECTURE_2026-09-02.md`, version `1.0.0-post-CR0008`, blob `7dd47124db837ea4eaf6a06661788423d22f3c6e`, publication commit `a15636d6ab870ca73e9008e406a9751a0ba16cb0`.
+- `VER-0356`: current Project-Governor/security review against the WBS/ACC/VER/EVD contract, TSK-0353, TSK-0585, current requirements/constraints and 2026-09-02 official Firebase sources found every applicable ACC-0356 element present and no contradictory current evidence.
+- Frozen initial route: base Firebase Authentication Spark; Google provider only initially; no Identity Platform upgrade, password, phone/SMS, SMS MFA, SAML or OIDC expansion without a later authorized review.
+- The complete accountless core remains independent of authentication. Firebase JS is limited to the short-lived sign-in exchange with in-memory persistence; fresh verified Firebase ID token -> server session exchange -> Secure/HttpOnly/SameSite=Lax host-scoped cookie with Version-1 maximum 7-day lifetime.
+- Protected account routes require revocation-aware server session verification plus server-side parent/resource authorization. Firebase UID/email/AdGuard ClientID/session presence never substitutes for ownership or technical protection evidence.
+- Provider/revocation uncertainty fails account-only authority closed while preserving the independently healthy accountless core. Local logout and global/security revocation remain distinct.
+- Current official vendor facts remain dated inputs: Spark social authentication/no-payment-method path, Identity Platform optionality/limits, US-only Firebase Authentication processing and May 1 2026 Firebase Terms. Legal/privacy acceptability remains separately unresolved.
+- `RSK-0001` and owner-deferred UK representative/ICO/legal readiness remain OPEN. No Firebase project/provider configuration, billing, vendor-term acceptance, user processing, legal completion, `LG-07`, L6 build, public activation or launch PASS is inferred.
+- `TSK-0232` may consume TSK-0356 as a satisfied hard dependency only after fresh eligibility recomputation against its other dependency and current authority.
+
+### Queue status after TSK-0356 acceptance
+
+Recompute the current L5 frontier from canonical WBS/graph, runtime PASS evidence, gates, constraints/interfaces and Action Authority. Preserve all legal/material-action fences; do not infer successor or LG-07 PASS.
