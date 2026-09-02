@@ -13,6 +13,7 @@ const locales = [
 ];
 const publicPaths = ['', '/how-it-works', '/compatibility', '/protection-and-limits', '/privacy', '/help'];
 const operationalPaths = ['/start', '/setup/route', '/setup/native?platform=android', '/setup/native?platform=iphone', '/setup/dns?platform=android', '/setup/dns?platform=iphone', '/status'];
+const invalidPlatformPaths = ['/setup/native', '/setup/native?platform=invalid', '/setup/dns', '/setup/dns?platform=invalid'];
 const viewports = [
   { width: 320, height: 720 },
   { width: 768, height: 900 },
@@ -42,7 +43,7 @@ async function openChecked(page, urlPath, expectedLocale, expectedDir) {
   }));
   assert.ok(overflow.document <= 1 && overflow.body <= 1, `horizontal overflow ${JSON.stringify(overflow)}`);
   const headers = response.headers();
-  for (const name of ['content-security-policy', 'x-content-type-options', 'referrer-policy', 'permissions-policy']) {
+  for (const name of ['content-security-policy', 'x-content-type-options', 'referrer-policy', 'permissions-policy', 'strict-transport-security']) {
     assert.ok(headers[name], `missing security header ${name}`);
   }
   assert.equal(headers['x-powered-by'], undefined, 'X-Powered-By must be disabled');
@@ -92,6 +93,17 @@ for (const locale of locales) {
     await context.close();
   });
 }
+
+await record('invalid or missing platform query fails closed', async () => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  for (const path of invalidPlatformPaths) {
+    const response = await page.goto(`${base}/en-GB${path}`, { waitUntil: 'networkidle' });
+    assert.ok(response, `missing HTTP response for ${path}`);
+    assert.equal(response.status(), 404, `invalid/missing platform must return 404 for ${path}`);
+  }
+  await context.close();
+});
 
 await record('keyboard skip-link and accountless journey links', async () => {
   const context = await browser.newContext({ viewport: { width: 320, height: 720 } });
