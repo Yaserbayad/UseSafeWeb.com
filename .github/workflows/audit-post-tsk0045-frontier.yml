@@ -1,4 +1,4 @@
-name: Audit post-corrected-TSK-0308 current L4 frontier
+name: Audit post-current-TSK-0297 L4 frontier
 
 on:
   pull_request:
@@ -27,7 +27,7 @@ jobs:
           from datetime import date
           from pathlib import Path
           W='Plans/Master/WBS/master-wbs.csv'; G='Plans/Master/RELATIONSHIP_INDEX.yaml'; S='CURRENT_STATE.md'
-          E={W:'b27a0c5df2f5636d8ed71051e9e26a68959a2616',G:'c108d2c162bcea2ee4cc01def46d0487a9501032',S:'f12f87cec9993f811d25d5f2f34b9996c4497c67'}
+          E={W:'b27a0c5df2f5636d8ed71051e9e26a68959a2616',G:'c108d2c162bcea2ee4cc01def46d0487a9501032',S:'b8baccb4c7f89e4b0029dd9b1cc686cf3eff09f2'}
           MATERIAL_INVALID=set()
           def blob(p): return subprocess.check_output(['git','hash-object',p],text=True).strip()
           for p,h in E.items(): assert blob(p)==h,(p,blob(p),h)
@@ -70,20 +70,22 @@ jobs:
                   seen.add(x); q.extend(children.get(x,()))
               return len(seen)
           ready=[]
+          l4_total=0; l4_effective=0; l4_waiting=[]
           for t,r in by.items():
-              if (r.get('Lifecycle_Stage') or '').strip()!='L4' or (r.get('Action_Authority') or '').strip()!='AUTO_ALLOWED' or t in effective: continue
+              if (r.get('Lifecycle_Stage') or '').strip()!='L4' or (r.get('Action_Authority') or '').strip()!='AUTO_ALLOWED': continue
+              l4_total += 1
+              if t in effective:
+                  l4_effective += 1
+                  continue
               missing=[d for d in deps[t] if d not in effective]
               if not missing: ready.append((desc(t),order[t],t,r,'REVALIDATE' if t in hist or t in static else 'NEW',newer(t)))
+              else: l4_waiting.append((t,missing,r))
           ready.sort(key=lambda x:(-x[0],x[1],x[2]))
-          print('AUDIT_INPUT_RUNTIME='+blob(S)); print('MATERIAL_INVALID='+(';'.join(sorted(MATERIAL_INVALID)) or 'NONE')); print('CURRENT_PASS_COUNT='+str(len(current))); print('STALE_COUNT='+str(len(stale))); print('READY_COUNT='+str(len(ready)))
+          print('AUDIT_INPUT_RUNTIME='+blob(S)); print('MATERIAL_INVALID='+(';'.join(sorted(MATERIAL_INVALID)) or 'NONE')); print('CURRENT_PASS_COUNT='+str(len(current))); print('STALE_COUNT='+str(len(stale))); print('L4_AUTO_TOTAL='+str(l4_total)); print('L4_AUTO_EFFECTIVE='+str(l4_effective)); print('L4_AUTO_BLOCKED_OR_WAITING='+str(len(l4_waiting))); print('READY_COUNT='+str(len(ready)))
           for i,(dc,o,t,r,mode,nw) in enumerate(ready,1): print('READY|{}|{}|mode={}|desc={}|priority={}|critical={}|deps={}|newer={}|acc={}|title={}'.format(i,t,mode,dc,r.get('Priority',''),r.get('Critical_Path',''),';'.join(deps[t]) or 'NONE',';'.join(f'{d}@{dt}' for d,dt in nw) or 'NONE',r.get('Acceptance_ID',''),(r.get('Title') or '').replace('|','/')))
-          print('TSK0300_DIRECT_CHILD_COUNT='+str(len(children['TSK-0300'])))
-          for t in sorted(children['TSK-0300'],key=lambda x:order.get(x,10**9)):
-              r=by[t]; newest=newest_section(t); missing=[d for d in deps[t] if d not in effective]
-              print('TSK0300_CHILD|{}|material_invalid={}|effective={}|raw_current={}|current={}|hist={}|static={}|latest_head={}|deps={}|missing={}|acc={}|title={}'.format(t,t in MATERIAL_INVALID,t in effective,t in raw_current,t in current,t in hist,t in static,(newest or {}).get('head','NONE').replace('|','/'),';'.join(deps[t]) or 'NONE',';'.join(missing) or 'NONE',r.get('Acceptance_ID',''),(r.get('Title') or '').replace('|','/')))
-          for t in ['TSK-0308','TSK-0310','TSK-0297']:
+          for t in ['TSK-0308','TSK-0310','TSK-0297','TSK-0052']:
               if t in by:
                   r=by[t]; missing=[d for d in deps[t] if d not in effective]
-                  print('ROW|{}|material_invalid={}|effective={}|hist={}|current={}|static={}|deps={}|missing={}|acceptance={}|title={}'.format(t,t in MATERIAL_INVALID,t in effective,t in hist,t in current,t in static,r.get('Dependencies',''),';'.join(missing) or 'NONE',(r.get('Acceptance_Criteria') or '').replace('|','/'),(r.get('Title') or '').replace('|','/')))
-          print('POST_CORRECTED_TSK0308_FRONTIER_AUDIT=PASS')
+                  print('ROW|{}|effective={}|hist={}|current={}|static={}|stage={}|deps={}|missing={}|acceptance={}|title={}'.format(t,t in effective,t in hist,t in current,t in static,r.get('Lifecycle_Stage',''),r.get('Dependencies',''),';'.join(missing) or 'NONE',(r.get('Acceptance_Criteria') or '').replace('|','/'),(r.get('Title') or '').replace('|','/')))
+          print('POST_CURRENT_TSK0297_L4_FRONTIER_AUDIT=PASS')
           PY
