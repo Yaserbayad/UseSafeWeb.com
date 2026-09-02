@@ -14,7 +14,6 @@ const requiredFiles = [
   'tsconfig.json',
   'next.config.ts',
   'eslint.config.mjs',
-  'src/app/layout.tsx',
   'src/app/globals.css',
   'src/app/[locale]/layout.tsx',
   'src/app/[locale]/page.tsx',
@@ -35,6 +34,7 @@ const requiredFiles = [
   'src/content/tr-TR.json',
   'src/content/ar.json',
   'src/lib/i18n.ts',
+  'src/lib/metadata.ts',
   'src/components/site-shell.tsx',
   'src/components/content-page.tsx',
   'src/components/setup-page.tsx',
@@ -67,6 +67,18 @@ test('generated Next and TypeScript metadata stay outside version control', () =
   const ignore = readFileSync(resolve(repoRoot, '.gitignore'), 'utf8');
   assert.match(ignore, /^next-env\.d\.ts$/m);
   assert.match(ignore, /^\*\.tsbuildinfo$/m);
+});
+
+test('locale root layout owns document language and direction and root redirects to baseline locale', () => {
+  assert.equal(existsSync(resolve(root, 'src/app/layout.tsx')), false, 'top-level root layout would hard-code locale outside [locale]');
+  assert.equal(existsSync(resolve(root, 'src/app/page.tsx')), false, 'top-level root page should not bypass locale-root layout');
+  const layout = read('src/app/[locale]/layout.tsx');
+  assert.match(layout, /<html\s+lang=\{locale\}\s+dir=\{meta\.direction\}>/);
+  assert.match(layout, /<body>/);
+  const config = read('next.config.ts');
+  assert.match(config, /source:\s*['"]\/['"]/);
+  assert.match(config, /destination:\s*['"]\/en-GB['"]/);
+  assert.match(config, /permanent:\s*false/);
 });
 
 test('locale manifest keeps English canonical and Turkish/Arabic provisional without market activation', () => {
@@ -109,6 +121,11 @@ test('implementation consumes the approved shared design system rather than defi
 test('SEO and security configuration preserve public-vs-operational and no-premature-claim boundaries', () => {
   const config = read('next.config.ts');
   for (const header of ['Content-Security-Policy', 'X-Content-Type-Options', 'Referrer-Policy', 'Permissions-Policy']) assert.ok(config.includes(header), `missing security header ${header}`);
+  const metadata = read('src/lib/metadata.ts');
+  assert.match(metadata, /publicMetadata\(locale:\s*Locale,\s*path:\s*string/);
+  assert.match(metadata, /canonical:\s*localizedUrl\(locale\)/);
+  assert.match(metadata, /localizedUrl\('tr-TR'\)/);
+  assert.match(metadata, /localizedUrl\('ar'\)/);
   const sitemap = read('src/app/sitemap.ts');
   assert.ok(sitemap.includes('how-it-works'));
   assert.ok(sitemap.includes('compatibility'));
