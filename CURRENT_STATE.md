@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T08:26:51Z
+**Updated:** 2026-09-02T10:34:06Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -8,9 +8,14 @@
 
 ## Canonical planning authority
 
-**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0008 PUBLISHED, RECONCILED, READ-BACK VERIFIED.**
+**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0009 PUBLISHED, RECONCILED, READ-BACK VERIFIED.**
 
-- Latest post-freeze change: `CR-0008` / `DEC-0055`, explicit Project Owner authority 2026-09-01: proportional evidence plus full action-authority normalization for correctness/efficiency, with no acceptance/scope/dependency weakening and no repository cleanup requirement.
+- Latest post-freeze change: `CR-0009` / `DEC-0056`, explicit Project Owner authority 2026-09-02: all legal/regulatory/compliance work is owner-external and nonblocking for governed sequencing; AI does not perform or claim legal/compliance verification.
+- CR-0009 planning publication commit: `0ec48f84c08a670a3cb637bd27474ce39d51c2db`; deterministic validator PASS before publication.
+- CR-0009 changes only legal-scope dependency/gate evaluation semantics. WBS task definitions/statuses/dependency edges remain unchanged; legal work is not marked legally PASS.
+- Pure legal-scope tasks and legal clauses are `OWNER_EXTERNAL_SATISFIED` for sequencing. Mixed tasks still require every non-legal product, privacy-engineering, security, architecture, delivery, test, recovery, cost and operations criterion.
+- Actual law/safety/security/platform/technical reality remains higher authority; known prohibitions are not bypassed and no signature, attestation, filing, registration, payment, approval or legal conclusion is fabricated.
+- Prior post-freeze change: `CR-0008` / `DEC-0055`, explicit Project Owner authority 2026-09-01: proportional evidence plus full action-authority normalization for correctness/efficiency, with no acceptance/scope/dependency weakening and no repository cleanup requirement.
 - CR-0008 planning publication commit: `9acb09a1d69cca305776b63b9cb041e679da619d`; WBS blob `b27a0c5df2f5636d8ed71051e9e26a68959a2616`; Layer-5 blob `2097d83961affaa69850e41a5ffcd72a660d69cd`.
 - CR-0008 audited all 101 prior `HUMAN_ONLY` / `HUMAN_APPROVAL_REQUIRED` WBS rows. Delegable work was converted to `AUTO_ALLOWED`; genuine nondelegable/historical boundaries were retained exactly as recorded in `CR_0008_ACTION_AUTHORITY_AUDIT_2026-09-01.md`.
 - Proportional-evidence rule: minimum durable proof that actually proves the acceptance boundary; separate evidence/verifier/marker/workflow/audit artifacts only when they materially improve proof, risk control, ambiguity resolution or recovery. Security/privacy/recovery/production/high-impact independence remains where risk/acceptance requires it.
@@ -30,6 +35,20 @@
 - The prior `TSK_0052_LG06_READINESS_REVIEW_2026-08-30.md` is **superseded as a readiness conclusion** by CR-0006. `LG-06` is not PASS and must not be presented for owner approval until the revised dual-mode L4 baseline is complete.
 - `CR-0005` / `DEC-0052` remains controlling for the pre-L8 rule: all 31 L3 tasks plus `TSK-0187`, `TSK-0326`, and `TSK-0336` remain `NOT_APPLICABLE + PASS` exclusion records; no behavioral/user evidence is inferred. DEC-0054/CR-0007 supersedes the downstream pilot/staging model: first real-user validation remains after `LG-09` PASS but occurs as bounded/ramped **live production validation**, not a separate pilot or staging environment.
 - `LG-06`/`LG-07`/`LG-08`/`LG-09` remain mandatory in order. DEC-0054/CR-0007 creates standing **conditional** authority for evidence-complete automatic gates/live-production activation/public-production GO, but creates no PASS by itself and cannot waive missing evidence or actually applicable legal/privacy/consent/security/platform requirements. `RSK-0002` remains OPEN and non-blocking before L8.
+
+## CR-0009 current owner-external legal-scope boundary — 2026-09-02
+
+- `DEC-0056 / CR-0009` supersedes `DEC-0036` and `DEC-0049 / CR-0002` legal-hold timing/preparatory-only restrictions for active governed sequencing.
+- Legal/regulatory/compliance work is outside AI scope and is treated as `OWNER_EXTERNAL_SATISFIED` for dependency and gate evaluation only. This is not legal PASS/evidence.
+- Legal-scope WBS rows retain their historical planning/runtime records for traceability and are not selected by the AI.
+- In mixed tasks/gates, only the legal clause is external. All non-legal acceptance remains mandatory and must be evidenced normally.
+- The previously deferred legal predecessor `TSK-0240` therefore no longer blocks technical L5 progression through `TSK-0239`; exact eligibility must still be recomputed against every other dependency and current evidence before execution.
+- No LG-07/L6/build/production/publication/payment/market/launch PASS is inferred from CR-0009.
+- Planning publication commit: `0ec48f84c08a670a3cb637bd27474ce39d51c2db`.
+
+### Queue status after CR-0009 reconciliation
+
+Recompute the residual L5 frontier from current WBS/graph, gates, runtime PASS evidence and DEC-0056 semantics; execute the highest-priority genuinely eligible non-legal AUTO_ALLOWED task.
 
 ## CR-0007 current authority and execution boundary
 
