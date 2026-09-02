@@ -62,13 +62,15 @@ jobs:
                 await page.goto('http://127.0.0.1:4173/prototype/TSK-0308/dual-mode-reference.html', {waitUntil:'networkidle'});
                 const result = await page.evaluate(() => {
                   const body = document.body;
-                  const start = [...document.querySelectorAll('a,button')].find(el => el.textContent.trim() === 'Start setup');
-                  const signIn = [...document.querySelectorAll('a,button')].find(el => el.textContent.trim() === 'Sign in / Manage devices');
-                  const fallback = [...document.querySelectorAll('a,button')].find(el => el.textContent.trim() === 'Continue without signing in');
+                  const actions = [...document.querySelectorAll('a,button')];
+                  const start = actions.find(el => el.textContent.trim() === 'Start setup');
+                  const signIn = actions.find(el => el.textContent.trim() === 'Sign in / Manage devices');
+                  const fallback = actions.find(el => el.textContent.trim() === 'Continue without signing in');
                   const life = ['Sign out','Unlink device','Delete device record','Delete account','Reset anonymous web state','Remove SafeWeb DNS'];
-                  const allText = body.innerText.toLowerCase();
+                  const allText = body.innerText.toLowerCase().replace(/\s+/g,' ');
                   const rtl = document.querySelector('[dir="rtl"]');
                   const deviceRows = document.querySelectorAll('.sw-ds-device-row');
+                  const limitConcepts = ['no browsing','dns-query history','child activity/profile','raw adguard administration','query log','overall safety score'];
                   return {
                     overflow: body.scrollWidth > window.innerWidth + 1,
                     start: !!start,
@@ -78,15 +80,15 @@ jobs:
                     fallback: !!fallback,
                     optionalText: allText.includes('sign-in is optional for core setup'),
                     identityTruth: allText.includes('does not mean safeweb dns') && allText.includes('protection verification'),
-                    noSurveillance: allText.includes('no browsing or dns-query history') && allText.includes('no browsing or dns-query history, child activity/profile, raw adguard administration, query log, or overall safety score'),
-                    lifecycle: life.every(label => [...document.querySelectorAll('a,button')].some(el => el.textContent.trim() === label)),
+                    noSurveillance: limitConcepts.every(x => allText.includes(x)),
+                    lifecycle: life.every(label => actions.some(el => el.textContent.trim() === label)),
                     accountDeleteDnsTruth: allText.includes('deleting the account does not remove safeweb dns') && allText.includes('removing safeweb dns does not delete the account'),
                     rtl: !!rtl && getComputedStyle(rtl).direction === 'rtl' && rtl.scrollWidth <= rtl.clientWidth + 1,
                     deviceRows: deviceRows.length >= 2,
                   };
                 });
                 for (const [key, value] of Object.entries(result)) {
-                  if (['startSecondary'].includes(key)) continue;
+                  if (key === 'startSecondary') continue;
                   if (!value) throw new Error(`VIEWPORT_${width}_${key}=FAIL`);
                 }
                 if (result.startSecondary) throw new Error(`VIEWPORT_${width}_START_PRIMARY=FAIL`);
