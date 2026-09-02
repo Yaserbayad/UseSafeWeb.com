@@ -1,131 +1,22 @@
-name: Reconcile refreshed LG-06 state
+name: Retired - Reconcile refreshed LG-06 state
 
 on:
-  workflow_run:
-    workflows: ['Publish refreshed LG-06 evidence']
-    types: [completed]
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  reconcile:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+  verify-retired-state:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 0
-          persist-credentials: true
-      - name: Guard and append current LG-06 runtime state
+      - name: Verify durable LG-06 state without mutation
         shell: bash
-        env:
-          STATE_RUN_ID: ${{ github.run_id }}
         run: |
           set -euo pipefail
-          python3 - <<'PY'
-          import csv,re,subprocess,os
-          from datetime import datetime, timezone
-          from pathlib import Path
-
-          W='Plans/Master/WBS/master-wbs.csv'
-          G='Plans/Master/RELATIONSHIP_INDEX.yaml'
-          GT='Plans/Master/Registers/GATES.md'
-          R='Plans/Master/Registers/RISKS.md'
-          S='CURRENT_STATE.md'
-          REVIEW='TSK_0052_LG06_POST_CR0008_CURRENT_FREEZE_REVALIDATION_2026-09-02.md'
-          EVIDENCE='TSK_0052_LG06_POST_CR0008_CURRENT_FREEZE_EVIDENCE_2026-09-02.md'
-          HEADING='## TSK-0052 / LG-06 current accepted stable state — 2026-09-02 — POST-CR-0008 FREEZE REVALIDATION'
-          expected={
-            W:'b27a0c5df2f5636d8ed71051e9e26a68959a2616',
-            G:'c108d2c162bcea2ee4cc01def46d0487a9501032',
-            GT:'87cf9060954a82e1d5a092200d3c922f1986a5da',
-            R:'0ebb7ab97ec4d418e61eaae0fce6a35e3a9e36ec',
-            REVIEW:'0647adbbc03a2f2750c9ab869b5788775ea77f9e',
-          }
-          def blob(p): return subprocess.check_output(['git','hash-object',p],text=True).strip()
-          state_path=Path(S)
-          old=state_path.read_text(encoding='utf-8')
-          if HEADING in old:
-              section=old.split(HEADING,1)[1]
-              for marker in ['**PASS**','ACC-0052 = PASS. VER-0052 = PASS. EVD-0052 = SATISFIED','LG06_REFRESH_L4_EXHAUSTION=PASS','Unlock: internal L5']:
-                  assert marker in section,marker
-              print('LG06_REFRESH_STATE_RECONCILIATION=ALREADY_APPLIED')
-              raise SystemExit(0)
-          for p,h in expected.items():
-              actual=blob(p); assert actual==h,f'hash drift {p}: {actual} != {h}'
-          runtime_blob=blob(S)
-          assert runtime_blob=='b8baccb4c7f89e4b0029dd9b1cc686cf3eff09f2',runtime_blob
-          assert Path(EVIDENCE).exists(),'durable EVD-0052 missing'
-          evidence_blob=blob(EVIDENCE)
-          evidence=Path(EVIDENCE).read_text(encoding='utf-8')
-          required=[
-            'ACC-0052 = PASS. VER-0052 = PASS. EVD-0052 = SATISFIED',
-            'LG06_REFRESH_L4_READY=0',
-            'LG06_REFRESH_L4_EXHAUSTION=PASS',
-            'LG06_REFRESH_MATRIX_EFFECTIVE=PASS',
-            'LG06_REFRESH_OPEN_RISKS=PASS',
-            'LG06_REFRESH_NONINFERENCE=PASS',
-            'LG06_CURRENT_FREEZE_REVALIDATION=PASS',
-          ]
-          for marker in required: assert marker in evidence,marker
-          m=re.search(r'actions/runs/(\d+)',evidence); assert m,'publisher run id missing'
-          publisher_run=m.group(1)
-          with open(W,newline='',encoding='utf-8-sig') as f: rows=list(csv.DictReader(f))
-          row=next(r for r in rows if r.get('Task_ID')=='TSK-0052')
-          assert row['Lifecycle_Stage']=='L5'
-          assert row['AI_Capability_A0_A4']=='A4'
-          assert row['Action_Authority']=='AUTO_ALLOWED'
-          assert [x.strip() for x in (row.get('Dependencies') or '').split(';') if x.strip()]==['TSK-0043','TSK-0321','TSK-0309','TSK-0628']
-          assert (row['Acceptance_ID'],row['Verification_ID'],row['Evidence_ID'])==('ACC-0052','VER-0052','EVD-0052')
-          def mask_updated(text):
-              return re.sub(r'^\*\*Updated:\*\*.*$','**Updated:** <MASK>',text,count=1,flags=re.M)
-          now=datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
-          base=re.sub(r'^\*\*Updated:\*\*.*$',f'**Updated:** {now}',old,count=1,flags=re.M)
-          assert mask_updated(base)==mask_updated(old)
-          append=f'''
-
-{HEADING}
-
-`TSK-0052 / LG-06 — Product, Brand and Experience Freeze`: **PASS** under current `ACC-0052 / VER-0052 / EVD-0052`, current DEC-0052/0053/0054/0055 authority, current L4 evidence and the corrected TSK-0300 → TSK-0310/TSK-0308/TSK-0297 proof chain.
-
-- Current WBS `b27a0c5df2f5636d8ed71051e9e26a68959a2616`: TSK-0052 is L5 gate work / A4 / `AUTO_ALLOWED`; hard dependencies exactly `TSK-0043; TSK-0321; TSK-0309; TSK-0628`.
-- Gate register `87cf9060954a82e1d5a092200d3c922f1986a5da`: LG-06 is the Product, Brand and Experience Freeze that unlocks L5 only when every applicable L4 acceptance requirement is evidenced.
-- Refreshed review `TSK_0052_LG06_POST_CR0008_CURRENT_FREEZE_REVALIDATION_2026-09-02.md`, blob `0647adbbc03a2f2750c9ab869b5788775ea77f9e`.
-- Durable refreshed evidence `TSK_0052_LG06_POST_CR0008_CURRENT_FREEZE_EVIDENCE_2026-09-02.md`, blob `{evidence_blob}`; independent verify/evidence publication run `{publisher_run}` completed successfully before this state workflow could run.
-- Independent L4 exhaustion is bound twice: reusable read-only audit `33594970281 / 100136470954` and the refreshed gate verifier both establish `L4_AUTO_TOTAL=89`, `L4_AUTO_EFFECTIVE=86`, `L4_AUTO_DEPENDENCY_BLOCKED=3`, `L4_AUTO_READY=0` / `LG06_REFRESH_L4_EXHAUSTION=PASS`.
-- Refreshed material evidence: TSK-0300 `a3e39896b67098ced321cb9e4b82c65c440806e4`; TSK-0310 `34d119334e07a5d6ffe63fb893bb741d3aa0c775`; TSK-0308 `959c1f47d600fefbceb2f569ed5c7c606beae48f`; TSK-0297 `0415b7c6719712de33822e991dd0882096c0a030`; TSK-0317 `cd001f3ce391634e38ef0c89934cb34f4f347401`.
-- Current frozen protection-state semantics remain `Protection verified`, `Setup confirmed`, `Action needed`, `Not covered`, `Protection status could not be verified`, `Removed`; S2 carries `Protection has not yet been technically verified.` Account/session/device ownership is not technical protection evidence.
-- Open risks remain open, including `RSK-0002`, `RSK-0005`, `RSK-0015`, `RSK-0017`, and `RSK-0022`; this gate does not erase or accept them beyond their current governed disposition.
-- **ACC-0052 = PASS. VER-0052 = PASS. EVD-0052 = SATISFIED.**
-- **Unlock: internal L5 architecture/security/privacy/delivery-readiness work only.** No authentication/persistence implementation, real-user processing, publication/payment/market activation/production/launch, LG-07/LG-08/LG-09 PASS or successor PASS is inferred.
-- State reconciliation workflow run `{os.environ['STATE_RUN_ID']}` performed the guarded append; exact durable read-back remains required before this gate is relied upon.
-
-### Queue status after refreshed LG-06
-
-After independent read-back, recompute the L5 executable frontier from canonical WBS/graph, gate prerequisites, current effective PASS, triggers/preconditions, Action Authority and current evidence. Do not infer the first L5 task from numbering or historical queue summaries.
-'''
-          candidate=base.rstrip()+append
-          assert mask_updated(candidate)==mask_updated(old).rstrip()+append
-          state_path.write_text(candidate,encoding='utf-8')
-          written=state_path.read_text(encoding='utf-8')
-          for marker in [HEADING,'ACC-0052 = PASS. VER-0052 = PASS. EVD-0052 = SATISFIED.',evidence_blob,'Unlock: internal L5']:
-              assert marker in written,marker
-          print('LG06_REFRESH_ALL_EXISTING_RUNTIME_BODY_PRESERVED=PASS')
-          print('LG06_REFRESH_STATE_CANDIDATE=PASS')
-          PY
-          if git diff --quiet -- CURRENT_STATE.md; then
-            echo 'LG06_REFRESH_RUNTIME_WRITE=ALREADY_APPLIED'
-            exit 0
-          fi
-          changes="$(git status --porcelain)"
-          test "$(printf '%s\n' "$changes" | sed '/^$/d' | wc -l)" -eq 1
-          printf '%s\n' "$changes" | grep -Fx ' M CURRENT_STATE.md'
-          git diff --check
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add CURRENT_STATE.md
-          git commit -m 'state: reaccept refreshed LG-06 current freeze'
-          git push origin HEAD:main
-          echo 'LG06_REFRESH_RUNTIME_WRITE=PASS'
+          grep -Fq '## TSK-0052 / LG-06 current accepted stable state — 2026-09-01 — POST-CR-0007' CURRENT_STATE.md
+          grep -Fq '`TSK-0052 / LG-06 — Product, Brand and Experience Freeze`: **PASS**' CURRENT_STATE.md
+          grep -Fq 'latest_change: CR-0010' Plans/Master/MANIFEST.yaml
+          python3 Plans/Master/Tools/validate_master_plan.py
+          echo 'LG06_HISTORICAL_RECONCILE_WORKFLOW_RETIRED=PASS'
