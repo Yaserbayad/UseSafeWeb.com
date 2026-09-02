@@ -1,0 +1,27 @@
+name: Verify refreshed LG-06 current freeze
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/diagnostics/tsk0052-lg06-refresh-trigger.txt']
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify refreshed LG-06 current evidence and L4 exhaustion
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/verify_tsk0052_lg06_current_refresh.py
+          git diff --check
+          git diff --exit-code -- CURRENT_STATE.md Plans/Master TSK_0052_LG06_POST_CR0008_CURRENT_FREEZE_REVALIDATION_2026-09-02.md
+          echo 'LG06_REFRESH_SOURCE_UNCHANGED=PASS'
