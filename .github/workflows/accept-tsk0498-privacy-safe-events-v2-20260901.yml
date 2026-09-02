@@ -14,14 +14,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Independently verify TSK-0051 LG-07
+      - name: Independently verify corrected TSK-0051 LG-07
         shell: bash
         run: |
           set -euo pipefail
           test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
           test "$(git hash-object Plans/Master/Registers/GATES.md)" = '87cf9060954a82e1d5a092200d3c922f1986a5da'
           test "$(git hash-object TSK_0051_LG07_ARCHITECTURE_DELIVERY_READINESS_DECISION_2026-09-02.md)" = 'f3febe09b804163e47b96a1784512b8b12620628'
-          test "$(git hash-object Plans/Master/Tools/verify_tsk0051_lg07_readiness_20260902.py)" = '479e27b5910c0967b8fcb687140546d9c2df4ebc'
+          test "$(git hash-object Plans/Master/Tools/verify_tsk0051_lg07_readiness_20260902.py)" = '5de49d257a40556ec9756178665d487de7905431'
           test "$(git hash-object TSK_0048_DEPENDENCY_ORDERED_VERTICAL_IMPLEMENTATION_BACKLOG_2026-09-02.md)" = '4463a818d15a9faa4e48363105bce92fe28e3450'
           python3 Plans/Master/Tools/verify_tsk0051_lg07_readiness_20260902.py
           python3 Plans/Master/Tools/validate_master_plan.py
