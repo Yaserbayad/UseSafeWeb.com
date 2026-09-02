@@ -85,7 +85,7 @@ jobs:
           print('HISTORICAL_TSK0317_PROCEDURAL_NAMING_STALENESS=PASS')
 
           e316=P['e0316'].read_text(encoding='utf-8')
-          for s in ['complete accountless core remains the lowest-friction safe path','optional parent account/sign-in/session/dashboard/device management occurs only after explicit parent choice','managed-device persistence is minimum bounded continuity','Ambiguous consequential effects are reconciled before replay']:
+          for s in ['complete accountless core remains the lowest-friction safe path','optional parent account/sign-in/session/dashboard/device management occurs only after explicit parent choice','managed-device persistence is minimum bounded continuity','consequential and ambiguous effects are reconciled before replay rather than blindly retried']:
               assert s in e316, s
           print('TSK0317_CURRENT_FRICTION_PREDECESSOR_SEMANTICS=PASS')
 
