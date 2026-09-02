@@ -269,7 +269,6 @@ server {
 }
 EOF
   ln -sfn "$NGINX_HTTP" "$NGINX_HTTP_LINK"
-  rm -f /etc/nginx/sites-enabled/default
   nginx -t || fail "$EXIT_VERIFY" 'nginx HTTP-01 staging config invalid'
   systemctl enable --now nginx
   systemctl reload nginx
