@@ -1,4 +1,4 @@
-name: Audit post-TSK-0311 current L4 frontier
+name: Audit post-TSK-0044 current L4 frontier
 
 on:
   pull_request:
@@ -27,7 +27,7 @@ jobs:
           from datetime import date
           from pathlib import Path
           W='Plans/Master/WBS/master-wbs.csv'; G='Plans/Master/RELATIONSHIP_INDEX.yaml'; S='CURRENT_STATE.md'
-          E={W:'b27a0c5df2f5636d8ed71051e9e26a68959a2616',G:'c108d2c162bcea2ee4cc01def46d0487a9501032',S:'934a911d491e657f5cfe4991ad6217dc3d447509'}
+          E={W:'b27a0c5df2f5636d8ed71051e9e26a68959a2616',G:'c108d2c162bcea2ee4cc01def46d0487a9501032',S:'0a0fc742d3e0d54dbb07c29275b4d5e1358c4fd4'}
           def blob(p): return subprocess.check_output(['git','hash-object',p],text=True).strip()
           for p,h in E.items(): assert blob(p)==h,(p,blob(p),h)
           with open(W,newline='',encoding='utf-8-sig') as f: rows=list(csv.DictReader(f))
@@ -72,9 +72,9 @@ jobs:
           ready.sort(key=lambda x:(-x[0],x[1],x[2]))
           print('AUDIT_INPUT_RUNTIME='+blob(S)); print('CURRENT_PASS_COUNT='+str(len(current))); print('STALE_COUNT='+str(len(stale))); print('READY_COUNT='+str(len(ready)))
           for i,(dc,o,t,r,mode,nw) in enumerate(ready,1): print('READY|{}|{}|mode={}|desc={}|priority={}|critical={}|deps={}|newer={}|acc={}|title={}'.format(i,t,mode,dc,r.get('Priority',''),r.get('Critical_Path',''),';'.join(deps[t]) or 'NONE',';'.join(f'{d}@{dt}' for d,dt in nw) or 'NONE',r.get('Acceptance_ID',''),(r.get('Title') or '').replace('|','/')))
-          for t in ['TSK-0311','TSK-0044','TSK-0353','TSK-0585','TSK-0352','TSK-0297']:
+          for t in ['TSK-0044','TSK-0353','TSK-0585','TSK-0352','TSK-0297']:
               if t in by:
                   r=by[t]; missing=[d for d in deps[t] if d not in effective]
                   print('ROW|{}|effective={}|hist={}|current={}|static={}|deps={}|missing={}|acceptance={}|title={}'.format(t,t in effective,t in hist,t in current,t in static,r.get('Dependencies',''),';'.join(missing) or 'NONE',(r.get('Acceptance_Criteria') or '').replace('|','/'),(r.get('Title') or '').replace('|','/')))
-          print('POST_TSK0311_FRONTIER_AUDIT=PASS')
+          print('POST_TSK0044_FRONTIER_AUDIT=PASS')
           PY
