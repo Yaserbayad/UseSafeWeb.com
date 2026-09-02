@@ -63,8 +63,9 @@ jobs:
                 const result = await page.evaluate(() => {
                   const body = document.body;
                   const actions = [...document.querySelectorAll('a,button')];
-                  const start = actions.find(el => el.textContent.trim() === 'Start setup');
-                  const signIn = actions.find(el => el.textContent.trim() === 'Sign in / Manage devices');
+                  const setupActions = [...document.querySelectorAll('#setup a,#setup button')];
+                  const start = setupActions.find(el => el.textContent.trim() === 'Start setup');
+                  const signIn = setupActions.find(el => el.textContent.trim() === 'Sign in / Manage devices');
                   const fallback = actions.find(el => el.textContent.trim() === 'Continue without signing in');
                   const life = ['Sign out','Unlink device','Delete device record','Delete account','Reset anonymous web state','Remove SafeWeb DNS'];
                   const allText = body.innerText.toLowerCase().replace(/\s+/g,' ');
