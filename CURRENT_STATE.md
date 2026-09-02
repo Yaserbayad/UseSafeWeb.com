@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T17:59:40Z
+**Updated:** 2026-09-02T18:05:01Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -2915,3 +2915,20 @@ Recompute current authority. `TSK-0051` becomes dependency-eligible only if `TSK
 ### Queue status after TSK-0051 / LG-07 acceptance
 
 `TSK-0050 — Persist approved baselines and readiness decision in GitHub` is the remaining non-legal L5 successor and must be completed/read back before selecting actual L6 implementation work. `TSK-0240` remains owner-external under CR-0009 and is not selected as legal work.
+
+## TSK-0050 current accepted stable state — 2026-09-02 — LG-07 BASELINE PERSISTED
+
+`TSK-0050 — Persist approved baselines and readiness decision in GitHub`: **PASS** under current `ACC-0050 / VER-0050 / EVD-0050`.
+
+- Current normalized WBS blob `eb35f3b10356396c5117e3f47d0b0378953e2157`: L5 / A3 / `AUTO_ALLOWED`; sole dependency `TSK-0051` is current durable PASS and LG-07 is current durable PASS.
+- Accepted persistence index: `TSK_0050_LG07_APPROVED_BASELINE_PERSISTENCE_INDEX_2026-09-02.md`, version `1.0.0`, blob `971af8e89ce79bfe00e4c08d647104b445673ec5`, publication commit `bb41fadc6b883fdbaa27077b1ff3c88ca7d20943`.
+- Deterministic verifier: `Plans/Master/Tools/verify_tsk0050_lg07_baseline_persistence_20260902.py`, blob `3023e556b991958ec6106f891d4548228bafafe8`.
+- Independent read-only GitHub Actions verification run `33664917332 / 1`: **SUCCESS**; 12 immutable readiness artifacts matched exact blobs, current LG-07 PASS and authority separation were verified, the next action was confirmed as a full L6 frontier recomputation, secret/participant-data payload guards passed, and the full modular validator passed with 641 tasks / 858 dependency edges / 0 broken links / 0 generated missing task IDs.
+- Earlier read-only run `33664805560` failed only because a narrative assertion ignored Markdown backticks around `CURRENT_STATE.md`; it caused no runtime mutation or acceptance failure. The accepted verifier normalizes narrative presentation while keeping artifact hashes and authoritative WBS fields exact.
+- Single-authority invariant preserved: WBS owns task/dependency/acceptance, gate register owns LG-07, relationship index owns traversal, and `CURRENT_STATE.md` owns volatile runtime. This persistence index is immutable evidence/pointers only.
+- The persisted baseline contains repository/task/commit/blob/run identifiers and governance statements only; no password, token, private key, production secret, raw DNS query, browsing/activity history or participant record is included.
+- **Non-inference:** TSK-0050 PASS marks no L6 implementation task PASS and authorizes no deployment, production activation, new spend, participant processing, launch, or legal/compliance completion.
+
+### Queue status after TSK-0050 acceptance
+
+LG-07 and all non-legal L5 readiness work are complete. Recompute the full current L6 eligible frontier from WBS/graph/runtime/gates and select the highest-priority genuinely executable `AUTO_ALLOWED` task. `TSK-0240` remains owner-external under CR-0009 and is not selected as legal work.
