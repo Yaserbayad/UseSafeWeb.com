@@ -1,0 +1,94 @@
+/* TSK-0308 current dual-mode additive composition layer.
+   Uses TSK-0300 tokens/primitives only; no brand/token/font/identity fork. */
+
+.sw-ds-account-entry,
+.sw-ds-session-status,
+.sw-ds-device-list,
+.sw-ds-account-lifecycle {
+  display: grid;
+  gap: var(--sw-space-4);
+  min-width: 0;
+}
+
+.sw-ds-account-entry {
+  border-block-start: var(--sw-border-width) solid var(--sw-color-border);
+  padding-block-start: var(--sw-space-5);
+}
+
+.sw-ds-session-status {
+  border: var(--sw-border-width) solid var(--sw-color-border);
+  border-radius: var(--sw-radius-md);
+  padding: var(--sw-space-4);
+  background: var(--sw-color-surface);
+}
+
+.sw-ds-session-status > * {
+  margin-block: 0;
+}
+
+.sw-ds-dashboard {
+  display: grid;
+  gap: var(--sw-space-6);
+  min-width: 0;
+}
+
+.sw-ds-device-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sw-ds-device-row {
+  display: grid;
+  gap: var(--sw-space-3);
+  min-width: 0;
+  border: var(--sw-border-width) solid var(--sw-color-border);
+  border-radius: var(--sw-radius-md);
+  padding: var(--sw-space-4);
+  background: var(--sw-color-surface);
+}
+
+.sw-ds-device-row__meta {
+  display: grid;
+  gap: var(--sw-space-1);
+  min-width: 0;
+}
+
+.sw-ds-device-row__meta > * {
+  margin-block: 0;
+  overflow-wrap: anywhere;
+}
+
+.sw-ds-account-lifecycle {
+  border-block-start: var(--sw-border-width) solid var(--sw-color-border);
+  padding-block-start: var(--sw-space-5);
+}
+
+.sw-ds-account-lifecycle .sw-ds-actions {
+  align-items: flex-start;
+}
+
+@media (min-width: 48rem) {
+  .sw-ds-device-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .sw-ds-device-row > .sw-ds-actions {
+    justify-content: flex-end;
+  }
+}
+
+@media (min-width: 64rem) {
+  .sw-ds-dashboard[data-layout="supporting-column"] {
+    grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.42fr);
+    align-items: start;
+  }
+}
+
+[dir="rtl"] .sw-ds-account-entry,
+[dir="rtl"] .sw-ds-session-status,
+[dir="rtl"] .sw-ds-device-row,
+[dir="rtl"] .sw-ds-account-lifecycle {
+  text-align: start;
+}
