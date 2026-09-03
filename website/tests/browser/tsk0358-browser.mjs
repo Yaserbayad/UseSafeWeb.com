@@ -92,9 +92,18 @@ await record('accountless core fails closed at uncertain verification and truthf
   await page.waitForURL('**/en-GB/troubleshoot?platform=android');
   await page.locator('[data-core-recover]').click();
   await page.waitForURL('**/en-GB/recover?platform=android');
+  assert.equal(await page.locator('[data-core-remove]').count(), 0, 'recovery must not expose profile cleanup before service revocation evidence');
+  assert.equal((await coreState(page)).phase, 'recover');
+
+  // TSK-0417 non-live browser proof: mock only the already-proven post-revocation cleanup state.
+  // No service-side revocation API exists in current source and none is fabricated here.
+  await setPhase(page, 'en-GB', 'cleanup', 'android');
+  await page.goto(`${base}/en-GB/cleanup?platform=android`, { waitUntil: 'domcontentloaded' });
+  await page.locator('[data-core-remove]').waitFor({ state: 'visible' });
   await page.locator('[data-core-remove]').click();
   await page.waitForURL('**/en-GB/removed?platform=android');
   assert.equal((await coreState(page)).phase, 'removed');
+  assert.deepEqual(unexpectedMutations, [], `mock cleanup must not create persistent or unapproved server mutation: ${unexpectedMutations.join(' | ')}`);
   await context.close();
 });
 
