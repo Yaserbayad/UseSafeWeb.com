@@ -3153,3 +3153,19 @@ Successors requiring `TSK-0499` remain dependency-blocked while this task is `TO
 ### Queue effect after TSK-0374 source implementation publication
 
 Recompute the current executable frontier from canonical WBS/graph, runtime evidence, gates, constraints/interfaces, executor availability, unresolved target-evidence obligations, and Action Authority. Do not treat this source-only publication as `TSK-0374` PASS or as permission to cross any material-action fence.
+
+## TSK-0380 current accepted stable state — 2026-09-03
+
+`TSK-0380 — Implement deterministic local build, lint, test, and validation commands`: **PASS** under current `ACC-0380 / VER-0380 / EVD-0380`.
+
+- Current WBS: L6 / MEDIUM / A3 / `AUTO_ALLOWED`; sole hard predecessor `TSK-0454` is current durable PASS. Current linked planning entities remain `REQ-0036`, `REQ-0037`, `CON-0010`, `CON-0011`, `RSK-0045`, `INT-0011`, and `INT-0012`.
+- Canonical source publication: PR `#87`, merge commit `1ee48aeb28d2fb01411bd971e83a305287baa2fd`, tree `6a9d04c326782dd9b42d99a0d46d446761b1131e`.
+- Accepted evidence: `TSK_0380_DETERMINISTIC_DEV_COMMANDS_EVIDENCE_2026-09-03.md`, blob `81bf9cda1d2e3286a3e1953c92f69b6ef879d1f7`.
+- Exact published baseline: Node `22.23.2` via `.nvmrc`; npm `10.9.8` via `packageManager`; unchanged dependency-lock blob `14f9a62607489f965b96d98cdf0d825a363cd8bc`; deterministic `npm run validate` executes contract tests -> lint -> typecheck -> production build.
+- Test-first proof: RED `33753371567 / 100641870874`; focused GREEN `33753560478 / 100642486359`; full clean-runner acceptance `33753630320 / 100642709779`; final PR-head TSK-0380 `33753875540 / 100643504418`; canonical clean-main TSK-0380 `33754242557 / 100644681805` — SUCCESS.
+- Full acceptance proves clean `npm ci`, 97/97 contract tests, lint/typecheck/build, zero high-level npm audit vulnerabilities, deterministic nonzero propagation from a deliberate invalid-source probe, probe rollback/removal, and a clean worktree. All 10 PR-head and all 10 canonical-main inherited workflows reached terminal clean state.
+- **Non-inference:** no deployment, live-device/profile/certificate action, service removal/revocation, participant processing, telemetry activation, market/launch action, `TSK-0374 PASS`, `TSK-0417 PASS`, or `TSK-0499 PASS` is created. PR `#86` remains a separate draft/unmerged source checkpoint.
+
+### Queue status after TSK-0380 acceptance
+
+Recompute the residual L6 frontier from current WBS/graph/runtime/gates. Direct successors such as `TSK-0453` or `TSK-0491` may consume TSK-0380 only if every other current dependency, gate, authority, input, and preserved material-action fence is independently satisfied.
