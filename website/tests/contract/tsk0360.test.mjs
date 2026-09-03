@@ -6,6 +6,8 @@ import { stripTypeScriptTypes } from 'node:module';
 
 const root = resolve(import.meta.dirname, '../..');
 const modulePath = resolve(root, 'src/lib/ios-doh-profile.ts');
+const deliveryRoutePath = resolve(root, 'src/app/api/ios-doh-profile/route.ts');
+const setupDnsPagePath = resolve(root, 'src/app/[locale]/setup/dns/page.tsx');
 const canonicalServerUrl = 'https://dns.usesafeweb.com/dns-query';
 const payloadUuid = '11111111-2222-4333-8444-555555555555';
 const dnsPayloadUuid = 'AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE';
@@ -86,4 +88,22 @@ test('generator normalizes UUID case and is deterministic for the same release U
   assert.equal(first, api.generateSafeWebIosDohProfile(input));
   assert.match(first, new RegExp(`<string>${payloadUuid}<\\/string>`));
   assert.match(first, new RegExp(`<string>${dnsPayloadUuid}<\\/string>`));
+});
+
+test('profile delivery is source-only, disabled by default, server-controlled, and not linked from setup', () => {
+  assert.equal(existsSync(deliveryRoutePath), true, 'missing gated TSK-0360 profile delivery route');
+  const route = readFileSync(deliveryRoutePath, 'utf8');
+  const setupDnsPage = readFileSync(setupDnsPagePath, 'utf8');
+
+  assert.match(route, /generateSafeWebIosDohProfile/);
+  assert.match(route, /USESAFEWEB_IOS_PROFILE_DELIVERY_ENABLED/);
+  assert.match(route, /USESAFEWEB_IOS_PROFILE_PAYLOAD_UUID/);
+  assert.match(route, /USESAFEWEB_IOS_PROFILE_DNS_PAYLOAD_UUID/);
+  assert.match(route, /application\/x-apple-aspen-config/);
+  assert.match(route, /Cache-Control['"]?\s*[:,]\s*['"]no-store['"]/);
+  assert.match(route, /Content-Disposition['"]?\s*[:,].*SafeWeb-DNS\.mobileconfig/);
+  assert.match(route, /process\.env\.USESAFEWEB_IOS_PROFILE_DELIVERY_ENABLED\s*!==\s*['"]true['"]/);
+  assert.doesNotMatch(route, /searchParams|request\.json|request\.text|formData|sessionStorage|localStorage|cookies\(/);
+  assert.doesNotMatch(route, /clientId|adminUrl|password|credential|authorization/i);
+  assert.doesNotMatch(setupDnsPage, /ios-doh-profile|mobileconfig/i);
 });
