@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import { CoreActionButton } from '@/components/core-action-button';
 import { SetupPage } from '@/components/setup-page';
@@ -9,21 +9,26 @@ import { getContent, getJourneyContent, getVersionedInstruction, type Locale } f
 
 type CleanupPlatform = 'android' | 'iphone';
 
+const subscribe = () => () => {};
+const getServerSnapshot = () => false;
+
 export function RevocationGatedCleanup({ locale, platform }: { locale: Locale; platform: CleanupPlatform }) {
   const router = useRouter();
-  const [authorized, setAuthorized] = useState(false);
+  const getAuthorizedSnapshot = useCallback(() => {
+    const state = readCoreSession(window.sessionStorage, Date.now());
+    return Boolean(state && state.locale === locale && state.deviceFamily === platform && state.phase === 'cleanup');
+  }, [locale, platform]);
+  const authorized = useSyncExternalStore(subscribe, getAuthorizedSnapshot, getServerSnapshot);
 
   useEffect(() => {
     const state = readCoreSession(window.sessionStorage, Date.now());
     if (!state || state.locale !== locale || state.deviceFamily !== platform || state.phase !== 'cleanup') {
       clearCoreSession(window.sessionStorage);
       router.replace(`/${locale}/setup/route`);
-      return;
     }
-    setAuthorized(true);
   }, [locale, platform, router]);
 
-  // Fail closed during server/pre-hydration render and while browser-session evidence is being checked.
+  // Server/pre-hydration rendering stays empty; only a valid current browser-session cleanup phase exposes removal UI.
   if (!authorized) return null;
 
   const c = getContent(locale);
