@@ -3169,3 +3169,22 @@ Recompute the current executable frontier from canonical WBS/graph, runtime evid
 ### Queue status after TSK-0380 acceptance
 
 Recompute the residual L6 frontier from current WBS/graph/runtime/gates. Direct successors such as `TSK-0453` or `TSK-0491` may consume TSK-0380 only if every other current dependency, gate, authority, input, and preserved material-action fence is independently satisfied.
+
+## TSK-0453 current accepted stable state — 2026-09-03 — SOURCE/POLICY VERIFIED; REVIEW ENFORCEMENT WAITING
+
+`TSK-0453 — Configure formatting, linting, type checking, commit/change, and code-review rules`: **WAITING** under current `ACC-0453 / VER-0453 / EVD-0453`. Source/policy controls are durably implemented and independently verified, but critical-path Code Owner review is not yet proven as a mandatory GitHub merge condition.
+
+- Current normalized WBS: L6 / MEDIUM / A3 / `AUTO_ALLOWED`; hard predecessor `TSK-0380` is current durable PASS.
+- Canonical source checkpoint: merge commit `b1f3fcad1265b40b5d5b414bb4c31d1f7bad80c2`, tree `7d5907146ba63b58d3309cdd6b782853ff55fe3f`; source PR `#89`, final exact head `b4fc1246d2fbff201cc067fee6b4a543509bc962`.
+- Durable evidence: `TSK_0453_QUALITY_AND_REVIEW_RULES_SOURCE_CHECKPOINT_2026-09-03.md`, evidence blob `2a06fed6987bd81e465f21a7fd5adeae0442a0ab` on the publication branch before merge.
+- Source controls include exact Prettier `3.9.6`, deterministic formatting/lint/type checks, CODEOWNERS routing for critical/governance paths, generated/configuration change coverage, explicit time-bounded exceptions, pull-request metadata, and a non-deploying TSK-0453 CI gate.
+- RED run/job `33755212839 / 100647896639` failed only the intended missing controls; final source gate `33755786032 / 100649749364` succeeded.
+- Exact PR-head regression matrix: **11/11 SUCCESS**; focused TSK-0453 run/job `33757539847 / 100655477984`.
+- Exact canonical clean-main regression matrix on `b1f3fcad1265b40b5d5b414bb4c31d1f7bad80c2`: **11/11 SUCCESS, zero failures**; focused TSK-0453 run/job `33758148342 / 100657497458`. Browser-heavy TSK-0243, TSK-0359, and TSK-0629 suites also succeeded.
+- Current GitHub read-back for `main` reports `protected=false`, protection disabled, and required-status-check enforcement off. The repository-rulesets endpoint is not readable through the current integration/plan, so absence of rulesets is not inferred. PR `#89` nevertheless merged without a required approving Code Owner review, so merge-blocking critical-path review is not proven for the governed execution path.
+- **WAIT condition / deterministic check:** configure and read back effective `main` repository controls requiring pull-request Code Owner approval for the intended critical paths and the intended quality/status checks, with no unapproved ordinary-governed bypass; then rerun `VER-0453`. Only complete current acceptance evidence may move this task to PASS.
+- **Non-inference / fences:** this WAITING checkpoint does not deploy, touch a live device, remove/revoke a profile or service, process participants, activate telemetry or production/public service, launch, invent a service-revocation interface/authority, or mark `TSK-0374`, `TSK-0417`, or `TSK-0499` PASS. PR `#86` remains draft and unmerged. Blocked real-target TSK-0417 work is not whole-project completion.
+
+### Queue effect after TSK-0453 WAITING checkpoint
+
+TSK-0453 WAITING blocks only work that requires its completed review-enforcement acceptance. Recompute the complete current executable frontier from canonical WBS/graph/runtime/gates/risks/interfaces and Action Authority; continue independent eligible `AUTO_ALLOWED` work without crossing the preserved material-action fences.
