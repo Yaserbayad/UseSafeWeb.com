@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "owner": "Security",
+  "generated_from": {
+    "package_manifest": "website/package.json",
+    "package_lock": "website/package-lock.json",
+    "package_lock_blob": "6ff91d845bc5f3099b6a00f5f43673eed80a3ba5",
+    "adguard_installer": "infrastructure/adguard-server/install-adguard.sh",
+    "adguard_installer_blob": "5891f79b531ac2f0366374a8f4bec8fa560a2496"
+  },
+  "toolchain": {
+    "node": "22.23.2",
+    "npm": "10.9.8"
+  },
+  "npm": {
+    "direct": [
+      {
+        "name": "@types/node",
+        "scope": "development",
+        "declared": "^20",
+        "resolved": "20.19.43"
+      },
+      {
+        "name": "@types/react",
+        "scope": "development",
+        "declared": "^19",
+        "resolved": "19.2.18"
+      },
+      {
+        "name": "@types/react-dom",
+        "scope": "development",
+        "declared": "^19",
+        "resolved": "19.2.5"
+      },
+      {
+        "name": "eslint",
+        "scope": "development",
+        "declared": "9.39.5",
+        "resolved": "9.39.5"
+      },
+      {
+        "name": "eslint-config-next",
+        "scope": "development",
+        "declared": "16.3.3",
+        "resolved": "16.3.3"
+      },
+      {
+        "name": "next",
+        "scope": "runtime",
+        "declared": "16.3.3",
+        "resolved": "16.3.3"
+      },
+      {
+        "name": "prettier",
+        "scope": "development",
+        "declared": "3.9.6",
+        "resolved": "3.9.6"
+      },
+      {
+        "name": "react",
+        "scope": "runtime",
+        "declared": "19.2.8",
+        "resolved": "19.2.8"
+      },
+      {
+        "name": "react-dom",
+        "scope": "runtime",
+        "declared": "19.2.8",
+        "resolved": "19.2.8"
+      },
+      {
+        "name": "typescript",
+        "scope": "development",
+        "declared": "^5",
+        "resolved": "5.9.3"
+      }
+    ]
+  },
+  "external_artifacts": [
+    {
+      "name": "AdGuardHome",
+      "version": "v0.107.79",
+      "asset": "AdGuardHome_linux_amd64.tar.gz",
+      "sha256": "c48f4a43000665484c5ec28177de11a004759b620dae8f77b2aabefc9ef3687f",
+      "source": "official-github-release"
+    }
+  ],
+  "host_package_inputs": {
+    "base_os": "ubuntu-24.04-lts",
+    "versioning": "provider-managed-security-channel",
+    "project_locked": false,
+    "packages": [
+      "ufw",
+      "nginx",
+      "libnginx-mod-stream",
+      "openssl",
+      "python3-yaml",
+      "curl",
+      "ca-certificates"
+    ],
+    "disposition": "Ubuntu host package versions are resolved from the approved Ubuntu 24.04 LTS package/security channel at execution; exact installed target versions are target-environment evidence owned by the applicable deployment/recovery task, not by the website lockfile."
+  },
+  "container_images": []
+}
