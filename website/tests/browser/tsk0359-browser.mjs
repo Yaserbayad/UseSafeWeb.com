@@ -44,6 +44,7 @@ async function setPhase(page, locale, phase, deviceFamily = 'android') {
       locale,
       phase,
       loginRequired: false,
+      retryCount: 0,
       deviceFamily,
     },
   });
