@@ -121,12 +121,13 @@ test('new operational pages consume externalized content and contain no hard-cod
   assert.doesNotMatch(complete, />\s*[A-Za-z][^<{]*</, 'completion page contains literal visible English JSX');
 });
 
-test('DNS and recovery surfaces select current instruction IDs by locale and platform', () => {
+test('DNS and recovery surfaces select current instruction IDs by locale and platform without duplicate instruction rendering', () => {
   const dns = read('src/app/[locale]/setup/dns/page.tsx');
   assert.match(dns, /getInstructionVariant/);
   assert.match(dns, /INS-AND-SETUP-01/);
   assert.match(dns, /INS-IOS-SETUP-01/);
   assert.doesNotMatch(dns, /label="I saved this DNS setting/);
+  assert.doesNotMatch(dns, /summary=\{instruction\.value\}/, 'DNS setup must not repeat the exact source-bound instruction as both summary and instruction body');
   const verify = read('src/app/[locale]/verify/page.tsx');
   assert.match(verify, /INS-AND-VERIFY-01/);
   assert.match(verify, /INS-IOS-VERIFY-01/);
