@@ -38,6 +38,6 @@ test('TSK-0395 public landing retains semantic heading, keyboard-native links, a
   assert.match(page, /<h1 className="sw-title">/);
   assert.match(page, /<Link[\s\S]*className=\{action\.secondary/);
   assert.match(css, /\.sw-actions/);
-  assert.match(css, /@media\s*\(max-width:/);
+  assert.match(css, /@media\s*\(min-width:/);
   assert.doesNotMatch(css, /#[0-9a-fA-F]{6}/, 'landing must consume shared brand tokens rather than a parallel raw palette');
 });
