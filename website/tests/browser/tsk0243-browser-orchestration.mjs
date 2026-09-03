@@ -93,6 +93,7 @@ async function setPhase(page, phase) {
       locale: 'en-GB',
       phase,
       loginRequired: false,
+      retryCount: 0,
       deviceFamily: 'android',
     },
   });
