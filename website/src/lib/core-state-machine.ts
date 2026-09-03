@@ -2,7 +2,7 @@ import { JOURNEY_MAX_AGE_MS } from './journey-state';
 
 export type Locale = 'en-GB' | 'tr-TR' | 'ar';
 export type DeviceFamily = 'android' | 'iphone';
-export type CorePhase = 'route' | 'native' | 'dns' | 'verify' | 'protection' | 'troubleshoot' | 'recover' | 'removed' | 'complete';
+export type CorePhase = 'route' | 'native' | 'dns' | 'verify' | 'protection' | 'troubleshoot' | 'recover' | 'cleanup' | 'removed' | 'complete';
 export type CoreJourneyStage = 'phone' | 'internet' | 'services';
 export type ProtectionState = 'protected/verified' | 'configured/parent-confirmed' | 'action-needed' | 'not-covered' | 'uncertain/error' | 'removed';
 export type ReasonCode =
@@ -62,6 +62,7 @@ export type CoreEvent =
   | { type: 'OPEN_TROUBLESHOOT'; deviceFamily?: DeviceFamily }
   | { type: 'RETRY_VERIFICATION'; deviceFamily?: DeviceFamily }
   | { type: 'OPEN_RECOVERY'; deviceFamily?: DeviceFamily }
+  | { type: 'SERVICE_REVOCATION_RESULT'; deviceFamily?: DeviceFamily; evidence: ProtectionEvidence }
   | { type: 'REMOVE_CONFIGURATION'; deviceFamily?: DeviceFamily }
   | { type: 'RESTART_SETUP'; deviceFamily?: DeviceFamily }
   | { type: 'COMPLETE'; deviceFamily?: DeviceFamily };
@@ -73,7 +74,7 @@ export type OptionalAccountState = {
 };
 
 const locales = new Set<Locale>(['en-GB', 'tr-TR', 'ar']);
-const phases = new Set<CorePhase>(['route', 'native', 'dns', 'verify', 'protection', 'troubleshoot', 'recover', 'removed', 'complete']);
+const phases = new Set<CorePhase>(['route', 'native', 'dns', 'verify', 'protection', 'troubleshoot', 'recover', 'cleanup', 'removed', 'complete']);
 const reasonCodes = new Set<ReasonCode>([
   'TECH_VERIFIED',
   'CONFIG_CONFIRMED_NO_TECH_VERIFY',
@@ -222,7 +223,12 @@ export function transitionCoreState(state: CoreState, event: CoreEvent, nowMs: n
       if (state.retryCount >= CORE_MAX_VERIFICATION_RETRIES) throw new Error('retry limit reached');
       return { ...withPhase(state, 'verify'), retryCount: state.retryCount + 1 };
     case 'troubleshoot:OPEN_RECOVERY': return withPhase(state, 'recover');
-    case 'recover:REMOVE_CONFIGURATION': return withPhase(state, 'removed');
+    case 'recover:SERVICE_REVOCATION_RESULT':
+      if (event.type !== 'SERVICE_REVOCATION_RESULT' || !isJourneyProtectionEvidence(event.evidence) || event.evidence.removal !== 'REVOKED') {
+        throw new Error('service revocation evidence required');
+      }
+      return withPhase(state, 'cleanup');
+    case 'cleanup:REMOVE_CONFIGURATION': return withPhase(state, 'removed');
     case 'removed:RESTART_SETUP': return withPhase(state, 'route');
     case 'protection:COMPLETE': return withPhase(state, 'complete');
     default: throw new Error(`invalid core transition: ${state.phase} -> ${event.type}`);

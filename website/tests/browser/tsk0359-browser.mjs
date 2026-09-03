@@ -92,11 +92,25 @@ for (const locale of locales) {
 
       await setPhase(page, locale.id, 'recover', deviceFamily);
       await page.goto(`${base}/${locale.id}/recover?platform=${deviceFamily}`, { waitUntil: 'domcontentloaded' });
+      assert.doesNotMatch(await page.locator('body').innerText(), new RegExp(bindings.instructions[removeId].variants[locale.id].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+
+      await setPhase(page, locale.id, 'cleanup', deviceFamily);
+      await page.goto(`${base}/${locale.id}/cleanup?platform=${deviceFamily}`, { waitUntil: 'domcontentloaded' });
+      await page.locator('[data-instruction-id]').waitFor({ state: 'visible' });
       assert.match(await page.locator('body').innerText(), new RegExp(bindings.instructions[removeId].variants[locale.id].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
     }
     await context.close();
   });
 }
+
+await record('cleanup deep link without revocation-gated session state fails closed', async () => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  await page.goto(`${base}/en-GB/cleanup?platform=iphone`, { waitUntil: 'domcontentloaded' });
+  await page.waitForURL(`${base}/en-GB/setup/route`);
+  assert.equal((await page.locator('body').innerText()).includes(bindings.instructions['INS-IOS-REMOVE-01'].variants['en-GB']), false);
+  await context.close();
+});
 
 await record('Arabic TSK-0359 operational page remains WCAG 2.2 AA and RTL', async () => {
   const context = await browser.newContext({ viewport: { width: 320, height: 720 } });
