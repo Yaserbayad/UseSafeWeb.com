@@ -48,6 +48,13 @@ test('accepts only the minimal categorical support contract and normalizes bound
     'reportType',
     'rootCause',
   ]);
+
+  assert.deepEqual(api.toSupportMetricDimensions(falsePositive), {
+    reportType: 'false_positive',
+    rootCause: 'filter_false_positive',
+    journeyStage: 'internet',
+    deviceClass: 'iphone',
+  });
 });
 
 test('fails closed on free text, identity, browsing fields, arbitrary keys, and URL-shaped diagnostics', async () => {
