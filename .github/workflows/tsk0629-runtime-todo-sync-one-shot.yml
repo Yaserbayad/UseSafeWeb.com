@@ -1,0 +1,91 @@
+name: TSK-0629 one-shot TODO runtime sync
+
+on:
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  contents: write
+
+jobs:
+  sync-current-state:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Atomically patch CURRENT_STATE.md, self-remove, and verify remote read-back
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPECTED_EVIDENCE_COMMIT='ad8e5f4309dfaee5d84ef1eabcc535d6c808ed37'
+          EXPECTED_STATE_BLOB='1355b3f0d2cb2ae25091ce3893d2b2f3ba84e3b1'
+          EXPECTED_STATE_BYTES='470885'
+          WORKFLOW='.github/workflows/tsk0629-runtime-todo-sync-one-shot.yml'
+
+          git merge-base --is-ancestor "$EXPECTED_EVIDENCE_COMMIT" HEAD
+          test "$(git diff --name-only "$EXPECTED_EVIDENCE_COMMIT"..HEAD | sort | paste -sd ' ' -)" = "$WORKFLOW"
+          test "$(git hash-object CURRENT_STATE.md)" = "$EXPECTED_STATE_BLOB"
+          test "$(wc -c < CURRENT_STATE.md | tr -d ' ')" = "$EXPECTED_STATE_BYTES"
+          ! grep -Fq '## TSK-0629 current accepted stable state — 2026-09-03' CURRENT_STATE.md
+
+          SYNC_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          export SYNC_TIME
+          python3 - <<'PY'
+          from pathlib import Path
+          import os, subprocess
+
+          path = Path('CURRENT_STATE.md')
+          original = subprocess.check_output(['git', 'show', 'HEAD:CURRENT_STATE.md']).decode('utf-8')
+          assert original.encode('utf-8') == path.read_bytes()
+          lines = original.splitlines(keepends=True)
+          indexes = [i for i, line in enumerate(lines) if line.startswith('**Updated:** ')]
+          assert indexes == [2], indexes
+          lines[2] = f"**Updated:** {os.environ['SYNC_TIME']}\n"
+          base = ''.join(lines)
+          assert '## TSK-0629 current accepted stable state — 2026-09-03' not in base
+
+          block = '''\n## TSK-0629 current accepted stable state — 2026-09-03 — SOURCE IMPLEMENTATION PARTIAL\n\n`TSK-0629 — Implement privacy-safe automated checks that confirm what can be technically verified and clearly label everything else`: **TODO**. Durable source implementation is accepted, but current `ACC-0629 / VER-0629 / EVD-0629` is incomplete because no approved trusted producer of fresh E1 DNS-path evidence is connected or proven.\n\n- Current normalized WBS: L6 / HIGH / A4 / `AUTO_ALLOWED`; hard predecessors `TSK-0358` and `TSK-0320` are current durable PASS; `LG-07` is current durable PASS.\n- Canonical source implementation merged through PR `#64`; squash merge `d00a2ad85ae58c50457724f473da6aab0dfdcf56`.\n- Durable partial evidence: `TSK_0629_PRIVACY_SAFE_AUTOMATED_CHECK_SOURCE_IMPLEMENTATION_2026-09-03.md`, blob `d64407f63a4ab867b1f10ef25e87d9664d8bbfb5`, evidence commit `ad8e5f4309dfaee5d84ef1eabcc535d6c808ed37`.\n- Final feature gate `33709655002 / 100506226449`: **SUCCESS** on exact feature head `fccc55aafb923993ac49c9f6a6ac7ae0f4baddfb`.\n- Canonical clean-main TSK-0629 gate `33709817061 / 100506699183`: **SUCCESS** on exact merge SHA; 42/42 contracts PASS, lint has zero errors, type-check and Next.js production build PASS, dependency audits report 0 vulnerabilities, and `TSK0629_BROWSER_ACCEPTANCE=PASS`.\n- Independent inherited regression `33709817022 / 100506699008`: **SUCCESS** on the same merge SHA.\n- Proven source behavior includes exact-field privacy-safe check classification, strict separation of parent confirmation from technical evidence, fail-closed stale/failure/conflict/unknown/not-run/removal behavior, query-spoof resistance, single current-verification authority, Protection Map binding, and controlled verify-to-troubleshoot recovery.\n- Current product source intentionally evaluates the live check as `unknown / unknown / not-run`; it cannot truthfully produce a positive working/protected result until a trusted approved fresh E1 DNS-path producer exists. Source-level positive test vectors are not target verification evidence.\n- `TSK-0243` currently owns the privacy-safe DNS-protection verification acceptance boundary needed to establish deterministic supported-path verification without query history and with cache/failure/conflict handling. The WBS does not declare `TSK-0243` as a hard predecessor of `TSK-0629`; this is recorded as a technical enabling relationship for sequencing only, not an invented dependency edge.\n- **Non-inference / fences:** no deployment, DNS-server mutation, profile distribution, production/runtime activation, market activation, participant processing, launch or unrelated task/gate PASS is inferred. `TSK-0360` remains TODO; `TSK-0455` remains WAITING; `TSK-0399` remains ineligible while `TSK-0360` is non-PASS. No `GATE-0026` exists or is created.\n\n### Queue status after TSK-0629 partial source acceptance\n\nContinue with the highest-priority genuinely executable work that can supply or enable the missing trusted verification evidence without bypassing target-host, distribution, deployment, production or participant fences. Recompute eligibility before every consequential mutation.\n'''
+          expected = base + block
+          path.write_text(expected, encoding='utf-8')
+          assert path.read_text(encoding='utf-8') == expected
+          assert len(path.read_bytes()) > len(original.encode('utf-8'))
+          PY
+
+          NEW_STATE_BLOB="$(git hash-object CURRENT_STATE.md)"
+          NEW_STATE_BYTES="$(wc -c < CURRENT_STATE.md | tr -d ' ')"
+          test "$NEW_STATE_BLOB" != "$EXPECTED_STATE_BLOB"
+          test "$NEW_STATE_BYTES" -gt "$EXPECTED_STATE_BYTES"
+          grep -Fq 'TSK-0629 current accepted stable state — 2026-09-03' CURRENT_STATE.md
+          grep -Fq '`: **TODO**.' CURRENT_STATE.md
+          grep -Fq 'TSK-0360` remains TODO' CURRENT_STATE.md
+          grep -Fq 'TSK-0455` remains WAITING' CURRENT_STATE.md
+          grep -Fq 'No `GATE-0026` exists or is created.' CURRENT_STATE.md
+          git diff --check
+
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$(git rev-parse HEAD)"
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm "$WORKFLOW"
+          git add CURRENT_STATE.md
+          git commit -m 'state: record TSK-0629 partial TODO checkpoint'
+          test "$(git diff --name-only "$EXPECTED_EVIDENCE_COMMIT"..HEAD | sort | paste -sd ' ' -)" = 'CURRENT_STATE.md'
+          echo "TSK0629_STATE_SYNC_NEW_BLOB=$NEW_STATE_BLOB"
+          echo "TSK0629_STATE_SYNC_NEW_BYTES=$NEW_STATE_BYTES"
+          git push origin HEAD:main
+
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$(git rev-parse HEAD)"
+          git show origin/main:CURRENT_STATE.md > /tmp/current-state-readback.md
+          cmp -s CURRENT_STATE.md /tmp/current-state-readback.md
+          test "$(git hash-object /tmp/current-state-readback.md)" = "$NEW_STATE_BLOB"
+          test "$(wc -c < /tmp/current-state-readback.md | tr -d ' ')" = "$NEW_STATE_BYTES"
+          grep -Fq 'TSK-0629 current accepted stable state — 2026-09-03' /tmp/current-state-readback.md
+          grep -Fq '`TSK-0629 — Implement privacy-safe automated checks that confirm what can be technically verified and clearly label everything else`: **TODO**.' /tmp/current-state-readback.md
+          grep -Fq 'TSK-0360` remains TODO' /tmp/current-state-readback.md
+          grep -Fq 'TSK-0455` remains WAITING' /tmp/current-state-readback.md
+          grep -Fq 'No `GATE-0026` exists or is created.' /tmp/current-state-readback.md
+          echo 'TSK0629_STATE_SYNC_REMOTE_READBACK=PASS'
