@@ -85,6 +85,22 @@ test('proof parser rejects expanded fields, invalid timing, unsupported outcomes
   assert.throws(() => api.signDnsVerificationObservation(observation({ outcome: 'working' }), secret), /invalid dns verification observation/i);
 });
 
+test('untrusted proof input is byte-bounded and observation batches are count-bounded', async () => {
+  const api = await loadApi();
+  assert.equal(api.DNS_VERIFICATION_MAX_TOKEN_BYTES, 2048);
+  assert.equal(api.DNS_VERIFICATION_MAX_OBSERVATIONS, 8);
+  assert.equal(api.verifyDnsVerificationObservation('x'.repeat(2049), secret, now + 1_000, scope, challenge), null);
+
+  const token = api.signDnsVerificationObservation(observation(), secret);
+  const oversizedBatch = api.reconcileDnsVerificationObservations(Array(9).fill(token), secret, now + 1_000, scope, challenge);
+  assert.equal(oversizedBatch.dnsPath, 'uncertain');
+  assert.equal(oversizedBatch.reasonCode, 'VERIFICATION_SERVICE_ERROR');
+
+  const malformedBatch = api.reconcileDnsVerificationObservations(null, secret, now + 1_000, scope, challenge);
+  assert.equal(malformedBatch.dnsPath, 'uncertain');
+  assert.equal(malformedBatch.reasonCode, 'VERIFICATION_SERVICE_ERROR');
+});
+
 test('approved event projection excludes challenge, scope, host, address and browsing/domain history', async () => {
   const api = await loadApi();
   const token = api.signDnsVerificationObservation(observation(), secret);
