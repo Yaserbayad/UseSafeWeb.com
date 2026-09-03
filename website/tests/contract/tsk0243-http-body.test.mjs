@@ -6,6 +6,8 @@ import { stripTypeScriptTypes } from 'node:module';
 
 const root = resolve(import.meta.dirname, '../..');
 const modulePath = resolve(root, 'src/lib/bounded-request-body.ts');
+const requestRoutePath = resolve(root, 'src/app/api/dns-verification/requests/route.ts');
+const probeRoutePath = resolve(root, 'src/app/api/dns-verification/probes/route.ts');
 
 async function loadApi() {
   assert.equal(existsSync(modulePath), true, 'missing bounded streaming request-body reader');
@@ -49,4 +51,13 @@ test('bounded reader rejects malformed UTF-8 rather than normalizing untrusted b
   });
   const request = new Request('https://verify.usesafeweb.com/probe', { method: 'POST', body, duplex: 'half' });
   await assert.rejects(api.readBoundedUtf8Body(request, 4096), /invalid utf-8/i);
+});
+
+test('both verifier routes use the streaming bound and never buffer with request.text()', () => {
+  const requestRoute = readFileSync(requestRoutePath, 'utf8');
+  const probeRoute = readFileSync(probeRoutePath, 'utf8');
+  for (const source of [requestRoute, probeRoute]) {
+    assert.match(source, /readBoundedUtf8Body/);
+    assert.doesNotMatch(source, /request\.text\(\)/);
+  }
 });
