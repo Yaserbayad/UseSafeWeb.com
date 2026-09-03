@@ -1,0 +1,37 @@
+name: TSK-0453 quality and review rules acceptance
+
+on:
+  push:
+    branches:
+      - feature/tsk-0453-quality-review-rules-20260903
+  pull_request:
+    paths:
+      - 'website/**'
+      - '.github/CODEOWNERS'
+      - '.github/CHANGE_REVIEW_POLICY.md'
+      - '.github/pull_request_template.md'
+      - '.github/workflows/accept-tsk0453-quality-review-rules-20260903.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  accept-tsk0453:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.23.2'
+      - name: Verify canonical planning integrity and focused TSK-0453 contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
+          python3 tests/repository-structure/verify_structure.py
+          python3 Plans/Master/Tools/validate_master_plan.py
+          cd website
+          node --test tests/contract/tsk0453.test.mjs
+          cd ..
+          git diff --check
+          test -z "$(git status --porcelain)"
