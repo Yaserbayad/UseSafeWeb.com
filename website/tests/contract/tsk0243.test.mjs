@@ -179,6 +179,8 @@ test('route handlers expose POST-only node interfaces with bounded input, no-sto
     assert.doesNotMatch(source, /export (?:async )?function (?:GET|PUT|PATCH|DELETE|OPTIONS)\(/);
     assert.match(source, /Cache-Control['"]?\s*[:,]\s*['"]no-store['"]/);
     assert.match(source, /DNS_VERIFICATION_MAX_HTTP_BODY_BYTES/);
+    assert.match(source, /readBoundedUtf8Body/);
+    assert.doesNotMatch(source, /request\.text\(\)/);
     assert.doesNotMatch(source, /x-forwarded-host/i);
     for (const forbidden of ['queryHistory', 'browsingHistory', 'childId', 'accountId', 'clientIp']) {
       assert.equal(source.includes(forbidden), false);
@@ -194,7 +196,6 @@ test('route handlers expose POST-only node interfaces with bounded input, no-sto
   assert.match(probeRoute, /USESAFEWEB_PUBLIC_ORIGIN/);
   assert.match(probeRoute, /Access-Control-Allow-Origin/);
   assert.match(probeRoute, /Vary['"]?\s*[:,]\s*['"]Origin['"]/);
-  assert.match(probeRoute, /request\.text\(\)/, 'probe POST uses an opaque text token so browser CORS preflight is not required');
   assert.doesNotMatch(probeRoute, /JSON\.parse/);
   assert.match(probeRoute, /createDnsVerificationObservationFromProbeRequest/);
   assert.doesNotMatch(probeRoute, /\b(?:outcome|reasonCode|challenge|probeHost)\s*=/, 'probe route must not derive positive evidence from client-selected body fields');
