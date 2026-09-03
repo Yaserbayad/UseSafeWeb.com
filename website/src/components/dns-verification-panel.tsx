@@ -3,12 +3,7 @@
 import { useEffect, useState } from 'react';
 import { CoreActionButton } from '@/components/core-action-button';
 import { classifyAutomatedChecks, type AutomatedVerificationOutcome } from '@/lib/automated-verification';
-import {
-  clearDnsVerificationProof,
-  runDnsVerification,
-  writeDnsVerificationProof,
-  type BrowserDnsVerificationCheck,
-} from '@/lib/dns-verification-browser';
+import { runDnsVerification, type BrowserDnsVerificationCheck } from '@/lib/dns-verification-browser';
 import { readCoreSession } from '@/lib/core-session';
 import { evaluateProtection, type DeviceFamily, type Locale } from '@/lib/core-state-machine';
 
@@ -40,7 +35,6 @@ export function DnsVerificationPanel({
     let active = true;
     const run = async () => {
       const state = readCoreSession(window.sessionStorage, Date.now());
-      clearDnsVerificationProof(window.sessionStorage);
       if (!state || state.phase !== 'verify' || state.locale !== locale || state.deviceFamily !== deviceFamily) {
         if (active) {
           setOutcome(outcomeFromCheck(null));
@@ -49,16 +43,9 @@ export function DnsVerificationPanel({
         return;
       }
 
-      const result = await runDnsVerification(state.scope);
+      const check = await runDnsVerification(state.scope);
       if (!active) return;
-      if (result) {
-        if (result.check.dnsPath === 'verified-fresh') {
-          writeDnsVerificationProof(window.sessionStorage, result.proof);
-        }
-        setOutcome(outcomeFromCheck(result.check));
-      } else {
-        setOutcome(outcomeFromCheck(null));
-      }
+      setOutcome(outcomeFromCheck(check));
       setChecking(false);
     };
     void run();
