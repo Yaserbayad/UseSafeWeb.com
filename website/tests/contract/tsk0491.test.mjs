@@ -21,7 +21,11 @@ const packageLock = readJson(join(websiteRoot, 'package-lock.json'));
 function directManifestEntries() {
   return [
     ...Object.entries(packageJson.dependencies ?? {}).map(([name, declared]) => ({ name, declared, scope: 'runtime' })),
-    ...Object.entries(packageJson.devDependencies ?? {}).map(([name, declared]) => ({ name, declared, scope: 'development' })),
+    ...Object.entries(packageJson.devDependencies ?? {}).map(([name, declared]) => ({
+      name,
+      declared,
+      scope: 'development',
+    })),
   ].sort((a, b) => a.name.localeCompare(b.name));
 }
 

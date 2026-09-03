@@ -89,15 +89,7 @@
     "base_os": "ubuntu-24.04-lts",
     "versioning": "provider-managed-security-channel",
     "project_locked": false,
-    "packages": [
-      "ufw",
-      "nginx",
-      "libnginx-mod-stream",
-      "openssl",
-      "python3-yaml",
-      "curl",
-      "ca-certificates"
-    ],
+    "packages": ["ufw", "nginx", "libnginx-mod-stream", "openssl", "python3-yaml", "curl", "ca-certificates"],
     "disposition": "Ubuntu host package versions are resolved from the approved Ubuntu 24.04 LTS package/security channel at execution; exact installed target versions are target-environment evidence owned by the applicable deployment/recovery task, not by the website lockfile."
   },
   "container_images": []
