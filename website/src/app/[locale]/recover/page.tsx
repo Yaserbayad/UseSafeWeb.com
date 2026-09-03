@@ -4,6 +4,7 @@ import { CorePageGuard } from '@/components/core-page-guard';
 import { SetupPage, operationalMetadata } from '@/components/setup-page';
 import { getJourneyContent, getVersionedInstruction, isLocale } from '@/lib/i18n';
 
+// TSK-0359 provenance compatibility: INS-AND-REMOVE-01 / INS-IOS-REMOVE-01 selection is delegated to the TSK-0374 versioned release map.
 export const metadata = operationalMetadata;
 
 export default async function Page({ params, searchParams }: {
