@@ -8,16 +8,17 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   if (!isLocale(locale)) return {};
   const content = getContent(locale);
-  return publicMetadata(locale, '', content.home.title, content.home.summary);
+  return publicMetadata(locale, '', content.home.kicker, content.home.summary);
 }
 
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const content = getContent(locale);
+  const section = { ...content.home, kicker: content.common.brand, title: content.home.kicker };
   return (
     <ContentPage
-      section={content.home}
+      section={section}
       actions={[
         { href: `/${locale}/start`, label: content.home.primaryLabel },
         { href: `/${locale}/how-it-works`, label: content.home.secondaryLabel, secondary: true },
