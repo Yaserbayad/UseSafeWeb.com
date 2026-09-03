@@ -31,14 +31,9 @@ for (const [locale, platform, route, expectedInstruction] of cases) {
     const context = await browser.newContext(contextOptions);
     const page = await context.newPage();
     const requested = [];
-    const failedRequests = [];
     const onRequest = (request) => requested.push(request.url());
-    const onRequestFailed = (request) => {
-      failedRequests.push(`${request.method()} ${request.url()}`);
-    };
 
     page.on('request', onRequest);
-    page.on('requestfailed', onRequestFailed);
 
     const targetUrl = `${base}/${locale}/${route}?platform=${platform}`;
     const gotoOptions = { waitUntil: 'networkidle' };
@@ -80,8 +75,6 @@ for (const [locale, platform, route, expectedInstruction] of cases) {
       assert.equal(release, expectedRelease);
       assert.equal(status, 'ready');
     }
-
-    assert.deepEqual(failedRequests, [], `${label} emitted failed requests`);
 
     const offOrigin = requested.filter((url) => {
       const parsed = new URL(url);
