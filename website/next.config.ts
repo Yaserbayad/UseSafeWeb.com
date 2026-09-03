@@ -11,7 +11,7 @@ const contentSecurityPolicy = [
   "font-src 'self'",
   "style-src 'self' 'unsafe-inline'",
   "script-src 'self' 'unsafe-inline'",
-  "connect-src 'self'",
+  "connect-src 'self' https://*.verify.usesafeweb.com",
 ].join('; ');
 
 const nextConfig: NextConfig = {
