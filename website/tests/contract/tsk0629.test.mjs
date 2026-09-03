@@ -6,12 +6,17 @@ import { stripTypeScriptTypes } from 'node:module';
 
 const root = resolve(import.meta.dirname, '../..');
 const modulePath = resolve(root, 'src/lib/automated-verification.ts');
+const stateMachinePath = resolve(root, 'src/lib/core-state-machine.ts');
 
-async function loadApi() {
-  assert.equal(existsSync(modulePath), true, 'missing TSK-0629 privacy-safe automated-check classifier');
-  const source = readFileSync(modulePath, 'utf8');
+async function loadTypeScriptModule(path, missingMessage) {
+  assert.equal(existsSync(path), true, missingMessage);
+  const source = readFileSync(path, 'utf8');
   const js = stripTypeScriptTypes(source, { mode: 'strip' });
   return import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
+}
+
+async function loadApi() {
+  return loadTypeScriptModule(modulePath, 'missing TSK-0629 privacy-safe automated-check classifier');
 }
 
 const base = {
@@ -100,4 +105,16 @@ test('runtime input is exact-field allowlisted and rejects browsing/history/diag
   }
   assert.throws(() => api.classifyAutomatedChecks({ ...base, dnsPath: 'verified' }), /invalid automated verification input/);
   assert.throws(() => api.classifyAutomatedChecks(null), /invalid automated verification input/);
+});
+
+test('uncertain verification can enter troubleshooting directly without bypassing controlled session state', async () => {
+  const api = await loadTypeScriptModule(stateMachinePath, 'missing core state machine');
+  let state = api.createCoreState('en-GB', 'ab'.repeat(16), 1_000, 10_000);
+  state = api.transitionCoreState(state, { type: 'SELECT_DEVICE', deviceFamily: 'android' }, 2_000);
+  state = api.transitionCoreState(state, { type: 'CONTINUE_NATIVE' }, 2_100);
+  state = api.transitionCoreState(state, { type: 'CONTINUE_DNS' }, 2_200);
+  assert.equal(state.phase, 'verify');
+  state = api.transitionCoreState(state, { type: 'OPEN_TROUBLESHOOT' }, 2_300);
+  assert.equal(state.phase, 'troubleshoot');
+  assert.equal(state.loginRequired, false);
 });
