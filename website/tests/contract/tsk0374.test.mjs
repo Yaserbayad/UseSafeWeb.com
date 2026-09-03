@@ -13,7 +13,7 @@ const bindingPath = 'src/content/instruction-bindings.json';
 const pagePaths = [
   'src/app/[locale]/setup/dns/page.tsx',
   'src/app/[locale]/verify/page.tsx',
-  'src/app/[locale]/recover/page.tsx',
+  'src/app/[locale]/cleanup/page.tsx',
 ];
 
 async function loadApi() {
@@ -111,7 +111,7 @@ test('release selection and delivery fail closed for stale, withdrawn, malformed
   }).status, 'unsupported');
 });
 
-test('i18n delivery integration exposes release/status metadata and operational pages stop hard-coding instruction IDs', () => {
+test('i18n delivery integration exposes release/status metadata and operational delivery pages stop hard-coding instruction IDs', () => {
   const i18n = read('src/lib/i18n.ts');
   assert.match(i18n, /getVersionedInstruction/);
   assert.match(i18n, /resolveContentDelivery/);
@@ -135,11 +135,11 @@ test('non-ready delivery is visibly fail-closed and retains a localized safe rec
   assert.match(verify, /protectionContent\.troubleshootLabel/, 'verify failure must retain localized troubleshooting');
   assert.match(verify, /href: `\/\$\{locale\}\/troubleshoot\?platform=\$\{platform\}`/, 'verify failure must route to troubleshooting');
 
-  const recover = read(pagePaths[2]);
-  assert.match(recover, /getContent/, 'recovery failure needs localized shell actions');
-  assert.match(recover, /\{instruction\.status\}/, 'recovery must visibly expose its non-ready content status');
-  assert.match(recover, /href: `\/\$\{locale\}\/help`/, 'recovery failure must retain Help');
-  assert.match(recover, /href: `\/\$\{locale\}\/setup\/route`/, 'recovery failure must retain a safe restart route');
+  const cleanup = read(pagePaths[2]);
+  assert.match(cleanup, /getContent/, 'cleanup failure needs localized shell actions');
+  assert.match(cleanup, /\{instruction\.status\}/, 'cleanup must visibly expose its non-ready content status');
+  assert.match(cleanup, /href: `\/\$\{locale\}\/help`/, 'cleanup failure must retain Help');
+  assert.match(cleanup, /href: `\/\$\{locale\}\/setup\/route`/, 'cleanup failure must retain a safe restart route');
 });
 
 test('versioned delivery has no remote content transport, persistence, identity, or analytics side channel', () => {
