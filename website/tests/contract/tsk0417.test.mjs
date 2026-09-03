@@ -11,6 +11,7 @@ const profilePath = resolve(root, 'src/lib/ios-doh-profile.ts');
 const deliveryRoutePath = resolve(root, 'src/app/api/ios-doh-profile/route.ts');
 const recoverPagePath = resolve(root, 'src/app/[locale]/recover/page.tsx');
 const cleanupPagePath = resolve(root, 'src/app/[locale]/cleanup/page.tsx');
+const cleanupClientPath = resolve(root, 'src/components/revocation-gated-cleanup.tsx');
 const dataUrl = (source) => `data:text/javascript;base64,${Buffer.from(source).toString('base64')}`;
 
 async function loadApi() {
@@ -79,7 +80,7 @@ test('TSK-0417 rejects missing or profile-removal evidence as a substitute for s
   }
 });
 
-test('profile-removal instructions and action are exposed only in the revocation-gated cleanup phase', () => {
+test('profile-removal instructions and action are exposed only after the browser session proves cleanup phase', () => {
   assert.equal(existsSync(recoverPagePath), true, 'missing recovery page');
   const recoverSource = readFileSync(recoverPagePath, 'utf8');
   assert.doesNotMatch(recoverSource, /getVersionedInstruction\(locale,\s*platform,\s*'remove'\)/);
@@ -87,9 +88,18 @@ test('profile-removal instructions and action are exposed only in the revocation
 
   assert.equal(existsSync(cleanupPagePath), true, 'missing revocation-gated cleanup page');
   const cleanupSource = readFileSync(cleanupPagePath, 'utf8');
-  assert.match(cleanupSource, /expectedPhase="cleanup"/);
-  assert.match(cleanupSource, /getVersionedInstruction\(locale,\s*platform,\s*'remove'\)/);
-  assert.match(cleanupSource, /event=\{\{ type: 'REMOVE_CONFIGURATION' \}\}/);
+  assert.match(cleanupSource, /RevocationGatedCleanup/);
+  assert.doesNotMatch(cleanupSource, /getVersionedInstruction/);
+  assert.doesNotMatch(cleanupSource, /REMOVE_CONFIGURATION/);
+  assert.doesNotMatch(cleanupSource, /instruction\.value/);
+
+  assert.equal(existsSync(cleanupClientPath), true, 'missing client-side cleanup authorization boundary');
+  const clientSource = readFileSync(cleanupClientPath, 'utf8');
+  assert.match(clientSource, /^'use client';/);
+  assert.match(clientSource, /readCoreSession\(window\.sessionStorage, Date\.now\(\)\)/);
+  assert.match(clientSource, /state\.phase !== 'cleanup'/);
+  assert.match(clientSource, /getVersionedInstruction\(locale,\s*platform,\s*'remove'\)/);
+  assert.match(clientSource, /event=\{\{ type: 'REMOVE_CONFIGURATION' \}\}/);
 });
 
 test('current iPhone artifact is an Apple encrypted-DNS profile with no client credential or identity-certificate cleanup surface', () => {
