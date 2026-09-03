@@ -10,7 +10,7 @@ import {
   type BrowserDnsVerificationCheck,
 } from '@/lib/dns-verification-browser';
 import { readCoreSession } from '@/lib/core-session';
-import type { DeviceFamily, Locale } from '@/lib/core-state-machine';
+import { evaluateProtection, type DeviceFamily, type Locale } from '@/lib/core-state-machine';
 
 function outcomeFromCheck(check: BrowserDnsVerificationCheck | null): AutomatedVerificationOutcome {
   return classifyAutomatedChecks(check
@@ -39,8 +39,7 @@ export function DnsVerificationPanel({
   useEffect(() => {
     let active = true;
     const run = async () => {
-      const now = Date.now();
-      const state = readCoreSession(window.sessionStorage, now);
+      const state = readCoreSession(window.sessionStorage, Date.now());
       clearDnsVerificationProof(window.sessionStorage);
       if (!state || state.phase !== 'verify' || state.locale !== locale || state.deviceFamily !== deviceFamily) {
         if (active) {
@@ -64,21 +63,23 @@ export function DnsVerificationPanel({
     return () => { active = false; };
   }, [deviceFamily, locale]);
 
-  const supporting = outcome.action ?? reasonCopy[outcome.reasonCode] ?? reasonCopy.default;
-  const showRecovery = outcome.state === 'uncertain/error' || outcome.state === 'action-needed';
+  const protection = evaluateProtection(outcome.evidence);
+  const supporting = protection.action ?? reasonCopy[protection.reasonCode] ?? reasonCopy.default;
+  const showRecovery = protection.state === 'uncertain/error' || protection.state === 'action-needed';
 
   return (
     <>
       <section
         className="sw-card"
-        data-verification-outcome={outcome.outcome}
-        data-protection-state={outcome.state}
+        data-verification-outcome={outcome.checkState}
+        data-parent-confirmation={outcome.parentConfirmation}
+        data-protection-state={protection.state}
         aria-live="polite"
         aria-busy={checking}
       >
-        <h2>{stateLabels[outcome.state]}</h2>
+        <h2>{stateLabels[protection.state]}</h2>
         <p>{supporting}</p>
-        <p className="sw-technical">{outcome.reasonCode}</p>
+        <p className="sw-technical">{protection.reasonCode}</p>
       </section>
       <div className="sw-actions">
         {showRecovery ? (
