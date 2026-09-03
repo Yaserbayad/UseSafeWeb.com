@@ -159,7 +159,7 @@ test('capacity is bounded and does not create a hidden persistent support databa
   assert.doesNotMatch(source, /localStorage|indexedDB|from ['"]node:fs['"]|writeFile|appendFile|sqlite|postgres|mysql/i);
 });
 
-test('privacy notice and no-store POST/DELETE route are present without a public listing endpoint', async () => {
+test('privacy notice and no-store POST/DELETE route are present, default-off, and expose no public listing endpoint', async () => {
   const api = await loadSupportApi();
   assert.match(api.SUPPORT_CAPTURE_PRIVACY_NOTICE, /24 hours/i);
   assert.match(api.SUPPORT_CAPTURE_PRIVACY_NOTICE, /delete/i);
@@ -171,5 +171,7 @@ test('privacy notice and no-store POST/DELETE route are present without a public
   assert.doesNotMatch(routeSource, /export\s+async\s+function\s+GET/);
   assert.match(routeSource, /readBoundedUtf8Body/);
   assert.match(routeSource, /Cache-Control['"\s,:]+no-store/i);
+  assert.match(routeSource, /USESAFEWEB_SUPPORT_CAPTURE_ENABLED/);
+  assert.match(routeSource, /SUPPORT_CAPTURE_DISABLED/);
   assert.doesNotMatch(routeSource, /console\.(?:log|info|debug)\s*\(/);
 });
