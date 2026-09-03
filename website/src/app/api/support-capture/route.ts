@@ -33,7 +33,14 @@ function acceptsJson(request: Request): boolean {
   return request.headers.get('content-type')?.toLowerCase().startsWith('application/json') ?? false;
 }
 
+function captureEnabled(): boolean {
+  return process.env.USESAFEWEB_SUPPORT_CAPTURE_ENABLED === '1';
+}
+
 export async function POST(request: Request): Promise<Response> {
+  if (!captureEnabled()) {
+    return error(503, 'SUPPORT_CAPTURE_DISABLED', 'Support capture is not enabled.');
+  }
   if (!acceptsJson(request)) {
     return error(415, 'UNSUPPORTED_MEDIA_TYPE', 'Expected application/json.');
   }
