@@ -69,15 +69,25 @@ test('canonical happy path exposes Phone -> Internet -> Services without a paral
   assert.equal(api.coreJourneyStage(state), 'services');
   assert.equal(state.phase, 'protection');
   assert.equal(state.retryCount, 0);
-  assert.equal(Object.hasOwn(state, 'verification'), false, 'verification evaluation must not be duplicated into retained session state');
+  assert.equal(
+    Object.hasOwn(state, 'verification'),
+    false,
+    'verification evaluation must not be duplicated into retained session state',
+  );
 });
 
 test('illegal transitions are rejected rather than silently advancing or no-oping', async () => {
   const api = await loadCoreApi();
   const state = api.createCoreState('en-GB', scope, createdAt, createdAt + 60_000);
-  assert.throws(() => api.transitionCoreState(state, { type: 'CONTINUE_DNS' }, withinLifetime), /invalid core transition/);
+  assert.throws(
+    () => api.transitionCoreState(state, { type: 'CONTINUE_DNS' }, withinLifetime),
+    /invalid core transition/,
+  );
   const verification = await toVerification(api);
-  assert.throws(() => api.transitionCoreState(verification, { type: 'SELECT_DEVICE', deviceFamily: 'iphone' }, withinLifetime), /invalid core transition/);
+  assert.throws(
+    () => api.transitionCoreState(verification, { type: 'SELECT_DEVICE', deviceFamily: 'iphone' }, withinLifetime),
+    /invalid core transition/,
+  );
 });
 
 test('parent confirmation and measured verification remain distinct and an evidence-free UX event cannot manufacture verified/protected state', async () => {
@@ -132,10 +142,21 @@ test('negative/uncertain verification cannot enter Services and recovery retry i
     assert.deepEqual(replay, first, 'same retry input must be deterministic/idempotent');
     assert.equal(first.retryCount, attempt);
     assert.equal(first.phase, 'verify');
-    assert.equal(Object.hasOwn(first, 'verification'), false, 'retry must not retain or manufacture verification state');
+    assert.equal(
+      Object.hasOwn(first, 'verification'),
+      false,
+      'retry must not retain or manufacture verification state',
+    );
     if (attempt === api.CORE_MAX_VERIFICATION_RETRIES) {
-      const failedAgain = api.transitionCoreState(first, { type: 'VERIFICATION_RESULT', evidence: failed }, withinLifetime);
-      assert.throws(() => api.transitionCoreState(failedAgain, { type: 'RETRY_VERIFICATION' }, withinLifetime), /retry limit reached/);
+      const failedAgain = api.transitionCoreState(
+        first,
+        { type: 'VERIFICATION_RESULT', evidence: failed },
+        withinLifetime,
+      );
+      assert.throws(
+        () => api.transitionCoreState(failedAgain, { type: 'RETRY_VERIFICATION' }, withinLifetime),
+        /retry limit reached/,
+      );
       break;
     }
     state = api.transitionCoreState(first, { type: 'VERIFICATION_RESULT', evidence: failed }, withinLifetime);
@@ -147,7 +168,10 @@ test('Journey-0 state is accountless, session-scoped, capped at 24h, and malform
   const api = await loadCoreApi();
   assert.equal(journey.JOURNEY_MAX_AGE_MS, 24 * 60 * 60 * 1000);
 
-  const randomFill = (bytes) => { bytes.fill(7); return bytes; };
+  const randomFill = (bytes) => {
+    bytes.fill(7);
+    return bytes;
+  };
   const state = journey.createJourneyState('en-GB', createdAt, randomFill);
   assert.equal(state.hardExpiresAt - state.createdAt, journey.JOURNEY_MAX_AGE_MS);
   assert.equal(journey.parseJourneyState(JSON.stringify(state), state.hardExpiresAt), null);
@@ -159,13 +183,31 @@ test('Journey-0 state is accountless, session-scoped, capped at 24h, and malform
   );
   const core = api.createCoreState('en-GB', scope, createdAt, createdAt + journey.JOURNEY_MAX_AGE_MS);
   assert.deepEqual(api.resumeCoreState(JSON.stringify(core), withinLifetime), core);
-  assert.deepEqual(api.resumeCoreState(JSON.stringify(core), withinLifetime), core, 'resume must be deterministic/idempotent');
+  assert.deepEqual(
+    api.resumeCoreState(JSON.stringify(core), withinLifetime),
+    core,
+    'resume must be deterministic/idempotent',
+  );
   assert.equal(api.resumeCoreState(JSON.stringify(core), core.hardExpiresAt), null);
   assert.equal(api.resumeCoreState('{malformed', withinLifetime), null);
 
   const serialized = JSON.stringify(core).toLowerCase();
-  for (const forbidden of ['account', 'household', 'child', 'browsing', 'history', 'dnsquery', 'hostname', 'domain', 'verification']) {
-    assert.equal(serialized.includes(forbidden), false, `retained core state contains prohibited/duplicated field ${forbidden}`);
+  for (const forbidden of [
+    'account',
+    'household',
+    'child',
+    'browsing',
+    'history',
+    'dnsquery',
+    'hostname',
+    'domain',
+    'verification',
+  ]) {
+    assert.equal(
+      serialized.includes(forbidden),
+      false,
+      `retained core state contains prohibited/duplicated field ${forbidden}`,
+    );
   }
 });
 
@@ -178,7 +220,10 @@ test('runtime adapters remain transient/session-only and bind trusted classifier
   assert.match(coreSource, /JOURNEY_MAX_AGE_MS/);
   assert.match(sessionSource, /sessionStorage|StorageLike/);
   assert.doesNotMatch(`${coreSource}\n${journeySource}\n${sessionSource}`, /localStorage|indexedDB/);
-  assert.doesNotMatch(`${coreSource}\n${journeySource}\n${sessionSource}`, /accountId|householdId|childId|queryHistory|browsingHistory|rawDns|hostnameHistory|domainHistory/i);
+  assert.doesNotMatch(
+    `${coreSource}\n${journeySource}\n${sessionSource}`,
+    /accountId|householdId|childId|queryHistory|browsingHistory|rawDns|hostnameHistory|domainHistory/i,
+  );
   assert.match(panelSource, /VERIFICATION_RESULT[\s\S]{0,180}evidence:\s*outcome\.evidence/);
   assert.doesNotMatch(panelSource, /event=\{\{\s*type:\s*['"]VERIFICATION_RESULT['"]\s*\}\}/);
 });

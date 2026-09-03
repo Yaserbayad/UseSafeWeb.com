@@ -53,14 +53,27 @@ test('framework versions, scripts, and lockfile are deterministic', () => {
   assert.equal(pkg.dependencies['react-dom'], '19.2.8');
   assert.equal(pkg.devDependencies.eslint, '9.39.5');
   assert.equal(pkg.devDependencies['eslint-config-next'], '16.3.3');
-  for (const name of ['dev', 'build', 'start', 'lint', 'typecheck', 'test:contract']) assert.ok(pkg.scripts[name], `missing script ${name}`);
+  for (const name of ['dev', 'build', 'start', 'lint', 'typecheck', 'test:contract'])
+    assert.ok(pkg.scripts[name], `missing script ${name}`);
   assert.match(pkg.scripts.typecheck, /next typegen\s*&&\s*tsc --noEmit/);
   assert.deepEqual(lock.packages[''].dependencies, pkg.dependencies);
   assert.equal(lock.packages[''].devDependencies.eslint, '9.39.5');
   assert.equal(lock.packages[''].devDependencies['eslint-config-next'], '16.3.3');
   const dependencyNames = Object.keys({ ...(pkg.dependencies ?? {}), ...(pkg.devDependencies ?? {}) });
-  const forbiddenDb = ['prisma', '@prisma/client', 'drizzle-orm', 'better-sqlite3', 'sqlite3', 'pg', 'mysql', 'mysql2', 'mongodb', 'mongoose'];
-  for (const name of forbiddenDb) assert.equal(dependencyNames.includes(name), false, `unnecessary database dependency ${name}`);
+  const forbiddenDb = [
+    'prisma',
+    '@prisma/client',
+    'drizzle-orm',
+    'better-sqlite3',
+    'sqlite3',
+    'pg',
+    'mysql',
+    'mysql2',
+    'mongodb',
+    'mongoose',
+  ];
+  for (const name of forbiddenDb)
+    assert.equal(dependencyNames.includes(name), false, `unnecessary database dependency ${name}`);
 });
 
 test('generated Next and TypeScript metadata stay outside version control', () => {
@@ -70,8 +83,16 @@ test('generated Next and TypeScript metadata stay outside version control', () =
 });
 
 test('locale root layout owns document language and direction and root redirects to baseline locale', () => {
-  assert.equal(existsSync(resolve(root, 'src/app/layout.tsx')), false, 'top-level root layout would hard-code locale outside [locale]');
-  assert.equal(existsSync(resolve(root, 'src/app/page.tsx')), false, 'top-level root page should not bypass locale-root layout');
+  assert.equal(
+    existsSync(resolve(root, 'src/app/layout.tsx')),
+    false,
+    'top-level root layout would hard-code locale outside [locale]',
+  );
+  assert.equal(
+    existsSync(resolve(root, 'src/app/page.tsx')),
+    false,
+    'top-level root page should not bypass locale-root layout',
+  );
   const layout = read('src/app/[locale]/layout.tsx');
   assert.match(layout, /<html\s+lang=\{locale\}\s+dir=\{meta\.direction\}>/);
   assert.match(layout, /<body>/);
@@ -98,15 +119,38 @@ test('locale manifest keeps English canonical and Turkish/Arabic provisional wit
 test('localized bundles expose the same critical public/start structure and preserve technical literals', () => {
   const locales = ['en-GB', 'tr-TR', 'ar'];
   const bundles = locales.map((locale) => [locale, json(`src/content/${locale}.json`)]);
-  const requiredSections = ['common', 'home', 'howItWorks', 'compatibility', 'limits', 'privacy', 'help', 'status', 'start', 'route', 'native', 'dns'];
+  const requiredSections = [
+    'common',
+    'home',
+    'howItWorks',
+    'compatibility',
+    'limits',
+    'privacy',
+    'help',
+    'status',
+    'start',
+    'route',
+    'native',
+    'dns',
+  ];
   for (const [locale, bundle] of bundles) {
     for (const key of requiredSections) assert.ok(bundle[key], `${locale} missing ${key}`);
     assert.equal(bundle.common.brand, 'SafeWeb');
     assert.equal(bundle.common.dnsHostname, 'dns.usesafeweb.com');
     assert.equal(bundle.common.dohUrl, 'https://dns.usesafeweb.com/dns-query');
     const flattened = JSON.stringify(bundle);
-    for (const forbidden of ['browsing history dashboard', 'activity history dashboard', '100% safe', 'completely safe', 'fully protected']) {
-      assert.equal(flattened.toLowerCase().includes(forbidden), false, `${locale} contains premature/prohibited claim: ${forbidden}`);
+    for (const forbidden of [
+      'browsing history dashboard',
+      'activity history dashboard',
+      '100% safe',
+      'completely safe',
+      'fully protected',
+    ]) {
+      assert.equal(
+        flattened.toLowerCase().includes(forbidden),
+        false,
+        `${locale} contains premature/prohibited claim: ${forbidden}`,
+      );
     }
   }
 });
@@ -120,7 +164,8 @@ test('implementation consumes the approved shared design system rather than defi
 
 test('SEO and security configuration preserve public-vs-operational and no-premature-claim boundaries', () => {
   const config = read('next.config.ts');
-  for (const header of ['Content-Security-Policy', 'X-Content-Type-Options', 'Referrer-Policy', 'Permissions-Policy']) assert.ok(config.includes(header), `missing security header ${header}`);
+  for (const header of ['Content-Security-Policy', 'X-Content-Type-Options', 'Referrer-Policy', 'Permissions-Policy'])
+    assert.ok(config.includes(header), `missing security header ${header}`);
   const metadata = read('src/lib/metadata.ts');
   assert.match(metadata, /publicMetadata\(locale:\s*Locale,\s*path:\s*string/);
   assert.match(metadata, /canonical:\s*localizedUrl\(locale\)/);
@@ -138,9 +183,20 @@ test('SEO and security configuration preserve public-vs-operational and no-prema
 
 test('server-first baseline contains no local persistence, analytics transport, or client-only state primitive', () => {
   const paths = requiredFiles.filter((path) => path.endsWith('.tsx') || path.endsWith('.ts'));
-  const source = paths.map((path) => existsSync(resolve(root, path)) ? read(path) : '').join('\n');
-  for (const forbidden of ['localStorage', 'sessionStorage', 'indexedDB', 'useState(', 'useEffect(', 'dangerouslySetInnerHTML']) {
+  const source = paths.map((path) => (existsSync(resolve(root, path)) ? read(path) : '')).join('\n');
+  for (const forbidden of [
+    'localStorage',
+    'sessionStorage',
+    'indexedDB',
+    'useState(',
+    'useEffect(',
+    'dangerouslySetInnerHTML',
+  ]) {
     assert.equal(source.includes(forbidden), false, `unexpected client/persistence primitive ${forbidden}`);
   }
-  assert.equal(source.includes('NEXT_PUBLIC_'), false, 'no public runtime secret/config surface is needed for this baseline');
+  assert.equal(
+    source.includes('NEXT_PUBLIC_'),
+    false,
+    'no public runtime secret/config surface is needed for this baseline',
+  );
 });

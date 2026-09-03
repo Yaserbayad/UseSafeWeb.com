@@ -27,7 +27,7 @@ function corsHeaders(origin: string): Record<string, string> {
   return {
     'Access-Control-Allow-Origin': origin,
     'Cache-Control': 'no-store',
-    'Vary': 'Origin',
+    Vary: 'Origin',
   };
 }
 
@@ -59,7 +59,8 @@ export async function POST(request: Request): Promise<Response> {
   try {
     requestToken = await readBoundedUtf8Body(request, DNS_VERIFICATION_MAX_HTTP_BODY_BYTES);
   } catch (cause) {
-    if (cause instanceof RangeError) return error(413, 'REQUEST_TOO_LARGE', 'Request body exceeds the allowed size.', publicOrigin);
+    if (cause instanceof RangeError)
+      return error(413, 'REQUEST_TOO_LARGE', 'Request body exceeds the allowed size.', publicOrigin);
     return error(400, 'INVALID_REQUEST', 'Probe request must be valid UTF-8 text.', publicOrigin);
   }
 
@@ -69,12 +70,7 @@ export async function POST(request: Request): Promise<Response> {
   const host = request.headers.get('host');
   if (!host) return error(403, 'PROBE_NOT_AUTHORIZED', 'Probe request is not authorized.', publicOrigin);
 
-  const observationToken = createDnsVerificationObservationFromProbeRequest(
-    requestToken,
-    host,
-    secret,
-    Date.now(),
-  );
+  const observationToken = createDnsVerificationObservationFromProbeRequest(requestToken, host, secret, Date.now());
   if (!observationToken) return error(403, 'PROBE_NOT_AUTHORIZED', 'Probe request is not authorized.', publicOrigin);
 
   return response(200, { observationToken }, publicOrigin);

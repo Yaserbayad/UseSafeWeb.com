@@ -7,9 +7,11 @@ import { readCoreSession } from '@/lib/core-session';
 import { evaluateProtection, type DeviceFamily, type Locale } from '@/lib/core-state-machine';
 
 function outcomeFromCheck(check: BrowserDnsVerificationCheck | null): AutomatedVerificationOutcome {
-  return classifyAutomatedChecks(check
-    ? { support: 'supported', service: 'healthy', dnsPath: check.dnsPath, configured: true, removed: false }
-    : { support: 'supported', service: 'unknown', dnsPath: 'not-run', configured: true, removed: false });
+  return classifyAutomatedChecks(
+    check
+      ? { support: 'supported', service: 'healthy', dnsPath: check.dnsPath, configured: true, removed: false }
+      : { support: 'supported', service: 'unknown', dnsPath: 'not-run', configured: true, removed: false },
+  );
 }
 
 export function DnsVerificationCard({
@@ -46,7 +48,9 @@ export function DnsVerificationCard({
       setChecking(false);
     };
     void run();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [deviceFamily, locale]);
 
   const protection = evaluateProtection(outcome.evidence);
@@ -63,7 +67,9 @@ export function DnsVerificationCard({
       aria-busy={checking}
     >
       <h2>{label}</h2>
-      <p><strong>{stateLabels[protection.state]}</strong></p>
+      <p>
+        <strong>{stateLabels[protection.state]}</strong>
+      </p>
       <p>{supporting}</p>
       <p className="sw-technical">{protection.reasonCode}</p>
     </section>

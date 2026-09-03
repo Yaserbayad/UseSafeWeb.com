@@ -24,7 +24,12 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
         resumeNote={c.start.resumeNote}
       />
       <div className="sw-card-grid">
-        {c.start.cards.map((card) => <section className="sw-card" key={card.title}><h2>{card.title}</h2><p>{card.body}</p></section>)}
+        {c.start.cards.map((card) => (
+          <section className="sw-card" key={card.title}>
+            <h2>{card.title}</h2>
+            <p>{card.body}</p>
+          </section>
+        ))}
       </div>
     </SetupPage>
   );

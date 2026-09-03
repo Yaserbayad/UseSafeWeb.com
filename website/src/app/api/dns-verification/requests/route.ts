@@ -1,8 +1,5 @@
 import { readBoundedUtf8Body } from '@/lib/bounded-request-body';
-import {
-  DNS_VERIFICATION_MAX_HTTP_BODY_BYTES,
-  createDnsProbeRequest,
-} from '@/lib/dns-verification-proof';
+import { DNS_VERIFICATION_MAX_HTTP_BODY_BYTES, createDnsProbeRequest } from '@/lib/dns-verification-proof';
 
 export const runtime = 'nodejs';
 
@@ -29,7 +26,8 @@ async function boundedJson(request: Request): Promise<unknown> {
 function parseScope(value: unknown): string | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const body = value as Record<string, unknown>;
-  if (Object.keys(body).length !== 1 || typeof body.scope !== 'string' || !/^[0-9a-f]{32}$/.test(body.scope)) return null;
+  if (Object.keys(body).length !== 1 || typeof body.scope !== 'string' || !/^[0-9a-f]{32}$/.test(body.scope))
+    return null;
   return body.scope;
 }
 
@@ -47,7 +45,8 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const scope = parseScope(body);
-  if (!scope) return error(400, 'INVALID_REQUEST', 'Request body does not match the DNS verification request contract.');
+  if (!scope)
+    return error(400, 'INVALID_REQUEST', 'Request body does not match the DNS verification request contract.');
 
   const secret = signingSecret();
   if (!secret) return error(503, 'VERIFIER_UNAVAILABLE', 'DNS verification is not configured.');

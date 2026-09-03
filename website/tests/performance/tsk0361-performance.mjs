@@ -26,7 +26,8 @@ await page.addInitScript(() => {
   window.__tsk0361Perf = { lcp: 0, cls: 0, events: [] };
   try {
     new PerformanceObserver((list) => {
-      for (const entry of list.getEntries()) window.__tsk0361Perf.lcp = Math.max(window.__tsk0361Perf.lcp, entry.startTime || 0);
+      for (const entry of list.getEntries())
+        window.__tsk0361Perf.lcp = Math.max(window.__tsk0361Perf.lcp, entry.startTime || 0);
     }).observe({ type: 'largest-contentful-paint', buffered: true });
   } catch {}
   try {
@@ -95,7 +96,10 @@ assert.ok(navP95 <= 1000, `synthetic critical-route navigation p95 ${navP95.toFi
 assert.ok(navP99 <= 2000, `synthetic critical-route navigation p99 ${navP99.toFixed(1)}ms exceeds 2000ms`);
 assert.ok(maxLcp <= 2500, `synthetic LCP ${maxLcp.toFixed(1)}ms exceeds 2500ms`);
 assert.ok(maxCls <= 0.1, `synthetic CLS ${maxCls.toFixed(4)} exceeds 0.1`);
-assert.ok(interactionUpperBound <= 200, `synthetic representative interaction duration ${interactionUpperBound.toFixed(1)}ms exceeds 200ms`);
+assert.ok(
+  interactionUpperBound <= 200,
+  `synthetic representative interaction duration ${interactionUpperBound.toFixed(1)}ms exceeds 200ms`,
+);
 
 console.log(`TSK0361_PERF_BROWSER=${browser.version()}`);
 console.log(`TSK0361_PERF_SAMPLE_COUNT=${successes}`);

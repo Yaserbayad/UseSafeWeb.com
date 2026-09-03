@@ -32,7 +32,12 @@ test('release metadata generates only the current canonical SafeWeb DoH profile 
   const profile = api.generateSafeWebIosDohProfile(releaseMetadata());
 
   assert.match(profile, /<key>DNSProtocol<\/key>\s*<string>HTTPS<\/string>/);
-  assert.match(profile, new RegExp(`<key>ServerURL<\\/key>\\s*<string>${canonicalServerUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}<\\/string>`));
+  assert.match(
+    profile,
+    new RegExp(
+      `<key>ServerURL<\\/key>\\s*<string>${canonicalServerUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}<\\/string>`,
+    ),
+  );
   assert.match(profile, /<string>com\.apple\.dnsSettings\.managed<\/string>/);
   assert.match(profile, /<string>Configuration<\/string>/);
   assert.match(profile, /<string>com\.usesafeweb\.profile\.doh<\/string>/);
@@ -83,7 +88,10 @@ test('generator rejects endpoint overrides, invented approval/version state, sec
 
 test('generator normalizes UUID case and is deterministic for the same release UUIDs', async () => {
   const api = await loadApi();
-  const input = releaseMetadata({ payloadUuid: payloadUuid.toLowerCase(), dnsPayloadUuid: dnsPayloadUuid.toLowerCase() });
+  const input = releaseMetadata({
+    payloadUuid: payloadUuid.toLowerCase(),
+    dnsPayloadUuid: dnsPayloadUuid.toLowerCase(),
+  });
   const first = api.generateSafeWebIosDohProfile(input);
   assert.equal(first, api.generateSafeWebIosDohProfile(input));
   assert.match(first, new RegExp(`<string>${payloadUuid}<\\/string>`));

@@ -156,7 +156,10 @@ test('capacity is bounded and does not create a hidden persistent support databa
   assert.equal(store.size(now + 2), 2);
 
   const source = readFileSync(supportPath, 'utf8');
-  assert.doesNotMatch(source, /localStorage|indexedDB|from ['"]node:fs['"]|writeFile|appendFile|sqlite|postgres|mysql/i);
+  assert.doesNotMatch(
+    source,
+    /localStorage|indexedDB|from ['"]node:fs['"]|writeFile|appendFile|sqlite|postgres|mysql/i,
+  );
 });
 
 test('privacy notice and no-store POST/DELETE route are present, default-off, and expose no public listing endpoint', async () => {

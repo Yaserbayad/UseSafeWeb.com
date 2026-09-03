@@ -22,10 +22,18 @@ function loadApi() {
 function fakeStorage(initial = {}) {
   const data = new Map(Object.entries(initial));
   return {
-    getItem(key) { return data.has(key) ? data.get(key) : null; },
-    setItem(key, value) { data.set(key, String(value)); },
-    removeItem(key) { data.delete(key); },
-    dump() { return Object.fromEntries(data); },
+    getItem(key) {
+      return data.has(key) ? data.get(key) : null;
+    },
+    setItem(key, value) {
+      data.set(key, String(value));
+    },
+    removeItem(key) {
+      data.delete(key);
+    },
+    dump() {
+      return Object.fromEntries(data);
+    },
   };
 }
 
@@ -61,12 +69,22 @@ test('J0 creation is anonymous, scoped with 128 random bits, and hard-expires no
 test('controlled route updates preserve scope and original hard expiry while storing only approved current setup state', async () => {
   const api = await loadApi();
   const storage = fakeStorage();
-  const first = api.recordJourneyLocation(storage, { pathname: '/en-GB/setup/route', platform: null }, 10_000, deterministicRandom);
+  const first = api.recordJourneyLocation(
+    storage,
+    { pathname: '/en-GB/setup/route', platform: null },
+    10_000,
+    deterministicRandom,
+  );
   assert.ok(first);
   const expiry = first.hardExpiresAt;
   const scope = first.scope;
 
-  const native = api.recordJourneyLocation(storage, { pathname: '/en-GB/setup/native', platform: 'android' }, 20_000, deterministicRandom);
+  const native = api.recordJourneyLocation(
+    storage,
+    { pathname: '/en-GB/setup/native', platform: 'android' },
+    20_000,
+    deterministicRandom,
+  );
   assert.ok(native);
   assert.equal(native.scope, scope);
   assert.equal(native.hardExpiresAt, expiry, 'ordinary activity must not slide hard expiry');
@@ -74,7 +92,12 @@ test('controlled route updates preserve scope and original hard expiry while sto
   assert.equal(native.deviceFamily, 'android');
   assert.equal(native.journeyStep, 'native');
 
-  const dns = api.recordJourneyLocation(storage, { pathname: '/en-GB/setup/dns', platform: 'android' }, 30_000, deterministicRandom);
+  const dns = api.recordJourneyLocation(
+    storage,
+    { pathname: '/en-GB/setup/dns', platform: 'android' },
+    30_000,
+    deterministicRandom,
+  );
   assert.ok(dns);
   assert.equal(dns.scope, scope);
   assert.equal(dns.hardExpiresAt, expiry);
@@ -84,8 +107,25 @@ test('controlled route updates preserve scope and original hard expiry while sto
   assert.equal(dns.journeyStep, 'dns');
 
   const persisted = JSON.parse(storage.dump()[storageKey]);
-  for (const forbidden of ['email', 'phone', 'parent', 'child', 'account', 'ip', 'query', 'domain', 'history', 'url', 'diagnostic', 'freeText']) {
-    assert.equal(Object.keys(persisted).some((key) => key.toLowerCase().includes(forbidden.toLowerCase())), false, `forbidden persisted field ${forbidden}`);
+  for (const forbidden of [
+    'email',
+    'phone',
+    'parent',
+    'child',
+    'account',
+    'ip',
+    'query',
+    'domain',
+    'history',
+    'url',
+    'diagnostic',
+    'freeText',
+  ]) {
+    assert.equal(
+      Object.keys(persisted).some((key) => key.toLowerCase().includes(forbidden.toLowerCase())),
+      false,
+      `forbidden persisted field ${forbidden}`,
+    );
   }
 });
 
@@ -118,12 +158,21 @@ test('reset deletion is immediate and storage failure degrades to URL-only accou
   assert.equal(storage.getItem(storageKey), null);
 
   const blocked = {
-    getItem() { throw new Error('storage blocked'); },
-    setItem() { throw new Error('storage blocked'); },
-    removeItem() { throw new Error('storage blocked'); },
+    getItem() {
+      throw new Error('storage blocked');
+    },
+    setItem() {
+      throw new Error('storage blocked');
+    },
+    removeItem() {
+      throw new Error('storage blocked');
+    },
   };
   assert.equal(api.readJourneyState(blocked, 1_000), null);
-  assert.equal(api.recordJourneyLocation(blocked, { pathname: '/en-GB/setup/route', platform: null }, 1_000, deterministicRandom), null);
+  assert.equal(
+    api.recordJourneyLocation(blocked, { pathname: '/en-GB/setup/route', platform: null }, 1_000, deterministicRandom),
+    null,
+  );
   assert.doesNotThrow(() => api.clearJourneyState(blocked));
 });
 
@@ -132,11 +181,24 @@ test('resume href is derived only from validated controlled state and cannot bec
   const storage = fakeStorage();
   api.recordJourneyLocation(storage, { pathname: '/ar/setup/route', platform: null }, 1_000, deterministicRandom);
   api.recordJourneyLocation(storage, { pathname: '/ar/setup/native', platform: 'iphone' }, 2_000, deterministicRandom);
-  const state = api.recordJourneyLocation(storage, { pathname: '/ar/setup/dns', platform: 'iphone' }, 3_000, deterministicRandom);
+  const state = api.recordJourneyLocation(
+    storage,
+    { pathname: '/ar/setup/dns', platform: 'iphone' },
+    3_000,
+    deterministicRandom,
+  );
   assert.ok(state);
   assert.equal(api.resumeHref(state), '/ar/setup/dns?platform=iphone');
   assert.equal(api.resumeHref(state, 'en-GB'), '/en-GB/setup/dns?platform=iphone');
-  assert.equal(api.recordJourneyLocation(storage, { pathname: 'https://evil.invalid/', platform: 'iphone' }, 4_000, deterministicRandom), null);
+  assert.equal(
+    api.recordJourneyLocation(
+      storage,
+      { pathname: 'https://evil.invalid/', platform: 'iphone' },
+      4_000,
+      deterministicRandom,
+    ),
+    null,
+  );
 });
 
 test('client integration uses sessionStorage only and wraps query-reading tracker in Suspense', () => {

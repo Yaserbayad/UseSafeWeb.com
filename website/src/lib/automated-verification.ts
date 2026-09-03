@@ -53,7 +53,11 @@ function evidenceBase(configured: boolean): ProtectionEvidence {
   };
 }
 
-function uncertain(configured: boolean, reasonCode: ReasonCode, technical: ProtectionEvidence['technical'] = null): AutomatedVerificationOutcome {
+function uncertain(
+  configured: boolean,
+  reasonCode: ReasonCode,
+  technical: ProtectionEvidence['technical'] = null,
+): AutomatedVerificationOutcome {
   return {
     checkState: 'uncertain',
     parentConfirmation: configured ? 'confirmed' : 'not-confirmed',

@@ -21,10 +21,7 @@ test('TSK-0380 pins the local Node/npm baseline and keeps the dependency lock au
 });
 
 test('TSK-0380 exposes one deterministic validation command that fails closed through ordered quality gates', () => {
-  assert.equal(
-    pkg.scripts?.validate,
-    'npm run test:contract && npm run lint && npm run typecheck && npm run build',
-  );
+  assert.equal(pkg.scripts?.validate, 'npm run test:contract && npm run lint && npm run typecheck && npm run build');
   assert.match(pkg.scripts?.['test:contract'] ?? '', /tsk0380\.test\.mjs/);
 });
 

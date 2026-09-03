@@ -2,9 +2,16 @@ import { JOURNEY_MAX_AGE_MS } from './journey-state';
 
 export type Locale = 'en-GB' | 'tr-TR' | 'ar';
 export type DeviceFamily = 'android' | 'iphone';
-export type CorePhase = 'route' | 'native' | 'dns' | 'verify' | 'protection' | 'troubleshoot' | 'recover' | 'removed' | 'complete';
+export type CorePhase =
+  'route' | 'native' | 'dns' | 'verify' | 'protection' | 'troubleshoot' | 'recover' | 'removed' | 'complete';
 export type CoreJourneyStage = 'phone' | 'internet' | 'services';
-export type ProtectionState = 'protected/verified' | 'configured/parent-confirmed' | 'action-needed' | 'not-covered' | 'uncertain/error' | 'removed';
+export type ProtectionState =
+  | 'protected/verified'
+  | 'configured/parent-confirmed'
+  | 'action-needed'
+  | 'not-covered'
+  | 'uncertain/error'
+  | 'removed';
 export type ReasonCode =
   | 'TECH_VERIFIED'
   | 'CONFIG_CONFIRMED_NO_TECH_VERIFY'
@@ -73,7 +80,17 @@ export type OptionalAccountState = {
 };
 
 const locales = new Set<Locale>(['en-GB', 'tr-TR', 'ar']);
-const phases = new Set<CorePhase>(['route', 'native', 'dns', 'verify', 'protection', 'troubleshoot', 'recover', 'removed', 'complete']);
+const phases = new Set<CorePhase>([
+  'route',
+  'native',
+  'dns',
+  'verify',
+  'protection',
+  'troubleshoot',
+  'recover',
+  'removed',
+  'complete',
+]);
 const reasonCodes = new Set<ReasonCode>([
   'TECH_VERIFIED',
   'CONFIG_CONFIRMED_NO_TECH_VERIFY',
@@ -91,10 +108,23 @@ const reasonCodes = new Set<ReasonCode>([
   'REVOKED',
   'REINSTALLED_AWAITING_VERIFY',
 ]);
-const baseKeys = ['createdAt', 'hardExpiresAt', 'locale', 'loginRequired', 'phase', 'retryCount', 'schemaVersion', 'scope'];
+const baseKeys = [
+  'createdAt',
+  'hardExpiresAt',
+  'locale',
+  'loginRequired',
+  'phase',
+  'retryCount',
+  'schemaVersion',
+  'scope',
+];
 const journeyEvidenceKeys = ['action', 'configured', 'coverage', 'removal', 'technical', 'uncertainty'];
 
-function evaluation(state: ProtectionState, reasonCode: ReasonCode, action: string | null = null): ProtectionEvaluation {
+function evaluation(
+  state: ProtectionState,
+  reasonCode: ReasonCode,
+  action: string | null = null,
+): ProtectionEvaluation {
   return { state, reasonCode, action };
 }
 
@@ -106,7 +136,11 @@ export function evaluateProtection(evidence: ProtectionEvidence): ProtectionEval
     if (!evidence.technical.fresh) return evaluation('uncertain/error', 'VERIFY_STALE');
     if (evidence.technical.result === 'positive') return evaluation('protected/verified', 'TECH_VERIFIED');
     if (evidence.technical.result === 'negative') {
-      return evaluation('action-needed', evidence.action ? 'REMEDIATION_REQUIRED' : 'TECH_VERIFY_NEGATIVE', evidence.action);
+      return evaluation(
+        'action-needed',
+        evidence.action ? 'REMEDIATION_REQUIRED' : 'TECH_VERIFY_NEGATIVE',
+        evidence.action,
+      );
     }
     return evaluation('uncertain/error', 'EVIDENCE_CONFLICT');
   }
@@ -128,10 +162,12 @@ function isJourneyProtectionEvidence(value: unknown): value is ProtectionEvidenc
   if (candidate.coverage !== 'covered' && candidate.coverage !== 'not-covered') return false;
   if (typeof candidate.configured !== 'boolean') return false;
   if (candidate.action !== null && typeof candidate.action !== 'string') return false;
-  if (candidate.removal !== null && candidate.removal !== 'REMOVED_BY_PARENT' && candidate.removal !== 'REVOKED') return false;
+  if (candidate.removal !== null && candidate.removal !== 'REMOVED_BY_PARENT' && candidate.removal !== 'REVOKED')
+    return false;
   if (candidate.uncertainty !== null && !reasonCodes.has(candidate.uncertainty as ReasonCode)) return false;
   if (candidate.technical === null) return true;
-  if (!candidate.technical || typeof candidate.technical !== 'object' || Array.isArray(candidate.technical)) return false;
+  if (!candidate.technical || typeof candidate.technical !== 'object' || Array.isArray(candidate.technical))
+    return false;
   const technical = candidate.technical as Record<string, unknown>;
   if (!hasExactKeys(technical, ['fresh', 'result'])) return false;
   if (typeof technical.fresh !== 'boolean') return false;
@@ -159,9 +195,23 @@ function isCoreState(value: unknown, nowMs: number): value is CoreState {
   if (!Number.isSafeInteger(candidate.createdAt) || !Number.isSafeInteger(candidate.hardExpiresAt)) return false;
   const createdAt = candidate.createdAt as number;
   const hardExpiresAt = candidate.hardExpiresAt as number;
-  if (!Number.isSafeInteger(nowMs) || createdAt < 0 || hardExpiresAt <= createdAt || hardExpiresAt - createdAt > JOURNEY_MAX_AGE_MS || nowMs < createdAt || nowMs >= hardExpiresAt) return false;
-  if (!Number.isSafeInteger(candidate.retryCount) || (candidate.retryCount as number) < 0 || (candidate.retryCount as number) > CORE_MAX_VERIFICATION_RETRIES) return false;
-  if (!isLocale(candidate.locale) || typeof candidate.phase !== 'string' || !phases.has(candidate.phase as CorePhase)) return false;
+  if (
+    !Number.isSafeInteger(nowMs) ||
+    createdAt < 0 ||
+    hardExpiresAt <= createdAt ||
+    hardExpiresAt - createdAt > JOURNEY_MAX_AGE_MS ||
+    nowMs < createdAt ||
+    nowMs >= hardExpiresAt
+  )
+    return false;
+  if (
+    !Number.isSafeInteger(candidate.retryCount) ||
+    (candidate.retryCount as number) < 0 ||
+    (candidate.retryCount as number) > CORE_MAX_VERIFICATION_RETRIES
+  )
+    return false;
+  if (!isLocale(candidate.locale) || typeof candidate.phase !== 'string' || !phases.has(candidate.phase as CorePhase))
+    return false;
   if (!exactCoreKeys(candidate)) return false;
   if (candidate.phase !== 'route' && !isDevice(candidate.deviceFamily)) return false;
   return true;
@@ -169,9 +219,24 @@ function isCoreState(value: unknown, nowMs: number): value is CoreState {
 
 export function createCoreState(locale: Locale, scope: string, createdAt: number, hardExpiresAt: number): CoreState {
   if (!isLocale(locale) || !/^[0-9a-f]{32}$/.test(scope)) throw new TypeError('invalid core identity');
-  if (!Number.isSafeInteger(createdAt) || !Number.isSafeInteger(hardExpiresAt) || createdAt < 0 || hardExpiresAt <= createdAt) throw new TypeError('invalid core lifetime');
+  if (
+    !Number.isSafeInteger(createdAt) ||
+    !Number.isSafeInteger(hardExpiresAt) ||
+    createdAt < 0 ||
+    hardExpiresAt <= createdAt
+  )
+    throw new TypeError('invalid core lifetime');
   if (hardExpiresAt - createdAt > JOURNEY_MAX_AGE_MS) throw new TypeError('core lifetime exceeds Journey-0 limit');
-  return { schemaVersion: 1, scope, createdAt, hardExpiresAt, locale, phase: 'route', loginRequired: false, retryCount: 0 };
+  return {
+    schemaVersion: 1,
+    scope,
+    createdAt,
+    hardExpiresAt,
+    locale,
+    phase: 'route',
+    loginRequired: false,
+    retryCount: 0,
+  };
 }
 
 function withPhase(state: CoreState, phase: CorePhase, deviceFamily = state.deviceFamily): CoreState {
@@ -203,8 +268,10 @@ export function transitionCoreState(state: CoreState, event: CoreEvent, nowMs: n
     case 'route:SELECT_DEVICE':
       if (!isDevice(event.deviceFamily)) throw new Error('device selection required');
       return withPhase(state, 'native', event.deviceFamily);
-    case 'native:CONTINUE_NATIVE': return withPhase(state, 'dns');
-    case 'dns:CONTINUE_DNS': return withPhase(state, 'verify');
+    case 'native:CONTINUE_NATIVE':
+      return withPhase(state, 'dns');
+    case 'dns:CONTINUE_DNS':
+      return withPhase(state, 'verify');
     case 'verify:VERIFICATION_RESULT': {
       if (event.type !== 'VERIFICATION_RESULT' || !isJourneyProtectionEvidence(event.evidence)) {
         throw new Error('verification evidence required');
@@ -216,16 +283,23 @@ export function transitionCoreState(state: CoreState, event: CoreEvent, nowMs: n
       if (result.state === 'removed') return withPhase(state, 'removed');
       return withPhase(state, 'troubleshoot');
     }
-    case 'verify:OPEN_TROUBLESHOOT': return withPhase(state, 'troubleshoot');
-    case 'protection:OPEN_TROUBLESHOOT': return withPhase(state, 'troubleshoot');
+    case 'verify:OPEN_TROUBLESHOOT':
+      return withPhase(state, 'troubleshoot');
+    case 'protection:OPEN_TROUBLESHOOT':
+      return withPhase(state, 'troubleshoot');
     case 'troubleshoot:RETRY_VERIFICATION':
       if (state.retryCount >= CORE_MAX_VERIFICATION_RETRIES) throw new Error('retry limit reached');
       return { ...withPhase(state, 'verify'), retryCount: state.retryCount + 1 };
-    case 'troubleshoot:OPEN_RECOVERY': return withPhase(state, 'recover');
-    case 'recover:REMOVE_CONFIGURATION': return withPhase(state, 'removed');
-    case 'removed:RESTART_SETUP': return withPhase(state, 'route');
-    case 'protection:COMPLETE': return withPhase(state, 'complete');
-    default: throw new Error(`invalid core transition: ${state.phase} -> ${event.type}`);
+    case 'troubleshoot:OPEN_RECOVERY':
+      return withPhase(state, 'recover');
+    case 'recover:REMOVE_CONFIGURATION':
+      return withPhase(state, 'removed');
+    case 'removed:RESTART_SETUP':
+      return withPhase(state, 'route');
+    case 'protection:COMPLETE':
+      return withPhase(state, 'complete');
+    default:
+      throw new Error(`invalid core transition: ${state.phase} -> ${event.type}`);
   }
 }
 
@@ -238,16 +312,24 @@ export function resumeCoreState(raw: string, nowMs: number): CoreState | null {
   }
 }
 
-export function optionalAccountTransition(state: OptionalAccountState, event: 'ENTER' | 'RETURN' | 'EXPIRE' | 'LOGOUT' | 'DASHBOARD'): Required<OptionalAccountState> {
+export function optionalAccountTransition(
+  state: OptionalAccountState,
+  event: 'ENTER' | 'RETURN' | 'EXPIRE' | 'LOGOUT' | 'DASHBOARD',
+): Required<OptionalAccountState> {
   if (!state.capabilityEnabled) return { capabilityEnabled: false, status: 'unavailable', route: null };
   switch (event) {
-    case 'ENTER': return { capabilityEnabled: true, status: 'entry', route: '/account' };
-    case 'RETURN': return { capabilityEnabled: true, status: 'authenticated', route: '/dashboard' };
-    case 'EXPIRE': return { capabilityEnabled: true, status: 'expired', route: '/account' };
-    case 'LOGOUT': return { capabilityEnabled: true, status: 'logged-out', route: null };
-    case 'DASHBOARD': return state.status === 'authenticated'
-      ? { capabilityEnabled: true, status: 'authenticated', route: '/dashboard' }
-      : { capabilityEnabled: true, status: state.status, route: '/account' };
+    case 'ENTER':
+      return { capabilityEnabled: true, status: 'entry', route: '/account' };
+    case 'RETURN':
+      return { capabilityEnabled: true, status: 'authenticated', route: '/dashboard' };
+    case 'EXPIRE':
+      return { capabilityEnabled: true, status: 'expired', route: '/account' };
+    case 'LOGOUT':
+      return { capabilityEnabled: true, status: 'logged-out', route: null };
+    case 'DASHBOARD':
+      return state.status === 'authenticated'
+        ? { capabilityEnabled: true, status: 'authenticated', route: '/dashboard' }
+        : { capabilityEnabled: true, status: state.status, route: '/account' };
   }
 }
 

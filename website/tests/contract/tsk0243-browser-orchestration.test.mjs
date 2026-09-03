@@ -41,11 +41,19 @@ test('browser orchestration performs request -> dedicated probe -> server result
     if (calls.length === 2) {
       return jsonResponse({ observationToken }, 200, { 'Access-Control-Allow-Origin': 'https://usesafeweb.com' });
     }
-    return jsonResponse({ dnsPath: 'verified-fresh', reasonCode: 'TECH_VERIFIED', verifierVersion: 'private-rewrite-v1' });
+    return jsonResponse({
+      dnsPath: 'verified-fresh',
+      reasonCode: 'TECH_VERIFIED',
+      verifierVersion: 'private-rewrite-v1',
+    });
   };
 
   const result = await api.runDnsVerification(scope, fetchImpl, 5_000);
-  assert.deepEqual(result, { dnsPath: 'verified-fresh', reasonCode: 'TECH_VERIFIED', verifierVersion: 'private-rewrite-v1' });
+  assert.deepEqual(result, {
+    dnsPath: 'verified-fresh',
+    reasonCode: 'TECH_VERIFIED',
+    verifierVersion: 'private-rewrite-v1',
+  });
   assert.equal(calls.length, 3);
   assert.equal(calls[0].url, '/api/dns-verification/requests');
   assert.equal(calls[0].options.method, 'POST');
@@ -70,12 +78,15 @@ test('browser rejects arbitrary probe origins before any cross-origin request', 
   const calls = [];
   const fetchImpl = async (url, options) => {
     calls.push({ url, options });
-    return jsonResponse({
-      challenge,
-      probeHost: 'attacker.example',
-      requestToken,
-      expiresAt: 120_000,
-    }, 201);
+    return jsonResponse(
+      {
+        challenge,
+        probeHost: 'attacker.example',
+        requestToken,
+        expiresAt: 120_000,
+      },
+      201,
+    );
   };
   assert.equal(await api.runDnsVerification(scope, fetchImpl, 5_000), null);
   assert.equal(calls.length, 1);
@@ -83,9 +94,27 @@ test('browser rejects arbitrary probe origins before any cross-origin request', 
 
 test('network, status, schema, timeout and server-verification failures stay fail-closed', async () => {
   const api = await loadClient();
-  assert.equal(await api.runDnsVerification(scope, async () => { throw new TypeError('network'); }, 5_000), null);
+  assert.equal(
+    await api.runDnsVerification(
+      scope,
+      async () => {
+        throw new TypeError('network');
+      },
+      5_000,
+    ),
+    null,
+  );
   assert.equal(await api.runDnsVerification(scope, async () => new Response('', { status: 503 }), 5_000), null);
-  assert.equal(await api.runDnsVerification('bad', async () => { throw new Error('must not fetch'); }, 5_000), null);
+  assert.equal(
+    await api.runDnsVerification(
+      'bad',
+      async () => {
+        throw new Error('must not fetch');
+      },
+      5_000,
+    ),
+    null,
+  );
 
   let call = 0;
   const malformed = async () => {
@@ -147,7 +176,10 @@ test('verify and Protection Map perform fresh client checks; no bare positive st
     assert.match(source, /readCoreSession\(window\.sessionStorage/);
     assert.match(source, /aria-live=['"]polite['"]/);
     assert.doesNotMatch(source, /searchParams|URLSearchParams/);
-    assert.doesNotMatch(source, /writeDnsVerificationProof|readDnsVerificationProof|revalidateDnsVerificationProof|clearDnsVerificationProof/);
+    assert.doesNotMatch(
+      source,
+      /writeDnsVerificationProof|readDnsVerificationProof|revalidateDnsVerificationProof|clearDnsVerificationProof/,
+    );
   }
 
   assert.match(verifyPage, /DnsVerificationPanel/);

@@ -21,7 +21,12 @@ export function resolveIntakeRoute(value: unknown): IntakeRouteDecision {
 
   const locale = candidate.locale;
   const choice = candidate.choice;
-  if (typeof locale !== 'string' || !isLocale(locale) || typeof choice !== 'string' || !choices.has(choice as IntakeChoice)) {
+  if (
+    typeof locale !== 'string' ||
+    !isLocale(locale) ||
+    typeof choice !== 'string' ||
+    !choices.has(choice as IntakeChoice)
+  ) {
     throw new TypeError('invalid intake routing input');
   }
 

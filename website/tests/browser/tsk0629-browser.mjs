@@ -26,26 +26,39 @@ async function setPhase(page, locale, phase, deviceFamily) {
 async function waitForCheck(page, selector, expected) {
   const locator = page.locator(selector);
   await locator.waitFor({ state: 'visible' });
-  await page.waitForFunction(({ selector, expected }) => {
-    const node = document.querySelector(selector);
-    return node?.getAttribute('data-verification-outcome') === expected
-      || node?.getAttribute('data-dns-verification-state') === expected;
-  }, { selector, expected });
+  await page.waitForFunction(
+    ({ selector, expected }) => {
+      const node = document.querySelector(selector);
+      return (
+        node?.getAttribute('data-verification-outcome') === expected ||
+        node?.getAttribute('data-dns-verification-state') === expected
+      );
+    },
+    { selector, expected },
+  );
   return locator;
 }
 
 const browser = await chromium.launch({ headless: true });
 const failures = [];
 function record(label, fn) {
-  return Promise.resolve().then(fn).catch((error) => failures.push(`${label}: ${error.stack ?? error}`));
+  return Promise.resolve()
+    .then(fn)
+    .catch((error) => failures.push(`${label}: ${error.stack ?? error}`));
 }
 
-for (const [locale, deviceFamily] of [['en-GB', 'android'], ['tr-TR', 'iphone'], ['ar', 'android']]) {
+for (const [locale, deviceFamily] of [
+  ['en-GB', 'android'],
+  ['tr-TR', 'iphone'],
+  ['ar', 'android'],
+]) {
   await record(`${locale} verification stays fail-closed with recovery`, async () => {
     const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
     const page = await context.newPage();
     await setPhase(page, locale, 'verify', deviceFamily);
-    const response = await page.goto(`${base}/${locale}/verify?platform=${deviceFamily}`, { waitUntil: 'domcontentloaded' });
+    const response = await page.goto(`${base}/${locale}/verify?platform=${deviceFamily}`, {
+      waitUntil: 'domcontentloaded',
+    });
     assert.equal(response?.status(), 200);
 
     const panel = await waitForCheck(page, '[data-verification-outcome]', 'uncertain');
@@ -62,7 +75,9 @@ await record('URL/query input cannot manufacture a positive verification result'
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await context.newPage();
   await setPhase(page, 'en-GB', 'verify', 'android');
-  await page.goto(`${base}/en-GB/verify?platform=android&support=supported&service=healthy&dnsPath=verified-fresh`, { waitUntil: 'domcontentloaded' });
+  await page.goto(`${base}/en-GB/verify?platform=android&support=supported&service=healthy&dnsPath=verified-fresh`, {
+    waitUntil: 'domcontentloaded',
+  });
   const panel = await waitForCheck(page, '[data-verification-outcome]', 'uncertain');
   assert.equal(await panel.getAttribute('data-protection-state'), 'uncertain/error');
   assert.equal(await page.locator('[data-core-view-protection]').count(), 0);
@@ -70,17 +85,20 @@ await record('URL/query input cannot manufacture a positive verification result'
   await context.close();
 });
 
-await record('Protection Map performs a fresh check and remains fail-closed when no trusted producer is available', async () => {
-  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
-  const page = await context.newPage();
-  await setPhase(page, 'en-GB', 'protection', 'android');
-  await page.goto(`${base}/en-GB/protection?platform=android`, { waitUntil: 'domcontentloaded' });
-  const dns = await waitForCheck(page, '[data-dns-verification-state]', 'uncertain');
-  assert.equal(await dns.getAttribute('data-parent-confirmation'), 'confirmed');
-  assert.equal(await dns.getAttribute('data-protection-state'), 'uncertain/error');
-  assert.equal((await dns.innerText()).includes('Protection verified'), false);
-  await context.close();
-});
+await record(
+  'Protection Map performs a fresh check and remains fail-closed when no trusted producer is available',
+  async () => {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const page = await context.newPage();
+    await setPhase(page, 'en-GB', 'protection', 'android');
+    await page.goto(`${base}/en-GB/protection?platform=android`, { waitUntil: 'domcontentloaded' });
+    const dns = await waitForCheck(page, '[data-dns-verification-state]', 'uncertain');
+    assert.equal(await dns.getAttribute('data-parent-confirmation'), 'confirmed');
+    assert.equal(await dns.getAttribute('data-protection-state'), 'uncertain/error');
+    assert.equal((await dns.innerText()).includes('Protection verified'), false);
+    await context.close();
+  },
+);
 
 await browser.close();
 if (failures.length) {

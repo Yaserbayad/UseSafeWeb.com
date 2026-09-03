@@ -1,0 +1,77 @@
+name: TSK-0453 quality and review rules acceptance
+
+on:
+  push:
+    branches:
+      - main
+      - feature/tsk-0453-quality-review-rules-20260903
+  pull_request:
+    paths:
+      - 'website/**'
+      - '.github/CODEOWNERS'
+      - '.github/CHANGE_REVIEW_POLICY.md'
+      - '.github/pull_request_template.md'
+      - '.github/workflows/accept-tsk0453-quality-review-rules-20260903.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  accept-tsk0453:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.23.2'
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - name: Verify deterministic quality and review-source controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
+          python3 tests/repository-structure/verify_structure.py
+          python3 Plans/Master/Tools/validate_master_plan.py
+
+          cd website
+          npm ci --ignore-scripts --no-fund --no-audit
+          test "$(node -p "require('./node_modules/prettier/package.json').version")" = '3.9.6'
+          node --test tests/contract/tsk0453.test.mjs
+          npm run format:check
+          npm run lint
+          npm run typecheck
+          npm run test:contract
+          NEXT_TELEMETRY_DISABLED=1 npm run build
+          npm audit --audit-level=high
+          npm audit --omit=dev --audit-level=high
+          cd ..
+
+          git diff --check
+          test -z "$(git status --porcelain)"
+
+      - name: Verify formatting failure propagation and rollback
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd website
+          PROBE='src/tsk0453-format-negative.ts'
+          printf 'export const tsk0453Negative={value:1}\n' > "$PROBE"
+
+          set +e
+          ./node_modules/.bin/prettier --check "$PROBE" >/tmp/tsk0453-format-negative.log 2>&1
+          NEGATIVE_EXIT=$?
+          set -e
+
+          rm -f "$PROBE"
+          if [ "$NEGATIVE_EXIT" -eq 0 ]; then
+            cat /tmp/tsk0453-format-negative.log
+            echo 'Expected formatter check to return nonzero for the deliberate unformatted probe.' >&2
+            exit 1
+          fi
+
+          npm run format:check
+          cd ..
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'TSK0453_QUALITY_REVIEW_SOURCE_ACCEPTANCE=PASS'

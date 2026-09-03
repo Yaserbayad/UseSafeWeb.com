@@ -15,5 +15,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const content = getContent(locale);
-  return <ContentPage section={content.home} actions={[{ href: `/${locale}/start`, label: content.home.primaryLabel }, { href: `/${locale}/how-it-works`, label: content.home.secondaryLabel, secondary: true }]} />;
+  return (
+    <ContentPage
+      section={content.home}
+      actions={[
+        { href: `/${locale}/start`, label: content.home.primaryLabel },
+        { href: `/${locale}/how-it-works`, label: content.home.secondaryLabel, secondary: true },
+      ]}
+    />
+  );
 }

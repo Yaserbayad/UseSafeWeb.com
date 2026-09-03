@@ -51,13 +51,7 @@ type StoreOptions = {
 };
 
 const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
-const ALLOWED_FIELDS = new Set([
-  'reportType',
-  'rootCause',
-  'journeyStage',
-  'deviceClass',
-  'diagnosticHostname',
-]);
+const ALLOWED_FIELDS = new Set(['reportType', 'rootCause', 'journeyStage', 'deviceClass', 'diagnosticHostname']);
 
 function invalidCapture(): never {
   throw new TypeError('invalid support capture');

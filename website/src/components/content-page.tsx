@@ -22,13 +22,33 @@ export function ContentPage({ section, actions = [] }: { section: Section; actio
         {actions.length > 0 && (
           <div className="sw-actions">
             {actions.map((action) => (
-              <Link key={action.href} className={action.secondary ? 'sw-button sw-button--secondary' : 'sw-button'} href={action.href}>{action.label}</Link>
+              <Link
+                key={action.href}
+                className={action.secondary ? 'sw-button sw-button--secondary' : 'sw-button'}
+                href={action.href}
+              >
+                {action.label}
+              </Link>
             ))}
           </div>
         )}
       </header>
-      {section.cards && <div className="sw-card-grid">{section.cards.map((card) => <section className="sw-card" key={card.title}><h2>{card.title}</h2><p>{card.body}</p></section>)}</div>}
-      {section.noteTitle && section.noteBody && <aside className="sw-callout"><strong>{section.noteTitle}</strong><p>{section.noteBody}</p></aside>}
+      {section.cards && (
+        <div className="sw-card-grid">
+          {section.cards.map((card) => (
+            <section className="sw-card" key={card.title}>
+              <h2>{card.title}</h2>
+              <p>{card.body}</p>
+            </section>
+          ))}
+        </div>
+      )}
+      {section.noteTitle && section.noteBody && (
+        <aside className="sw-callout">
+          <strong>{section.noteTitle}</strong>
+          <p>{section.noteBody}</p>
+        </aside>
+      )}
     </article>
   );
 }

@@ -19,7 +19,9 @@ const pagePaths = [
 async function loadApi() {
   assert.equal(existsSync(resolve(root, modulePath)), true, 'missing versioned content delivery module');
   const source = read(modulePath);
-  return import(`data:text/javascript;base64,${Buffer.from(stripTypeScriptTypes(source, { mode: 'strip' })).toString('base64')}`);
+  return import(
+    `data:text/javascript;base64,${Buffer.from(stripTypeScriptTypes(source, { mode: 'strip' })).toString('base64')}`
+  );
 }
 
 test('TSK-0374 artifacts exist and the full contract suite includes this task', () => {
@@ -83,32 +85,76 @@ test('release selection and delivery fail closed for stale, withdrawn, malformed
     lastVerified: '2026-09-02',
   };
   const releases = { current, previous: { ...current, sourceCommit: 'previous' } };
-  assert.deepEqual(api.selectContentRelease(releases, 'current'), { status: 'ready', releaseId: 'current', release: current });
-  assert.deepEqual(api.selectContentRelease(releases, 'previous'), { status: 'ready', releaseId: 'previous', release: releases.previous });
+  assert.deepEqual(api.selectContentRelease(releases, 'current'), {
+    status: 'ready',
+    releaseId: 'current',
+    release: current,
+  });
+  assert.deepEqual(api.selectContentRelease(releases, 'previous'), {
+    status: 'ready',
+    releaseId: 'previous',
+    release: releases.previous,
+  });
   assert.deepEqual(api.selectContentRelease(releases, 'missing'), { status: 'missing_release', releaseId: 'missing' });
   assert.equal(api.selectContentRelease({ stale: { ...current, status: 'stale' } }, 'stale').status, 'stale');
   assert.equal(api.selectContentRelease({ gone: { ...current, status: 'withdrawn' } }, 'gone').status, 'withdrawn');
-  assert.equal(api.selectContentRelease({ bad: { ...current, status: 'unexpected' } }, 'bad').status, 'invalid_release');
+  assert.equal(
+    api.selectContentRelease({ bad: { ...current, status: 'unexpected' } }, 'bad').status,
+    'invalid_release',
+  );
 
-  const metadata = { schemaVersion: '1.0.0', sourceArtifact: 'artifact', sourceCommit: 'commit', lastVerified: '2026-09-02' };
+  const metadata = {
+    schemaVersion: '1.0.0',
+    sourceArtifact: 'artifact',
+    sourceCommit: 'commit',
+    lastVerified: '2026-09-02',
+  };
   assert.equal(api.validateBindingsMetadata(current, metadata), true);
   assert.equal(api.validateBindingsMetadata(current, { ...metadata, sourceCommit: 'tampered' }), false);
-  assert.deepEqual(api.resolveContentDelivery({
-    releases: { current }, releaseId: 'current', platform: 'android', purpose: 'setup',
-    availableInstructionIds: ['INS-AND-SETUP-01'], bindingsMetadata: metadata,
-  }), { status: 'ready', releaseId: 'current', instructionId: 'INS-AND-SETUP-01', release: current });
-  assert.equal(api.resolveContentDelivery({
-    releases: { current }, releaseId: 'current', platform: 'android', purpose: 'setup',
-    availableInstructionIds: [], bindingsMetadata: metadata,
-  }).status, 'missing_instruction');
-  assert.equal(api.resolveContentDelivery({
-    releases: { current }, releaseId: 'current', platform: 'android', purpose: 'setup',
-    availableInstructionIds: ['INS-AND-SETUP-01'], bindingsMetadata: { ...metadata, sourceCommit: 'tampered' },
-  }).status, 'integrity_error');
-  assert.equal(api.resolveContentDelivery({
-    releases: { current }, releaseId: 'current', platform: 'common', purpose: 'setup',
-    availableInstructionIds: ['INS-AND-SETUP-01'], bindingsMetadata: metadata,
-  }).status, 'unsupported');
+  assert.deepEqual(
+    api.resolveContentDelivery({
+      releases: { current },
+      releaseId: 'current',
+      platform: 'android',
+      purpose: 'setup',
+      availableInstructionIds: ['INS-AND-SETUP-01'],
+      bindingsMetadata: metadata,
+    }),
+    { status: 'ready', releaseId: 'current', instructionId: 'INS-AND-SETUP-01', release: current },
+  );
+  assert.equal(
+    api.resolveContentDelivery({
+      releases: { current },
+      releaseId: 'current',
+      platform: 'android',
+      purpose: 'setup',
+      availableInstructionIds: [],
+      bindingsMetadata: metadata,
+    }).status,
+    'missing_instruction',
+  );
+  assert.equal(
+    api.resolveContentDelivery({
+      releases: { current },
+      releaseId: 'current',
+      platform: 'android',
+      purpose: 'setup',
+      availableInstructionIds: ['INS-AND-SETUP-01'],
+      bindingsMetadata: { ...metadata, sourceCommit: 'tampered' },
+    }).status,
+    'integrity_error',
+  );
+  assert.equal(
+    api.resolveContentDelivery({
+      releases: { current },
+      releaseId: 'current',
+      platform: 'common',
+      purpose: 'setup',
+      availableInstructionIds: ['INS-AND-SETUP-01'],
+      bindingsMetadata: metadata,
+    }).status,
+    'unsupported',
+  );
 });
 
 test('i18n delivery integration exposes release/status metadata and operational pages stop hard-coding instruction IDs', () => {
@@ -133,7 +179,11 @@ test('non-ready delivery is visibly fail-closed and retains a localized safe rec
   const verify = read(pagePaths[1]);
   assert.match(verify, /\{failed\.status\}/, 'verify must visibly expose its non-ready content status');
   assert.match(verify, /protectionContent\.troubleshootLabel/, 'verify failure must retain localized troubleshooting');
-  assert.match(verify, /href: `\/\$\{locale\}\/troubleshoot\?platform=\$\{platform\}`/, 'verify failure must route to troubleshooting');
+  assert.match(
+    verify,
+    /href: `\/\$\{locale\}\/troubleshoot\?platform=\$\{platform\}`/,
+    'verify failure must route to troubleshooting',
+  );
 
   const recover = read(pagePaths[2]);
   assert.match(recover, /getContent/, 'recovery failure needs localized shell actions');
@@ -145,8 +195,19 @@ test('non-ready delivery is visibly fail-closed and retains a localized safe rec
 test('versioned delivery has no remote content transport, persistence, identity, or analytics side channel', () => {
   const source = read(modulePath);
   for (const forbidden of [
-    /fetch\s*\(/, /https?:\/\//i, /localStorage/, /sessionStorage/, /indexedDB/i,
-    /document\.cookie/, /authorization/i, /accountId/i, /childId/i, /deviceId/i,
-    /analytics/i, /telemetry/i, /product-events/i,
-  ]) assert.equal(forbidden.test(source), false, forbidden.toString());
+    /fetch\s*\(/,
+    /https?:\/\//i,
+    /localStorage/,
+    /sessionStorage/,
+    /indexedDB/i,
+    /document\.cookie/,
+    /authorization/i,
+    /accountId/i,
+    /childId/i,
+    /deviceId/i,
+    /analytics/i,
+    /telemetry/i,
+    /product-events/i,
+  ])
+    assert.equal(forbidden.test(source), false, forbidden.toString());
 });

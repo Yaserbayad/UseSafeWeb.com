@@ -5,7 +5,15 @@ export const operationalMetadata: Metadata = { robots: { index: false, follow: f
 
 type Action = { href: string; label: string; secondary?: boolean };
 
-export function SetupPage({ kicker, title, summary, children, noteTitle, noteBody, actions = [] }: {
+export function SetupPage({
+  kicker,
+  title,
+  summary,
+  children,
+  noteTitle,
+  noteBody,
+  actions = [],
+}: {
   kicker: string;
   title: string;
   summary: string;
@@ -22,8 +30,25 @@ export function SetupPage({ kicker, title, summary, children, noteTitle, noteBod
         <p className="sw-lede">{summary}</p>
       </header>
       {children}
-      {noteTitle && noteBody && <aside className="sw-callout"><strong>{noteTitle}</strong><p>{noteBody}</p></aside>}
-      {actions.length > 0 && <div className="sw-actions">{actions.map((action) => <Link key={action.href} className={action.secondary ? 'sw-button sw-button--secondary' : 'sw-button'} href={action.href}>{action.label}</Link>)}</div>}
+      {noteTitle && noteBody && (
+        <aside className="sw-callout">
+          <strong>{noteTitle}</strong>
+          <p>{noteBody}</p>
+        </aside>
+      )}
+      {actions.length > 0 && (
+        <div className="sw-actions">
+          {actions.map((action) => (
+            <Link
+              key={action.href}
+              className={action.secondary ? 'sw-button sw-button--secondary' : 'sw-button'}
+              href={action.href}
+            >
+              {action.label}
+            </Link>
+          ))}
+        </div>
+      )}
     </article>
   );
 }
