@@ -108,6 +108,5 @@ if (failures.length) {
 }
 
 const summary =
-  `TSK0374_TARGET_ACCEPTANCE status=${expectedStatus}` +
-  ` release=${expectedRelease} failure=${expectFailure}`;
+  `TSK0374_TARGET_ACCEPTANCE status=${expectedStatus}` + ` release=${expectedRelease} failure=${expectFailure}`;
 console.log(summary);
