@@ -88,6 +88,9 @@ body {
 .sw-hero {
   max-width: var(--sw-copy-max);
 }
+.sw-title {
+  overflow-wrap: anywhere;
+}
 .sw-lede {
   max-width: var(--sw-copy-max);
   margin: 0;
@@ -101,8 +104,12 @@ body {
 }
 .sw-card-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--sw-space-4);
+}
+.sw-card,
+.sw-callout {
+  overflow-wrap: anywhere;
 }
 .sw-card p,
 .sw-callout p {
