@@ -1,0 +1,42 @@
+name: Apply CR-0011 stale-candidate reconciliation
+
+on:
+  push:
+    branches:
+      - change/cr0011-stale-candidate-reconciliation-r3
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact branch head
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Apply bounded CR-0011 reconciliation and audit
+        run: |
+          if ! python .github/scripts/apply_cr0011_stale_candidate_reconciliation_20260903.py; then
+            echo "CR-0011 applicator failed; emitting direct validator diagnostics from the reconstructed workspace"
+            python Plans/Master/Tools/validate_master_plan.py || true
+            exit 1
+          fi
+      - name: Verify final diff
+        run: |
+          git diff --check
+          test ! -e .github/scripts/apply_cr0011_stale_candidate_reconciliation_20260903.py
+          test ! -e .github/workflows/apply-cr0011-stale-candidate-reconciliation-20260903.yml
+          git diff --quiet -- Plans/Master/WBS/master-wbs.csv
+          git diff --quiet -- Plans/Master/RELATIONSHIP_INDEX.yaml
+          git diff --quiet -- Plans/Master/Registers/GATES.md
+      - name: Commit audited CR-0011 candidate
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "[cr0011-generated] Reconcile stale candidate intent onto current canonical plan" -m "Preserve all 641 WBS tasks, 858 dependency edges, relationship authority, runtime PASS/evidence and material-action fences. Add only DEC-0058/CR-0011, derived hierarchy roll-up and recurring-dependency invariants, validator hardening, generated/checksum refresh and bounded audit evidence. No deployment, live-device/profile/certificate action, service removal/revocation, participant processing, telemetry activation, production/public activation, market/launch authority, TSK-0374 PASS, TSK-0417 PASS or TSK-0499 PASS is inferred. PR #86 remains draft and unmerged."
+          git push origin HEAD:${GITHUB_REF_NAME}
