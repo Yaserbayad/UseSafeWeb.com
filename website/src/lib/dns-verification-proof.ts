@@ -4,6 +4,8 @@ export const DNS_VERIFICATION_SUFFIX = 'verify.usesafeweb.com';
 export const DNS_VERIFICATION_PROTOCOL = 'usesafeweb-dns-path-v1';
 export const DNS_VERIFIER_VERSION = 'private-rewrite-v1';
 export const DNS_VERIFICATION_MAX_LIFETIME_MS = 120_000;
+export const DNS_VERIFICATION_MAX_TOKEN_BYTES = 2048;
+export const DNS_VERIFICATION_MAX_OBSERVATIONS = 8;
 
 export type DnsVerificationOutcome = 'verified' | 'failed' | 'uncertain';
 export type DnsPathCheck = 'verified-fresh' | 'verified-stale' | 'failed' | 'uncertain' | 'not-run';
@@ -159,6 +161,7 @@ export function verifyDnsVerificationObservation(
     validateSigningSecret(secret);
     if (
       typeof token !== 'string'
+      || Buffer.byteLength(token, 'utf8') > DNS_VERIFICATION_MAX_TOKEN_BYTES
       || typeof expectedScope !== 'string'
       || !challengePattern.test(expectedScope)
       || typeof expectedChallenge !== 'string'
@@ -188,9 +191,11 @@ export function reconcileDnsVerificationObservations(
   expectedScope: string,
   expectedChallenge: string,
 ): VerifiedDnsVerification {
-  if (!Array.isArray(tokens) || tokens.length === 0) {
+  if (!Array.isArray(tokens)) return uncertainResult('VERIFICATION_SERVICE_ERROR');
+  if (tokens.length === 0) {
     return { dnsPath: 'not-run', reasonCode: 'VERIFY_UNREACHABLE', observedAt: null, verifierVersion: DNS_VERIFIER_VERSION };
   }
+  if (tokens.length > DNS_VERIFICATION_MAX_OBSERVATIONS) return uncertainResult('VERIFICATION_SERVICE_ERROR');
   const verified = tokens.map((token) => verifyDnsVerificationObservation(token, secret, nowMs, expectedScope, expectedChallenge));
   if (verified.some((item) => item === null)) return uncertainResult();
   const results = verified as VerifiedDnsVerification[];
