@@ -116,7 +116,10 @@ for (const locale of locales) {
       for (const action of [primary, secondary]) {
         const box = await action.boundingBox();
         assert.ok(box, 'CTA has no rendered box');
-        assert.ok(box.width >= 24 && box.height >= 24, `CTA target is ${box.width}x${box.height}, below WCAG AA minimum`);
+        assert.ok(
+          box.width >= 24 && box.height >= 24,
+          `CTA target is ${box.width}x${box.height}, below WCAG AA minimum`,
+        );
       }
 
       const overflow = await page.evaluate(
@@ -150,12 +153,20 @@ for (const locale of locales) {
         );
       }
 
-      assert.equal(await page.locator('form, input, textarea, select').count(), 0, 'public landing collects user input');
+      assert.equal(
+        await page.locator('form, input, textarea, select').count(),
+        0,
+        'public landing collects user input',
+      );
       const storage = await page.evaluate(() => ({
         local: Object.keys(localStorage),
         session: Object.keys(sessionStorage),
       }));
-      assert.deepEqual(storage, { local: [], session: [] }, 'landing creates persistent or journey storage before setup');
+      assert.deepEqual(
+        storage,
+        { local: [], session: [] },
+        'landing creates persistent or journey storage before setup',
+      );
       assert.deepEqual(await context.cookies(), [], 'landing creates cookies before setup');
       assert.deepEqual(pageErrors, [], 'landing emitted page errors');
       assert.deepEqual(consoleErrors, [], 'landing emitted console errors');
