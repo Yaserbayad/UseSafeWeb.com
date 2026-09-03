@@ -20,7 +20,7 @@ test('Protection Map precedence is deterministic and only fresh positive technic
   const api = await loadApi();
   assert.equal(api.evaluateProtection({ ...baseEvidence, configured: true }).state, 'configured/parent-confirmed');
   assert.equal(api.evaluateProtection({ ...baseEvidence, configured: true }).reasonCode, 'CONFIG_CONFIRMED_NO_TECH_VERIFY');
-  assert.equal(api.evaluateProtection({ ...baseEvidence, configured: true }).supporting, 'Protection has not yet been technically verified.');
+  assert.equal(api.evaluateProtection({ ...baseEvidence, configured: true }).action, null);
 
   assert.equal(api.evaluateProtection({ ...baseEvidence, configured: true, technical: { result: 'positive', fresh: true } }).state, 'protected/verified');
   assert.equal(api.evaluateProtection({ ...baseEvidence, configured: true, technical: { result: 'positive', fresh: false } }).state, 'uncertain/error');
