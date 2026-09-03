@@ -6,15 +6,21 @@ import { stripTypeScriptTypes } from 'node:module';
 
 const root = resolve(import.meta.dirname, '../..');
 const modulePath = resolve(root, 'src/lib/core-state-machine.ts');
+const journeyPath = resolve(root, 'src/lib/journey-state.ts');
+const dataUrl = (source) => `data:text/javascript;base64,${Buffer.from(source).toString('base64')}`;
 
 async function loadApi() {
   assert.equal(existsSync(modulePath), true, 'missing TSK-0358 core state machine');
-  const source = readFileSync(modulePath, 'utf8');
-  const js = stripTypeScriptTypes(source, { mode: 'strip' });
-  return import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
+  let source = readFileSync(modulePath, 'utf8');
+  if (source.includes("from './journey-state'")) {
+    const journeySource = readFileSync(journeyPath, 'utf8');
+    source = source.replace("from './journey-state'", `from '${dataUrl(stripTypeScriptTypes(journeySource, { mode: 'strip' }))}'`);
+  }
+  return import(dataUrl(stripTypeScriptTypes(source, { mode: 'strip' })));
 }
 
 const baseEvidence = { coverage: 'covered', configured: false, technical: null, action: null, uncertainty: null, removal: null };
+const parentConfirmedEvidence = { ...baseEvidence, configured: true };
 
 test('Protection Map precedence is deterministic and only fresh positive technical evidence yields protected/verified', async () => {
   const api = await loadApi();
@@ -45,23 +51,23 @@ test('accountless core transitions cover setup, verification, Protection Map, tr
   const api = await loadApi();
   let state = api.createCoreState('en-GB', 'ab'.repeat(16), 1_000, 10_000);
   const events = [
-    ['SELECT_DEVICE', 'native'],
-    ['CONTINUE_NATIVE', 'dns'],
-    ['CONTINUE_DNS', 'verify'],
-    ['VERIFICATION_RESULT', 'protection'],
-    ['OPEN_TROUBLESHOOT', 'troubleshoot'],
-    ['OPEN_RECOVERY', 'recover'],
-    ['REMOVE_CONFIGURATION', 'removed'],
-    ['RESTART_SETUP', 'route'],
-    ['SELECT_DEVICE', 'native'],
-    ['CONTINUE_NATIVE', 'dns'],
-    ['CONTINUE_DNS', 'verify'],
-    ['VERIFICATION_RESULT', 'protection'],
-    ['COMPLETE', 'complete'],
+    [{ type: 'SELECT_DEVICE', deviceFamily: 'android' }, 'native'],
+    [{ type: 'CONTINUE_NATIVE' }, 'dns'],
+    [{ type: 'CONTINUE_DNS' }, 'verify'],
+    [{ type: 'VERIFICATION_RESULT', evidence: parentConfirmedEvidence }, 'protection'],
+    [{ type: 'OPEN_TROUBLESHOOT' }, 'troubleshoot'],
+    [{ type: 'OPEN_RECOVERY' }, 'recover'],
+    [{ type: 'REMOVE_CONFIGURATION' }, 'removed'],
+    [{ type: 'RESTART_SETUP' }, 'route'],
+    [{ type: 'SELECT_DEVICE', deviceFamily: 'android' }, 'native'],
+    [{ type: 'CONTINUE_NATIVE' }, 'dns'],
+    [{ type: 'CONTINUE_DNS' }, 'verify'],
+    [{ type: 'VERIFICATION_RESULT', evidence: parentConfirmedEvidence }, 'protection'],
+    [{ type: 'COMPLETE' }, 'complete'],
   ];
-  for (const [type, phase] of events) {
-    state = api.transitionCoreState(state, { type, deviceFamily: type === 'SELECT_DEVICE' ? 'android' : undefined }, 2_000);
-    assert.equal(state.phase, phase, `${type} -> ${phase}`);
+  for (const [event, phase] of events) {
+    state = api.transitionCoreState(state, event, 2_000);
+    assert.equal(state.phase, phase, `${event.type} -> ${phase}`);
     assert.equal(state.loginRequired, false);
   }
 });
@@ -92,7 +98,7 @@ test('optional-account state contract is dormant under the current owner fence a
 test('core state allowlist rejects identity, browsing/activity history, raw diagnostics and arbitrary URLs', async () => {
   const api = await loadApi();
   const state = api.createCoreState('ar', 'ef'.repeat(16), 1_000, 5_000);
-  assert.deepEqual(Object.keys(state).sort(), ['createdAt','hardExpiresAt','locale','loginRequired','phase','schemaVersion','scope'].sort());
-  const forbidden = ['email','account','child','query','domain','history','activity','diagnostic','url','ip'];
+  assert.deepEqual(Object.keys(state).sort(), ['createdAt','hardExpiresAt','locale','loginRequired','phase','retryCount','schemaVersion','scope'].sort());
+  const forbidden = ['email','account','child','query','domain','history','activity','diagnostic','url','ip','verification'];
   for (const key of forbidden) assert.equal(Object.keys(state).some((candidate) => candidate.toLowerCase().includes(key)), false);
 });
