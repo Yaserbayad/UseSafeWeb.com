@@ -1,0 +1,88 @@
+name: Guard publish TSK-0499 source partial evidence
+
+on:
+  push:
+    branches:
+      - guard/tsk-0499-source-evidence-20260903
+
+permissions:
+  contents: write
+
+jobs:
+  publish-guarded-partial:
+    if: github.event.head_commit.message != 'evidence: record TSK-0499 source partial and runtime TODO'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.23.2'
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - name: Verify immutable authority and generate guarded publication
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = '9221aeed32c131597e8356a9d7d0660eb893b1c5'
+          test "$(git merge-base HEAD origin/main)" = '9221aeed32c131597e8356a9d7d0660eb893b1c5'
+          test "$(git hash-object CURRENT_STATE.md)" = '2ce560d19520d26c869c01d576293218a6273515'
+          test "$(git hash-object Plans/Master/MANIFEST.yaml)" = '0b0238a75926009a50d8503a7fe86bfa94c77708'
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
+          test "$(git hash-object website/package-lock.json)" = '14f9a62607489f965b96d98cdf0d825a363cd8bc'
+          test "$(git hash-object website/src/lib/product-events.ts)" = '909aeb5ca8b6c1cc8e142abea0fda3002015c48d'
+          test "$(git hash-object website/src/app/api/product-events/route.ts)" = 'ac810d8969fd99cea87662600e0a9a01f93813a5'
+          test "$(git hash-object website/tests/contract/tsk0499.test.mjs)" = '1cdbb60005a0b9c05d19231bce2c5df7918e7843'
+          test "$(git hash-object website/package.json)" = '831ee3edf37fc8b4c28b814cfea22b317f54f72f'
+          test "$(git hash-object .github/workflows/accept-tsk0499-product-events-metrics-20260903.yml)" = '4b7ba5bf31180911b71f1a66f6c49d48fb8af8ff'
+          test ! -e TSK_0499_PRODUCT_EVENTS_METRICS_SOURCE_IMPLEMENTATION_2026-09-03.md
+          ! grep -Fq 'TSK-0499 current accepted stable state — 2026-09-03 — SOURCE IMPLEMENTATION PARTIAL' CURRENT_STATE.md
+
+          python3 tests/repository-structure/verify_structure.py
+          python3 Plans/Master/Tools/validate_master_plan.py
+          cd website
+          npm ci --ignore-scripts --no-fund --no-audit
+          node --test tests/contract/tsk0499.test.mjs
+          npm run test:contract
+          npm run lint
+          npm run typecheck
+          NEXT_TELEMETRY_DISABLED=1 npm run build
+          npm audit --audit-level=high
+          npm audit --omit=dev --audit-level=high
+          cd ..
+
+          python3 .github/scripts/publish_tsk0499_source_partial.py
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('CURRENT_STATE.md')
+          path.write_text(path.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')
+          PY
+
+          git diff --check
+          mapfile -t changed < <({ git diff --name-only; git ls-files --others --exclude-standard; } | sort)
+          expected=(CURRENT_STATE.md TSK_0499_PRODUCT_EVENTS_METRICS_SOURCE_IMPLEMENTATION_2026-09-03.md)
+          if [[ "${changed[*]}" != "${expected[*]}" ]]; then
+            printf 'Unexpected generated diff:\n%s\n' "${changed[*]}"
+            exit 1
+          fi
+          grep -Fq 'TSK-0499 current accepted stable state — 2026-09-03 — SOURCE IMPLEMENTATION PARTIAL' CURRENT_STATE.md
+          grep -Fq 'Task runtime disposition:** TODO' TSK_0499_PRODUCT_EVENTS_METRICS_SOURCE_IMPLEMENTATION_2026-09-03.md
+          grep -Fq 'USESAFEWEB_PRODUCT_EVENTS_ENABLED=1' TSK_0499_PRODUCT_EVENTS_METRICS_SOURCE_IMPLEMENTATION_2026-09-03.md
+          ! grep -Fq 'Task runtime disposition:** PASS' TSK_0499_PRODUCT_EVENTS_METRICS_SOURCE_IMPLEMENTATION_2026-09-03.md
+          ! grep -Fq '`TSK-0499 — Implement approved product events and metric validation`: **PASS**' CURRENT_STATE.md
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md TSK_0499_PRODUCT_EVENTS_METRICS_SOURCE_IMPLEMENTATION_2026-09-03.md
+          git diff --cached --check
+          mapfile -t staged < <(git diff --cached --name-only | sort)
+          if [[ "${staged[*]}" != "${expected[*]}" ]]; then
+            printf 'Unexpected staged diff:\n%s\n' "${staged[*]}"
+            exit 1
+          fi
+          git commit -m 'evidence: record TSK-0499 source partial and runtime TODO'
+          git push origin HEAD:guard/tsk-0499-source-evidence-20260903
+          echo 'TSK0499_SOURCE_PARTIAL_PUBLICATION_GUARD=PASS'
