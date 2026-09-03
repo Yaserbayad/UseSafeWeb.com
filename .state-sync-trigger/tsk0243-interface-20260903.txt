@@ -1,0 +1,1 @@
+Trigger only. Do not merge. This branch exists solely to fire the default-branch one-shot CURRENT_STATE.md synchronizer for the TSK-0243 verifier-interface source slice.
