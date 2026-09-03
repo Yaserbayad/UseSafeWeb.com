@@ -16,6 +16,7 @@ const localizedPages = [
   'src/app/[locale]/protection/page.tsx',
   'src/app/[locale]/troubleshoot/page.tsx',
   'src/app/[locale]/recover/page.tsx',
+  'src/app/[locale]/cleanup/page.tsx',
   'src/app/[locale]/removed/page.tsx',
   'src/app/[locale]/complete/page.tsx',
 ];
@@ -121,7 +122,7 @@ test('new operational pages consume externalized content and contain no hard-cod
   assert.doesNotMatch(complete, />\s*[A-Za-z][^<{]*</, 'completion page contains literal visible English JSX');
 });
 
-test('DNS and recovery surfaces select current instruction IDs by locale and platform without duplicate instruction rendering', () => {
+test('DNS, verification and revocation-gated cleanup select localized platform instructions without duplicate rendering', () => {
   const dns = read('src/app/[locale]/setup/dns/page.tsx');
   assert.match(dns, /getInstructionVariant/);
   assert.match(dns, /INS-AND-SETUP-01/);
@@ -131,9 +132,11 @@ test('DNS and recovery surfaces select current instruction IDs by locale and pla
   const verify = read('src/app/[locale]/verify/page.tsx');
   assert.match(verify, /INS-AND-VERIFY-01/);
   assert.match(verify, /INS-IOS-VERIFY-01/);
-  const recover = read('src/app/[locale]/recover/page.tsx');
-  assert.match(recover, /INS-AND-REMOVE-01/);
-  assert.match(recover, /INS-IOS-REMOVE-01/);
+  const cleanup = read('src/app/[locale]/cleanup/page.tsx');
+  assert.match(cleanup, /getVersionedInstruction/);
+  assert.match(cleanup, /'remove'/);
+  assert.equal((cleanup.match(/\{instruction\.value\}/g) ?? []).length, 1, 'cleanup must render the exact source-bound removal instruction only once');
+  assert.doesNotMatch(cleanup, /INS-(AND|IOS)-REMOVE-01/, 'cleanup must not hard-code removal instruction IDs');
 });
 
 test('Protection Map state machine no longer owns user-facing English/legacy-brand copy', () => {
