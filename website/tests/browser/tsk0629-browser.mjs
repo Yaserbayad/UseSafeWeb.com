@@ -44,7 +44,7 @@ for (const [locale, deviceFamily] of [['en-GB', 'android'], ['tr-TR', 'iphone'],
     const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
     const page = await context.newPage();
     await setPhase(page, locale, 'verify', deviceFamily);
-    const response = await page.goto(`${base}/${locale}/verify?platform=${deviceFamily}`, { waitUntil: 'networkidle' });
+    const response = await page.goto(`${base}/${locale}/verify?platform=${deviceFamily}`, { waitUntil: 'domcontentloaded' });
     assert.equal(response?.status(), 200);
 
     const panel = await waitForCheck(page, '[data-verification-outcome]', 'uncertain');
@@ -60,7 +60,7 @@ await record('URL/query input cannot manufacture a positive verification result'
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await context.newPage();
   await setPhase(page, 'en-GB', 'verify', 'android');
-  await page.goto(`${base}/en-GB/verify?platform=android&support=supported&service=healthy&dnsPath=verified-fresh`, { waitUntil: 'networkidle' });
+  await page.goto(`${base}/en-GB/verify?platform=android&support=supported&service=healthy&dnsPath=verified-fresh`, { waitUntil: 'domcontentloaded' });
   const panel = await waitForCheck(page, '[data-verification-outcome]', 'uncertain');
   assert.equal(await panel.getAttribute('data-protection-state'), 'uncertain/error');
   assert.equal((await page.locator('body').innerText()).includes('Protection verified'), false);
@@ -71,7 +71,7 @@ await record('Protection Map performs a fresh check and remains fail-closed when
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await context.newPage();
   await setPhase(page, 'en-GB', 'protection', 'android');
-  await page.goto(`${base}/en-GB/protection?platform=android`, { waitUntil: 'networkidle' });
+  await page.goto(`${base}/en-GB/protection?platform=android`, { waitUntil: 'domcontentloaded' });
   const dns = await waitForCheck(page, '[data-dns-verification-state]', 'uncertain');
   assert.equal(await dns.getAttribute('data-parent-confirmation'), 'confirmed');
   assert.equal(await dns.getAttribute('data-protection-state'), 'uncertain/error');
