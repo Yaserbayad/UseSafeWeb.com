@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "1.0.0",
+  "sourceArtifact": "TSK_0307_POST_CR0008_CURRENT_SOURCE_BACKED_INSTRUCTION_CATALOGUE_REVALIDATION_2026-09-02.md",
+  "sourceCommit": "330e9d13b9d479212ca6c49df3431f19f7107ba5",
+  "lastVerified": "2026-09-02",
+  "instructions": {
+    "INS-AND-SETUP-01": {
+      "purpose": "Configure SafeWeb DNS on supported Android Private DNS provider-hostname paths",
+      "platform": "android",
+      "variants": {
+        "en-GB": "Open Android's Private DNS setting and choose the provider-hostname option. Enter dns.usesafeweb.com and save. Use the hostname exactly as shown — not an https:// address. Return to SafeWeb so protection can be checked.",
+        "tr-TR": "Android'da Özel DNS ayarını açın ve sağlayıcı ana bilgisayar adı seçeneğini seçin. dns.usesafeweb.com adresini girip kaydedin. Ana bilgisayar adını gösterildiği gibi kullanın; https:// adresi girmeyin. Korumanın kontrol edilebilmesi için SafeWeb'e geri dönün.",
+        "ar": "افتح إعداد DNS الخاص في Android واختر خيار اسم مضيف المزوّد. أدخل dns.usesafeweb.com ثم احفظ. استخدم اسم المضيف كما هو ظاهر ولا تُدخل عنوانًا يبدأ بـ https://. ارجع إلى SafeWeb حتى يمكن التحقق من الحماية."
+      }
+    },
+    "INS-AND-VERIFY-01": {
+      "purpose": "Verify Android SafeWeb DNS without treating the saved setting as technical proof",
+      "platform": "android",
+      "variants": {
+        "en-GB": "Checking SafeWeb DNS… A saved Private DNS setting is not enough on its own. SafeWeb shows Verified only when the approved technical check confirms the intended encrypted DNS path. If another VPN, app, browser or network may control DNS, the result can remain Status uncertain.",
+        "tr-TR": "SafeWeb DNS kontrol ediliyor… Özel DNS ayarının kaydedilmiş olması tek başına yeterli değildir. SafeWeb yalnızca onaylı teknik kontrol amaçlanan şifreli DNS yolunu doğruladığında Doğrulandı durumunu gösterir. Başka bir VPN, uygulama, tarayıcı veya ağ DNS'i kontrol ediyor olabilir; bu durumda sonuç Durum belirsiz kalabilir.",
+        "ar": "جارٍ التحقق من SafeWeb DNS… حفظ إعداد DNS الخاص وحده لا يكفي. يعرض SafeWeb حالة تم التحقق فقط عندما يؤكد الفحص التقني المعتمد مسار DNS المشفّر المقصود. إذا كان VPN أو تطبيق أو متصفح أو شبكة أخرى قد تتحكم في DNS فقد تبقى الحالة غير مؤكدة."
+      }
+    },
+    "INS-AND-REMOVE-01": {
+      "purpose": "Remove or recover Android SafeWeb DNS through the supported Private DNS path",
+      "platform": "android",
+      "variants": {
+        "en-GB": "To remove SafeWeb DNS, leave the custom Private DNS provider-hostname mode and return Android to its normal DNS policy, normally Automatic. After removal, SafeWeb no longer claims DNS protection. A neutral connectivity check may confirm recovery.",
+        "tr-TR": "SafeWeb DNS'i kaldırmak için özel sağlayıcı ana bilgisayar adı modundan çıkın ve Android'i normal DNS politikasına, genellikle Otomatik seçeneğine döndürün. Kaldırmadan sonra SafeWeb DNS koruması iddiasında bulunmaz.",
+        "ar": "لإزالة SafeWeb DNS، اخرج من وضع اسم مضيف مزوّد DNS الخاص وأعد Android إلى سياسة DNS العادية، وعادةً إلى تلقائي. بعد الإزالة لا يدّعي SafeWeb استمرار حماية DNS."
+      }
+    },
+    "INS-IOS-SETUP-01": {
+      "purpose": "Configure the verified SafeWeb encrypted-DNS profile on a supported iPhone path",
+      "platform": "iphone",
+      "variants": {
+        "en-GB": "Get the exact verified SafeWeb DNS profile for this environment, then follow iPhone's profile-installation flow and explicitly approve the installation in iOS. SafeWeb does not install it silently. If current device-management/security policy blocks installation, do not weaken that control merely to make SafeWeb green; use the truthful current blocked/uncertain route and retry only when conditions change.",
+        "tr-TR": "Bu ortam için doğrulanmış SafeWeb DNS profilini alın, ardından iPhone'un profil yükleme akışını izleyin ve yüklemeyi iOS'ta açıkça onaylayın. SafeWeb profili sessizce yüklemez. Güvenlik veya cihaz yönetimi ilkesi yüklemeyi engelliyorsa yalnızca SafeWeb'i etkin göstermek için bu kontrolü zayıflatmayın.",
+        "ar": "احصل على ملف تعريف SafeWeb DNS الذي تم التحقق منه لهذه البيئة، ثم اتبع مسار تثبيت ملف التعريف في iPhone ووافق صراحةً على التثبيت في iOS. لا يثبّت SafeWeb الملف بصمت. إذا منعت سياسة الأمان أو إدارة الجهاز التثبيت، فلا تُضعف هذا التحكم لمجرد إظهار SafeWeb بحالة إيجابية."
+      }
+    },
+    "INS-IOS-VERIFY-01": {
+      "purpose": "Verify iPhone SafeWeb DNS without treating profile presence or account state as proof",
+      "platform": "iphone",
+      "variants": {
+        "en-GB": "Checking SafeWeb DNS… An installed profile or signed-in account is not enough on its own. Verified requires the approved technical check. VPN, Private Relay, app/browser custom resolver or other unresolved path conflicts remain evidence-bounded uncertainty/not-covered states.",
+        "tr-TR": "SafeWeb DNS kontrol ediliyor… Yüklü bir profil veya oturum açılmış hesap tek başına yeterli değildir. Doğrulandı durumu için onaylı teknik kontrol gerekir.",
+        "ar": "جارٍ التحقق من SafeWeb DNS… وجود ملف تعريف مثبّت أو حساب مسجّل الدخول لا يكفي وحده. تتطلب حالة تم التحقق الفحص التقني المعتمد."
+      }
+    },
+    "INS-IOS-REMOVE-01": {
+      "purpose": "Remove or recover the exact SafeWeb DNS profile on a supported iPhone path",
+      "platform": "iphone",
+      "variants": {
+        "en-GB": "In iPhone Settings, identify the exact SafeWeb DNS profile under the current profile-management route and remove that profile. On a school/business-managed device, follow the applicable management policy rather than deleting required profiles without authorization. Removing the SafeWeb profile removes its profile-owned DNS configuration; it does not delete the SafeWeb account/device record or anonymous web state.",
+        "tr-TR": "iPhone Ayarları'nda mevcut profil yönetimi yolunda SafeWeb DNS profilini bulun ve yalnızca o profili kaldırın. Okul/işletme tarafından yönetilen bir cihazda gerekli profilleri yetkisiz silmek yerine geçerli yönetim politikasını izleyin.",
+        "ar": "في إعدادات iPhone، حدّد ملف تعريف SafeWeb DNS بالضبط ضمن مسار إدارة الملفات الحالي واحذف هذا الملف فقط. إذا كان الجهاز مُدارًا من مدرسة أو مؤسسة، فاتبع سياسة الإدارة المعمول بها بدل حذف ملفات مطلوبة دون تصريح."
+      }
+    },
+    "INS-COMMON-UNCERTAIN-01": {
+      "purpose": "Truthful conflict or uncertainty state",
+      "platform": "common",
+      "variants": {
+        "en-GB": "SafeWeb cannot prove the intended DNS path right now. Keep required VPN, school, work or security controls in place. Change only the condition you understand, then recheck; otherwise keep Status uncertain / Not covered.",
+        "tr-TR": "SafeWeb şu anda amaçlanan DNS yolunu doğrulayamıyor. Gerekli VPN, okul, iş veya güvenlik kontrollerini açık bırakın. Yalnızca anladığınız koşulu değiştirdikten sonra yeniden kontrol edin.",
+        "ar": "لا يستطيع SafeWeb إثبات مسار DNS المقصود الآن. أبقِ عناصر تحكم VPN أو المدرسة أو العمل أو الأمان المطلوبة مفعّلة. غيّر فقط الحالة التي تفهمها ثم أعد التحقق."
+      }
+    },
+    "INS-COMMON-NOTCOVERED-01": {
+      "purpose": "Truthful unsupported or not-yet-supported state",
+      "platform": "common",
+      "variants": {
+        "en-GB": "This device/network combination is not covered by the current SafeWeb setup path. Do not improvise another VPN, DNS client or profile. SafeWeb makes no positive protection claim for this path.",
+        "tr-TR": "Bu cihaz/ağ birleşimi mevcut SafeWeb kurulum yolu kapsamında değildir. Başka bir VPN, DNS istemcisi veya profil uydurmayın.",
+        "ar": "هذا المزيج من الجهاز/الشبكة غير مشمول بمسار إعداد SafeWeb الحالي. لا تستخدم مسار VPN أو عميل DNS أو ملف تعريف بديل غير معتمد."
+      }
+    },
+    "INS-COMMON-RECOVERY-01": {
+      "purpose": "Connectivity-failure safe recovery",
+      "platform": "common",
+      "variants": {
+        "en-GB": "If the SafeWeb DNS change materially breaks intended connectivity, use the current platform-specific SafeWeb removal/reset path. After removal, SafeWeb must stop claiming DNS protection. Do not silently fall back to plaintext DNS while displaying SafeWeb as active.",
+        "tr-TR": "SafeWeb DNS değişikliği bağlantıyı önemli ölçüde bozarsa mevcut platforma özel SafeWeb kaldırma/sıfırlama yolunu kullanın. Kaldırmadan sonra SafeWeb DNS koruması iddiasını durdurmalıdır.",
+        "ar": "إذا أدى تغيير SafeWeb DNS إلى تعطيل الاتصال المقصود بشكل ملموس، فاستخدم مسار الإزالة/إعادة الضبط الحالي الخاص بالمنصة. بعد الإزالة يجب أن يتوقف SafeWeb عن ادعاء حماية DNS."
+      }
+    }
+  }
+}
