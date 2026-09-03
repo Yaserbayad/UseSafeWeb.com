@@ -7,10 +7,7 @@ on:
       - main
   pull_request:
     paths:
-      - 'website/package.json'
-      - 'website/package-lock.json'
-      - 'website/DEPENDENCY_SECURITY_POLICY.md'
-      - 'website/tests/contract/tsk0491.test.mjs'
+      - 'website/**'
       - '.github/workflows/accept-tsk0491-dependency-sbom-20260903.yml'
 
 permissions:
@@ -24,7 +21,9 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '22.23.2'
-      - name: Verify canonical planning integrity and focused TSK-0491 contract
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - name: Verify deterministic dependency, quality, and SBOM baseline
         shell: bash
         run: |
           set -euo pipefail
@@ -32,18 +31,21 @@ jobs:
           test "$(git hash-object website/package-lock.json)" = '6ff91d845bc5f3099b6a00f5f43673eed80a3ba5'
           python3 tests/repository-structure/verify_structure.py
           python3 Plans/Master/Tools/validate_master_plan.py
-          node --test website/tests/contract/tsk0491.test.mjs
 
-      - name: Generate and validate lockfile-derived SPDX SBOM
-        shell: bash
-        run: |
-          set -euo pipefail
           cd website
+          test "$(node --version)" = 'v22.23.2'
+          test "$(npm --version)" = '10.9.8'
           npm ci --no-fund --no-audit
-          npm run sbom > sbom.spdx.json
+          node --test tests/contract/tsk0491.test.mjs
+          npm run format:check
+          NEXT_TELEMETRY_DISABLED=1 npm run validate
+          npm --silent run sbom > sbom.spdx.json
           node -e "const fs=require('node:fs'); const s=JSON.parse(fs.readFileSync('sbom.spdx.json','utf8')); if(s.spdxVersion !== 'SPDX-2.3') throw new Error('unexpected SPDX version'); if(!Array.isArray(s.packages) || s.packages.length < 1) throw new Error('empty SBOM');"
           npm audit --audit-level=high
+          npm audit --omit=dev --audit-level=high
           rm sbom.spdx.json
           cd ..
+
           git diff --check
           test -z "$(git status --porcelain)"
+          echo 'TSK0491_DEPENDENCY_SBOM_ACCEPTANCE=PASS'
