@@ -1,0 +1,86 @@
+name: TSK-0375 intake routing acceptance
+
+on:
+  push:
+    branches:
+      - main
+      - feature/tsk-0375-intake-routing-20260903
+  pull_request:
+    paths:
+      - 'website/**'
+      - '.github/workflows/accept-tsk0375-intake-routing-20260903.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  accept-tsk0375:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.23.2'
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - name: Verify intake contracts and production build
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
+          test "$(git hash-object website/package-lock.json)" = '14f9a62607489f965b96d98cdf0d825a363cd8bc'
+          python3 tests/repository-structure/verify_structure.py
+          python3 Plans/Master/Tools/validate_master_plan.py
+          cd website
+          npm ci --no-fund --no-audit
+          npm run test:contract
+          npm run lint
+          npm run typecheck
+          NEXT_TELEMETRY_DISABLED=1 npm run build
+          npm audit --audit-level=high
+          npm audit --omit=dev --audit-level=high
+          cd ..
+          git diff --check
+          test -z "$(git status --porcelain)"
+      - name: Install exact ephemeral browser tooling
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd website
+          PLAYWRIGHT_VERSION='1.55.0'
+          npm install --no-save --no-package-lock --ignore-scripts "playwright@${PLAYWRIGHT_VERSION}"
+          npx --yes "playwright@${PLAYWRIGHT_VERSION}" install chromium
+          test -z "$(git status --porcelain)"
+      - name: Run real-browser intake routing acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd website
+          NEXT_TELEMETRY_DISABLED=1 npm start -- --hostname 127.0.0.1 --port 3210 >/tmp/tsk0375-next.log 2>&1 &
+          SERVER_PID=$!
+          cleanup() {
+            kill "$SERVER_PID" >/dev/null 2>&1 || true
+            wait "$SERVER_PID" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
+          READY=0
+          for _ in $(seq 1 30); do
+            if curl -fsS 'http://127.0.0.1:3210/en-GB/setup/route' >/dev/null; then
+              READY=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$READY" -ne 1 ]; then
+            cat /tmp/tsk0375-next.log
+            exit 1
+          fi
+
+          BASE_URL='http://127.0.0.1:3210' node tests/browser/tsk0375-browser.mjs
+          cleanup
+          trap - EXIT
+          cd ..
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'TSK0375_INTAKE_ROUTING_ACCEPTANCE=PASS'
