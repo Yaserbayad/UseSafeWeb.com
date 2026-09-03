@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 
 export const DNS_VERIFICATION_SUFFIX = 'verify.usesafeweb.com';
 export const DNS_VERIFICATION_PROTOCOL = 'usesafeweb-dns-path-v1';
@@ -134,6 +134,10 @@ function resultFromObservation(observation: DnsVerificationObservation, nowMs: n
     return { dnsPath: 'failed', reasonCode: 'TECH_VERIFY_NEGATIVE', observedAt: observation.observedAt, verifierVersion: DNS_VERIFIER_VERSION };
   }
   return { dnsPath: 'uncertain', reasonCode: observation.reasonCode, observedAt: observation.observedAt, verifierVersion: DNS_VERIFIER_VERSION };
+}
+
+export function createDnsVerificationChallenge(): string {
+  return randomBytes(16).toString('hex');
 }
 
 export function buildDnsProbeHostname(challenge: string): string {
