@@ -1,0 +1,154 @@
+name: Temporary TSK-0374 publication builder
+
+on:
+  push:
+    branches:
+      - 'tmp/tsk-0374-publication-builder-20260903'
+
+permissions:
+  contents: write
+
+jobs:
+  build-publication:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out bounded builder branch
+        uses: actions/checkout@v4
+        with:
+          ref: 'tmp/tsk-0374-publication-builder-20260903'
+          fetch-depth: 0
+
+      - name: Guard exact canonical base
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --no-tags
+          test "$(git rev-parse origin/main)" = "6abe13a00fc2c906e0f9d592dd5383da008298c0"
+          test "$(git merge-base origin/main HEAD)" = "6abe13a00fc2c906e0f9d592dd5383da008298c0"
+          test ! -e TSK_0374_VERSIONED_CONTENT_DELIVERY_SOURCE_IMPLEMENTATION_2026-09-03.md
+          ! grep -Fq 'TSK-0374 = TODO — SOURCE IMPLEMENTATION PARTIAL' CURRENT_STATE.md
+
+      - name: Construct exact publication payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from datetime import datetime, timezone
+          from pathlib import Path
+          import re
+
+          state_path = Path('CURRENT_STATE.md')
+          state = state_path.read_text(encoding='utf-8')
+          timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+          state, count = re.subn(r'^\*\*Updated:\*\* .+$', f'**Updated:** {timestamp}', state, count=1, flags=re.MULTILINE)
+          if count != 1:
+              raise SystemExit('CURRENT_STATE Updated marker missing or ambiguous')
+          if 'TSK-0374 = TODO — SOURCE IMPLEMENTATION PARTIAL' in state:
+              raise SystemExit('TSK-0374 publication state already present')
+          if not state.endswith('\n'):
+              state += '\n'
+          state += '''
+## TSK-0374 current source implementation partial state — 2026-09-03
+
+`TSK-0374 = TODO — SOURCE IMPLEMENTATION PARTIAL`.
+
+- Canonical source implementation was merged through PR `#84` at commit `6abe13a00fc2c906e0f9d592dd5383da008298c0`, tree `907c9ccfe935edb6423799d796eedb570396151d`.
+- Clean-main source acceptance run/job `33743013472 / 100609046721`: **SUCCESS** on the exact source-merge commit above.
+- The source implementation preserves versioned release/provenance/integrity metadata, deterministic supported-device content selection, fail-closed stale/withdrawn/malformed/missing/unsupported/integrity-error behavior, localized safe recovery, and a rollback-capable known-release pin against the current source-backed catalogue/instruction bindings.
+- `ACC-0374` is not fully proven because required `VER-0374` target-environment functional, negative, configuration, security/privacy, and actual rollback-drill evidence remains incomplete.
+- No deployment, participant processing, telemetry activation, profile/runtime activation, market/launch activation, lifecycle PASS, `TSK-0374` PASS, `TSK-0499` PASS, downstream task PASS, or target acceptance is inferred.
+- Durable source evidence: `TSK_0374_VERSIONED_CONTENT_DELIVERY_SOURCE_IMPLEMENTATION_2026-09-03.md`.
+
+### Queue effect after TSK-0374 source implementation publication
+
+Recompute the current executable frontier from canonical WBS/graph, runtime evidence, gates, constraints/interfaces, executor availability, unresolved target-evidence obligations, and Action Authority. Do not treat this source-only publication as `TSK-0374` PASS or as permission to cross any material-action fence.
+'''
+          state_path.write_text(state, encoding='utf-8')
+
+          evidence = '''# TSK-0374 — Versioned Device/Service Content Delivery Source Implementation — 2026-09-03
+
+## Disposition
+
+`TSK-0374 = TODO — SOURCE IMPLEMENTATION PARTIAL`.
+
+This artifact records durable source-implementation and source-CI evidence only. It does **not** satisfy the complete `ACC-0374 / VER-0374 / EVD-0374` contract and is not a task PASS.
+
+## Current authority and prerequisites
+
+- Current normalized WBS blob: `eb35f3b10356396c5117e3f47d0b0378953e2157`.
+- `TSK-0374 — Implement versioned device/service content delivery`: L6 / MEDIUM / A3 / `AUTO_ALLOWED`; hard dependencies `TSK-0375; TSK-0323`.
+- Current runtime evidence independently confirms both hard predecessors are PASS: TSK-0375 under its 2026-09-03 accepted state and TSK-0323 under its current post-CR-0007 accepted state.
+- `ACC-0374` requires correct content/version selection, visible stale/unsupported states, preserved integrity/version metadata, safe missing-content behavior, and update rollback capability.
+- `VER-0374` requires execution in the target environment with functional, negative, configuration, security/privacy, and rollback checks.
+
+## Canonical source implementation
+
+- Source PR: `#84`, `TSK-0374: implement versioned device/service content delivery`.
+- Accepted PR head: `daf5b621ded4887a7ad6d1282223c1685bca9d20`.
+- Canonical source merge: `6abe13a00fc2c906e0f9d592dd5383da008298c0`.
+- Canonical source-merge tree: `907c9ccfe935edb6423799d796eedb570396151d`.
+- Current machine catalogue consumed by the source contract: `content/TSK-0323/CATALOGUE.json`, blob `79753cc4916d38ed8d2f0ed6d01890e62df3fb04`.
+- Current instruction bindings consumed by the source contract: blob `32441b56f5b2daf2c9924584685fd35fb416438e`.
+
+The merged source provides a thin source-backed versioned delivery layer with deterministic Android/iPhone/common selection, exact release/provenance/integrity metadata, fail-closed stale/withdrawn/malformed/missing/unsupported/integrity-error handling, localized safe recovery, and rollback-capable known-release pinning. It introduces no remote CMS/fetch, persistence, identity, analytics, or browser-facing AdGuard administration.
+
+## Source verification evidence
+
+- Clean-main workflow run: `33743013472` — **SUCCESS**.
+- Clean-main acceptance job: `100609046721` (`accept-tsk0374`) — **SUCCESS**.
+- Exact tested source commit: `6abe13a00fc2c906e0f9d592dd5383da008298c0`.
+- Acceptance workflow blob: `0a514634b96128e3fc4b0e0f2a2c7cf4efa6c056`.
+- The clean-main source acceptance executed repository/Master-Plan validation, locked dependency installation, focused TSK-0374 contract coverage, the full current website contract suite, lint, typecheck, production build, dependency audits, diff/clean checks, and emitted the TSK-0374 source-acceptance PASS marker.
+
+The source-merge history also retains test-first diagnostic evidence: the initial RED/GREEN cycle and a review-driven RED/GREEN correction occurred before the accepted source head. Those source cycles do not substitute for target-environment `VER-0374`.
+
+## Remaining acceptance gap
+
+The following required target evidence has **not** been established by this source publication:
+
+- target functional verification;
+- target negative/failure verification;
+- target configuration verification;
+- target security/privacy verification;
+- an actual target rollback drill and rollback result.
+
+Until those applicable checks are executed and durably evidenced, `TSK-0374` remains TODO and cannot satisfy downstream hard dependencies that require its PASS.
+
+## Preserved material-action fences
+
+This evidence authorizes or proves none of the following: deployment; participant processing; telemetry/analytics activation; profile/runtime activation; market or launch activation; lifecycle-gate PASS; `TSK-0374` PASS; `TSK-0499` PASS; downstream task PASS; public/production target acceptance; or new spend/contract/legal approval.
+
+Any later consequential target action must independently satisfy its current gate, Action Authority, security/privacy/legal/technical constraints, reversibility/idempotency requirements, and target-evidence contract.
+
+## Publication rule
+
+This file and the minimal `CURRENT_STATE.md` synchronization are the only intended canonical publication changes. Exact publication commit/tree/blob identities are established only by post-merge canonical GitHub read-back; they are not self-referentially guessed here.
+'''
+          Path('TSK_0374_VERSIONED_CONTENT_DELIVERY_SOURCE_IMPLEMENTATION_2026-09-03.md').write_text(evidence, encoding='utf-8')
+          PY
+
+      - name: Validate exact two-file mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t changed < <(git diff --name-only | sort)
+          test "${#changed[@]}" -eq 2
+          test "${changed[0]}" = "CURRENT_STATE.md"
+          test "${changed[1]}" = "TSK_0374_VERSIONED_CONTENT_DELIVERY_SOURCE_IMPLEMENTATION_2026-09-03.md"
+          git diff --check
+          grep -Fq 'TSK-0374 = TODO — SOURCE IMPLEMENTATION PARTIAL' CURRENT_STATE.md
+          grep -Fq 'actual target rollback drill' TSK_0374_VERSIONED_CONTENT_DELIVERY_SOURCE_IMPLEMENTATION_2026-09-03.md
+          grep -Fq 'TSK-0374` PASS' TSK_0374_VERSIONED_CONTENT_DELIVERY_SOURCE_IMPLEMENTATION_2026-09-03.md
+          python Plans/Master/Tools/validate_master_plan.py
+
+      - name: Commit bounded publication payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md TSK_0374_VERSIONED_CONTENT_DELIVERY_SOURCE_IMPLEMENTATION_2026-09-03.md
+          git diff --cached --check
+          git commit -m 'TSK-0374: publish source implementation partial evidence'
+          git push origin HEAD:'tmp/tsk-0374-publication-builder-20260903'
