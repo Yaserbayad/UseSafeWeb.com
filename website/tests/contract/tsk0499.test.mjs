@@ -162,7 +162,9 @@ test('metric definitions require source, formula, denominator, window, release/c
   assert.deepEqual(api.computeRateMetric(metric, { journey_completed: 7 }), {
     numerator: 7, denominator: null, value: null, missing_denominator: true,
   });
-  assert.throws(() => api.computeRateMetric(metric, { journey_started: 0, journey_completed: 0 }).value === 0, /./);
+  assert.deepEqual(api.computeRateMetric(metric, { journey_started: 0, journey_completed: 0 }), {
+    numerator: 0, denominator: 0, value: null, missing_denominator: false,
+  });
   assert.throws(() => api.parseMetricDefinition({ ...metric, owner: '', extra: 'x' }), /invalid metric definition/i);
 });
 
