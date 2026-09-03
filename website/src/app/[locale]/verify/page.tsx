@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation';
 import { CoreActionButton } from '@/components/core-action-button';
 import { CorePageGuard } from '@/components/core-page-guard';
 import { SetupPage, operationalMetadata } from '@/components/setup-page';
+import { getCurrentAutomatedVerification } from '@/lib/automated-verification';
+import { evaluateProtection } from '@/lib/core-state-machine';
 import { getInstructionVariant, getJourneyContent, isLocale } from '@/lib/i18n';
 
 export const metadata = operationalMetadata;
@@ -17,8 +19,15 @@ export default async function Page({ params, searchParams }: {
   if (platform !== 'android' && platform !== 'iphone') notFound();
 
   const content = getJourneyContent(locale, 'verify').value;
+  const protectionContent = getJourneyContent(locale, 'protection').value;
   const instructionId = platform === 'iphone' ? 'INS-IOS-VERIFY-01' : 'INS-AND-VERIFY-01';
   const instruction = getInstructionVariant(locale, instructionId);
+  const uncertaintyInstruction = getInstructionVariant(locale, 'INS-COMMON-UNCERTAIN-01');
+  const automated = getCurrentAutomatedVerification();
+  const evaluation = evaluateProtection(automated.evidence);
+  const stateLabels = protectionContent.stateLabels as Record<string, string>;
+  const reasonCopy = protectionContent.reasonCopy as Record<string, string>;
+  const supporting = evaluation.action ?? reasonCopy[evaluation.reasonCode] ?? reasonCopy.default;
 
   return (
     <SetupPage
@@ -32,7 +41,29 @@ export default async function Page({ params, searchParams }: {
       <p data-instruction-id={instruction.instructionId} data-instruction-source-locale={instruction.sourceLocale}>
         {instruction.value}
       </p>
+      <section
+        className="sw-card"
+        data-automated-verification={automated.checkState}
+        data-parent-confirmation={automated.parentConfirmation}
+      >
+        <h2>{stateLabels[evaluation.state]}</h2>
+        <p>{supporting}</p>
+        <p>{uncertaintyInstruction.value}</p>
+        <p className="sw-technical">{evaluation.reasonCode}</p>
+      </section>
       <div className="sw-actions">
+        {automated.recovery === 'troubleshoot' ? (
+          <span data-automated-recovery="">
+            <CoreActionButton
+              locale={locale}
+              deviceFamily={platform}
+              event={{ type: 'OPEN_TROUBLESHOOT' }}
+              href={`/${locale}/troubleshoot?platform=${platform}`}
+              label={protectionContent.troubleshootLabel}
+              dataAttribute="data-core-troubleshoot"
+            />
+          </span>
+        ) : null}
         <CoreActionButton
           locale={locale}
           deviceFamily={platform}
@@ -40,6 +71,7 @@ export default async function Page({ params, searchParams }: {
           href={`/${locale}/protection?platform=${platform}`}
           label={content.actionLabel}
           dataAttribute="data-core-view-protection"
+          secondary={automated.recovery === 'troubleshoot'}
         />
       </div>
     </SetupPage>
