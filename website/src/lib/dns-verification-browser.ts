@@ -66,20 +66,30 @@ function parseCheck(value: unknown): BrowserDnsVerificationCheck | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const candidate = value as Record<string, unknown>;
   if (!exactKeys(candidate, ['dnsPath', 'reasonCode', 'verifierVersion'])) return null;
-  const dnsPaths = new Set(['verified-fresh', 'verified-stale', 'failed', 'uncertain', 'not-run']);
-  const reasonCodes = new Set([
-    'TECH_VERIFIED',
-    'TECH_VERIFY_NEGATIVE',
-    'VERIFY_STALE',
-    'VERIFY_UNREACHABLE',
-    'VERIFICATION_SERVICE_ERROR',
-    'EVIDENCE_CONFLICT',
-    'BYPASS_OR_CONTEXT_UNCERTAIN',
-  ]);
-  if (typeof candidate.dnsPath !== 'string' || !dnsPaths.has(candidate.dnsPath)) return null;
-  if (typeof candidate.reasonCode !== 'string' || !reasonCodes.has(candidate.reasonCode)) return null;
   if (candidate.verifierVersion !== 'private-rewrite-v1') return null;
-  return candidate as BrowserDnsVerificationCheck;
+
+  const dnsPath = candidate.dnsPath;
+  const reasonCode = candidate.reasonCode;
+  if (dnsPath === 'verified-fresh' && reasonCode === 'TECH_VERIFIED') {
+    return { dnsPath: 'verified-fresh', reasonCode: 'TECH_VERIFIED', verifierVersion: 'private-rewrite-v1' };
+  }
+  if (dnsPath === 'verified-stale' && reasonCode === 'VERIFY_STALE') {
+    return { dnsPath: 'verified-stale', reasonCode: 'VERIFY_STALE', verifierVersion: 'private-rewrite-v1' };
+  }
+  if (dnsPath === 'failed' && reasonCode === 'TECH_VERIFY_NEGATIVE') {
+    return { dnsPath: 'failed', reasonCode: 'TECH_VERIFY_NEGATIVE', verifierVersion: 'private-rewrite-v1' };
+  }
+  if (dnsPath === 'not-run' && reasonCode === 'VERIFY_UNREACHABLE') {
+    return { dnsPath: 'not-run', reasonCode: 'VERIFY_UNREACHABLE', verifierVersion: 'private-rewrite-v1' };
+  }
+  if (dnsPath === 'uncertain') {
+    if (reasonCode === 'VERIFY_UNREACHABLE') return { dnsPath: 'uncertain', reasonCode: 'VERIFY_UNREACHABLE', verifierVersion: 'private-rewrite-v1' };
+    if (reasonCode === 'VERIFICATION_SERVICE_ERROR') return { dnsPath: 'uncertain', reasonCode: 'VERIFICATION_SERVICE_ERROR', verifierVersion: 'private-rewrite-v1' };
+    if (reasonCode === 'EVIDENCE_CONFLICT') return { dnsPath: 'uncertain', reasonCode: 'EVIDENCE_CONFLICT', verifierVersion: 'private-rewrite-v1' };
+    if (reasonCode === 'BYPASS_OR_CONTEXT_UNCERTAIN') return { dnsPath: 'uncertain', reasonCode: 'BYPASS_OR_CONTEXT_UNCERTAIN', verifierVersion: 'private-rewrite-v1' };
+    if (reasonCode === 'VERIFY_STALE') return { dnsPath: 'uncertain', reasonCode: 'VERIFY_STALE', verifierVersion: 'private-rewrite-v1' };
+  }
+  return null;
 }
 
 async function fetchWithTimeout(fetchImpl: FetchLike, input: string, init: RequestInit, timeoutMs: number): Promise<Response> {
