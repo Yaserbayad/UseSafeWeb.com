@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { CoreActionButton } from '@/components/core-action-button';
 import { CorePageGuard } from '@/components/core-page-guard';
 import { SetupPage, operationalMetadata } from '@/components/setup-page';
-import { classifyAutomatedChecks } from '@/lib/automated-verification';
+import { getCurrentAutomatedVerification } from '@/lib/automated-verification';
 import { evaluateProtection } from '@/lib/core-state-machine';
 import { getInstructionVariant, getJourneyContent, isLocale } from '@/lib/i18n';
 
@@ -23,16 +23,7 @@ export default async function Page({ params, searchParams }: {
   const instructionId = platform === 'iphone' ? 'INS-IOS-VERIFY-01' : 'INS-AND-VERIFY-01';
   const instruction = getInstructionVariant(locale, instructionId);
   const uncertaintyInstruction = getInstructionVariant(locale, 'INS-COMMON-UNCERTAIN-01');
-
-  // No approved browser-visible DNS-path verifier currently supplies fresh E1 evidence.
-  // Keep the production page fail-closed until a trusted internal producer is connected.
-  const automated = classifyAutomatedChecks({
-    support: 'unknown',
-    service: 'unknown',
-    dnsPath: 'not-run',
-    configured: true,
-    removed: false,
-  });
+  const automated = getCurrentAutomatedVerification();
   const evaluation = evaluateProtection(automated.evidence);
   const stateLabels = protectionContent.stateLabels as Record<string, string>;
   const reasonCopy = protectionContent.reasonCopy as Record<string, string>;
@@ -62,14 +53,16 @@ export default async function Page({ params, searchParams }: {
       </section>
       <div className="sw-actions">
         {automated.recovery === 'troubleshoot' ? (
-          <CoreActionButton
-            locale={locale}
-            deviceFamily={platform}
-            event={{ type: 'OPEN_TROUBLESHOOT' }}
-            href={`/${locale}/troubleshoot?platform=${platform}`}
-            label={protectionContent.troubleshootLabel}
-            dataAttribute="data-automated-recovery"
-          />
+          <span data-automated-recovery="">
+            <CoreActionButton
+              locale={locale}
+              deviceFamily={platform}
+              event={{ type: 'OPEN_TROUBLESHOOT' }}
+              href={`/${locale}/troubleshoot?platform=${platform}`}
+              label={protectionContent.troubleshootLabel}
+              dataAttribute="data-core-troubleshoot"
+            />
+          </span>
         ) : null}
         <CoreActionButton
           locale={locale}
