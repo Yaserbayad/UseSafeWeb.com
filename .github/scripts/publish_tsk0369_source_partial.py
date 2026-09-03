@@ -52,9 +52,9 @@ STATE.write_text(state_after.rstrip() + section + "\n", encoding="utf-8")
 EVIDENCE.write_text(
     f"""# TSK-0369 — Minimal support capture source implementation evidence
 
-**Evidence ID:** EVD-0369 source-implementation partial  
-**Date:** 2026-09-03  
-**Task runtime disposition:** TODO — source implementation verified; target-environment verification incomplete  
+**Evidence ID:** EVD-0369 source-implementation partial
+**Date:** 2026-09-03
+**Task runtime disposition:** TODO — source implementation verified; target-environment verification incomplete
 **Acceptance authority:** ACC-0369 / VER-0369 / EVD-0369
 
 ## Decision
