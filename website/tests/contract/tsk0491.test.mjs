@@ -85,7 +85,7 @@ test('TSK-0491 records pinned AdGuard supply-chain input, host package provider 
 
 test('TSK-0491 documents update ownership, severity handling, immutable inputs, and secret-safe change rules', () => {
   const policy = readRepo('.github/DEPENDENCY_SECURITY_POLICY.md');
-  assert.match(policy, /Owner:\s*Security/i);
+  assert.match(policy, /\*\*Owner:\*\*\s*Security/i);
   assert.match(policy, /critical|high/i);
   assert.match(policy, /block(?:s|ed)? promotion/i);
   assert.match(policy, /package-lock\.json/i);
