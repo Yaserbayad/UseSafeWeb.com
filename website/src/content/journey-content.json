@@ -1,0 +1,252 @@
+{
+  "schemaVersion": "1.0.0",
+  "defaultLocale": "en-GB",
+  "supportedLocales": ["en-GB", "tr-TR", "ar"],
+  "marketActivation": {
+    "en-GB": false,
+    "tr-TR": false,
+    "ar": false
+  },
+  "sections": {
+    "verify": {
+      "en-GB": {
+        "kicker": "Verification",
+        "title": "Check what is known before relying on protection",
+        "summary": "SafeWeb keeps parent-confirmed setup separate from technical verification. A configured setting is not proof that the intended DNS path is active.",
+        "noteTitle": "Fail-closed verification",
+        "noteBody": "If technical evidence is unavailable, stale, conflicting, or indeterminate, SafeWeb must not label the setup protected or verified.",
+        "actionLabel": "View Protection Map",
+        "dnsContinueLabel": "I saved this DNS setting — check protection"
+      },
+      "tr-TR": {
+        "kicker": "Doğrulama",
+        "title": "Korumaya güvenmeden önce neyin bilindiğini kontrol edin",
+        "summary": "SafeWeb, ebeveyn tarafından onaylanan kurulumu teknik doğrulamadan ayrı tutar. Bir ayarın yapılandırılmış olması, amaçlanan DNS yolunun etkin olduğunun kanıtı değildir.",
+        "noteTitle": "Başarısızlıkta güvenli doğrulama",
+        "noteBody": "Teknik kanıt kullanılamıyorsa, güncel değilse, çelişkiliyse veya belirsizse SafeWeb kurulumu korunuyor ya da doğrulanmış olarak etiketlememelidir.",
+        "actionLabel": "Koruma Haritasını görüntüle",
+        "dnsContinueLabel": "Bu DNS ayarını kaydettim — korumayı kontrol et"
+      },
+      "ar": {
+        "kicker": "التحقق",
+        "title": "تحقق مما هو معروف قبل الاعتماد على الحماية",
+        "summary": "يفصل SafeWeb بين الإعداد الذي أكده الوالد والتحقق التقني. وجود إعداد مُهيأ لا يثبت أن مسار DNS المقصود فعّال.",
+        "noteTitle": "تحقق يتوقف بأمان عند غياب الدليل",
+        "noteBody": "إذا كان الدليل التقني غير متاح أو قديماً أو متعارضاً أو غير حاسم، فلا يجوز لـ SafeWeb وصف الإعداد بأنه محمي أو تم التحقق منه.",
+        "actionLabel": "عرض خريطة الحماية",
+        "dnsContinueLabel": "حفظت إعداد DNS هذا — تحقق من الحماية"
+      }
+    },
+    "protection": {
+      "en-GB": {
+        "kicker": "Protection Map",
+        "title": "What is protected, what still needs proof, and what is not covered",
+        "summary": "SafeWeb separates parent-confirmed setup from technical verification. No account, journey completion, or configuration flag can manufacture a verified protection claim.",
+        "noteTitle": "Evidence first",
+        "noteBody": "Only fresh qualifying technical evidence can produce Protected / verified. Without that evidence, the state stays bounded by what is actually known.",
+        "deviceSetupLabel": "Device setup",
+        "dnsVerificationLabel": "DNS verification",
+        "otherServicesLabel": "Other services and apps",
+        "troubleshootLabel": "Troubleshoot",
+        "completeLabel": "Finish setup",
+        "stateLabels": {
+          "protected/verified": "Protection verified",
+          "configured/parent-confirmed": "Setup confirmed",
+          "action-needed": "Action needed",
+          "not-covered": "Not covered",
+          "uncertain/error": "Protection status could not be verified",
+          "removed": "Removed"
+        },
+        "reasonCopy": {
+          "default": "Review the current evidence before relying on this protection.",
+          "TECH_VERIFIED": "SafeWeb verified this protection step for this setup.",
+          "CONFIG_CONFIRMED_NO_TECH_VERIFY": "Protection has not yet been technically verified.",
+          "OUT_OF_SCOPE": "SafeWeb does not cover this on your current setup.",
+          "VERIFY_UNREACHABLE": "Retry verification or follow the troubleshooting steps before relying on this protection.",
+          "VERIFY_STALE": "The previous verification is no longer current. Verify again before relying on this protection.",
+          "EVIDENCE_CONFLICT": "The current technical result is indeterminate. Retry verification before relying on this protection.",
+          "REMEDIATION_REQUIRED": "Review this setup, correct the problem, then verify again.",
+          "TECH_VERIFY_NEGATIVE": "Review this setup, correct the problem, then verify again.",
+          "REMOVED_BY_PARENT": "This setup is no longer enrolled through SafeWeb.",
+          "REVOKED": "This setup is no longer enrolled through SafeWeb."
+        }
+      },
+      "tr-TR": {
+        "kicker": "Koruma Haritası",
+        "title": "Neyin korunduğunu, neyin hâlâ kanıt gerektirdiğini ve neyin kapsam dışında olduğunu görün",
+        "summary": "SafeWeb, ebeveyn tarafından onaylanan kurulumu teknik doğrulamadan ayrı tutar. Hesap, yolculuğun tamamlanması veya yapılandırma işareti doğrulanmış koruma kanıtı oluşturamaz.",
+        "noteTitle": "Önce kanıt",
+        "noteBody": "Yalnızca güncel ve uygun teknik kanıt Korundu / doğrulandı sonucunu oluşturabilir. Böyle bir kanıt yoksa durum yalnızca gerçekten bilinenlerle sınırlı kalır.",
+        "deviceSetupLabel": "Cihaz kurulumu",
+        "dnsVerificationLabel": "DNS doğrulaması",
+        "otherServicesLabel": "Diğer hizmetler ve uygulamalar",
+        "troubleshootLabel": "Sorun gider",
+        "completeLabel": "Kurulumu bitir",
+        "stateLabels": {
+          "protected/verified": "Koruma doğrulandı",
+          "configured/parent-confirmed": "Kurulum onaylandı",
+          "action-needed": "İşlem gerekli",
+          "not-covered": "Kapsam dışı",
+          "uncertain/error": "Koruma durumu doğrulanamadı",
+          "removed": "Kaldırıldı"
+        },
+        "reasonCopy": {
+          "default": "Bu korumaya güvenmeden önce mevcut kanıtı gözden geçirin.",
+          "TECH_VERIFIED": "SafeWeb bu kurulum için bu koruma adımını doğruladı.",
+          "CONFIG_CONFIRMED_NO_TECH_VERIFY": "Koruma henüz teknik olarak doğrulanmadı.",
+          "OUT_OF_SCOPE": "SafeWeb mevcut kurulumunuzda bunu kapsamıyor.",
+          "VERIFY_UNREACHABLE": "Bu korumaya güvenmeden önce doğrulamayı yeniden deneyin veya sorun giderme adımlarını izleyin.",
+          "VERIFY_STALE": "Önceki doğrulama artık güncel değil. Güvenmeden önce yeniden doğrulayın.",
+          "EVIDENCE_CONFLICT": "Mevcut teknik sonuç belirsiz. Güvenmeden önce doğrulamayı yeniden deneyin.",
+          "REMEDIATION_REQUIRED": "Bu kurulumu gözden geçirin, sorunu düzeltin ve ardından yeniden doğrulayın.",
+          "TECH_VERIFY_NEGATIVE": "Bu kurulumu gözden geçirin, sorunu düzeltin ve ardından yeniden doğrulayın.",
+          "REMOVED_BY_PARENT": "Bu kurulum artık SafeWeb üzerinden kayıtlı değildir.",
+          "REVOKED": "Bu kurulum artık SafeWeb üzerinden kayıtlı değildir."
+        }
+      },
+      "ar": {
+        "kicker": "خريطة الحماية",
+        "title": "ما الذي تتم حمايته، وما الذي ما زال يحتاج إلى دليل، وما الذي لا يشمله النطاق",
+        "summary": "يفصل SafeWeb بين الإعداد الذي أكده الوالد والتحقق التقني. لا يمكن للحساب أو إكمال المسار أو علامة الإعداد أن تنشئ ادعاء حماية تم التحقق منه.",
+        "noteTitle": "الدليل أولاً",
+        "noteBody": "فقط الدليل التقني الحديث والمؤهل يمكن أن ينتج حالة محمي / تم التحقق. من دون هذا الدليل تبقى الحالة محدودة بما هو معروف فعلاً.",
+        "deviceSetupLabel": "إعداد الجهاز",
+        "dnsVerificationLabel": "التحقق من DNS",
+        "otherServicesLabel": "الخدمات والتطبيقات الأخرى",
+        "troubleshootLabel": "استكشاف المشكلة",
+        "completeLabel": "إنهاء الإعداد",
+        "stateLabels": {
+          "protected/verified": "تم التحقق من الحماية",
+          "configured/parent-confirmed": "تم تأكيد الإعداد",
+          "action-needed": "يلزم إجراء",
+          "not-covered": "غير مشمول",
+          "uncertain/error": "تعذر التحقق من حالة الحماية",
+          "removed": "تمت الإزالة"
+        },
+        "reasonCopy": {
+          "default": "راجع الدليل الحالي قبل الاعتماد على هذه الحماية.",
+          "TECH_VERIFIED": "تحقق SafeWeb من خطوة الحماية هذه لهذا الإعداد.",
+          "CONFIG_CONFIRMED_NO_TECH_VERIFY": "لم يتم التحقق تقنياً من الحماية بعد.",
+          "OUT_OF_SCOPE": "لا يغطي SafeWeb هذا العنصر في إعدادك الحالي.",
+          "VERIFY_UNREACHABLE": "أعد محاولة التحقق أو اتبع خطوات استكشاف المشكلة قبل الاعتماد على هذه الحماية.",
+          "VERIFY_STALE": "لم يعد التحقق السابق حديثاً. تحقق مرة أخرى قبل الاعتماد على هذه الحماية.",
+          "EVIDENCE_CONFLICT": "النتيجة التقنية الحالية غير حاسمة. أعد التحقق قبل الاعتماد على هذه الحماية.",
+          "REMEDIATION_REQUIRED": "راجع هذا الإعداد وصحح المشكلة ثم تحقق مرة أخرى.",
+          "TECH_VERIFY_NEGATIVE": "راجع هذا الإعداد وصحح المشكلة ثم تحقق مرة أخرى.",
+          "REMOVED_BY_PARENT": "لم يعد هذا الإعداد مسجلاً عبر SafeWeb.",
+          "REVOKED": "لم يعد هذا الإعداد مسجلاً عبر SafeWeb."
+        }
+      }
+    },
+    "troubleshoot": {
+      "en-GB": {
+        "kicker": "Troubleshooting",
+        "title": "Protection could not be fully verified",
+        "summary": "Review the supported setup, confirm the DNS setting is still present, and retry only when the condition or available evidence has changed.",
+        "noteTitle": "Do not guess",
+        "noteBody": "An unavailable verification result stays uncertain. It does not become protected because setup was completed.",
+        "actionLabel": "Recovery and removal options"
+      },
+      "tr-TR": {
+        "kicker": "Sorun giderme",
+        "title": "Koruma tamamen doğrulanamadı",
+        "summary": "Desteklenen kurulumu gözden geçirin, DNS ayarının hâlâ mevcut olduğunu doğrulayın ve yalnızca koşul veya mevcut kanıt değiştiğinde yeniden deneyin.",
+        "noteTitle": "Tahmin etmeyin",
+        "noteBody": "Kullanılamayan bir doğrulama sonucu belirsiz kalır. Kurulum tamamlandı diye korunuyor durumuna geçmez.",
+        "actionLabel": "Kurtarma ve kaldırma seçenekleri"
+      },
+      "ar": {
+        "kicker": "استكشاف المشكلة",
+        "title": "تعذر التحقق الكامل من الحماية",
+        "summary": "راجع الإعداد المدعوم، وتأكد من أن إعداد DNS ما زال موجوداً، ولا تُعد المحاولة إلا عندما تتغير الحالة أو يتوفر دليل جديد.",
+        "noteTitle": "لا تخمّن",
+        "noteBody": "نتيجة التحقق غير المتاحة تبقى غير مؤكدة. لا تصبح محمية لمجرد اكتمال الإعداد.",
+        "actionLabel": "خيارات الاسترداد والإزالة"
+      }
+    },
+    "recover": {
+      "en-GB": {
+        "kicker": "Recovery and removal",
+        "title": "Recover safely or remove this setup",
+        "summary": "If this setup is no longer wanted or cannot be made trustworthy, use the current platform-specific recovery or removal path rather than treating an uncertain state as protected.",
+        "noteTitle": "Removal is explicit",
+        "noteBody": "Removing this setup changes the Protection Map to Removed. Reinstalling later must be verified again before any verified protection claim.",
+        "actionLabel": "I removed this setup"
+      },
+      "tr-TR": {
+        "kicker": "Kurtarma ve kaldırma",
+        "title": "Güvenli şekilde kurtarın veya bu kurulumu kaldırın",
+        "summary": "Bu kurulum artık istenmiyorsa veya güvenilir hâle getirilemiyorsa belirsiz bir durumu korunuyor saymak yerine mevcut platforma özel kurtarma veya kaldırma yolunu kullanın.",
+        "noteTitle": "Kaldırma açıkça yapılır",
+        "noteBody": "Bu kurulumu kaldırmak Koruma Haritasını Kaldırıldı durumuna geçirir. Daha sonra yeniden kurulum yapılırsa doğrulanmış koruma iddiasından önce yeniden doğrulama gerekir.",
+        "actionLabel": "Bu kurulumu kaldırdım"
+      },
+      "ar": {
+        "kicker": "الاسترداد والإزالة",
+        "title": "استعد بأمان أو أزل هذا الإعداد",
+        "summary": "إذا لم يعد هذا الإعداد مطلوباً أو تعذر جعله موثوقاً، فاستخدم مسار الاسترداد أو الإزالة الحالي الخاص بالمنصة بدلاً من اعتبار الحالة غير المؤكدة محمية.",
+        "noteTitle": "الإزالة إجراء صريح",
+        "noteBody": "تغيير هذا الإعداد إلى حالة تمت الإزالة في خريطة الحماية يعني أن أي إعادة تثبيت لاحقة تحتاج إلى تحقق جديد قبل أي ادعاء حماية تم التحقق منه.",
+        "actionLabel": "أزلت هذا الإعداد"
+      }
+    },
+    "removed": {
+      "en-GB": {
+        "kicker": "Removed",
+        "title": "This setup is marked removed",
+        "summary": "SafeWeb no longer treats this device setup as enrolled. Starting again creates a new accountless setup path; verification must be earned again.",
+        "noteTitle": "No stale verification",
+        "noteBody": "A previous verification result cannot be reused after removal or reinstall.",
+        "actionLabel": "Start setup again"
+      },
+      "tr-TR": {
+        "kicker": "Kaldırıldı",
+        "title": "Bu kurulum kaldırılmış olarak işaretlendi",
+        "summary": "SafeWeb artık bu cihaz kurulumunu kayıtlı saymaz. Yeniden başlamak yeni bir hesapsız kurulum yolu oluşturur; doğrulamanın yeniden kazanılması gerekir.",
+        "noteTitle": "Eski doğrulama kullanılmaz",
+        "noteBody": "Önceki bir doğrulama sonucu kaldırma veya yeniden kurulumdan sonra tekrar kullanılamaz.",
+        "actionLabel": "Kurulumu yeniden başlat"
+      },
+      "ar": {
+        "kicker": "تمت الإزالة",
+        "title": "تم وضع علامة تمت الإزالة على هذا الإعداد",
+        "summary": "لم يعد SafeWeb يعتبر إعداد هذا الجهاز مسجلاً. البدء من جديد ينشئ مسار إعداد جديداً من دون حساب، ويجب اكتساب التحقق من جديد.",
+        "noteTitle": "لا يُعاد استخدام تحقق قديم",
+        "noteBody": "لا يمكن إعادة استخدام نتيجة تحقق سابقة بعد الإزالة أو إعادة التثبيت.",
+        "actionLabel": "بدء الإعداد من جديد"
+      }
+    },
+    "complete": {
+      "en-GB": {
+        "kicker": "Complete",
+        "title": "Setup complete",
+        "summary": "Setup complete. Review what SafeWeb verified, what you confirmed, what needs action, and what is not covered.",
+        "noteTitle": "Accountless core remains complete",
+        "noteBody": "You do not need an account to finish, review, troubleshoot, recover, or remove the core setup.",
+        "accountTitle": "Optional account capability deferred",
+        "accountBody": "Persistent account and dashboard functionality is not active under the current owner-approved boundary. The accountless core remains available without login.",
+        "backLabel": "Back to setup start"
+      },
+      "tr-TR": {
+        "kicker": "Tamamlandı",
+        "title": "Kurulum tamamlandı",
+        "summary": "Kurulum tamamlandı. SafeWeb'in neyi doğruladığını, sizin neyi onayladığınızı, hangi işlemlerin gerektiğini ve nelerin kapsam dışında olduğunu gözden geçirin.",
+        "noteTitle": "Hesapsız temel akış tamamlanabilir",
+        "noteBody": "Temel kurulumu bitirmek, gözden geçirmek, sorun gidermek, kurtarmak veya kaldırmak için hesaba ihtiyacınız yoktur.",
+        "accountTitle": "İsteğe bağlı hesap özelliği ertelendi",
+        "accountBody": "Kalıcı hesap ve pano işlevi mevcut sahip onaylı sınır kapsamında etkin değildir. Hesapsız temel akış oturum açmadan kullanılmaya devam eder.",
+        "backLabel": "Kurulum başlangıcına dön"
+      },
+      "ar": {
+        "kicker": "اكتمل",
+        "title": "اكتمل الإعداد",
+        "summary": "اكتمل الإعداد. راجع ما تحقّق منه SafeWeb، وما أكدته أنت، وما يحتاج إلى إجراء، وما لا يشمله النطاق.",
+        "noteTitle": "يبقى المسار الأساسي مكتملاً من دون حساب",
+        "noteBody": "لا تحتاج إلى حساب لإنهاء الإعداد الأساسي أو مراجعته أو استكشاف مشكلاته أو استرداده أو إزالته.",
+        "accountTitle": "ميزة الحساب الاختيارية مؤجلة",
+        "accountBody": "وظيفة الحساب الدائم ولوحة المعلومات غير نشطة ضمن الحدود الحالية التي وافق عليها المالك. يبقى المسار الأساسي من دون حساب متاحاً من دون تسجيل الدخول.",
+        "backLabel": "العودة إلى بداية الإعداد"
+      }
+    }
+  }
+}
