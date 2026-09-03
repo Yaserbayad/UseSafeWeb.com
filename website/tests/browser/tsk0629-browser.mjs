@@ -50,7 +50,7 @@ for (const [locale, deviceFamily] of [['en-GB', 'android'], ['tr-TR', 'iphone'],
     const panel = await waitForCheck(page, '[data-verification-outcome]', 'uncertain');
     assert.equal(await panel.getAttribute('data-parent-confirmation'), 'confirmed');
     assert.equal(await panel.getAttribute('data-protection-state'), 'uncertain/error');
-    assert.equal(await page.locator('[data-core-verify-recovery]').count(), 1);
+    assert.equal(await page.locator('[data-core-troubleshoot]').count(), 1);
     assert.equal((await page.locator('body').innerText()).includes('Protection verified'), false);
     await context.close();
   });
@@ -67,7 +67,7 @@ await record('URL/query input cannot manufacture a positive verification result'
   await context.close();
 });
 
-await record('Protection Map revalidates proof and remains fail-closed when no trusted producer is available', async () => {
+await record('Protection Map performs a fresh check and remains fail-closed when no trusted producer is available', async () => {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await context.newPage();
   await setPhase(page, 'en-GB', 'protection', 'android');
