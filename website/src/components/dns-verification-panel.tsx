@@ -52,7 +52,9 @@ export function DnsVerificationPanel({
       const result = await runDnsVerification(state.scope);
       if (!active) return;
       if (result) {
-        writeDnsVerificationProof(window.sessionStorage, result.proof);
+        if (result.check.dnsPath === 'verified-fresh') {
+          writeDnsVerificationProof(window.sessionStorage, result.proof);
+        }
         setOutcome(outcomeFromCheck(result.check));
       } else {
         setOutcome(outcomeFromCheck(null));
