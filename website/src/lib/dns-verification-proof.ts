@@ -2,10 +2,13 @@ import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 
 export const DNS_VERIFICATION_SUFFIX = 'verify.usesafeweb.com';
 export const DNS_VERIFICATION_PROTOCOL = 'usesafeweb-dns-path-v1';
+export const DNS_PROBE_REQUEST_PROTOCOL = 'usesafeweb-dns-probe-request-v1';
 export const DNS_VERIFIER_VERSION = 'private-rewrite-v1';
 export const DNS_VERIFICATION_MAX_LIFETIME_MS = 120_000;
+export const DNS_PROBE_REQUEST_MAX_LIFETIME_MS = 120_000;
 export const DNS_VERIFICATION_MAX_TOKEN_BYTES = 2048;
 export const DNS_VERIFICATION_MAX_OBSERVATIONS = 8;
+export const DNS_VERIFICATION_MAX_HTTP_BODY_BYTES = 4096;
 
 export type DnsVerificationOutcome = 'verified' | 'failed' | 'uncertain';
 export type DnsPathCheck = 'verified-fresh' | 'verified-stale' | 'failed' | 'uncertain' | 'not-run';
@@ -36,6 +39,28 @@ export type VerifiedDnsVerification = {
   verifierVersion: typeof DNS_VERIFIER_VERSION;
 };
 
+type DnsProbeRequestPayload = {
+  protocol: typeof DNS_PROBE_REQUEST_PROTOCOL;
+  scope: string;
+  challenge: string;
+  issuedAt: number;
+  expiresAt: number;
+};
+
+export type DnsProbeRequest = {
+  challenge: string;
+  probeHost: string;
+  requestToken: string;
+  expiresAt: number;
+};
+
+export type VerifiedDnsProbeRequest = {
+  scope: string;
+  challenge: string;
+  probeHost: string;
+  expiresAt: number;
+};
+
 const observationKeys = [
   'challenge',
   'expiresAt',
@@ -46,6 +71,7 @@ const observationKeys = [
   'scope',
   'verifierVersion',
 ];
+const probeRequestKeys = ['challenge', 'expiresAt', 'issuedAt', 'protocol', 'scope'];
 const challengePattern = /^[0-9a-f]{32}$/;
 const allowedOutcomeReasons: Record<DnsVerificationOutcome, ReadonlySet<DnsVerificationReasonCode>> = {
   verified: new Set(['TECH_VERIFIED']),
@@ -55,6 +81,10 @@ const allowedOutcomeReasons: Record<DnsVerificationOutcome, ReadonlySet<DnsVerif
 
 function invalidObservation(): never {
   throw new TypeError('invalid dns verification observation');
+}
+
+function invalidProbeRequest(): never {
+  throw new TypeError('invalid dns probe request');
 }
 
 function validateSigningSecret(secret: string): void {
@@ -89,6 +119,27 @@ function parseObservation(value: unknown): DnsVerificationObservation {
   };
 }
 
+function parseProbeRequest(value: unknown): DnsProbeRequestPayload {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) invalidProbeRequest();
+  const candidate = value as Record<string, unknown>;
+  const keys = Object.keys(candidate).sort();
+  if (keys.length !== probeRequestKeys.length || keys.some((key, index) => key !== probeRequestKeys[index])) invalidProbeRequest();
+  if (candidate.protocol !== DNS_PROBE_REQUEST_PROTOCOL) invalidProbeRequest();
+  if (typeof candidate.scope !== 'string' || !challengePattern.test(candidate.scope)) invalidProbeRequest();
+  if (typeof candidate.challenge !== 'string' || !challengePattern.test(candidate.challenge)) invalidProbeRequest();
+  if (!Number.isSafeInteger(candidate.issuedAt) || !Number.isSafeInteger(candidate.expiresAt)) invalidProbeRequest();
+  const issuedAt = candidate.issuedAt as number;
+  const expiresAt = candidate.expiresAt as number;
+  if (issuedAt < 0 || expiresAt <= issuedAt || expiresAt - issuedAt > DNS_PROBE_REQUEST_MAX_LIFETIME_MS) invalidProbeRequest();
+  return {
+    protocol: DNS_PROBE_REQUEST_PROTOCOL,
+    scope: candidate.scope,
+    challenge: candidate.challenge,
+    issuedAt,
+    expiresAt,
+  };
+}
+
 function serializeObservation(value: DnsVerificationObservation): string {
   return JSON.stringify({
     protocol: value.protocol,
@@ -102,9 +153,27 @@ function serializeObservation(value: DnsVerificationObservation): string {
   });
 }
 
+function serializeProbeRequest(value: DnsProbeRequestPayload): string {
+  return JSON.stringify({
+    protocol: value.protocol,
+    scope: value.scope,
+    challenge: value.challenge,
+    issuedAt: value.issuedAt,
+    expiresAt: value.expiresAt,
+  });
+}
+
 function signatureFor(payload: string, secret: string): string {
   validateSigningSecret(secret);
   return createHmac('sha256', secret).update(payload, 'utf8').digest('base64url');
+}
+
+function probeRequestSignatureFor(payload: string, secret: string): string {
+  validateSigningSecret(secret);
+  return createHmac('sha256', secret)
+    .update(`${DNS_PROBE_REQUEST_PROTOCOL}\0`, 'utf8')
+    .update(payload, 'utf8')
+    .digest('base64url');
 }
 
 function safeSignatureEqual(actual: string, expected: string): boolean {
@@ -134,6 +203,14 @@ function resultFromObservation(observation: DnsVerificationObservation, nowMs: n
     return { dnsPath: 'failed', reasonCode: 'TECH_VERIFY_NEGATIVE', observedAt: observation.observedAt, verifierVersion: DNS_VERIFIER_VERSION };
   }
   return { dnsPath: 'uncertain', reasonCode: observation.reasonCode, observedAt: observation.observedAt, verifierVersion: DNS_VERIFIER_VERSION };
+}
+
+function normalizeProbeHost(value: string): string | null {
+  if (typeof value !== 'string' || value.length > 253) return null;
+  const lowered = value.toLowerCase();
+  const host = lowered.endsWith(':443') ? lowered.slice(0, -4) : lowered;
+  if (host.includes(':') || host.endsWith('.')) return null;
+  return host;
 }
 
 export function createDnsVerificationChallenge(): string {
@@ -182,6 +259,78 @@ export function verifyDnsVerificationObservation(
   } catch {
     return null;
   }
+}
+
+export function createDnsProbeRequest(scope: string, secret: string, nowMs: number): DnsProbeRequest {
+  validateSigningSecret(secret);
+  if (typeof scope !== 'string' || !challengePattern.test(scope) || !Number.isSafeInteger(nowMs) || nowMs < 0) {
+    throw new TypeError('invalid dns probe request input');
+  }
+  const challenge = createDnsVerificationChallenge();
+  const expiresAt = nowMs + DNS_PROBE_REQUEST_MAX_LIFETIME_MS;
+  const value: DnsProbeRequestPayload = {
+    protocol: DNS_PROBE_REQUEST_PROTOCOL,
+    scope,
+    challenge,
+    issuedAt: nowMs,
+    expiresAt,
+  };
+  const payload = Buffer.from(serializeProbeRequest(value), 'utf8').toString('base64url');
+  const requestToken = `${payload}.${probeRequestSignatureFor(payload, secret)}`;
+  if (Buffer.byteLength(requestToken, 'utf8') > DNS_VERIFICATION_MAX_TOKEN_BYTES) {
+    throw new Error('dns probe request token exceeds configured limit');
+  }
+  return { challenge, probeHost: buildDnsProbeHostname(challenge), requestToken, expiresAt };
+}
+
+export function verifyDnsProbeRequest(token: string, secret: string, nowMs: number): VerifiedDnsProbeRequest | null {
+  try {
+    validateSigningSecret(secret);
+    if (
+      typeof token !== 'string'
+      || Buffer.byteLength(token, 'utf8') > DNS_VERIFICATION_MAX_TOKEN_BYTES
+      || !Number.isSafeInteger(nowMs)
+      || nowMs < 0
+    ) return null;
+    const parts = token.split('.');
+    if (parts.length !== 2 || !parts[0] || !parts[1]) return null;
+    const [payload, signature] = parts;
+    if (!safeSignatureEqual(signature, probeRequestSignatureFor(payload, secret))) return null;
+    const parsed = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    const request = parseProbeRequest(parsed);
+    if (request.issuedAt > nowMs + 5_000 || nowMs >= request.expiresAt) return null;
+    return {
+      scope: request.scope,
+      challenge: request.challenge,
+      probeHost: buildDnsProbeHostname(request.challenge),
+      expiresAt: request.expiresAt,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function createDnsVerificationObservationFromProbeRequest(
+  requestToken: string,
+  requestHost: string,
+  secret: string,
+  nowMs: number,
+): string | null {
+  const request = verifyDnsProbeRequest(requestToken, secret, nowMs);
+  if (!request) return null;
+  const host = normalizeProbeHost(requestHost);
+  if (host !== request.probeHost) return null;
+  const expiresAt = Math.min(request.expiresAt, nowMs + DNS_VERIFICATION_MAX_LIFETIME_MS);
+  return signDnsVerificationObservation({
+    protocol: DNS_VERIFICATION_PROTOCOL,
+    verifierVersion: DNS_VERIFIER_VERSION,
+    scope: request.scope,
+    challenge: request.challenge,
+    outcome: 'verified',
+    reasonCode: 'TECH_VERIFIED',
+    observedAt: nowMs,
+    expiresAt,
+  }, secret);
 }
 
 function uncertainResult(reasonCode: DnsVerificationReasonCode = 'EVIDENCE_CONFLICT'): VerifiedDnsVerification {
