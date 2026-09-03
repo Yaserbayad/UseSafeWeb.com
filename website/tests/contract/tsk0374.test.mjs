@@ -69,7 +69,7 @@ test('platform and purpose map only to approved instruction IDs', async () => {
   assert.equal(api.resolveInstructionId('common', 'setup'), null);
 });
 
-test('release selection and delivery fail closed for stale, withdrawn, unknown, missing, or integrity-mismatched content', async () => {
+test('release selection and delivery fail closed for stale, withdrawn, malformed, unknown, missing, or integrity-mismatched content', async () => {
   const api = await loadApi();
   const current = {
     status: 'current',
@@ -88,6 +88,7 @@ test('release selection and delivery fail closed for stale, withdrawn, unknown, 
   assert.deepEqual(api.selectContentRelease(releases, 'missing'), { status: 'missing_release', releaseId: 'missing' });
   assert.equal(api.selectContentRelease({ stale: { ...current, status: 'stale' } }, 'stale').status, 'stale');
   assert.equal(api.selectContentRelease({ gone: { ...current, status: 'withdrawn' } }, 'gone').status, 'withdrawn');
+  assert.equal(api.selectContentRelease({ bad: { ...current, status: 'unexpected' } }, 'bad').status, 'invalid_release');
 
   const metadata = { schemaVersion: '1.0.0', sourceArtifact: 'artifact', sourceCommit: 'commit', lastVerified: '2026-09-02' };
   assert.equal(api.validateBindingsMetadata(current, metadata), true);
@@ -122,6 +123,23 @@ test('i18n delivery integration exposes release/status metadata and operational 
     assert.match(source, /data-content-status/);
     assert.equal(/const instructionId\s*=/.test(source), false, `${path} still hard-codes instruction selection`);
   }
+});
+
+test('non-ready delivery is visibly fail-closed and retains a localized safe recovery route', () => {
+  const setup = read(pagePaths[0]);
+  assert.match(setup, /\{instruction\.status\}/, 'setup must visibly expose its non-ready content status');
+  assert.match(setup, /href: `\/\$\{locale\}\/help`/, 'setup failure must retain Help');
+
+  const verify = read(pagePaths[1]);
+  assert.match(verify, /\{failed\.status\}/, 'verify must visibly expose its non-ready content status');
+  assert.match(verify, /protectionContent\.troubleshootLabel/, 'verify failure must retain localized troubleshooting');
+  assert.match(verify, /href: `\/\$\{locale\}\/troubleshoot\?platform=\$\{platform\}`/, 'verify failure must route to troubleshooting');
+
+  const recover = read(pagePaths[2]);
+  assert.match(recover, /getContent/, 'recovery failure needs localized shell actions');
+  assert.match(recover, /\{instruction\.status\}/, 'recovery must visibly expose its non-ready content status');
+  assert.match(recover, /href: `\/\$\{locale\}\/help`/, 'recovery failure must retain Help');
+  assert.match(recover, /href: `\/\$\{locale\}\/setup\/route`/, 'recovery failure must retain a safe restart route');
 });
 
 test('versioned delivery has no remote content transport, persistence, identity, or analytics side channel', () => {
