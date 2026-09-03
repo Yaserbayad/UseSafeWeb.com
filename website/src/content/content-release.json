@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "1.0.0",
+  "activeReleaseId": "instructions-2026-09-02",
+  "rollbackPolicy": "pin-known-release",
+  "releases": {
+    "instructions-2026-09-02": {
+      "status": "current",
+      "sourceCatalogueTask": "TSK-0323",
+      "sourceCatalogueVersion": "1.0.1-post-cr0007",
+      "sourceCatalogueBlob": "79753cc4916d38ed8d2f0ed6d01890e62df3fb04",
+      "instructionBindingsBlob": "32441b56f5b2daf2c9924584685fd35fb416438e",
+      "instructionBindingsSchemaVersion": "1.0.0",
+      "sourceArtifact": "TSK_0307_POST_CR0008_CURRENT_SOURCE_BACKED_INSTRUCTION_CATALOGUE_REVALIDATION_2026-09-02.md",
+      "sourceCommit": "330e9d13b9d479212ca6c49df3431f19f7107ba5",
+      "lastVerified": "2026-09-02"
+    }
+  }
+}
