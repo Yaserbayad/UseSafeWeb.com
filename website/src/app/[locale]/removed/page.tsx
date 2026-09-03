@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { CoreActionButton } from '@/components/core-action-button';
 import { CorePageGuard } from '@/components/core-page-guard';
 import { SetupPage, operationalMetadata } from '@/components/setup-page';
-import { isLocale } from '@/lib/i18n';
+import { getJourneyContent, isLocale } from '@/lib/i18n';
 
 export const metadata = operationalMetadata;
 
@@ -16,13 +16,15 @@ export default async function Page({ params, searchParams }: {
   const platform = typeof query.platform === 'string' ? query.platform : undefined;
   if (platform !== 'android' && platform !== 'iphone') notFound();
 
+  const content = getJourneyContent(locale, 'removed').value;
+
   return (
     <SetupPage
-      kicker="Removed"
-      title="This setup is marked removed"
-      summary="SafeWeb no longer treats this device setup as enrolled. Starting again creates a new accountless setup path; verification must be earned again."
-      noteTitle="No stale verification"
-      noteBody="A previous verification result cannot be reused after removal or reinstall."
+      kicker={content.kicker}
+      title={content.title}
+      summary={content.summary}
+      noteTitle={content.noteTitle}
+      noteBody={content.noteBody}
     >
       <CorePageGuard locale={locale} expectedPhase="removed" />
       <div className="sw-actions">
@@ -31,7 +33,7 @@ export default async function Page({ params, searchParams }: {
           deviceFamily={platform}
           event={{ type: 'RESTART_SETUP' }}
           href={`/${locale}/setup/route`}
-          label="Start setup again"
+          label={content.actionLabel}
           dataAttribute="data-core-restart"
         />
       </div>

@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { CoreActionButton } from '@/components/core-action-button';
 import { CorePageGuard } from '@/components/core-page-guard';
 import { SetupPage, operationalMetadata } from '@/components/setup-page';
-import { isLocale } from '@/lib/i18n';
+import { getJourneyContent, isLocale } from '@/lib/i18n';
 
 export const metadata = operationalMetadata;
 
@@ -16,13 +16,15 @@ export default async function Page({ params, searchParams }: {
   const platform = typeof query.platform === 'string' ? query.platform : undefined;
   if (platform !== 'android' && platform !== 'iphone') notFound();
 
+  const content = getJourneyContent(locale, 'troubleshoot').value;
+
   return (
     <SetupPage
-      kicker="Troubleshooting"
-      title="Protection could not be fully verified"
-      summary="Review the supported setup, confirm the DNS setting is still present, and retry later when qualifying technical verification is available."
-      noteTitle="Do not guess"
-      noteBody="An unavailable verification result stays uncertain. It does not become protected because setup was completed."
+      kicker={content.kicker}
+      title={content.title}
+      summary={content.summary}
+      noteTitle={content.noteTitle}
+      noteBody={content.noteBody}
     >
       <CorePageGuard locale={locale} expectedPhase="troubleshoot" />
       <div className="sw-actions">
@@ -31,7 +33,7 @@ export default async function Page({ params, searchParams }: {
           deviceFamily={platform}
           event={{ type: 'OPEN_RECOVERY' }}
           href={`/${locale}/recover?platform=${platform}`}
-          label="Recovery and removal options"
+          label={content.actionLabel}
           dataAttribute="data-core-recover"
         />
       </div>

@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { CoreActionButton } from '@/components/core-action-button';
 import { CorePageGuard } from '@/components/core-page-guard';
 import { SetupPage, operationalMetadata } from '@/components/setup-page';
-import { isLocale } from '@/lib/i18n';
+import { getInstructionVariant, getJourneyContent, isLocale } from '@/lib/i18n';
 
 export const metadata = operationalMetadata;
 
@@ -16,22 +16,29 @@ export default async function Page({ params, searchParams }: {
   const platform = typeof query.platform === 'string' ? query.platform : undefined;
   if (platform !== 'android' && platform !== 'iphone') notFound();
 
+  const content = getJourneyContent(locale, 'recover').value;
+  const instructionId = platform === 'iphone' ? 'INS-IOS-REMOVE-01' : 'INS-AND-REMOVE-01';
+  const instruction = getInstructionVariant(locale, instructionId);
+
   return (
     <SetupPage
-      kicker="Recovery and removal"
-      title="Recover safely or remove this setup"
-      summary="If this setup is no longer wanted or cannot be made trustworthy, remove the device configuration rather than treating an uncertain state as protected."
-      noteTitle="Removal is explicit"
-      noteBody="Removing this setup changes the Protection Map to Removed. Reinstalling later must be verified again before any verified protection claim."
+      kicker={content.kicker}
+      title={content.title}
+      summary={content.summary}
+      noteTitle={content.noteTitle}
+      noteBody={content.noteBody}
     >
       <CorePageGuard locale={locale} expectedPhase="recover" />
+      <p data-instruction-id={instruction.instructionId} data-instruction-source-locale={instruction.sourceLocale}>
+        {instruction.value}
+      </p>
       <div className="sw-actions">
         <CoreActionButton
           locale={locale}
           deviceFamily={platform}
           event={{ type: 'REMOVE_CONFIGURATION' }}
           href={`/${locale}/removed?platform=${platform}`}
-          label="I removed this setup"
+          label={content.actionLabel}
           dataAttribute="data-core-remove"
         />
       </div>

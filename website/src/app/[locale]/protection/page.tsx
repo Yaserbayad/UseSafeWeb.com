@@ -3,24 +3,9 @@ import { CoreActionButton } from '@/components/core-action-button';
 import { CorePageGuard } from '@/components/core-page-guard';
 import { SetupPage, operationalMetadata } from '@/components/setup-page';
 import { evaluateProtection, type ProtectionEvidence } from '@/lib/core-state-machine';
-import { isLocale } from '@/lib/i18n';
+import { getJourneyContent, isLocale } from '@/lib/i18n';
 
 export const metadata = operationalMetadata;
-
-const evidenceRows: Array<{ label: string; evidence: ProtectionEvidence }> = [
-  {
-    label: 'Device setup',
-    evidence: { coverage: 'covered', configured: true, technical: null, action: null, uncertainty: null, removal: null },
-  },
-  {
-    label: 'DNS verification',
-    evidence: { coverage: 'covered', configured: true, technical: null, action: null, uncertainty: 'VERIFY_UNREACHABLE', removal: null },
-  },
-  {
-    label: 'Other services and apps',
-    evidence: { coverage: 'not-covered', configured: false, technical: null, action: null, uncertainty: null, removal: null },
-  },
-];
 
 export default async function Page({ params, searchParams }: {
   params: Promise<{ locale: string }>;
@@ -32,23 +17,42 @@ export default async function Page({ params, searchParams }: {
   const platform = typeof query.platform === 'string' ? query.platform : undefined;
   if (platform !== 'android' && platform !== 'iphone') notFound();
 
+  const content = getJourneyContent(locale, 'protection').value;
+  const evidenceRows: Array<{ label: string; evidence: ProtectionEvidence }> = [
+    {
+      label: content.deviceSetupLabel,
+      evidence: { coverage: 'covered', configured: true, technical: null, action: null, uncertainty: null, removal: null },
+    },
+    {
+      label: content.dnsVerificationLabel,
+      evidence: { coverage: 'covered', configured: true, technical: null, action: null, uncertainty: 'VERIFY_UNREACHABLE', removal: null },
+    },
+    {
+      label: content.otherServicesLabel,
+      evidence: { coverage: 'not-covered', configured: false, technical: null, action: null, uncertainty: null, removal: null },
+    },
+  ];
+  const stateLabels = content.stateLabels as Record<string, string>;
+  const reasonCopy = content.reasonCopy as Record<string, string>;
+
   return (
     <SetupPage
-      kicker="Protection Map"
-      title="What is protected, what still needs proof, and what is not covered"
-      summary="SafeWeb separates parent-confirmed setup from technical verification. No account, journey completion, or configuration flag can manufacture a verified protection claim."
-      noteTitle="Evidence first"
-      noteBody="Only fresh qualifying technical evidence can produce Protected / verified. This task does not have that evidence yet."
+      kicker={content.kicker}
+      title={content.title}
+      summary={content.summary}
+      noteTitle={content.noteTitle}
+      noteBody={content.noteBody}
     >
       <CorePageGuard locale={locale} expectedPhase="protection" />
       <div className="sw-card-grid">
         {evidenceRows.map(({ label, evidence }) => {
           const result = evaluateProtection(evidence);
+          const supporting = result.action ?? reasonCopy[result.reasonCode] ?? reasonCopy.default;
           return (
             <section className="sw-card" data-protection-state={result.state} key={label}>
               <h2>{label}</h2>
-              <p><strong>{result.primary}</strong></p>
-              <p>{result.supporting}</p>
+              <p><strong>{stateLabels[result.state]}</strong></p>
+              <p>{supporting}</p>
               <p className="sw-technical">{result.reasonCode}</p>
             </section>
           );
@@ -60,7 +64,7 @@ export default async function Page({ params, searchParams }: {
           deviceFamily={platform}
           event={{ type: 'OPEN_TROUBLESHOOT' }}
           href={`/${locale}/troubleshoot?platform=${platform}`}
-          label="Troubleshoot"
+          label={content.troubleshootLabel}
           dataAttribute="data-core-troubleshoot"
         />
         <CoreActionButton
@@ -68,7 +72,7 @@ export default async function Page({ params, searchParams }: {
           deviceFamily={platform}
           event={{ type: 'COMPLETE' }}
           href={`/${locale}/complete?platform=${platform}`}
-          label="Finish setup"
+          label={content.completeLabel}
           dataAttribute="data-core-complete"
           secondary
         />
