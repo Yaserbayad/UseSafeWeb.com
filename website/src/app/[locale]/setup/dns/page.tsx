@@ -30,16 +30,16 @@ export default async function Page({
       <SetupPage
         kicker={c.dns.kicker}
         title={isIphone ? c.dns.iphoneTitle : c.dns.androidTitle}
-        summary={c.dns.noteBody}
-        noteTitle={c.dns.noteTitle}
-        noteBody={c.dns.noteBody}
+        summary={c.route.noteBody}
+        noteTitle={c.route.noteTitle}
+        noteBody={c.route.noteBody}
         actions={[
           { href: `/${locale}/help`, label: c.dns.helpLabel, secondary: true },
           { href: `/${locale}/setup/route`, label: c.dns.backLabel, secondary: true },
         ]}
       >
         <p data-content-release={instruction.releaseId} data-content-status={instruction.status}>
-          {c.dns.noteBody}
+          <span className="sw-technical">{instruction.status}</span> {c.route.noteBody}
         </p>
       </SetupPage>
     );
