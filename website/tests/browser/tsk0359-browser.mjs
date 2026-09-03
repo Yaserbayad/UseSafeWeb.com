@@ -7,6 +7,7 @@ const require = createRequire(import.meta.url);
 const axeSource = readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8');
 const journey = JSON.parse(readFileSync(new URL('../../src/content/journey-content.json', import.meta.url), 'utf8'));
 const bindings = JSON.parse(readFileSync(new URL('../../src/content/instruction-bindings.json', import.meta.url), 'utf8'));
+const localeManifest = JSON.parse(readFileSync(new URL('../../src/content/locale-manifest.json', import.meta.url), 'utf8'));
 const base = process.env.BASE_URL ?? 'http://127.0.0.1:3000';
 const coreKey = 'usesafeweb:core:v1';
 const locales = [
@@ -111,7 +112,7 @@ await record('Arabic TSK-0359 operational page remains WCAG 2.2 AA and RTL', asy
 });
 
 for (const locale of locales) {
-  assert.equal(journey.marketActivation[locale.id], false, `${locale.id} language availability cannot imply market activation`);
+  assert.equal(localeManifest.locales[locale.id].marketActivation, false, `${locale.id} language availability cannot imply market activation`);
 }
 
 await browser.close();
