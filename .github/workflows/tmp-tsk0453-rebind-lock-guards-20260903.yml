@@ -23,16 +23,19 @@ jobs:
           set -euo pipefail
           old='14f9a62607489f965b96d98cdf0d825a363cd8bc'
           new='6ff91d845bc5f3099b6a00f5f43673eed80a3ba5'
+          self='.github/workflows/tmp-tsk0453-rebind-lock-guards-20260903.yml'
           test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
           test "$(git hash-object website/package-lock.json)" = "$new"
-          mapfile -t files < <(grep -rl --include='*.yml' --include='*.yaml' "$old" .github/workflows | sort)
+          mapfile -t files < <(grep -rl --include='*.yml' --include='*.yaml' "$old" .github/workflows | grep -v "^$self$" | sort)
           printf 'LOCK_GUARD_FILES=%s\n' "${#files[@]}"
           printf '%s\n' "${files[@]}"
           test "${#files[@]}" -eq 9
           for file in "${files[@]}"; do
             sed -i "s/$old/$new/g" "$file"
           done
-          ! grep -R --include='*.yml' --include='*.yaml' -n "$old" .github/workflows
+          if grep -R --include='*.yml' --include='*.yaml' -n "$old" .github/workflows | grep -v "^$self:"; then
+            exit 1
+          fi
           python3 Plans/Master/Tools/validate_master_plan.py
           git diff --check
           git config user.name 'github-actions[bot]'
