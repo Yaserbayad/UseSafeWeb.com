@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-03T07:27:07Z
+**Updated:** 2026-09-03T08:37:55Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -3086,3 +3086,18 @@ Continue with the highest-priority genuinely executable work that can supply or 
 ### Queue effect
 
 `TSK-0376` may consume TSK-0375 only after this exact evidence/runtime publication is merged and independently read-back verified and full current eligibility is recomputed; no downstream PASS is inferred.
+
+## TSK-0376 current accepted stable state — PASS (2026-09-03)
+
+- Runtime state: **PASS**.
+- Acceptance authority: `ACC-0376` / `VER-0376` / `EVD-0376` — all state transitions defined/tested; illegal transitions rejected; parent-confirmed and technically verified evidence remain separate; resume/retry is deterministic and does not duplicate completed work.
+- Canonical implementation: PR `#78`; accepted feature head `b423c0304354b22b3151e1660f3e06299ff11f0a`; canonical merge `ce48a5f5fd754e95775a7fab571dba1b2d65ee81`.
+- Direct acceptance: feature run/job `33730514968` / `100569122644` **PASS**; clean-main run/job `33730835303` / `100570144399` **PASS**; focused contract 6/6 and complete current website contract suite 74/74.
+- `EVD-0376`: `TSK_0376_ACCOUNTLESS_STATE_MACHINE_ACCEPTANCE_2026-09-03.md` @ blob `70a1f79eb3aa7bf3718c7d684942e2577ee0d0e4`.
+- Guarded evidence/runtime publication: run `33734329037` from exact pre-mutation `CURRENT_STATE.md` blob `7e8230993f5a3fa487857754d095a8f9598b36b5`; only the top `Updated` timestamp and this appended TSK-0376 stable-state section are permitted runtime-state changes.
+- Journey-0 remains accountless/session-scoped with fixed 24-hour hard expiry, exact-key validation, safe malformed/expired restart, bounded verification retry, and no retained browsing/query/domain/hostname/raw-DNS history.
+- Preserved fences: no deployment, profile distribution, participant processing, runtime/market activation, or downstream lifecycle-gate activation is created or inferred by this PASS.
+
+### Queue effect
+
+- Current successors may consume TSK-0376 only after this exact evidence/runtime publication is merged to canonical `main` and independently read-back verified; no downstream task or gate PASS is inferred.
