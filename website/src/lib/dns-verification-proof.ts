@@ -153,17 +153,24 @@ export function verifyDnsVerificationObservation(
   secret: string,
   nowMs: number,
   expectedScope: string,
+  expectedChallenge: string,
 ): VerifiedDnsVerification | null {
   try {
     validateSigningSecret(secret);
-    if (typeof token !== 'string' || typeof expectedScope !== 'string' || !challengePattern.test(expectedScope)) return null;
+    if (
+      typeof token !== 'string'
+      || typeof expectedScope !== 'string'
+      || !challengePattern.test(expectedScope)
+      || typeof expectedChallenge !== 'string'
+      || !challengePattern.test(expectedChallenge)
+    ) return null;
     const parts = token.split('.');
     if (parts.length !== 2 || !parts[0] || !parts[1]) return null;
     const [payload, signature] = parts;
     if (!safeSignatureEqual(signature, signatureFor(payload, secret))) return null;
     const parsed = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
     const observation = parseObservation(parsed);
-    if (observation.scope !== expectedScope) return null;
+    if (observation.scope !== expectedScope || observation.challenge !== expectedChallenge) return null;
     return resultFromObservation(observation, nowMs);
   } catch {
     return null;
@@ -179,11 +186,12 @@ export function reconcileDnsVerificationObservations(
   secret: string,
   nowMs: number,
   expectedScope: string,
+  expectedChallenge: string,
 ): VerifiedDnsVerification {
   if (!Array.isArray(tokens) || tokens.length === 0) {
     return { dnsPath: 'not-run', reasonCode: 'VERIFY_UNREACHABLE', observedAt: null, verifierVersion: DNS_VERIFIER_VERSION };
   }
-  const verified = tokens.map((token) => verifyDnsVerificationObservation(token, secret, nowMs, expectedScope));
+  const verified = tokens.map((token) => verifyDnsVerificationObservation(token, secret, nowMs, expectedScope, expectedChallenge));
   if (verified.some((item) => item === null)) return uncertainResult();
   const results = verified as VerifiedDnsVerification[];
   const latestObservedAt = Math.max(...results.map((item) => item.observedAt ?? -1));
