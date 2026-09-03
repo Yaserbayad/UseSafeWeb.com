@@ -3,6 +3,7 @@ name: TSK-0491 dependency inventory and SBOM acceptance
 on:
   push:
     branches:
+      - main
       - feature/tsk-0491-dependency-inventory-sbom-20260903
   pull_request:
     paths:
@@ -22,16 +23,58 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '22.23.2'
-      - name: Verify canonical planning integrity and focused TSK-0491 RED contract
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - name: Verify inventory, exact dependency tree, SBOM, and security policy
         shell: bash
         run: |
           set -euo pipefail
           test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
           test "$(git hash-object website/package-lock.json)" = '6ff91d845bc5f3099b6a00f5f43673eed80a3ba5'
+          test "$(git hash-object infrastructure/adguard-server/install-adguard.sh)" = '5891f79b531ac2f0366374a8f4bec8fa560a2496'
           python3 tests/repository-structure/verify_structure.py
           python3 Plans/Master/Tools/validate_master_plan.py
+
           cd website
+          test "$(node --version)" = 'v22.23.2'
+          test "$(npm --version)" = '10.9.8'
           node --test tests/contract/tsk0491.test.mjs
+          npm ci --ignore-scripts --no-fund --no-audit
+          npm run format:check
+          npm run test:contract
+          npm run lint
+          npm run typecheck
+          NEXT_TELEMETRY_DISABLED=1 npm run build
+
+          SBOM="$RUNNER_TEMP/usesafeweb-website.cdx.json"
+          npm sbom --sbom-format cyclonedx --sbom-type application --package-lock-only > "$SBOM"
+          node --input-type=module - "$SBOM" <<'NODE'
+          import { readFileSync, statSync } from 'node:fs';
+          const path = process.argv[2];
+          const document = JSON.parse(readFileSync(path, 'utf8'));
+          const manifest = JSON.parse(readFileSync('package.json', 'utf8'));
+          if (document["bomFormat"] !== "CycloneDX") throw new Error('unexpected SBOM format');
+          if (statSync(path).size < 100) throw new Error('SBOM output unexpectedly small');
+          const componentNames = new Set(
+            (document.components ?? []).map((component) =>
+              component.group ? `${component.group}/${component.name}` : component.name,
+            ),
+          );
+          const directNames = [
+            ...Object.keys(manifest.dependencies ?? {}),
+            ...Object.keys(manifest.devDependencies ?? {}),
+          ];
+          for (const name of directNames) {
+            if (!componentNames.has(name)) throw new Error(`SBOM missing direct dependency: ${name}`);
+          }
+          console.log(`TSK0491_SBOM_DIRECT_DEPENDENCIES=${directNames.length}`);
+          console.log(`TSK0491_SBOM_COMPONENTS=${componentNames.size}`);
+          NODE
+          sha256sum "$SBOM" | awk '{print "TSK0491_SBOM_SHA256=" $1}'
+          npm audit --audit-level=high
+          npm audit --omit=dev --audit-level=high
           cd ..
+
           git diff --check
           test -z "$(git status --porcelain)"
+          echo 'TSK0491_DEPENDENCY_INVENTORY_SBOM_ACCEPTANCE=PASS'
