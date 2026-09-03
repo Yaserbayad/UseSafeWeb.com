@@ -19,7 +19,6 @@ async function loadApi() {
 
 function releaseMetadata(overrides = {}) {
   return {
-    version: 2,
     payloadUuid,
     dnsPayloadUuid,
     ...overrides,
@@ -41,21 +40,20 @@ test('release metadata generates only the current canonical SafeWeb DoH profile 
   assert.match(profile, /Remove this profile to restore the device's normal DNS settings\./);
   assert.match(profile, new RegExp(`<string>${payloadUuid}<\\/string>`));
   assert.match(profile, new RegExp(`<string>${dnsPayloadUuid}<\\/string>`));
-  assert.equal((profile.match(/<integer>2<\/integer>/g) ?? []).length, 2);
+  assert.equal((profile.match(/<integer>1<\/integer>/g) ?? []).length, 2, 'Apple PayloadVersion must remain 1');
+  assert.doesNotMatch(profile, /<key>PayloadVersion<\/key>\s*<integer>(?!1<\/integer>)/);
 
   assert.doesNotMatch(profile, /UseSafeWeb DNS|Get UseSafeWeb profile|Turn on UseSafeWeb|first-phone pilot/);
   assert.doesNotMatch(profile, /srv\.usesafeweb\.com|ClientID|credential|password|secret|protected\/verified/i);
 });
 
-test('generator fails closed on invalid or incomplete release metadata', async () => {
+test('generator fails closed on invalid or incomplete release UUID metadata', async () => {
   const api = await loadApi();
   for (const input of [
     null,
     {},
-    releaseMetadata({ version: 0 }),
-    releaseMetadata({ version: -1 }),
-    releaseMetadata({ version: 1.5 }),
-    releaseMetadata({ version: Number.MAX_SAFE_INTEGER + 1 }),
+    { payloadUuid },
+    { dnsPayloadUuid },
     releaseMetadata({ payloadUuid: 'not-a-uuid' }),
     releaseMetadata({ dnsPayloadUuid: 'not-a-uuid' }),
     releaseMetadata({ dnsPayloadUuid: payloadUuid }),
@@ -64,11 +62,12 @@ test('generator fails closed on invalid or incomplete release metadata', async (
   }
 });
 
-test('generator rejects endpoint overrides, invented approval state, secrets, identifiers, and other undeclared input', async () => {
+test('generator rejects endpoint overrides, invented approval/version state, secrets, identifiers, and other undeclared input', async () => {
   const api = await loadApi();
   for (const extra of [
     { serverUrl: 'https://example.invalid/dns-query' },
     { endpoint: canonicalServerUrl },
+    { version: 2 },
     { artifactStatus: 'verified' },
     { approved: true },
     { adminUrl: 'https://srv.usesafeweb.com' },
@@ -80,8 +79,11 @@ test('generator rejects endpoint overrides, invented approval state, secrets, id
   }
 });
 
-test('generator output is deterministic for the same release metadata', async () => {
+test('generator normalizes UUID case and is deterministic for the same release UUIDs', async () => {
   const api = await loadApi();
-  const input = releaseMetadata();
-  assert.equal(api.generateSafeWebIosDohProfile(input), api.generateSafeWebIosDohProfile(input));
+  const input = releaseMetadata({ payloadUuid: payloadUuid.toLowerCase(), dnsPayloadUuid: dnsPayloadUuid.toLowerCase() });
+  const first = api.generateSafeWebIosDohProfile(input);
+  assert.equal(first, api.generateSafeWebIosDohProfile(input));
+  assert.match(first, new RegExp(`<string>${payloadUuid}<\\/string>`));
+  assert.match(first, new RegExp(`<string>${dnsPayloadUuid}<\\/string>`));
 });
