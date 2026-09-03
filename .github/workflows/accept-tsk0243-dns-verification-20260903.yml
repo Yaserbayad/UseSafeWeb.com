@@ -24,7 +24,7 @@ jobs:
           node-version: '22.23.2'
           cache: npm
           cache-dependency-path: website/package-lock.json
-      - name: Verify governance, proof contracts, and production build
+      - name: Verify governance, proof contracts, production build, and local verifier HTTP boundary
         shell: bash
         run: |
           set -euo pipefail
@@ -39,6 +39,74 @@ jobs:
           NEXT_TELEMETRY_DISABLED=1 npm run build
           npm audit --audit-level=high
           npm audit --omit=dev --audit-level=high
+
+          export USESAFEWEB_DNS_VERIFICATION_SIGNING_SECRET='ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss'
+          export USESAFEWEB_PUBLIC_ORIGIN='https://usesafeweb.com'
+          NEXT_TELEMETRY_DISABLED=1 npm start -- --hostname 127.0.0.1 --port 3100 >/tmp/tsk0243-next.log 2>&1 &
+          SERVER_PID=$!
+          cleanup() {
+            kill "$SERVER_PID" >/dev/null 2>&1 || true
+            wait "$SERVER_PID" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
+          READY=0
+          for _ in $(seq 1 30); do
+            if curl -fsS 'http://127.0.0.1:3100/en-GB' >/dev/null; then
+              READY=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$READY" -ne 1 ]; then
+            cat /tmp/tsk0243-next.log
+            exit 1
+          fi
+
+          SCOPE='abababababababababababababababab'
+          REQUEST_STATUS="$(curl -sS -D /tmp/tsk0243-request.headers -o /tmp/tsk0243-request.json -w '%{http_code}' \
+            -X POST 'http://127.0.0.1:3100/api/dns-verification/requests' \
+            -H 'Content-Type: application/json' \
+            --data-binary "{\"scope\":\"$SCOPE\"}")"
+          test "$REQUEST_STATUS" = '201'
+          tr -d '\r' </tmp/tsk0243-request.headers | grep -iq '^cache-control: no-store$'
+          REQUEST_TOKEN="$(python3 -c "import json; print(json.load(open('/tmp/tsk0243-request.json'))['requestToken'])")"
+          PROBE_HOST="$(python3 -c "import json; print(json.load(open('/tmp/tsk0243-request.json'))['probeHost'])")"
+          CHALLENGE="$(python3 -c "import json; print(json.load(open('/tmp/tsk0243-request.json'))['challenge'])")"
+          python3 -c "import re; assert re.fullmatch(r'[0-9a-f]{32}', '$CHALLENGE')"
+          test "$PROBE_HOST" = "$CHALLENGE.verify.usesafeweb.com"
+
+          WRONG_ORIGIN_STATUS="$(curl -sS -o /tmp/tsk0243-wrong-origin.json -w '%{http_code}' \
+            -X POST 'http://127.0.0.1:3100/api/dns-verification/probes' \
+            -H "Host: $PROBE_HOST" \
+            -H 'Origin: https://evil.example' \
+            -H 'Content-Type: text/plain' \
+            --data-binary "$REQUEST_TOKEN")"
+          test "$WRONG_ORIGIN_STATUS" = '403'
+
+          WRONG_HOST_STATUS="$(curl -sS -o /tmp/tsk0243-wrong-host.json -w '%{http_code}' \
+            -X POST 'http://127.0.0.1:3100/api/dns-verification/probes' \
+            -H 'Host: wrong.verify.usesafeweb.com' \
+            -H 'Origin: https://usesafeweb.com' \
+            -H 'Content-Type: text/plain' \
+            --data-binary "$REQUEST_TOKEN")"
+          test "$WRONG_HOST_STATUS" = '403'
+
+          PROBE_STATUS="$(curl -sS -D /tmp/tsk0243-probe.headers -o /tmp/tsk0243-probe.json -w '%{http_code}' \
+            -X POST 'http://127.0.0.1:3100/api/dns-verification/probes' \
+            -H "Host: $PROBE_HOST" \
+            -H 'Origin: https://usesafeweb.com' \
+            -H 'Content-Type: text/plain' \
+            --data-binary "$REQUEST_TOKEN")"
+          test "$PROBE_STATUS" = '200'
+          tr -d '\r' </tmp/tsk0243-probe.headers | grep -iq '^cache-control: no-store$'
+          tr -d '\r' </tmp/tsk0243-probe.headers | grep -iq '^access-control-allow-origin: https://usesafeweb.com$'
+          tr -d '\r' </tmp/tsk0243-probe.headers | grep -iq '^vary: Origin$'
+          python3 -c "import json; value=json.load(open('/tmp/tsk0243-probe.json')); assert isinstance(value.get('observationToken'), str) and len(value['observationToken']) > 40"
+          echo 'TSK0243_LOCAL_HTTP_VERIFIER_ACCEPTANCE=PASS'
+
+          cleanup
+          trap - EXIT
           cd ..
           git diff --check
           test -z "$(git status --porcelain)"
