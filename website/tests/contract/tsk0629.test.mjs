@@ -119,17 +119,32 @@ test('uncertain verification can enter troubleshooting directly without bypassin
   assert.equal(state.loginRequired, false);
 });
 
-test('current product check state has one source authority and TSK-0629 markers do not leak into shared action API', async () => {
+test('current product check authority is fresh server-verified proof feeding the TSK-0629 classifier, not page constants or shared action state', async () => {
   const automatedSource = readFileSync(modulePath, 'utf8');
   const verifySource = readFileSync(resolve(root, 'src/app/[locale]/verify/page.tsx'), 'utf8');
   const protectionSource = readFileSync(resolve(root, 'src/app/[locale]/protection/page.tsx'), 'utf8');
+  const panelSource = readFileSync(resolve(root, 'src/components/dns-verification-panel.tsx'), 'utf8');
+  const cardSource = readFileSync(resolve(root, 'src/components/dns-verification-card.tsx'), 'utf8');
+  const browserSource = readFileSync(resolve(root, 'src/lib/dns-verification-browser.ts'), 'utf8');
+  const resultRoute = readFileSync(resolve(root, 'src/app/api/dns-verification/results/route.ts'), 'utf8');
   const actionSource = readFileSync(resolve(root, 'src/components/core-action-button.tsx'), 'utf8');
 
   assert.match(automatedSource, /export function getCurrentAutomatedVerification\(/);
+  assert.match(verifySource, /DnsVerificationPanel/);
+  assert.match(protectionSource, /DnsVerificationCard/);
   for (const source of [verifySource, protectionSource]) {
-    assert.match(source, /getCurrentAutomatedVerification\(\)/);
-    assert.doesNotMatch(source, /classifyAutomatedChecks\(\{\s*support:/s);
+    assert.doesNotMatch(source, /getCurrentAutomatedVerification\(\)/);
+    assert.doesNotMatch(source, /classifyAutomatedChecks\(/);
   }
-  assert.doesNotMatch(actionSource, /data-automated-recovery/);
-  assert.match(verifySource, /data-automated-recovery/);
+  assert.match(panelSource, /runDnsVerification/);
+  assert.match(panelSource, /classifyAutomatedChecks/);
+  assert.match(cardSource, /runDnsVerification/);
+  assert.match(cardSource, /classifyAutomatedChecks/);
+  assert.match(resultRoute, /verifyDnsProbeRequest/);
+  assert.match(resultRoute, /verifyDnsVerificationObservation/);
+  assert.match(resultRoute, /toApprovedDnsVerificationEvent/);
+  assert.match(browserSource, /\/api\/dns-verification\/results/);
+  assert.doesNotMatch(browserSource, /sessionStorage|localStorage|DNS_VERIFICATION_STORAGE_KEY/);
+  assert.doesNotMatch(actionSource, /data-automated-recovery|data-verification-outcome/);
+  assert.match(panelSource, /data-core-troubleshoot/);
 });

@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
 import { CoreActionButton } from '@/components/core-action-button';
 import { CorePageGuard } from '@/components/core-page-guard';
+import { DnsVerificationCard } from '@/components/dns-verification-card';
 import { SetupPage, operationalMetadata } from '@/components/setup-page';
-import { getCurrentAutomatedVerification } from '@/lib/automated-verification';
 import { evaluateProtection, type ProtectionEvidence } from '@/lib/core-state-machine';
 import { getJourneyContent, isLocale } from '@/lib/i18n';
 
@@ -19,16 +19,10 @@ export default async function Page({ params, searchParams }: {
   if (platform !== 'android' && platform !== 'iphone') notFound();
 
   const content = getJourneyContent(locale, 'protection').value;
-  const automated = getCurrentAutomatedVerification();
-  const evidenceRows: Array<{ label: string; evidence: ProtectionEvidence; dnsVerification?: boolean }> = [
+  const staticRows: Array<{ label: string; evidence: ProtectionEvidence }> = [
     {
       label: content.deviceSetupLabel,
       evidence: { coverage: 'covered', configured: true, technical: null, action: null, uncertainty: null, removal: null },
-    },
-    {
-      label: content.dnsVerificationLabel,
-      evidence: automated.evidence,
-      dnsVerification: true,
     },
     {
       label: content.otherServicesLabel,
@@ -48,17 +42,30 @@ export default async function Page({ params, searchParams }: {
     >
       <CorePageGuard locale={locale} expectedPhase="protection" />
       <div className="sw-card-grid">
-        {evidenceRows.map(({ label, evidence, dnsVerification }) => {
+        {staticRows.slice(0, 1).map(({ label, evidence }) => {
           const result = evaluateProtection(evidence);
           const supporting = result.action ?? reasonCopy[result.reasonCode] ?? reasonCopy.default;
           return (
-            <section
-              className="sw-card"
-              data-protection-state={result.state}
-              data-dns-verification-state={dnsVerification ? automated.checkState : undefined}
-              data-parent-confirmation={dnsVerification ? automated.parentConfirmation : undefined}
-              key={label}
-            >
+            <section className="sw-card" data-protection-state={result.state} key={label}>
+              <h2>{label}</h2>
+              <p><strong>{stateLabels[result.state]}</strong></p>
+              <p>{supporting}</p>
+              <p className="sw-technical">{result.reasonCode}</p>
+            </section>
+          );
+        })}
+        <DnsVerificationCard
+          locale={locale}
+          deviceFamily={platform}
+          label={content.dnsVerificationLabel}
+          stateLabels={stateLabels}
+          reasonCopy={reasonCopy}
+        />
+        {staticRows.slice(1).map(({ label, evidence }) => {
+          const result = evaluateProtection(evidence);
+          const supporting = result.action ?? reasonCopy[result.reasonCode] ?? reasonCopy.default;
+          return (
+            <section className="sw-card" data-protection-state={result.state} key={label}>
               <h2>{label}</h2>
               <p><strong>{stateLabels[result.state]}</strong></p>
               <p>{supporting}</p>
