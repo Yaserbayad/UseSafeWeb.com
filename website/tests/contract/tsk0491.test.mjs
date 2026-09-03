@@ -22,7 +22,12 @@ function dependencyInventory(policy) {
   const rows = policy
     .split('\n')
     .filter((line) => line.startsWith('|') && !/^\|\s*-/.test(line))
-    .map((line) => line.split('|').slice(1, -1).map((cell) => cell.trim()))
+    .map((line) =>
+      line
+        .split('|')
+        .slice(1, -1)
+        .map((cell) => cell.trim()),
+    )
     .filter((cells) => cells.length >= 4 && cells[0] !== 'Package');
   return new Map(rows.map(([name, requested]) => [name, requested]));
 }
