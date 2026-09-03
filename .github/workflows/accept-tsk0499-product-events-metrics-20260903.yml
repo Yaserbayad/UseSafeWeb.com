@@ -1,0 +1,47 @@
+name: TSK-0499 product events and metric validation acceptance
+
+on:
+  push:
+    branches:
+      - main
+      - feature/tsk-0499-product-events-metrics-20260903
+  pull_request:
+    paths:
+      - 'website/**'
+      - '.github/workflows/accept-tsk0499-product-events-metrics-20260903.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  accept-tsk0499:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.23.2'
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - name: Verify TSK-0499 contract and production baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
+          test "$(git hash-object website/package-lock.json)" = '14f9a62607489f965b96d98cdf0d825a363cd8bc'
+          python3 tests/repository-structure/verify_structure.py
+          python3 Plans/Master/Tools/validate_master_plan.py
+          cd website
+          npm ci --ignore-scripts --no-fund --no-audit
+          node --test tests/contract/tsk0499.test.mjs
+          npm run test:contract
+          npm run lint
+          npm run typecheck
+          NEXT_TELEMETRY_DISABLED=1 npm run build
+          npm audit --audit-level=high
+          npm audit --omit=dev --audit-level=high
+          cd ..
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'TSK0499_PRODUCT_EVENTS_METRICS_ACCEPTANCE=PASS'
