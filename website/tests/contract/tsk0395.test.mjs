@@ -12,13 +12,22 @@ const locales = ['en-GB', 'tr-TR', 'ar'];
 for (const locale of locales) {
   test(`TSK-0395 ${locale} landing proposition is first-phone-led rather than DNS-led`, () => {
     const content = json(`src/content/${locale}.json`);
-    assert.ok(content.home.kicker, 'missing first-phone kicker');
-    assert.doesNotMatch(content.home.title, /dns/i, 'landing headline must not make DNS the product proposition');
-    assert.doesNotMatch(content.home.summary, /^.*dns/i, 'landing summary must lead with the user outcome, not DNS');
+    assert.ok(content.home.kicker, 'missing localized first-phone proposition');
+    assert.doesNotMatch(content.home.kicker, /dns/i, 'rendered landing headline must not make DNS the product proposition');
+    assert.doesNotMatch(content.home.summary, /^dns/i, 'landing summary must lead with the user outcome, not DNS');
     assert.ok(content.home.primaryLabel, 'missing primary setup CTA');
     assert.ok(content.home.secondaryLabel, 'missing secondary explanation CTA');
   });
 }
+
+test('TSK-0395 renders the approved first-phone category as H1 and keeps DNS out of the proposition slot', () => {
+  const page = read('src/app/[locale]/page.tsx');
+
+  assert.match(page, /publicMetadata\(locale, '', content\.home\.kicker, content\.home\.summary\)/);
+  assert.match(page, /kicker:\s*content\.common\.brand/);
+  assert.match(page, /title:\s*content\.home\.kicker/);
+  assert.doesNotMatch(page, /section=\{content\.home\}/);
+});
 
 test('TSK-0395 landing page routes the primary CTA to accountless setup and exposes trust/support navigation', () => {
   const page = read('src/app/[locale]/page.tsx');
