@@ -142,10 +142,15 @@ test('Protection Map state machine no longer owns user-facing English/legacy-bra
   assert.doesNotMatch(source, /Protection verified|Protection status could not be verified|Protection has not yet been technically verified|UseSafeWeb/);
 });
 
-test('locale metadata keeps Arabic RTL and all language availability non-activating', () => {
+test('locale manifest is the single authority for direction and non-activating language availability', () => {
   const manifest = json('src/content/locale-manifest.json');
+  const journey = json(journeyPath);
+  const browser = read('tests/browser/tsk0359-browser.mjs');
   assert.equal(manifest.locales.ar.direction, 'rtl');
   assert.equal(manifest.locales['en-GB'].direction, 'ltr');
   assert.equal(manifest.locales['tr-TR'].direction, 'ltr');
   for (const locale of locales) assert.equal(manifest.locales[locale].marketActivation, false, `${locale} must not imply market activation`);
+  assert.equal(Object.hasOwn(journey, 'marketActivation'), false, 'journey content must not duplicate market-activation authority');
+  assert.match(browser, /locale-manifest\.json/);
+  assert.doesNotMatch(browser, /journey\.marketActivation/);
 });
