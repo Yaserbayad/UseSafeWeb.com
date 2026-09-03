@@ -9,6 +9,8 @@ const modulePath = resolve(root, 'src/lib/core-state-machine.ts');
 const journeyPath = resolve(root, 'src/lib/journey-state.ts');
 const profilePath = resolve(root, 'src/lib/ios-doh-profile.ts');
 const deliveryRoutePath = resolve(root, 'src/app/api/ios-doh-profile/route.ts');
+const recoverPagePath = resolve(root, 'src/app/[locale]/recover/page.tsx');
+const cleanupPagePath = resolve(root, 'src/app/[locale]/cleanup/page.tsx');
 const dataUrl = (source) => `data:text/javascript;base64,${Buffer.from(source).toString('base64')}`;
 
 async function loadApi() {
@@ -75,6 +77,19 @@ test('TSK-0417 rejects missing or profile-removal evidence as a substitute for s
       /service revocation evidence required|invalid core transition/i,
     );
   }
+});
+
+test('profile-removal instructions and action are exposed only in the revocation-gated cleanup phase', () => {
+  assert.equal(existsSync(recoverPagePath), true, 'missing recovery page');
+  const recoverSource = readFileSync(recoverPagePath, 'utf8');
+  assert.doesNotMatch(recoverSource, /getVersionedInstruction\(locale,\s*platform,\s*'remove'\)/);
+  assert.doesNotMatch(recoverSource, /REMOVE_CONFIGURATION/);
+
+  assert.equal(existsSync(cleanupPagePath), true, 'missing revocation-gated cleanup page');
+  const cleanupSource = readFileSync(cleanupPagePath, 'utf8');
+  assert.match(cleanupSource, /expectedPhase="cleanup"/);
+  assert.match(cleanupSource, /getVersionedInstruction\(locale,\s*platform,\s*'remove'\)/);
+  assert.match(cleanupSource, /event=\{\{ type: 'REMOVE_CONFIGURATION' \}\}/);
 });
 
 test('current iPhone artifact is an Apple encrypted-DNS profile with no client credential or identity-certificate cleanup surface', () => {
