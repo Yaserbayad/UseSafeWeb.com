@@ -91,7 +91,7 @@ export function DnsVerificationPanel({
             event={{ type: 'OPEN_TROUBLESHOOT' }}
             href={`/${locale}/troubleshoot?platform=${deviceFamily}`}
             label={troubleshootLabel}
-            dataAttribute="data-core-verify-recovery"
+            dataAttribute="data-core-troubleshoot"
           />
         ) : null}
         <CoreActionButton
