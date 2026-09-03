@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { CoreActionButton } from '@/components/core-action-button';
 import { CorePageGuard } from '@/components/core-page-guard';
 import { SetupPage, operationalMetadata } from '@/components/setup-page';
-import { classifyAutomatedChecks } from '@/lib/automated-verification';
+import { getCurrentAutomatedVerification } from '@/lib/automated-verification';
 import { evaluateProtection, type ProtectionEvidence } from '@/lib/core-state-machine';
 import { getJourneyContent, isLocale } from '@/lib/i18n';
 
@@ -19,13 +19,7 @@ export default async function Page({ params, searchParams }: {
   if (platform !== 'android' && platform !== 'iphone') notFound();
 
   const content = getJourneyContent(locale, 'protection').value;
-  const automated = classifyAutomatedChecks({
-    support: 'unknown',
-    service: 'unknown',
-    dnsPath: 'not-run',
-    configured: true,
-    removed: false,
-  });
+  const automated = getCurrentAutomatedVerification();
   const evidenceRows: Array<{ label: string; evidence: ProtectionEvidence; dnsVerification?: boolean }> = [
     {
       label: content.deviceSetupLabel,
