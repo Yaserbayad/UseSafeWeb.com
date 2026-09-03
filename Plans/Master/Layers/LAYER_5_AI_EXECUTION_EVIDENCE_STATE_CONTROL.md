@@ -210,3 +210,22 @@ ClickUp is generated only after owner freeze/canonical publication. Import/read-
 | TSK-0596 | L8 | Design the optional supporter experiment so full core value is delivered first and payment changes no safety outcome | Project Owner | Behavioral value passes and the applicable pilot funding gate authorizes payment testing. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
 | TSK-0609 | L12 | Reconcile bank/payment/provider, supporter, refunds/cancellations, fees, Azure/vendor expenses, receipts, and budget | Finance/Admin | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
 | TSK-0618 | L12 | Approve, defer, or reject bounded funding applications/partnership negotiations | Project Owner | Applicable lifecycle/gate and all hard dependencies satisfied. | Strategic/legal/identity/contract/consent/material-risk/launch/spend or equivalent authority cannot be delegated merely because AI can prepare it. |
+
+## 5.3.9 CR-0011 reconciliation invariants
+
+The owner-supplied pre-canonical corrected Master Plan is **change-intent input only**, never a replacement authority. Reconciliation is always against the current manifest-routed modular system and current runtime evidence. Legacy candidate counts, gates, dates, status labels and sequencing are not imported when later canonical decisions supersede them.
+
+### Derived hierarchy roll-up invariant
+
+- WBS task runtime state remains the task-level execution authority; hierarchy/parent completion is a derived reporting view and must never become a second mutable state store.
+- A parent/group may be reported complete only when every mandatory current child is `PASS` or is explicitly `NOT_APPLICABLE + PASS` as a verified exclusion. A mandatory child that is `TODO`, `WAITING`, or `BLOCKED` prevents a completed roll-up. Deferred/trigger work must be dispositioned under its governing trigger rather than silently counted complete.
+- `NOT_APPLICABLE + PASS` proves exclusion only, never implementation, execution, behavioral evidence, deployment, or satisfaction of a missing direct-predecessor proof requirement.
+- No hierarchy roll-up can substitute for direct task acceptance evidence or make a hard predecessor satisfied when the predecessor's own current semantics require direct proof.
+
+### Recurring/event dependency invariant
+
+- A `PLANNED_RECURRING` or event/trigger cadence item must not be used as an ordinary hard `FINISH_TO_START` predecessor because such work has no single terminal completion under its recurring semantics.
+- Express recurrence, monitoring and trigger relationships through recurrence/trigger/operating-input fields. If a successor genuinely requires one bounded occurrence to complete, model that occurrence as an independently verifiable bounded task with its own acceptance/evidence and dependency semantics.
+- The deterministic validator must reject any current WBS hard dependency whose predecessor is `PLANNED_RECURRING`.
+
+CR-0011 changes no existing task, dependency edge, gate, milestone, runtime PASS, evidence binding or material-action fence; it only makes these invariants explicit and machine-checkable.
