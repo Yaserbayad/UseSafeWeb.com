@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-03T09:46:33Z
+**Updated:** 2026-09-03T18:46:59Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -8,9 +8,18 @@
 
 ## Canonical planning authority
 
-**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0010 PUBLISHED, RECONCILED, READ-BACK VERIFIED.**
+**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0011 PUBLISHED, RECONCILED, READ-BACK VERIFIED.**
 
-- Latest post-freeze change: `CR-0010` / `DEC-0057`, explicit Project Owner activation approval 2026-09-02: canonical Master-Plan structural normalization removes redundant hierarchy wrappers while preserving task/readiness/gate/evidence semantics.
+- Latest post-freeze planning change: `CR-0011` / `DEC-0058`, explicitly authorized by the Project Owner on 2026-09-03 as a current-state rebase/reconciliation of stale correction intent onto CR-0010 authority, not verbatim stale-candidate publication.
+- CR-0011 canonical publication commit: `cf8672200d0f4a1f395e1f458d35ceef42be44ae`; exact published tree: `1cc60ae26c6eb1e995792401ae0646ae5457aac0`, identical to audited candidate commit `58a5bbce384547b1606d5e44fea7c2f27753e239` tree.
+- CR-0011 audit run/job `33791810309` / `100769937576`: **PASS** — 641 WBS tasks, 858 hard dependency edges, 0 recurring hard predecessors; WBS, relationship index and gates unchanged; deterministic master-plan validator PASS.
+- CR-0011 evidence: `CR_0011_STALE_CANDIDATE_RECONCILIATION_EVIDENCE_2026-09-03.md`, publication-tree blob `cce616a888893d4db252a6c563bdbf81e987f6f0`.
+- CR-0011 changes governance invariants only: hierarchy roll-up is derived rather than a second mutable state, recurring/cadence work cannot become an endless hard predecessor, and existing trigger/geography/domain-control/derived-view semantics are explicitly protected. It creates **no task, gate or milestone PASS**.
+- Post-publication commit `98d85c0c0618684777acffc2965f074fc8f7939c` changed only `TSK_LG06_PREDECESSOR_REQUALIFICATION_AUTOVERIFY_FINAL_2026-09-01.md`; CR-0011 planning authority and runtime states remain unchanged by that evidence-only update.
+- Runtime preservation: `TSK-0491` remains PASS; `TSK-0453` remains WAITING on its existing enforcement-proof boundary; `TSK-0417` remains non-PASS at its real-target material-action boundary; `TSK-0374` and `TSK-0499` remain non-PASS/partial as previously recorded; PR #86 remains draft and unmerged unless later independently verified otherwise.
+- No deployment, live-device/profile/certificate action, service removal/revocation, participant processing, telemetry activation, production/public activation, geographic/market activation, launch authority, service-revocation interface/authority, or other fenced material action is inferred from CR-0011.
+
+- Prior post-freeze change: `CR-0010` / `DEC-0057`, explicit Project Owner activation approval 2026-09-02: canonical Master-Plan structural normalization removes redundant hierarchy wrappers while preserving task/readiness/gate/evidence semantics.
 - CR-0010 planning publication head: `c1bd3bff023ed124de6e9907157dfcd70754fe43`; planning-files commit `21353b34dd2da948da96890c0f94f022830f0bf5`; both are clean descendants of frozen baseline `2a9d4fdaca8a13ad8945480b84dc99968fc86837`.
 - Exact 14-file activation set was verified on the staging tree by Git blob SHA and byte size before non-forced fast-forward to `main`; `main` read-back returned exact planning-publication head `c1bd3bff023ed124de6e9907157dfcd70754fe43`; subsequent workflow refresh commit `f8fd913dd54d7e3f212e000ace76b849269bcd41` changed only `TSK_LG06_PREDECESSOR_REQUALIFICATION_AUTOVERIFY_FINAL_2026-09-01.md` to reference the new source commit and introduced no planning/runtime semantic change.
 - Canonical validator on the exact published planning tree: **PASS** — 641 tasks, 858 dependency edges, 4,587 relationship entities, 18,152 relationship targets, 0 broken links, 0 generated missing task IDs.
