@@ -23,40 +23,76 @@ const browser = await chromium.launch({ headless: true });
 const failures = [];
 
 for (const [locale, platform, route, expectedInstruction] of cases) {
+  const label = `${locale}/${route}`;
+
   try {
-    const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
+    const viewport = { width: 390, height: 844 };
+    const contextOptions = { javaScriptEnabled: false, viewport };
+    const context = await browser.newContext(contextOptions);
     const page = await context.newPage();
     const requested = [];
     const failedRequests = [];
-    page.on('request', (request) => requested.push(request.url()));
-    page.on('requestfailed', (request) => failedRequests.push(`${request.method()} ${request.url()}`));
+    const onRequest = (request) => requested.push(request.url());
+    const onRequestFailed = (request) => {
+      failedRequests.push(`${request.method()} ${request.url()}`);
+    };
 
-    const response = await page.goto(`${base}/${locale}/${route}?platform=${platform}`, { waitUntil: 'networkidle' });
-    assert.ok(response, `${locale}/${route} returned no response`);
-    assert.equal(response.status(), 200, `${locale}/${route} HTTP status`);
+    page.on('request', onRequest);
+    page.on('requestfailed', onRequestFailed);
 
-    const marker = page.locator(`[data-content-release="${expectedRelease}"][data-content-status="${expectedStatus}"]`).first();
-    assert.equal(await marker.count(), 1, `${locale}/${route} missing expected release/status marker`);
+    const targetUrl = `${base}/${locale}/${route}?platform=${platform}`;
+    const gotoOptions = { waitUntil: 'networkidle' };
+    const response = await page.goto(targetUrl, gotoOptions);
+
+    assert.ok(response, `${label} returned no response`);
+    assert.equal(response.status(), 200, `${label} HTTP status`);
+
+    const releaseSelector = `[data-content-release="${expectedRelease}"]`;
+    const statusSelector = `[data-content-status="${expectedStatus}"]`;
+    const markerSelector = `${releaseSelector}${statusSelector}`;
+    const marker = page.locator(markerSelector).first();
+    const markerCount = await marker.count();
+
+    assert.equal(markerCount, 1, `${label} missing release/status marker`);
 
     if (expectFailure) {
-      assert.equal(await marker.isVisible(), true, `${locale}/${route} failure status is not visible`);
-      const safeLinks = page.locator(`a[href^="/${locale}/help"], a[href^="/${locale}/troubleshoot"], a[href^="/${locale}/setup/route"]`);
-      assert.ok((await safeLinks.count()) >= 1, `${locale}/${route} failure has no safe recovery action`);
-      assert.equal(await page.locator('[data-instruction-id]').count(), 0, `${locale}/${route} exposed an instruction while fail-closed`);
+      const markerVisible = await marker.isVisible();
+      const safeLinkSelector = [
+        `a[href^="/${locale}/help"]`,
+        `a[href^="/${locale}/troubleshoot"]`,
+        `a[href^="/${locale}/setup/route"]`,
+      ].join(', ');
+      const safeLinks = page.locator(safeLinkSelector);
+      const safeLinkCount = await safeLinks.count();
+      const instructionCount = await page.locator('[data-instruction-id]').count();
+
+      assert.equal(markerVisible, true, `${label} failure status is not visible`);
+      assert.ok(safeLinkCount >= 1, `${label} failure has no safe recovery action`);
+      assert.equal(instructionCount, 0, `${label} exposed a fail-closed instruction`);
     } else {
-      const instruction = page.locator(`[data-instruction-id="${expectedInstruction}"]`).first();
-      assert.equal(await instruction.count(), 1, `${locale}/${route} selected the wrong instruction`);
-      assert.equal(await instruction.getAttribute('data-content-release'), expectedRelease);
-      assert.equal(await instruction.getAttribute('data-content-status'), 'ready');
+      const instructionSelector = `[data-instruction-id="${expectedInstruction}"]`;
+      const instruction = page.locator(instructionSelector).first();
+      const instructionCount = await instruction.count();
+      const release = await instruction.getAttribute('data-content-release');
+      const status = await instruction.getAttribute('data-content-status');
+
+      assert.equal(instructionCount, 1, `${label} selected the wrong instruction`);
+      assert.equal(release, expectedRelease);
+      assert.equal(status, 'ready');
     }
 
-    assert.deepEqual(failedRequests, [], `${locale}/${route} emitted failed requests`);
+    assert.deepEqual(failedRequests, [], `${label} emitted failed requests`);
+
     const offOrigin = requested.filter((url) => {
       const parsed = new URL(url);
-      return (parsed.protocol === 'http:' || parsed.protocol === 'https:') && parsed.origin !== baseOrigin;
+      const isHttp = parsed.protocol === 'http:' || parsed.protocol === 'https:';
+      return isHttp && parsed.origin !== baseOrigin;
     });
-    assert.deepEqual(offOrigin, [], `${locale}/${route} made an off-origin content request`);
-    assert.deepEqual(await context.cookies(), [], `${locale}/${route} created cookies`);
+
+    assert.deepEqual(offOrigin, [], `${label} made an off-origin content request`);
+
+    const cookies = await context.cookies();
+    assert.deepEqual(cookies, [], `${label} created cookies`);
     await context.close();
   } catch (error) {
     failures.push(error.stack ?? String(error));
@@ -71,4 +107,7 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`TSK0374_TARGET_ACCEPTANCE status=${expectedStatus} release=${expectedRelease} failure=${expectFailure}`);
+const summary =
+  `TSK0374_TARGET_ACCEPTANCE status=${expectedStatus}` +
+  ` release=${expectedRelease} failure=${expectFailure}`;
+console.log(summary);
