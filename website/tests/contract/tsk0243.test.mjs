@@ -34,10 +34,15 @@ function observation(overrides = {}) {
   };
 }
 
-test('cache-safe probe identity uses a fresh 128-bit challenge under the fixed verification suffix', async () => {
+test('cache-safe probe identity generates a fresh 128-bit challenge under the fixed verification suffix', async () => {
   const api = await loadApi();
   assert.equal(api.DNS_VERIFICATION_SUFFIX, 'verify.usesafeweb.com');
-  assert.equal(api.buildDnsProbeHostname(challenge), `${challenge}.verify.usesafeweb.com`);
+  const first = api.createDnsVerificationChallenge();
+  const second = api.createDnsVerificationChallenge();
+  assert.match(first, /^[0-9a-f]{32}$/);
+  assert.match(second, /^[0-9a-f]{32}$/);
+  assert.notEqual(first, second);
+  assert.equal(api.buildDnsProbeHostname(first), `${first}.verify.usesafeweb.com`);
   assert.throws(() => api.buildDnsProbeHostname('short'), /invalid dns verification challenge/i);
   assert.throws(() => api.buildDnsProbeHostname('zz'.repeat(16)), /invalid dns verification challenge/i);
 });
