@@ -8,9 +8,11 @@ import { readCoreSession } from '@/lib/core-session';
 import { evaluateProtection, type DeviceFamily, type Locale } from '@/lib/core-state-machine';
 
 function outcomeFromCheck(check: BrowserDnsVerificationCheck | null): AutomatedVerificationOutcome {
-  return classifyAutomatedChecks(check
-    ? { support: 'supported', service: 'healthy', dnsPath: check.dnsPath, configured: true, removed: false }
-    : { support: 'supported', service: 'unknown', dnsPath: 'not-run', configured: true, removed: false });
+  return classifyAutomatedChecks(
+    check
+      ? { support: 'supported', service: 'healthy', dnsPath: check.dnsPath, configured: true, removed: false }
+      : { support: 'supported', service: 'unknown', dnsPath: 'not-run', configured: true, removed: false },
+  );
 }
 
 export function DnsVerificationPanel({
@@ -49,12 +51,15 @@ export function DnsVerificationPanel({
       setChecking(false);
     };
     void run();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [deviceFamily, locale]);
 
   const protection = evaluateProtection(outcome.evidence);
   const supporting = protection.action ?? reasonCopy[protection.reasonCode] ?? reasonCopy.default;
-  const canContinueToServices = protection.state === 'protected/verified' || protection.state === 'configured/parent-confirmed';
+  const canContinueToServices =
+    protection.state === 'protected/verified' || protection.state === 'configured/parent-confirmed';
 
   return (
     <>

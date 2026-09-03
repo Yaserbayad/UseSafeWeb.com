@@ -17,7 +17,13 @@ export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
 
-export default async function LocaleLayout({ children, params }: { children: ReactNode; params: Promise<{ locale: string }> }) {
+export default async function LocaleLayout({
+  children,
+  params,
+}: {
+  children: ReactNode;
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const content = getContent(locale);
@@ -27,8 +33,12 @@ export default async function LocaleLayout({ children, params }: { children: Rea
     <html lang={locale} dir={meta.direction}>
       <body>
         <div data-locale-root lang={locale} dir={meta.direction}>
-          <Suspense fallback={null}><JourneyStateBoundary /></Suspense>
-          <SiteShell locale={locale} common={content.common}>{children}</SiteShell>
+          <Suspense fallback={null}>
+            <JourneyStateBoundary />
+          </Suspense>
+          <SiteShell locale={locale} common={content.common}>
+            {children}
+          </SiteShell>
         </div>
       </body>
     </html>

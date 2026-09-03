@@ -74,7 +74,8 @@ function validateJourneyState(value: unknown, nowMs: number): JourneyState | nul
   if (hardExpiresAt - createdAt > JOURNEY_MAX_AGE_MS) return null;
   if (!Number.isSafeInteger(nowMs) || nowMs < createdAt || nowMs >= hardExpiresAt) return null;
   if (!isLocale(candidate.locale)) return null;
-  if (candidate.journeyStep !== 'route' && candidate.journeyStep !== 'native' && candidate.journeyStep !== 'dns') return null;
+  if (candidate.journeyStep !== 'route' && candidate.journeyStep !== 'native' && candidate.journeyStep !== 'dns')
+    return null;
   const step = candidate.journeyStep;
   if (!hasExactKeys(candidate, step)) return null;
 
@@ -85,7 +86,8 @@ function validateJourneyState(value: unknown, nowMs: number): JourneyState | nul
   if (step === 'native') {
     return candidate as JourneyState;
   }
-  if (!isDnsMethod(candidate.dnsMethod) || candidate.dnsMethod !== expectedDnsMethod(candidate.deviceFamily)) return null;
+  if (!isDnsMethod(candidate.dnsMethod) || candidate.dnsMethod !== expectedDnsMethod(candidate.deviceFamily))
+    return null;
   return candidate as JourneyState;
 }
 

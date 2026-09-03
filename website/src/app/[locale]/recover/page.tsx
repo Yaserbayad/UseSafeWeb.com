@@ -7,7 +7,10 @@ import { getContent, getJourneyContent, getVersionedInstruction, isLocale } from
 // TSK-0359 provenance compatibility: INS-AND-REMOVE-01 / INS-IOS-REMOVE-01 selection is delegated to the TSK-0374 versioned release map.
 export const metadata = operationalMetadata;
 
-export default async function Page({ params, searchParams }: {
+export default async function Page({
+  params,
+  searchParams,
+}: {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{ platform?: string | string[] }>;
 }) {

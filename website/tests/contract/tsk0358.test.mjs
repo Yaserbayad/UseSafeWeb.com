@@ -14,26 +14,62 @@ async function loadApi() {
   let source = readFileSync(modulePath, 'utf8');
   if (source.includes("from './journey-state'")) {
     const journeySource = readFileSync(journeyPath, 'utf8');
-    source = source.replace("from './journey-state'", `from '${dataUrl(stripTypeScriptTypes(journeySource, { mode: 'strip' }))}'`);
+    source = source.replace(
+      "from './journey-state'",
+      `from '${dataUrl(stripTypeScriptTypes(journeySource, { mode: 'strip' }))}'`,
+    );
   }
   return import(dataUrl(stripTypeScriptTypes(source, { mode: 'strip' })));
 }
 
-const baseEvidence = { coverage: 'covered', configured: false, technical: null, action: null, uncertainty: null, removal: null };
+const baseEvidence = {
+  coverage: 'covered',
+  configured: false,
+  technical: null,
+  action: null,
+  uncertainty: null,
+  removal: null,
+};
 const parentConfirmedEvidence = { ...baseEvidence, configured: true };
 
 test('Protection Map precedence is deterministic and only fresh positive technical evidence yields protected/verified', async () => {
   const api = await loadApi();
   assert.equal(api.evaluateProtection({ ...baseEvidence, configured: true }).state, 'configured/parent-confirmed');
-  assert.equal(api.evaluateProtection({ ...baseEvidence, configured: true }).reasonCode, 'CONFIG_CONFIRMED_NO_TECH_VERIFY');
+  assert.equal(
+    api.evaluateProtection({ ...baseEvidence, configured: true }).reasonCode,
+    'CONFIG_CONFIRMED_NO_TECH_VERIFY',
+  );
   assert.equal(api.evaluateProtection({ ...baseEvidence, configured: true }).action, null);
 
-  assert.equal(api.evaluateProtection({ ...baseEvidence, configured: true, technical: { result: 'positive', fresh: true } }).state, 'protected/verified');
-  assert.equal(api.evaluateProtection({ ...baseEvidence, configured: true, technical: { result: 'positive', fresh: false } }).state, 'uncertain/error');
-  assert.equal(api.evaluateProtection({ ...baseEvidence, configured: true, technical: { result: 'negative', fresh: true }, action: 'Reconfigure DNS, then verify again.' }).state, 'action-needed');
+  assert.equal(
+    api.evaluateProtection({ ...baseEvidence, configured: true, technical: { result: 'positive', fresh: true } }).state,
+    'protected/verified',
+  );
+  assert.equal(
+    api.evaluateProtection({ ...baseEvidence, configured: true, technical: { result: 'positive', fresh: false } })
+      .state,
+    'uncertain/error',
+  );
+  assert.equal(
+    api.evaluateProtection({
+      ...baseEvidence,
+      configured: true,
+      technical: { result: 'negative', fresh: true },
+      action: 'Reconfigure DNS, then verify again.',
+    }).state,
+    'action-needed',
+  );
   assert.equal(api.evaluateProtection({ ...baseEvidence, coverage: 'not-covered' }).state, 'not-covered');
   assert.equal(api.evaluateProtection({ ...baseEvidence, uncertainty: 'VERIFY_UNREACHABLE' }).state, 'uncertain/error');
-  assert.equal(api.evaluateProtection({ ...baseEvidence, configured: true, technical: { result: 'positive', fresh: true }, removal: 'REMOVED_BY_PARENT' }).state, 'removed');
+  assert.equal(
+    api.evaluateProtection({
+      ...baseEvidence,
+      configured: true,
+      technical: { result: 'positive', fresh: true },
+      removal: 'REMOVED_BY_PARENT',
+    }).state,
+    'removed',
+  );
 });
 
 test('account ownership, journey completion, and configuration never manufacture technical verification', async () => {
@@ -98,7 +134,26 @@ test('optional-account state contract is dormant under the current owner fence a
 test('core state allowlist rejects identity, browsing/activity history, raw diagnostics and arbitrary URLs', async () => {
   const api = await loadApi();
   const state = api.createCoreState('ar', 'ef'.repeat(16), 1_000, 5_000);
-  assert.deepEqual(Object.keys(state).sort(), ['createdAt','hardExpiresAt','locale','loginRequired','phase','retryCount','schemaVersion','scope'].sort());
-  const forbidden = ['email','account','child','query','domain','history','activity','diagnostic','url','ip','verification'];
-  for (const key of forbidden) assert.equal(Object.keys(state).some((candidate) => candidate.toLowerCase().includes(key)), false);
+  assert.deepEqual(
+    Object.keys(state).sort(),
+    ['createdAt', 'hardExpiresAt', 'locale', 'loginRequired', 'phase', 'retryCount', 'schemaVersion', 'scope'].sort(),
+  );
+  const forbidden = [
+    'email',
+    'account',
+    'child',
+    'query',
+    'domain',
+    'history',
+    'activity',
+    'diagnostic',
+    'url',
+    'ip',
+    'verification',
+  ];
+  for (const key of forbidden)
+    assert.equal(
+      Object.keys(state).some((candidate) => candidate.toLowerCase().includes(key)),
+      false,
+    );
 });

@@ -50,10 +50,19 @@ test('TSK-0359 localization artifacts exist and package contract runs this task'
 test('deterministic fallback resolves requested locale first, then declared fallback, and fails visibly when no value exists', async () => {
   const api = await loadFallbackApi();
   const fallback = { 'en-GB': null, 'tr-TR': 'en-GB', ar: 'en-GB' };
-  assert.deepEqual(api.resolveLocaleValue('ar', { ar: 'عربي', 'en-GB': 'English' }, fallback, 'en-GB'), { value: 'عربي', sourceLocale: 'ar' });
-  assert.deepEqual(api.resolveLocaleValue('tr-TR', { 'en-GB': 'English' }, fallback, 'en-GB'), { value: 'English', sourceLocale: 'en-GB' });
+  assert.deepEqual(api.resolveLocaleValue('ar', { ar: 'عربي', 'en-GB': 'English' }, fallback, 'en-GB'), {
+    value: 'عربي',
+    sourceLocale: 'ar',
+  });
+  assert.deepEqual(api.resolveLocaleValue('tr-TR', { 'en-GB': 'English' }, fallback, 'en-GB'), {
+    value: 'English',
+    sourceLocale: 'en-GB',
+  });
   assert.throws(() => api.resolveLocaleValue('tr-TR', {}, fallback, 'en-GB'), /missing localized value/i);
-  assert.throws(() => api.resolveLocaleValue('tr-TR', { 'en-GB': 'English' }, { 'en-GB': 'tr-TR', 'tr-TR': 'en-GB' }, 'en-GB'), /fallback cycle/i);
+  assert.throws(
+    () => api.resolveLocaleValue('tr-TR', { 'en-GB': 'English' }, { 'en-GB': 'tr-TR', 'tr-TR': 'en-GB' }, 'en-GB'),
+    /fallback cycle/i,
+  );
 });
 
 test('journey content externalizes all TSK-0358 operational surfaces for English, Turkish and Arabic', () => {
@@ -80,7 +89,10 @@ test('journey content externalizes all TSK-0358 operational surfaces for English
 test('instruction bindings preserve all nine current TSK-0307 IDs and exact current provenance', () => {
   const bindings = json(bindingsPath);
   assert.equal(bindings.schemaVersion, '1.0.0');
-  assert.equal(bindings.sourceArtifact, 'TSK_0307_POST_CR0008_CURRENT_SOURCE_BACKED_INSTRUCTION_CATALOGUE_REVALIDATION_2026-09-02.md');
+  assert.equal(
+    bindings.sourceArtifact,
+    'TSK_0307_POST_CR0008_CURRENT_SOURCE_BACKED_INSTRUCTION_CATALOGUE_REVALIDATION_2026-09-02.md',
+  );
   assert.equal(bindings.sourceCommit, '330e9d13b9d479212ca6c49df3431f19f7107ba5');
   assert.equal(bindings.lastVerified, '2026-09-02');
   assert.deepEqual(Object.keys(bindings.instructions).sort(), [...instructionIds].sort());
@@ -108,8 +120,7 @@ test('i18n layer uses declared fallback and instruction bindings rather than sil
 test('new operational pages consume externalized content and contain no hard-coded visible page/action copy', () => {
   for (const path of localizedPages) {
     const source = read(path);
-    assert.match(source, /getJourneyContent/,
-      `${path} must consume TSK-0359 externalized content`);
+    assert.match(source, /getJourneyContent/, `${path} must consume TSK-0359 externalized content`);
     for (const prop of ['kicker', 'title', 'summary', 'noteTitle', 'noteBody', 'label']) {
       assert.doesNotMatch(source, new RegExp(`${prop}\\s*=\\s*["']`), `${path} hard-codes ${prop}`);
     }
@@ -127,7 +138,11 @@ test('DNS and recovery surfaces select current instruction IDs by locale and pla
   assert.match(dns, /INS-AND-SETUP-01/);
   assert.match(dns, /INS-IOS-SETUP-01/);
   assert.doesNotMatch(dns, /label="I saved this DNS setting/);
-  assert.equal((dns.match(/\{instruction\.value\}/g) ?? []).length, 1, 'DNS setup must render the exact source-bound instruction only once');
+  assert.equal(
+    (dns.match(/\{instruction\.value\}/g) ?? []).length,
+    1,
+    'DNS setup must render the exact source-bound instruction only once',
+  );
   const verify = read('src/app/[locale]/verify/page.tsx');
   assert.match(verify, /INS-AND-VERIFY-01/);
   assert.match(verify, /INS-IOS-VERIFY-01/);
@@ -139,7 +154,10 @@ test('DNS and recovery surfaces select current instruction IDs by locale and pla
 test('Protection Map state machine no longer owns user-facing English/legacy-brand copy', () => {
   const source = read('src/lib/core-state-machine.ts');
   assert.doesNotMatch(source, /primary:\s*string|supporting:\s*string/);
-  assert.doesNotMatch(source, /Protection verified|Protection status could not be verified|Protection has not yet been technically verified|UseSafeWeb/);
+  assert.doesNotMatch(
+    source,
+    /Protection verified|Protection status could not be verified|Protection has not yet been technically verified|UseSafeWeb/,
+  );
 });
 
 test('locale manifest is the single authority for direction and non-activating language availability', () => {
@@ -149,8 +167,13 @@ test('locale manifest is the single authority for direction and non-activating l
   assert.equal(manifest.locales.ar.direction, 'rtl');
   assert.equal(manifest.locales['en-GB'].direction, 'ltr');
   assert.equal(manifest.locales['tr-TR'].direction, 'ltr');
-  for (const locale of locales) assert.equal(manifest.locales[locale].marketActivation, false, `${locale} must not imply market activation`);
-  assert.equal(Object.hasOwn(journey, 'marketActivation'), false, 'journey content must not duplicate market-activation authority');
+  for (const locale of locales)
+    assert.equal(manifest.locales[locale].marketActivation, false, `${locale} must not imply market activation`);
+  assert.equal(
+    Object.hasOwn(journey, 'marketActivation'),
+    false,
+    'journey content must not duplicate market-activation authority',
+  );
   assert.match(browser, /locale-manifest\.json/);
   assert.doesNotMatch(browser, /journey\.marketActivation/);
 });

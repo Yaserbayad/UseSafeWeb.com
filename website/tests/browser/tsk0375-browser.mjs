@@ -53,10 +53,7 @@ try {
         const sessionEntries = await page.evaluate(() => Object.entries(sessionStorage));
         assertMinimalSession(sessionEntries);
 
-        await Promise.all([
-          page.waitForURL(`${base}${expectedHref}`),
-          link.click(),
-        ]);
+        await Promise.all([page.waitForURL(`${base}${expectedHref}`), link.click()]);
         assert.equal(page.url(), `${base}${expectedHref}`);
       } catch (error) {
         failures.push(`${locale}/${testCase.choice}: ${error.stack ?? error}`);

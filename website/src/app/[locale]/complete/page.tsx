@@ -5,7 +5,10 @@ import { getJourneyContent, isLocale } from '@/lib/i18n';
 
 export const metadata = operationalMetadata;
 
-export default async function Page({ params, searchParams }: {
+export default async function Page({
+  params,
+  searchParams,
+}: {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{ platform?: string | string[] }>;
 }) {

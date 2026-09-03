@@ -8,7 +8,9 @@ const browser = await chromium.launch({ headless: true });
 const failures = [];
 
 function record(label, fn) {
-  return Promise.resolve().then(fn).catch((error) => failures.push(`${label}: ${error.stack ?? error}`));
+  return Promise.resolve()
+    .then(fn)
+    .catch((error) => failures.push(`${label}: ${error.stack ?? error}`));
 }
 
 async function stored(page) {
@@ -47,7 +49,14 @@ await record('J0 journey is created only when setup begins and resumes within th
   await page.waitForURL('**/en-GB/setup/route');
   const route = await storedAtStep(page, 'route');
   assert.ok(route, 'setup route must create J0 state');
-  assert.deepEqual(Object.keys(route).sort(), ['createdAt', 'hardExpiresAt', 'journeyStep', 'locale', 'schemaVersion', 'scope']);
+  assert.deepEqual(Object.keys(route).sort(), [
+    'createdAt',
+    'hardExpiresAt',
+    'journeyStep',
+    'locale',
+    'schemaVersion',
+    'scope',
+  ]);
   assert.match(route.scope, /^[0-9a-f]{32}$/);
   assert.equal(route.locale, 'en-GB');
   assert.equal(route.journeyStep, 'route');
@@ -91,30 +100,39 @@ await record('reset deletes immediately and malformed or expired state cannot be
   assert.equal(await page.locator('[data-journey-resume]').count(), 0, 'resume must disappear after reset');
 
   const now = Date.now();
-  await page.evaluate(({ key, nowMs, dayMs }) => {
-    sessionStorage.setItem(key, JSON.stringify({
-      schemaVersion: 1,
-      scope: 'ab'.repeat(16),
-      createdAt: nowMs - dayMs - 1,
-      hardExpiresAt: nowMs - 1,
-      locale: 'en-GB',
-      journeyStep: 'route',
-    }));
-  }, { key: storageKey, nowMs: now, dayMs: DAY_MS });
+  await page.evaluate(
+    ({ key, nowMs, dayMs }) => {
+      sessionStorage.setItem(
+        key,
+        JSON.stringify({
+          schemaVersion: 1,
+          scope: 'ab'.repeat(16),
+          createdAt: nowMs - dayMs - 1,
+          hardExpiresAt: nowMs - 1,
+          locale: 'en-GB',
+          journeyStep: 'route',
+        }),
+      );
+    },
+    { key: storageKey, nowMs: now, dayMs: DAY_MS },
+  );
   await page.reload({ waitUntil: 'networkidle' });
   assert.equal(await stored(page), null, 'expired state must be deleted on read');
   assert.equal(await page.locator('[data-journey-resume]').count(), 0);
 
   await page.evaluate((key) => {
-    sessionStorage.setItem(key, JSON.stringify({
-      schemaVersion: 1,
-      scope: 'ab'.repeat(16),
-      createdAt: Date.now(),
-      hardExpiresAt: Date.now() + 60_000,
-      locale: 'en-GB',
-      journeyStep: 'route',
-      email: 'parent@example.invalid',
-    }));
+    sessionStorage.setItem(
+      key,
+      JSON.stringify({
+        schemaVersion: 1,
+        scope: 'ab'.repeat(16),
+        createdAt: Date.now(),
+        hardExpiresAt: Date.now() + 60_000,
+        locale: 'en-GB',
+        journeyStep: 'route',
+        email: 'parent@example.invalid',
+      }),
+    );
   }, storageKey);
   await page.reload({ waitUntil: 'networkidle' });
   assert.equal(await stored(page), null, 'unknown/personal field must invalidate and delete state');

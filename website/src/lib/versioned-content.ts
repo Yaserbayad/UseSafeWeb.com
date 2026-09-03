@@ -61,10 +61,12 @@ export function selectContentRelease(
 }
 
 export function validateBindingsMetadata(release: ContentRelease, metadata: BindingsMetadata): boolean {
-  return metadata.schemaVersion === release.instructionBindingsSchemaVersion
-    && metadata.sourceArtifact === release.sourceArtifact
-    && metadata.sourceCommit === release.sourceCommit
-    && metadata.lastVerified === release.lastVerified;
+  return (
+    metadata.schemaVersion === release.instructionBindingsSchemaVersion &&
+    metadata.sourceArtifact === release.sourceArtifact &&
+    metadata.sourceCommit === release.sourceCommit &&
+    metadata.lastVerified === release.lastVerified
+  );
 }
 
 export function resolveContentDelivery({

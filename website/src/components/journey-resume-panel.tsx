@@ -40,8 +40,12 @@ export function JourneyResumePanel({ locale, resumeLabel, resetLabel, resumeNote
     <aside className="sw-callout" aria-live="polite">
       <p>{resumeNote}</p>
       <div className="sw-actions">
-        <Link className="sw-button" data-journey-resume href={href}>{resumeLabel}</Link>
-        <button className="sw-button sw-button--secondary" data-journey-reset type="button" onClick={resetJourney}>{resetLabel}</button>
+        <Link className="sw-button" data-journey-resume href={href}>
+          {resumeLabel}
+        </Link>
+        <button className="sw-button sw-button--secondary" data-journey-reset type="button" onClick={resetJourney}>
+          {resetLabel}
+        </button>
       </div>
     </aside>
   );

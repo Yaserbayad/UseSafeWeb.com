@@ -76,7 +76,12 @@ const challengePattern = /^[0-9a-f]{32}$/;
 const allowedOutcomeReasons: Record<DnsVerificationOutcome, ReadonlySet<DnsVerificationReasonCode>> = {
   verified: new Set(['TECH_VERIFIED']),
   failed: new Set(['TECH_VERIFY_NEGATIVE']),
-  uncertain: new Set(['VERIFY_UNREACHABLE', 'VERIFICATION_SERVICE_ERROR', 'EVIDENCE_CONFLICT', 'BYPASS_OR_CONTEXT_UNCERTAIN']),
+  uncertain: new Set([
+    'VERIFY_UNREACHABLE',
+    'VERIFICATION_SERVICE_ERROR',
+    'EVIDENCE_CONFLICT',
+    'BYPASS_OR_CONTEXT_UNCERTAIN',
+  ]),
 };
 
 function invalidObservation(): never {
@@ -97,16 +102,24 @@ function parseObservation(value: unknown): DnsVerificationObservation {
   if (!value || typeof value !== 'object' || Array.isArray(value)) invalidObservation();
   const candidate = value as Record<string, unknown>;
   const keys = Object.keys(candidate).sort();
-  if (keys.length !== observationKeys.length || keys.some((key, index) => key !== observationKeys[index])) invalidObservation();
-  if (candidate.protocol !== DNS_VERIFICATION_PROTOCOL || candidate.verifierVersion !== DNS_VERIFIER_VERSION) invalidObservation();
+  if (keys.length !== observationKeys.length || keys.some((key, index) => key !== observationKeys[index]))
+    invalidObservation();
+  if (candidate.protocol !== DNS_VERIFICATION_PROTOCOL || candidate.verifierVersion !== DNS_VERIFIER_VERSION)
+    invalidObservation();
   if (typeof candidate.scope !== 'string' || !challengePattern.test(candidate.scope)) invalidObservation();
   if (typeof candidate.challenge !== 'string' || !challengePattern.test(candidate.challenge)) invalidObservation();
-  if (candidate.outcome !== 'verified' && candidate.outcome !== 'failed' && candidate.outcome !== 'uncertain') invalidObservation();
-  if (typeof candidate.reasonCode !== 'string' || !allowedOutcomeReasons[candidate.outcome].has(candidate.reasonCode as DnsVerificationReasonCode)) invalidObservation();
+  if (candidate.outcome !== 'verified' && candidate.outcome !== 'failed' && candidate.outcome !== 'uncertain')
+    invalidObservation();
+  if (
+    typeof candidate.reasonCode !== 'string' ||
+    !allowedOutcomeReasons[candidate.outcome].has(candidate.reasonCode as DnsVerificationReasonCode)
+  )
+    invalidObservation();
   if (!Number.isSafeInteger(candidate.observedAt) || !Number.isSafeInteger(candidate.expiresAt)) invalidObservation();
   const observedAt = candidate.observedAt as number;
   const expiresAt = candidate.expiresAt as number;
-  if (observedAt < 0 || expiresAt <= observedAt || expiresAt - observedAt > DNS_VERIFICATION_MAX_LIFETIME_MS) invalidObservation();
+  if (observedAt < 0 || expiresAt <= observedAt || expiresAt - observedAt > DNS_VERIFICATION_MAX_LIFETIME_MS)
+    invalidObservation();
   return {
     protocol: DNS_VERIFICATION_PROTOCOL,
     verifierVersion: DNS_VERIFIER_VERSION,
@@ -123,14 +136,16 @@ function parseProbeRequest(value: unknown): DnsProbeRequestPayload {
   if (!value || typeof value !== 'object' || Array.isArray(value)) invalidProbeRequest();
   const candidate = value as Record<string, unknown>;
   const keys = Object.keys(candidate).sort();
-  if (keys.length !== probeRequestKeys.length || keys.some((key, index) => key !== probeRequestKeys[index])) invalidProbeRequest();
+  if (keys.length !== probeRequestKeys.length || keys.some((key, index) => key !== probeRequestKeys[index]))
+    invalidProbeRequest();
   if (candidate.protocol !== DNS_PROBE_REQUEST_PROTOCOL) invalidProbeRequest();
   if (typeof candidate.scope !== 'string' || !challengePattern.test(candidate.scope)) invalidProbeRequest();
   if (typeof candidate.challenge !== 'string' || !challengePattern.test(candidate.challenge)) invalidProbeRequest();
   if (!Number.isSafeInteger(candidate.issuedAt) || !Number.isSafeInteger(candidate.expiresAt)) invalidProbeRequest();
   const issuedAt = candidate.issuedAt as number;
   const expiresAt = candidate.expiresAt as number;
-  if (issuedAt < 0 || expiresAt <= issuedAt || expiresAt - issuedAt > DNS_PROBE_REQUEST_MAX_LIFETIME_MS) invalidProbeRequest();
+  if (issuedAt < 0 || expiresAt <= issuedAt || expiresAt - issuedAt > DNS_PROBE_REQUEST_MAX_LIFETIME_MS)
+    invalidProbeRequest();
   return {
     protocol: DNS_PROBE_REQUEST_PROTOCOL,
     scope: candidate.scope,
@@ -197,12 +212,27 @@ function resultFromObservation(observation: DnsVerificationObservation, nowMs: n
     };
   }
   if (observation.outcome === 'verified') {
-    return { dnsPath: 'verified-fresh', reasonCode: 'TECH_VERIFIED', observedAt: observation.observedAt, verifierVersion: DNS_VERIFIER_VERSION };
+    return {
+      dnsPath: 'verified-fresh',
+      reasonCode: 'TECH_VERIFIED',
+      observedAt: observation.observedAt,
+      verifierVersion: DNS_VERIFIER_VERSION,
+    };
   }
   if (observation.outcome === 'failed') {
-    return { dnsPath: 'failed', reasonCode: 'TECH_VERIFY_NEGATIVE', observedAt: observation.observedAt, verifierVersion: DNS_VERIFIER_VERSION };
+    return {
+      dnsPath: 'failed',
+      reasonCode: 'TECH_VERIFY_NEGATIVE',
+      observedAt: observation.observedAt,
+      verifierVersion: DNS_VERIFIER_VERSION,
+    };
   }
-  return { dnsPath: 'uncertain', reasonCode: observation.reasonCode, observedAt: observation.observedAt, verifierVersion: DNS_VERIFIER_VERSION };
+  return {
+    dnsPath: 'uncertain',
+    reasonCode: observation.reasonCode,
+    observedAt: observation.observedAt,
+    verifierVersion: DNS_VERIFIER_VERSION,
+  };
 }
 
 function normalizeProbeHost(value: string): string | null {
@@ -241,13 +271,14 @@ export function verifyDnsVerificationObservation(
   try {
     validateSigningSecret(secret);
     if (
-      typeof token !== 'string'
-      || Buffer.byteLength(token, 'utf8') > DNS_VERIFICATION_MAX_TOKEN_BYTES
-      || typeof expectedScope !== 'string'
-      || !challengePattern.test(expectedScope)
-      || typeof expectedChallenge !== 'string'
-      || !challengePattern.test(expectedChallenge)
-    ) return null;
+      typeof token !== 'string' ||
+      Buffer.byteLength(token, 'utf8') > DNS_VERIFICATION_MAX_TOKEN_BYTES ||
+      typeof expectedScope !== 'string' ||
+      !challengePattern.test(expectedScope) ||
+      typeof expectedChallenge !== 'string' ||
+      !challengePattern.test(expectedChallenge)
+    )
+      return null;
     const parts = token.split('.');
     if (parts.length !== 2 || !parts[0] || !parts[1]) return null;
     const [payload, signature] = parts;
@@ -287,11 +318,12 @@ export function verifyDnsProbeRequest(token: string, secret: string, nowMs: numb
   try {
     validateSigningSecret(secret);
     if (
-      typeof token !== 'string'
-      || Buffer.byteLength(token, 'utf8') > DNS_VERIFICATION_MAX_TOKEN_BYTES
-      || !Number.isSafeInteger(nowMs)
-      || nowMs < 0
-    ) return null;
+      typeof token !== 'string' ||
+      Buffer.byteLength(token, 'utf8') > DNS_VERIFICATION_MAX_TOKEN_BYTES ||
+      !Number.isSafeInteger(nowMs) ||
+      nowMs < 0
+    )
+      return null;
     const parts = token.split('.');
     if (parts.length !== 2 || !parts[0] || !parts[1]) return null;
     const [payload, signature] = parts;
@@ -321,16 +353,19 @@ export function createDnsVerificationObservationFromProbeRequest(
   const host = normalizeProbeHost(requestHost);
   if (host !== request.probeHost) return null;
   const expiresAt = Math.min(request.expiresAt, nowMs + DNS_VERIFICATION_MAX_LIFETIME_MS);
-  return signDnsVerificationObservation({
-    protocol: DNS_VERIFICATION_PROTOCOL,
-    verifierVersion: DNS_VERIFIER_VERSION,
-    scope: request.scope,
-    challenge: request.challenge,
-    outcome: 'verified',
-    reasonCode: 'TECH_VERIFIED',
-    observedAt: nowMs,
-    expiresAt,
-  }, secret);
+  return signDnsVerificationObservation(
+    {
+      protocol: DNS_VERIFICATION_PROTOCOL,
+      verifierVersion: DNS_VERIFIER_VERSION,
+      scope: request.scope,
+      challenge: request.challenge,
+      outcome: 'verified',
+      reasonCode: 'TECH_VERIFIED',
+      observedAt: nowMs,
+      expiresAt,
+    },
+    secret,
+  );
 }
 
 function uncertainResult(reasonCode: DnsVerificationReasonCode = 'EVIDENCE_CONFLICT'): VerifiedDnsVerification {
@@ -346,10 +381,17 @@ export function reconcileDnsVerificationObservations(
 ): VerifiedDnsVerification {
   if (!Array.isArray(tokens)) return uncertainResult('VERIFICATION_SERVICE_ERROR');
   if (tokens.length === 0) {
-    return { dnsPath: 'not-run', reasonCode: 'VERIFY_UNREACHABLE', observedAt: null, verifierVersion: DNS_VERIFIER_VERSION };
+    return {
+      dnsPath: 'not-run',
+      reasonCode: 'VERIFY_UNREACHABLE',
+      observedAt: null,
+      verifierVersion: DNS_VERIFIER_VERSION,
+    };
   }
   if (tokens.length > DNS_VERIFICATION_MAX_OBSERVATIONS) return uncertainResult('VERIFICATION_SERVICE_ERROR');
-  const verified = tokens.map((token) => verifyDnsVerificationObservation(token, secret, nowMs, expectedScope, expectedChallenge));
+  const verified = tokens.map((token) =>
+    verifyDnsVerificationObservation(token, secret, nowMs, expectedScope, expectedChallenge),
+  );
   if (verified.some((item) => item === null)) return uncertainResult();
   const results = verified as VerifiedDnsVerification[];
   const latestObservedAt = Math.max(...results.map((item) => item.observedAt ?? -1));

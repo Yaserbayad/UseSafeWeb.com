@@ -8,7 +8,10 @@ import { getJourneyContent, isLocale } from '@/lib/i18n';
 
 export const metadata = operationalMetadata;
 
-export default async function Page({ params, searchParams }: {
+export default async function Page({
+  params,
+  searchParams,
+}: {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{ platform?: string | string[] }>;
 }) {
@@ -22,11 +25,25 @@ export default async function Page({ params, searchParams }: {
   const staticRows: Array<{ label: string; evidence: ProtectionEvidence }> = [
     {
       label: content.deviceSetupLabel,
-      evidence: { coverage: 'covered', configured: true, technical: null, action: null, uncertainty: null, removal: null },
+      evidence: {
+        coverage: 'covered',
+        configured: true,
+        technical: null,
+        action: null,
+        uncertainty: null,
+        removal: null,
+      },
     },
     {
       label: content.otherServicesLabel,
-      evidence: { coverage: 'not-covered', configured: false, technical: null, action: null, uncertainty: null, removal: null },
+      evidence: {
+        coverage: 'not-covered',
+        configured: false,
+        technical: null,
+        action: null,
+        uncertainty: null,
+        removal: null,
+      },
     },
   ];
   const stateLabels = content.stateLabels as Record<string, string>;
@@ -48,7 +65,9 @@ export default async function Page({ params, searchParams }: {
           return (
             <section className="sw-card" data-protection-state={result.state} key={label}>
               <h2>{label}</h2>
-              <p><strong>{stateLabels[result.state]}</strong></p>
+              <p>
+                <strong>{stateLabels[result.state]}</strong>
+              </p>
               <p>{supporting}</p>
               <p className="sw-technical">{result.reasonCode}</p>
             </section>
@@ -67,7 +86,9 @@ export default async function Page({ params, searchParams }: {
           return (
             <section className="sw-card" data-protection-state={result.state} key={label}>
               <h2>{label}</h2>
-              <p><strong>{stateLabels[result.state]}</strong></p>
+              <p>
+                <strong>{stateLabels[result.state]}</strong>
+              </p>
               <p>{supporting}</p>
               <p className="sw-technical">{result.reasonCode}</p>
             </section>

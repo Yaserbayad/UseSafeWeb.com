@@ -15,7 +15,10 @@ async function loadTypeScriptModule(path, missingMessage) {
   let source = readFileSync(path, 'utf8');
   if (source.includes("from './journey-state'")) {
     const journeySource = readFileSync(journeyPath, 'utf8');
-    source = source.replace("from './journey-state'", `from '${dataUrl(stripTypeScriptTypes(journeySource, { mode: 'strip' }))}'`);
+    source = source.replace(
+      "from './journey-state'",
+      `from '${dataUrl(stripTypeScriptTypes(journeySource, { mode: 'strip' }))}'`,
+    );
   }
   return import(dataUrl(stripTypeScriptTypes(source, { mode: 'strip' })));
 }
@@ -108,7 +111,10 @@ test('runtime input is exact-field allowlisted and rejects browsing/history/diag
   ]) {
     assert.throws(() => api.classifyAutomatedChecks({ ...base, ...extra }), /invalid automated verification input/);
   }
-  assert.throws(() => api.classifyAutomatedChecks({ ...base, dnsPath: 'verified' }), /invalid automated verification input/);
+  assert.throws(
+    () => api.classifyAutomatedChecks({ ...base, dnsPath: 'verified' }),
+    /invalid automated verification input/,
+  );
   assert.throws(() => api.classifyAutomatedChecks(null), /invalid automated verification input/);
 });
 

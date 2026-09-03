@@ -11,21 +11,26 @@ const retiredProofKey = 'usesafeweb:dns-verification:v1';
 
 function localRequest(path, { method = 'GET', headers = {}, body = null } = {}) {
   return new Promise((resolve, reject) => {
-    const request = http.request({
-      hostname: localUrl.hostname,
-      port: localUrl.port,
-      path,
-      method,
-      headers,
-    }, (response) => {
-      const chunks = [];
-      response.on('data', (chunk) => chunks.push(chunk));
-      response.on('end', () => resolve({
-        status: response.statusCode ?? 500,
-        headers: response.headers,
-        body: Buffer.concat(chunks),
-      }));
-    });
+    const request = http.request(
+      {
+        hostname: localUrl.hostname,
+        port: localUrl.port,
+        path,
+        method,
+        headers,
+      },
+      (response) => {
+        const chunks = [];
+        response.on('data', (chunk) => chunks.push(chunk));
+        response.on('end', () =>
+          resolve({
+            status: response.statusCode ?? 500,
+            headers: response.headers,
+            body: Buffer.concat(chunks),
+          }),
+        );
+      },
+    );
     request.on('error', reject);
     if (body?.length) request.write(body);
     request.end();
@@ -101,9 +106,10 @@ async function setPhase(page, phase) {
 
 async function waitForState(page, selector, attribute, value) {
   await page.locator(selector).waitFor({ state: 'visible' });
-  await page.waitForFunction(({ selector, attribute, value }) => (
-    document.querySelector(selector)?.getAttribute(attribute) === value
-  ), { selector, attribute, value });
+  await page.waitForFunction(
+    ({ selector, attribute, value }) => document.querySelector(selector)?.getAttribute(attribute) === value,
+    { selector, attribute, value },
+  );
   return page.locator(selector);
 }
 

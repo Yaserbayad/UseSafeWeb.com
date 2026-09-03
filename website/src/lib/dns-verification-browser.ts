@@ -71,17 +71,28 @@ function parseCheck(value: unknown): BrowserDnsVerificationCheck | null {
     return { dnsPath: 'not-run', reasonCode: 'VERIFY_UNREACHABLE', verifierVersion: 'private-rewrite-v1' };
   }
   if (dnsPath === 'uncertain') {
-    if (reasonCode === 'VERIFY_UNREACHABLE') return { dnsPath: 'uncertain', reasonCode: 'VERIFY_UNREACHABLE', verifierVersion: 'private-rewrite-v1' };
-    if (reasonCode === 'VERIFICATION_SERVICE_ERROR') return { dnsPath: 'uncertain', reasonCode: 'VERIFICATION_SERVICE_ERROR', verifierVersion: 'private-rewrite-v1' };
-    if (reasonCode === 'EVIDENCE_CONFLICT') return { dnsPath: 'uncertain', reasonCode: 'EVIDENCE_CONFLICT', verifierVersion: 'private-rewrite-v1' };
-    if (reasonCode === 'BYPASS_OR_CONTEXT_UNCERTAIN') return { dnsPath: 'uncertain', reasonCode: 'BYPASS_OR_CONTEXT_UNCERTAIN', verifierVersion: 'private-rewrite-v1' };
-    if (reasonCode === 'VERIFY_STALE') return { dnsPath: 'uncertain', reasonCode: 'VERIFY_STALE', verifierVersion: 'private-rewrite-v1' };
+    if (reasonCode === 'VERIFY_UNREACHABLE')
+      return { dnsPath: 'uncertain', reasonCode: 'VERIFY_UNREACHABLE', verifierVersion: 'private-rewrite-v1' };
+    if (reasonCode === 'VERIFICATION_SERVICE_ERROR')
+      return { dnsPath: 'uncertain', reasonCode: 'VERIFICATION_SERVICE_ERROR', verifierVersion: 'private-rewrite-v1' };
+    if (reasonCode === 'EVIDENCE_CONFLICT')
+      return { dnsPath: 'uncertain', reasonCode: 'EVIDENCE_CONFLICT', verifierVersion: 'private-rewrite-v1' };
+    if (reasonCode === 'BYPASS_OR_CONTEXT_UNCERTAIN')
+      return { dnsPath: 'uncertain', reasonCode: 'BYPASS_OR_CONTEXT_UNCERTAIN', verifierVersion: 'private-rewrite-v1' };
+    if (reasonCode === 'VERIFY_STALE')
+      return { dnsPath: 'uncertain', reasonCode: 'VERIFY_STALE', verifierVersion: 'private-rewrite-v1' };
   }
   return null;
 }
 
-async function fetchWithTimeout(fetchImpl: FetchLike, input: string, init: RequestInit, timeoutMs: number): Promise<Response> {
-  if (!Number.isSafeInteger(timeoutMs) || timeoutMs <= 0 || timeoutMs > 30_000) throw new TypeError('invalid verification timeout');
+async function fetchWithTimeout(
+  fetchImpl: FetchLike,
+  input: string,
+  init: RequestInit,
+  timeoutMs: number,
+): Promise<Response> {
+  if (!Number.isSafeInteger(timeoutMs) || timeoutMs <= 0 || timeoutMs > 30_000)
+    throw new TypeError('invalid verification timeout');
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -97,13 +108,18 @@ async function consumeObservation(
   fetchImpl: FetchLike,
   timeoutMs: number,
 ): Promise<BrowserDnsVerificationCheck | null> {
-  const response = await fetchWithTimeout(fetchImpl, '/api/dns-verification/results', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ requestToken, observationToken }),
-    credentials: 'same-origin',
-    cache: 'no-store',
-  }, timeoutMs);
+  const response = await fetchWithTimeout(
+    fetchImpl,
+    '/api/dns-verification/results',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ requestToken, observationToken }),
+      credentials: 'same-origin',
+      cache: 'no-store',
+    },
+    timeoutMs,
+  );
   if (!response.ok) return null;
   return parseCheck(await response.json());
 }
@@ -115,25 +131,35 @@ export async function runDnsVerification(
 ): Promise<BrowserDnsVerificationCheck | null> {
   if (typeof scope !== 'string' || !challengePattern.test(scope)) return null;
   try {
-    const requestResponse = await fetchWithTimeout(fetchImpl, '/api/dns-verification/requests', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ scope }),
-      credentials: 'same-origin',
-      cache: 'no-store',
-    }, timeoutMs);
+    const requestResponse = await fetchWithTimeout(
+      fetchImpl,
+      '/api/dns-verification/requests',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scope }),
+        credentials: 'same-origin',
+        cache: 'no-store',
+      },
+      timeoutMs,
+    );
     if (!requestResponse.ok) return null;
     const issued = parseIssuedRequest(await requestResponse.json());
     if (!issued) return null;
 
-    const probeResponse = await fetchWithTimeout(fetchImpl, `https://${issued.probeHost}/api/dns-verification/probes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: issued.requestToken,
-      credentials: 'omit',
-      cache: 'no-store',
-      mode: 'cors',
-    }, timeoutMs);
+    const probeResponse = await fetchWithTimeout(
+      fetchImpl,
+      `https://${issued.probeHost}/api/dns-verification/probes`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: issued.requestToken,
+        credentials: 'omit',
+        cache: 'no-store',
+        mode: 'cors',
+      },
+      timeoutMs,
+    );
     if (!probeResponse.ok) return null;
     const observationToken = parseObservationEnvelope(await probeResponse.json());
     if (!observationToken) return null;

@@ -25,9 +25,11 @@ function signingSecret(): string | null {
 }
 
 function validToken(value: unknown): value is string {
-  return typeof value === 'string'
-    && value.length > 0
-    && Buffer.byteLength(value, 'utf8') <= DNS_VERIFICATION_MAX_TOKEN_BYTES;
+  return (
+    typeof value === 'string' &&
+    value.length > 0 &&
+    Buffer.byteLength(value, 'utf8') <= DNS_VERIFICATION_MAX_TOKEN_BYTES
+  );
 }
 
 function parseBody(value: unknown): { requestToken: string; observationToken: string } | null {
@@ -61,7 +63,8 @@ export async function POST(request: Request): Promise<Response> {
 
   const nowMs = Date.now();
   const issued = verifyDnsProbeRequest(body.requestToken, secret, nowMs);
-  if (!issued) return error(403, 'PROOF_NOT_AUTHORIZED', 'DNS verification request is not valid for the current check.');
+  if (!issued)
+    return error(403, 'PROOF_NOT_AUTHORIZED', 'DNS verification request is not valid for the current check.');
 
   const verified = verifyDnsVerificationObservation(
     body.observationToken,
@@ -70,7 +73,8 @@ export async function POST(request: Request): Promise<Response> {
     issued.scope,
     issued.challenge,
   );
-  if (!verified) return error(403, 'PROOF_NOT_AUTHORIZED', 'DNS verification proof is not valid for the current check.');
+  if (!verified)
+    return error(403, 'PROOF_NOT_AUTHORIZED', 'DNS verification proof is not valid for the current check.');
 
   return response(200, toApprovedDnsVerificationEvent(verified));
 }
