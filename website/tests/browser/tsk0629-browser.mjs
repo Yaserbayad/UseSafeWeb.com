@@ -17,6 +17,7 @@ async function setPhase(page, locale, phase, deviceFamily) {
       locale,
       phase,
       loginRequired: false,
+      retryCount: 0,
       deviceFamily,
     },
   });
@@ -51,6 +52,7 @@ for (const [locale, deviceFamily] of [['en-GB', 'android'], ['tr-TR', 'iphone'],
     assert.equal(await panel.getAttribute('data-parent-confirmation'), 'confirmed');
     assert.equal(await panel.getAttribute('data-protection-state'), 'uncertain/error');
     assert.equal(await page.locator('[data-core-troubleshoot]').count(), 1);
+    assert.equal(await page.locator('[data-core-view-protection]').count(), 0);
     assert.equal((await page.locator('body').innerText()).includes('Protection verified'), false);
     await context.close();
   });
@@ -63,6 +65,7 @@ await record('URL/query input cannot manufacture a positive verification result'
   await page.goto(`${base}/en-GB/verify?platform=android&support=supported&service=healthy&dnsPath=verified-fresh`, { waitUntil: 'domcontentloaded' });
   const panel = await waitForCheck(page, '[data-verification-outcome]', 'uncertain');
   assert.equal(await panel.getAttribute('data-protection-state'), 'uncertain/error');
+  assert.equal(await page.locator('[data-core-view-protection]').count(), 0);
   assert.equal((await page.locator('body').innerText()).includes('Protection verified'), false);
   await context.close();
 });
