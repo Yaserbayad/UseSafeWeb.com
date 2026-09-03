@@ -2,12 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { classifyAutomatedChecks, type AutomatedVerificationOutcome } from '@/lib/automated-verification';
-import {
-  clearDnsVerificationProof,
-  readDnsVerificationProof,
-  revalidateDnsVerificationProof,
-  type BrowserDnsVerificationCheck,
-} from '@/lib/dns-verification-browser';
+import { runDnsVerification, type BrowserDnsVerificationCheck } from '@/lib/dns-verification-browser';
 import { readCoreSession } from '@/lib/core-session';
 import { evaluateProtection, type DeviceFamily, type Locale } from '@/lib/core-state-machine';
 
@@ -37,9 +32,7 @@ export function DnsVerificationCard({
     let active = true;
     const run = async () => {
       const state = readCoreSession(window.sessionStorage, Date.now());
-      const proof = readDnsVerificationProof(window.sessionStorage);
-      if (!state || state.phase !== 'protection' || state.locale !== locale || state.deviceFamily !== deviceFamily || !proof) {
-        clearDnsVerificationProof(window.sessionStorage);
+      if (!state || state.phase !== 'protection' || state.locale !== locale || state.deviceFamily !== deviceFamily) {
         if (active) {
           setOutcome(outcomeFromCheck(null));
           setChecking(false);
@@ -47,11 +40,8 @@ export function DnsVerificationCard({
         return;
       }
 
-      const check = await revalidateDnsVerificationProof(state.scope, proof);
+      const check = await runDnsVerification(state.scope);
       if (!active) return;
-      if (!check || check.dnsPath !== 'verified-fresh') {
-        clearDnsVerificationProof(window.sessionStorage);
-      }
       setOutcome(outcomeFromCheck(check));
       setChecking(false);
     };
