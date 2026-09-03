@@ -7,7 +7,7 @@ const publicBase = process.env.PUBLIC_BASE_URL ?? 'https://usesafeweb.com';
 const publicOrigin = new URL(publicBase).origin;
 const localUrl = new URL(localBase);
 const coreKey = 'usesafeweb:core:v1';
-const proofKey = 'usesafeweb:dns-verification:v1';
+const retiredProofKey = 'usesafeweb:dns-verification:v1';
 
 function localRequest(path, { method = 'GET', headers = {}, body = null } = {}) {
   return new Promise((resolve, reject) => {
@@ -41,7 +41,7 @@ function responseHeaders(headers) {
   return result;
 }
 
-async function installLocalTransport(context) {
+async function installLocalTransport(context, stats) {
   await context.route('**/*', async (route) => {
     const request = route.request();
     const url = new URL(request.url());
@@ -51,11 +51,14 @@ async function installLocalTransport(context) {
     if (url.origin === publicOrigin) {
       targetPath = `${url.pathname}${url.search}`;
       headers.host = new URL(publicBase).host;
+      if (url.pathname === '/api/dns-verification/requests') stats.requests += 1;
+      if (url.pathname === '/api/dns-verification/results') stats.results += 1;
     } else if (url.hostname.endsWith('.verify.usesafeweb.com')) {
       targetPath = '/api/dns-verification/probes';
       headers.host = url.host;
       headers.origin = publicOrigin;
       headers['content-type'] = 'text/plain';
+      stats.probes += 1;
     } else {
       await route.abort('blockedbyclient');
       return;
@@ -103,9 +106,20 @@ async function waitForState(page, selector, attribute, value) {
   return page.locator(selector);
 }
 
+async function assertNoPersistedProof(page) {
+  assert.equal(await page.evaluate((key) => sessionStorage.getItem(key), retiredProofKey), null);
+  const storedValues = await page.evaluate(() => Object.values(sessionStorage));
+  for (const value of storedValues) {
+    assert.equal(value.includes('observationToken'), false);
+    assert.equal(value.includes('challenge'), false);
+    assert.equal(value.includes('verify.usesafeweb.com'), false);
+  }
+}
+
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
-await installLocalTransport(context);
+const stats = { requests: 0, probes: 0, results: 0 };
+await installLocalTransport(context, stats);
 const page = await context.newPage();
 
 try {
@@ -116,31 +130,29 @@ try {
   const panel = await waitForState(page, '[data-verification-outcome]', 'data-verification-outcome', 'working');
   assert.equal(await panel.getAttribute('data-protection-state'), 'protected/verified');
   assert.equal(await panel.getAttribute('data-parent-confirmation'), 'confirmed');
-  assert.equal(await page.locator('[data-core-verify-recovery]').count(), 0);
-
-  const stored = await page.evaluate((key) => sessionStorage.getItem(key), proofKey);
-  assert.ok(stored);
-  const proof = JSON.parse(stored);
-  assert.deepEqual(Object.keys(proof).sort(), ['challenge', 'observationToken']);
-  assert.match(proof.challenge, /^[0-9a-f]{32}$/);
-  assert.equal(typeof proof.observationToken, 'string');
-  assert.ok(proof.observationToken.length > 40);
+  assert.equal(await page.locator('[data-core-troubleshoot]').count(), 0);
+  assert.equal(stats.requests, 1);
+  assert.equal(stats.probes, 1);
+  assert.equal(stats.results, 1);
+  await assertNoPersistedProof(page);
 
   await page.locator('[data-core-view-protection]').click();
   await page.waitForURL(`${publicBase}/en-GB/protection?platform=android`);
   const card = await waitForState(page, '[data-dns-verification-state]', 'data-dns-verification-state', 'working');
   assert.equal(await card.getAttribute('data-protection-state'), 'protected/verified');
   assert.equal((await card.innerText()).includes('Protection verified'), true);
+  assert.equal(stats.requests, 2);
+  assert.equal(stats.probes, 2);
+  assert.equal(stats.results, 2);
+  await assertNoPersistedProof(page);
 
-  await page.evaluate((key) => {
-    const current = JSON.parse(sessionStorage.getItem(key));
-    sessionStorage.setItem(key, JSON.stringify({ ...current, working: true }));
-  }, proofKey);
   await page.reload({ waitUntil: 'networkidle' });
-  const tampered = await waitForState(page, '[data-dns-verification-state]', 'data-dns-verification-state', 'uncertain');
-  assert.equal(await tampered.getAttribute('data-protection-state'), 'uncertain/error');
-  assert.equal((await tampered.innerText()).includes('Protection verified'), false);
-  assert.equal(await page.evaluate((key) => sessionStorage.getItem(key), proofKey), null);
+  const refreshed = await waitForState(page, '[data-dns-verification-state]', 'data-dns-verification-state', 'working');
+  assert.equal(await refreshed.getAttribute('data-protection-state'), 'protected/verified');
+  assert.equal(stats.requests, 3);
+  assert.equal(stats.probes, 3);
+  assert.equal(stats.results, 3);
+  await assertNoPersistedProof(page);
 
   console.log('TSK0243_BROWSER_ORCHESTRATION_ACCEPTANCE=PASS');
 } finally {
