@@ -1,0 +1,42 @@
+name: Temporary TSK-0453 lock guard rebind
+
+on:
+  push:
+    branches:
+      - feature/tsk-0453-quality-review-rules-20260903
+
+permissions:
+  contents: write
+
+jobs:
+  rebind-lock-guards:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: feature/tsk-0453-quality-review-rules-20260903
+          fetch-depth: 1
+      - name: Rebind exact lockfile guards and commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          old='14f9a62607489f965b96d98cdf0d825a363cd8bc'
+          new='6ff91d845bc5f3099b6a00f5f43673eed80a3ba5'
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
+          test "$(git hash-object website/package-lock.json)" = "$new"
+          mapfile -t files < <(grep -rl --include='*.yml' --include='*.yaml' "$old" .github/workflows | sort)
+          printf 'LOCK_GUARD_FILES=%s\n' "${#files[@]}"
+          printf '%s\n' "${files[@]}"
+          test "${#files[@]}" -eq 9
+          for file in "${files[@]}"; do
+            sed -i "s/$old/$new/g" "$file"
+          done
+          ! grep -R --include='*.yml' --include='*.yaml' -n "$old" .github/workflows
+          python3 Plans/Master/Tools/validate_master_plan.py
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .github/workflows
+          git commit -m 'ci(TSK-0453): rebind accepted workflows to formatter lock baseline'
+          git push origin HEAD:feature/tsk-0453-quality-review-rules-20260903
