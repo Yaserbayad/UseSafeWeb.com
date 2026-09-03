@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-03T03:07:24Z
+**Updated:** 2026-09-03T03:42:40Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -3039,3 +3039,25 @@ Recompute the complete current L6 executable frontier from canonical WBS/graph/r
 ### Queue status after TSK-0629 partial source acceptance
 
 Continue with the highest-priority genuinely executable work that can supply or enable the missing trusted verification evidence without bypassing target-host, distribution, deployment, production or participant fences. Recompute eligibility before every consequential mutation.
+
+
+## TSK-0243 current accepted stable state — 2026-09-03 — SOURCE IMPLEMENTATION PARTIAL
+
+`TSK-0243 — Implement privacy-safe DNS protection verification`: **TODO**. The source trust/proof contract is durably integrated and independently verified, but current `ACC-0243 / VER-0243 / EVD-0243` remains incomplete because the required target DNS/TLS verifier path has not been deployed or observed.
+
+- Current normalized WBS: L6 / MEDIUM / A3 / `AUTO_ALLOWED`; hard predecessor `TSK-0358` is current durable PASS; `LG-07` is current durable PASS.
+- Canonical source implementation merged through PR `#66`; squash merge commit `34e2dd6599ae0f5a8e0d8fb2f955b8ba6b3a0e7b`.
+- Durable partial evidence: `TSK_0243_PRIVACY_SAFE_DNS_VERIFICATION_SOURCE_CONTRACT_2026-09-03.md`, blob `fa0f049384b4504f15329a1bed3d2f7a1cb04e7a`.
+- Canonical proof source: `website/src/lib/dns-verification-proof.ts`, blob `033b7db0e75e2625d16588bffb37eec4bb750cd8`.
+- Final PR-head acceptance `33711904916 / 100513010210`: **SUCCESS** on exact feature head `bca0d3db31ea5a8e5b8d844c111a925c596cc451`.
+- Clean canonical-main TSK-0243 acceptance `33711970862 / 100513212123`: **SUCCESS** on exact merge SHA `34e2dd6599ae0f5a8e0d8fb2f955b8ba6b3a0e7b`; 48/48 contract tests PASS, repository/master-plan validators PASS, lint has zero errors with one inherited `_accountState` warning, type-check and Next.js production build PASS with 55/55 static pages generated where applicable, and production/all dependency audits report 0 vulnerabilities.
+- Related clean-main regressions on the same merge SHA also PASS: TSK-0629 `33711970827 / 100513211979` including real-browser acceptance, and TSK-0359 `33711970866 / 100513212337` including inherited real-browser locale/accountless acceptance.
+- Proven source behavior includes CSPRNG 128-bit per-check challenges, cache-busting verification hostnames, strict no-history observation schema, HMAC-SHA256 proof authentication with timing-safe comparison, current scope + challenge replay binding, verifier-owned bounded freshness, untrusted token/batch limits, deterministic fail-closed stale/failure/conflict reconciliation, and a privacy-minimal approved event projection.
+- Security/correctness defects found during review were corrected test-first before integration: still-fresh prior-challenge replay, unbounded external proof input, and caller-dependent challenge freshness.
+- **Acceptance still missing:** target evidence must prove the intended UseSafeWeb DNS path resolves the dedicated random verification hostname while an ordinary/public path does not falsely succeed; TLS authenticates the verifier; the signer secret remains server-only and the positive signer cannot be invoked from arbitrary client input; stale/replayed/negative/timeout/conflict cases fail closed; runtime/event/storage inspection proves no browsing/query/activity history, raw DNS history, persistent client IP, unnecessary identity, secret, or challenge/scope product-event retention; and rollback/removal is tested against the exact target configuration/version.
+- The source contract authenticates proof tokens against untrusted-side tampering/replay when the verifier/consumer protect the HMAC key; it does not treat a compromised trusted signer holding that key as trustworthy evidence.
+- **Non-inference / fences:** no DNS rewrite/record, TLS certificate, DNS-server mutation, web deployment, profile distribution, production/runtime activation, participant processing, market activation, payment, launch, or unrelated task/gate PASS is inferred or performed. `TSK-0629` remains TODO until a trusted deployed fresh E1 DNS-path producer is evidenced; `TSK-0360` remains TODO; `TSK-0455` remains WAITING for a genuinely qualifying owner-provided fresh Ubuntu 24.04 LTS target host/access; `TSK-0399` remains ineligible while `TSK-0360` is non-PASS. No `GATE-0026` exists or is created.
+
+### Queue status after TSK-0243 partial source acceptance
+
+Continue only with current authorized source/configuration work that materially advances the missing target-verifier acceptance without deploying, distributing, activating runtime/market state or processing participants. If the remaining acceptance requires a fenced target DNS/TLS/runtime mutation or unavailable target access, retain `TSK-0243` as non-PASS and recompute the next genuinely executable `AUTO_ALLOWED` frontier.
