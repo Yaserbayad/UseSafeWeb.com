@@ -55,7 +55,7 @@ jobs:
             expected_failure="$3"
             rm -rf .next
             NEXT_TELEMETRY_DISABLED=1 npm run build
-            NEXT_TELEMETRY_DISABLED=1 npm run start -- -H 127.0.0.1 -p 3000 >/tmp/tsk0374-next.log 2>&1 &
+            NEXT_TELEMETRY_DISABLED=1 node node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000 >/tmp/tsk0374-next.log 2>&1 &
             server_pid=$!
             ready=0
             for attempt in $(seq 1 60); do
@@ -63,20 +63,42 @@ jobs:
                 ready=1
                 break
               fi
+              if ! kill -0 "$server_pid" 2>/dev/null; then
+                break
+              fi
               sleep 1
             done
             if [ "$ready" -ne 1 ]; then
               cat /tmp/tsk0374-next.log
               kill "$server_pid" 2>/dev/null || true
+              wait "$server_pid" 2>/dev/null || true
               exit 1
             fi
+
+            set +e
             BASE_URL='http://127.0.0.1:3000' \
               TSK0374_EXPECTED_STATUS="$expected_status" \
               TSK0374_EXPECTED_RELEASE="$expected_release" \
               TSK0374_EXPECT_FAILURE="$expected_failure" \
               node tests/browser/tsk0374-target.mjs
-            kill "$server_pid"
+            probe_status=$?
+            set -e
+
+            kill "$server_pid" 2>/dev/null || true
             wait "$server_pid" 2>/dev/null || true
+            for attempt in $(seq 1 10); do
+              if ! curl -fsS 'http://127.0.0.1:3000/en-GB/setup/dns?platform=android' >/dev/null 2>&1; then
+                break
+              fi
+              sleep 1
+            done
+            if curl -fsS 'http://127.0.0.1:3000/en-GB/setup/dns?platform=android' >/dev/null 2>&1; then
+              echo 'TSK0374_TARGET_SERVER_CLEANUP=FAIL'
+              exit 1
+            fi
+            if [ "$probe_status" -ne 0 ]; then
+              exit "$probe_status"
+            fi
           }
 
           # Canonical current release: functional selection, exact metadata, no off-origin content transport/cookies.
