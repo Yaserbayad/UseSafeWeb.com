@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-03T02:37:41Z
+**Updated:** 2026-09-03T03:07:24Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -3020,3 +3020,22 @@ Recompute the complete current L6 executable frontier from canonical WBS/graph/r
 ### Queue status after TSK-0359 acceptance
 
 Recompute the complete current L6 executable frontier from canonical WBS/graph/runtime/gates/risks/interfaces and Action Authority. Preserve all unresolved material-action fences and execute only the highest-priority genuinely eligible `AUTO_ALLOWED` work.
+
+## TSK-0629 current accepted stable state — 2026-09-03 — SOURCE IMPLEMENTATION PARTIAL
+
+`TSK-0629 — Implement privacy-safe automated checks that confirm what can be technically verified and clearly label everything else`: **TODO**. Durable source implementation is accepted, but current `ACC-0629 / VER-0629 / EVD-0629` is incomplete because no approved trusted producer of fresh E1 DNS-path evidence is connected or proven.
+
+- Current normalized WBS: L6 / HIGH / A4 / `AUTO_ALLOWED`; hard predecessors `TSK-0358` and `TSK-0320` are current durable PASS; `LG-07` is current durable PASS.
+- Canonical source implementation merged through PR `#64`; squash merge `d00a2ad85ae58c50457724f473da6aab0dfdcf56`.
+- Durable partial evidence: `TSK_0629_PRIVACY_SAFE_AUTOMATED_CHECK_SOURCE_IMPLEMENTATION_2026-09-03.md`, blob `d64407f63a4ab867b1f10ef25e87d9664d8bbfb5`, evidence commit `ad8e5f4309dfaee5d84ef1eabcc535d6c808ed37`.
+- Final feature gate `33709655002 / 100506226449`: **SUCCESS** on exact feature head `fccc55aafb923993ac49c9f6a6ac7ae0f4baddfb`.
+- Canonical clean-main TSK-0629 gate `33709817061 / 100506699183`: **SUCCESS** on exact merge SHA; 42/42 contracts PASS, lint has zero errors, type-check and Next.js production build PASS, dependency audits report 0 vulnerabilities, and `TSK0629_BROWSER_ACCEPTANCE=PASS`.
+- Independent inherited regression `33709817022 / 100506699008`: **SUCCESS** on the same merge SHA.
+- Proven source behavior includes exact-field privacy-safe check classification, strict separation of parent confirmation from technical evidence, fail-closed stale/failure/conflict/unknown/not-run/removal behavior, query-spoof resistance, single current-verification authority, Protection Map binding, and controlled verify-to-troubleshoot recovery.
+- Current product source intentionally evaluates the live check as `unknown / unknown / not-run`; it cannot truthfully produce a positive working/protected result until a trusted approved fresh E1 DNS-path producer exists. Source-level positive test vectors are not target verification evidence.
+- `TSK-0243` currently owns the privacy-safe DNS-protection verification acceptance boundary needed to establish deterministic supported-path verification without query history and with cache/failure/conflict handling. The WBS does not declare `TSK-0243` as a hard predecessor of `TSK-0629`; this is recorded as a technical enabling relationship for sequencing only, not an invented dependency edge.
+- **Non-inference / fences:** no deployment, DNS-server mutation, profile distribution, production/runtime activation, market activation, participant processing, launch or unrelated task/gate PASS is inferred. `TSK-0360` remains TODO; `TSK-0455` remains WAITING; `TSK-0399` remains ineligible while `TSK-0360` is non-PASS. No `GATE-0026` exists or is created.
+
+### Queue status after TSK-0629 partial source acceptance
+
+Continue with the highest-priority genuinely executable work that can supply or enable the missing trusted verification evidence without bypassing target-host, distribution, deployment, production or participant fences. Recompute eligibility before every consequential mutation.
