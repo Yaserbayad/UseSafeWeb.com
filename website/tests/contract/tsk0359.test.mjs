@@ -11,12 +11,12 @@ const json = (path) => JSON.parse(read(path));
 const journeyPath = 'src/content/journey-content.json';
 const bindingsPath = 'src/content/instruction-bindings.json';
 const fallbackModulePath = 'src/lib/locale-fallback.ts';
-const localizedPages = [
+const localizedSurfaces = [
   'src/app/[locale]/verify/page.tsx',
   'src/app/[locale]/protection/page.tsx',
   'src/app/[locale]/troubleshoot/page.tsx',
   'src/app/[locale]/recover/page.tsx',
-  'src/app/[locale]/cleanup/page.tsx',
+  'src/components/revocation-gated-cleanup.tsx',
   'src/app/[locale]/removed/page.tsx',
   'src/app/[locale]/complete/page.tsx',
 ];
@@ -41,7 +41,7 @@ async function loadFallbackApi() {
 }
 
 test('TSK-0359 localization artifacts exist and package contract runs this task', () => {
-  for (const path of [journeyPath, bindingsPath, fallbackModulePath, ...localizedPages]) {
+  for (const path of [journeyPath, bindingsPath, fallbackModulePath, ...localizedSurfaces]) {
     assert.equal(existsSync(resolve(root, path)), true, `missing ${path}`);
   }
   const pkg = json('package.json');
@@ -106,8 +106,8 @@ test('i18n layer uses declared fallback and instruction bindings rather than sil
   assert.match(source, /sourceLocale/);
 });
 
-test('new operational pages consume externalized content and contain no hard-coded visible page/action copy', () => {
-  for (const path of localizedPages) {
+test('operational surfaces consume externalized content and contain no hard-coded visible page/action copy', () => {
+  for (const path of localizedSurfaces) {
     const source = read(path);
     assert.match(source, /getJourneyContent/,
       `${path} must consume TSK-0359 externalized content`);
@@ -132,7 +132,7 @@ test('DNS, verification and revocation-gated cleanup select localized platform i
   const verify = read('src/app/[locale]/verify/page.tsx');
   assert.match(verify, /INS-AND-VERIFY-01/);
   assert.match(verify, /INS-IOS-VERIFY-01/);
-  const cleanup = read('src/app/[locale]/cleanup/page.tsx');
+  const cleanup = read('src/components/revocation-gated-cleanup.tsx');
   assert.match(cleanup, /getVersionedInstruction/);
   assert.match(cleanup, /'remove'/);
   assert.equal((cleanup.match(/\{instruction\.value\}/g) ?? []).length, 1, 'cleanup must render the exact source-bound removal instruction only once');
