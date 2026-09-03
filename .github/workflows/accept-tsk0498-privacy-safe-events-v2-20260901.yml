@@ -51,9 +51,7 @@ jobs:
           cd website
           npm audit --omit=dev --audit-level=high
           npm audit --audit-level=high
-          test "$(node -p \"require('./package.json').dependencies.next\")" = '16.3.3'
-          test "$(node -p \"require('./package.json').dependencies.react\")" = '19.2.8'
-          test "$(node -p \"require('./package.json').dependencies['react-dom']\")" = '19.2.8'
+          node -e 'const p=require("./package.json"); if (p.dependencies.next !== "16.3.3" || p.dependencies.react !== "19.2.8" || p.dependencies["react-dom"] !== "19.2.8") process.exit(1)'
       - name: Verify source-only boundary
         shell: bash
         run: |
