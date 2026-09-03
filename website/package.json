@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
-    "test:contract": "node --test tests/contract/tsk0361.test.mjs tests/contract/tsk0357.test.mjs tests/contract/tsk0358.test.mjs"
+    "test:contract": "node --test tests/contract/tsk0361.test.mjs tests/contract/tsk0357.test.mjs tests/contract/tsk0358.test.mjs tests/contract/tsk0360.test.mjs"
   },
   "dependencies": {
     "next": "16.3.3",
