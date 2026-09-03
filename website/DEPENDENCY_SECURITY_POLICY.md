@@ -12,18 +12,18 @@ Current repository inspection found **container images: none** in the tracked ex
 
 ### Direct dependency inventory
 
-| Package | Requested version/range | Class | Exact-resolution authority |
-| --- | --- | --- | --- |
-| next | 16.3.3 | runtime | `package-lock.json` |
-| react | 19.2.8 | runtime | `package-lock.json` |
-| react-dom | 19.2.8 | runtime | `package-lock.json` |
-| @types/node | ^20 | development | `package-lock.json` |
-| @types/react | ^19 | development | `package-lock.json` |
-| @types/react-dom | ^19 | development | `package-lock.json` |
-| eslint | 9.39.5 | development | `package-lock.json` |
-| eslint-config-next | 16.3.3 | development | `package-lock.json` |
-| prettier | 3.9.6 | development | `package-lock.json` |
-| typescript | ^5 | development | `package-lock.json` |
+| Package            | Requested version/range | Class       | Exact-resolution authority |
+| ------------------ | ----------------------- | ----------- | -------------------------- |
+| next               | 16.3.3                  | runtime     | `package-lock.json`        |
+| react              | 19.2.8                  | runtime     | `package-lock.json`        |
+| react-dom          | 19.2.8                  | runtime     | `package-lock.json`        |
+| @types/node        | ^20                     | development | `package-lock.json`        |
+| @types/react       | ^19                     | development | `package-lock.json`        |
+| @types/react-dom   | ^19                     | development | `package-lock.json`        |
+| eslint             | 9.39.5                  | development | `package-lock.json`        |
+| eslint-config-next | 16.3.3                  | development | `package-lock.json`        |
+| prettier           | 3.9.6                   | development | `package-lock.json`        |
+| typescript         | ^5                      | development | `package-lock.json`        |
 
 The requested range is not treated as the installed version when it is a range. The exact resolved version is the corresponding `node_modules/<package>.version` record in the committed lockfile and the generated SPDX SBOM.
 
@@ -48,12 +48,12 @@ Routine review:
 
 Severity disposition:
 
-| Severity | Required disposition |
-| --- | --- |
-| Critical | Stop acceptance until remediated or a current, explicitly authorized, time-bounded exception is recorded. |
-| High | CI fails through `npm audit --audit-level=high`; remediate before acceptance unless a current, explicitly authorized, time-bounded exception exists. |
+| Severity | Required disposition                                                                                                                                                                |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Critical | Stop acceptance until remediated or a current, explicitly authorized, time-bounded exception is recorded.                                                                           |
+| High     | CI fails through `npm audit --audit-level=high`; remediate before acceptance unless a current, explicitly authorized, time-bounded exception exists.                                |
 | Moderate | Security reviews the advisory and records upgrade or no-change rationale at the next dependency review; escalate if exploitability or project context makes the actual risk higher. |
-| Low | Review during the routine dependency cycle; update when compatible or record why the current version remains appropriate. |
+| Low      | Review during the routine dependency cycle; update when compatible or record why the current version remains appropriate.                                                           |
 
 `npm audit --audit-level=high` changes the failure threshold; it does not hide lower-severity findings, so moderate/low findings remain visible for review.
 
