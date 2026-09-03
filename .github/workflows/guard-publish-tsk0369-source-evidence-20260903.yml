@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - guard/tsk-0369-source-evidence-20260903
+    paths:
+      - '.github/scripts/publish_tsk0369_source_partial.py'
+      - '.github/workflows/guard-publish-tsk0369-source-evidence-20260903.yml'
 
 permissions:
   contents: write
@@ -59,7 +62,7 @@ jobs:
           path.write_text(path.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')
           PY
           git diff --check
-          mapfile -t changed < <(git diff --name-only | sort)
+          mapfile -t changed < <({ git diff --name-only; git ls-files --others --exclude-standard; } | sort)
           expected=(CURRENT_STATE.md TSK_0369_MINIMAL_SUPPORT_CAPTURE_SOURCE_IMPLEMENTATION_2026-09-03.md)
           if [[ "${changed[*]}" != "${expected[*]}" ]]; then
             printf 'Unexpected generated diff:\n%s\n' "${changed[*]}"
@@ -73,6 +76,12 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add CURRENT_STATE.md TSK_0369_MINIMAL_SUPPORT_CAPTURE_SOURCE_IMPLEMENTATION_2026-09-03.md
+          git diff --cached --check
+          mapfile -t staged < <(git diff --cached --name-only | sort)
+          if [[ "${staged[*]}" != "${expected[*]}" ]]; then
+            printf 'Unexpected staged diff:\n%s\n' "${staged[*]}"
+            exit 1
+          fi
           git commit -m 'evidence: record TSK-0369 source partial and runtime TODO'
           git push origin HEAD:guard/tsk-0369-source-evidence-20260903
           echo 'TSK0369_SOURCE_PARTIAL_PUBLICATION_GUARD=PASS'
