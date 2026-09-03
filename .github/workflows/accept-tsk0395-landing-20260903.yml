@@ -42,8 +42,6 @@ jobs:
           python3 Plans/Master/Tools/validate_master_plan.py
           cd website
           npm ci --no-fund --no-audit
-          npx prettier tests/browser/tsk0395-browser.mjs
-          exit 1
           npm run format:check
           npm run test:contract
           npm run lint
