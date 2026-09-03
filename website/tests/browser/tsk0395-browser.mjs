@@ -134,7 +134,35 @@ for (const locale of locales) {
         const zoomOverflow = await page.evaluate(
           () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
         );
-        assert.ok(zoomOverflow <= 1, `200% text resize causes ${zoomOverflow}px horizontal overflow`);
+        if (zoomOverflow > 1) {
+          const overflowSources = await page.evaluate(() => {
+            const viewportWidth = document.documentElement.clientWidth;
+            return [...document.querySelectorAll('body *')]
+              .map((element) => {
+                const rect = element.getBoundingClientRect();
+                return {
+                  tag: element.tagName.toLowerCase(),
+                  className: element instanceof HTMLElement ? element.className : '',
+                  text: element.textContent?.trim().replace(/\s+/g, ' ').slice(0, 80) ?? '',
+                  left: Math.round(rect.left),
+                  right: Math.round(rect.right),
+                  width: Math.round(rect.width),
+                  clientWidth: element instanceof HTMLElement ? element.clientWidth : 0,
+                  scrollWidth: element instanceof HTMLElement ? element.scrollWidth : 0,
+                };
+              })
+              .filter(
+                (entry) =>
+                  entry.left < -1 ||
+                  entry.right > viewportWidth + 1 ||
+                  entry.scrollWidth > entry.clientWidth + 1,
+              )
+              .slice(0, 20);
+          });
+          assert.fail(
+            `200% text resize causes ${zoomOverflow}px horizontal overflow; sources=${JSON.stringify(overflowSources)}`,
+          );
+        }
 
         await page.addScriptTag({ content: axeSource });
         const axeResult = await page.evaluate(
