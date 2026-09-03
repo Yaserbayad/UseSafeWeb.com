@@ -90,19 +90,22 @@ test('generator normalizes UUID case and is deterministic for the same release U
   assert.match(first, new RegExp(`<string>${dnsPayloadUuid}<\\/string>`));
 });
 
-test('profile delivery is source-only, disabled by default, server-controlled, and not linked from setup', () => {
+test('profile delivery is source-only, disabled by default, integrity-bound, server-controlled, and not linked from setup', () => {
   assert.equal(existsSync(deliveryRoutePath), true, 'missing gated TSK-0360 profile delivery route');
   const route = readFileSync(deliveryRoutePath, 'utf8');
   const setupDnsPage = readFileSync(setupDnsPagePath, 'utf8');
 
   assert.match(route, /generateSafeWebIosDohProfile/);
+  assert.match(route, /createHash/);
   assert.match(route, /USESAFEWEB_IOS_PROFILE_DELIVERY_ENABLED/);
   assert.match(route, /USESAFEWEB_IOS_PROFILE_PAYLOAD_UUID/);
   assert.match(route, /USESAFEWEB_IOS_PROFILE_DNS_PAYLOAD_UUID/);
+  assert.match(route, /USESAFEWEB_IOS_PROFILE_EXPECTED_SHA256/);
   assert.match(route, /application\/x-apple-aspen-config/);
   assert.match(route, /Cache-Control['"]?\s*[:,]\s*['"]no-store['"]/);
   assert.match(route, /Content-Disposition['"]?\s*[:,].*SafeWeb-DNS\.mobileconfig/);
   assert.match(route, /process\.env\.USESAFEWEB_IOS_PROFILE_DELIVERY_ENABLED\s*!==\s*['"]true['"]/);
+  assert.match(route, /actualSha256\s*!==\s*expectedSha256\.toLowerCase\(\)/);
   assert.doesNotMatch(route, /searchParams|request\.json|request\.text|formData|sessionStorage|localStorage|cookies\(/);
   assert.doesNotMatch(route, /clientId|adminUrl|password|credential|authorization/i);
   assert.doesNotMatch(setupDnsPage, /ios-doh-profile|mobileconfig/i);
