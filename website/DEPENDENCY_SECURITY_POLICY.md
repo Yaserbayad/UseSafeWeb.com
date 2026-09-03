@@ -34,7 +34,11 @@ The requested range is not treated as the installed version when it is a range. 
 - Generate the application SBOM with `npm run sbom`. The command uses `npm sbom --package-lock-only --sbom-format=spdx --sbom-type=application`, so CI reads the committed lockfile rather than relying on mutable local installation state.
 - CI parses the generated document and requires SPDX `2.3` plus a non-empty package list.
 
-npm documents that `package-lock.json` represents the exact dependency tree used for reproducible installs, and that `npm sbom` can generate SPDX or CycloneDX output from package-lock-only state.
+npm documents that `package-lock.json` represents the exact dependency tree used for reproducible installs, and that `npm sbom` can generate SPDX or CycloneDX output from package-lock-only state. The frozen npm 10 toolchain is checked against these official npm CLI v10 references:
+
+- `https://docs.npmjs.com/cli/v10/configuring-npm/package-lock-json/`
+- `https://docs.npmjs.com/cli/v10/commands/npm-sbom/`
+- `https://docs.npmjs.com/cli/v10/commands/npm-audit/`
 
 ## Update and vulnerability policy
 
