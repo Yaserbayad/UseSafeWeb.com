@@ -3,6 +3,7 @@ name: TSK-0243 privacy-safe DNS verification acceptance
 on:
   push:
     branches:
+      - main
       - feature/tsk-0243-privacy-safe-dns-verification-20260903
   pull_request:
     paths:
