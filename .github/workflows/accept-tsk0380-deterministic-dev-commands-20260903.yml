@@ -1,0 +1,73 @@
+name: TSK-0380 deterministic dev commands acceptance
+
+on:
+  push:
+    branches:
+      - main
+      - feature/tsk-0380-deterministic-dev-commands-20260903
+  pull_request:
+    paths:
+      - 'website/**'
+      - '.github/workflows/accept-tsk0380-deterministic-dev-commands-20260903.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  accept-tsk0380:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.23.2'
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - name: Verify clean deterministic baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
+          test "$(git hash-object website/package-lock.json)" = '14f9a62607489f965b96d98cdf0d825a363cd8bc'
+          python3 tests/repository-structure/verify_structure.py
+          python3 Plans/Master/Tools/validate_master_plan.py
+
+          cd website
+          test "$(node --version)" = 'v22.23.2'
+          test "$(npm --version)" = '10.9.8'
+          test "$(cat .nvmrc)" = '22.23.2'
+          test "$(node -p "require('./package.json').packageManager")" = 'npm@10.9.8'
+          npm ci --no-fund --no-audit
+          NEXT_TELEMETRY_DISABLED=1 npm run validate
+          npm audit --audit-level=high
+          npm audit --omit=dev --audit-level=high
+          cd ..
+
+          git diff --check
+          test -z "$(git status --porcelain)"
+
+      - name: Verify fail-closed command propagation and rollback
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd website
+          PROBE='src/tsk0380-negative-probe.ts'
+          printf 'export const = ;\n' > "$PROBE"
+
+          set +e
+          NEXT_TELEMETRY_DISABLED=1 npm run validate >/tmp/tsk0380-negative.log 2>&1
+          NEGATIVE_EXIT=$?
+          set -e
+
+          rm -f "$PROBE"
+          if [ "$NEGATIVE_EXIT" -eq 0 ]; then
+            cat /tmp/tsk0380-negative.log
+            echo 'Expected npm run validate to return nonzero for the deliberate invalid source probe.' >&2
+            exit 1
+          fi
+
+          npm run lint
+          cd ..
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'TSK0380_DETERMINISTIC_DEV_COMMANDS_ACCEPTANCE=PASS'
