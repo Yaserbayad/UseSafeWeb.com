@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-03T05:25:39Z
+**Updated:** 2026-09-03T07:27:07Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -3069,3 +3069,20 @@ Continue with the highest-priority genuinely executable work that can supply or 
 ### Queue status after TSK-0243 browser-orchestration source acceptance
 
 `TSK-0243` remains TODO because its remaining acceptance is target-environment evidence. Do not deploy, distribute, activate runtime/market state or process participants without current durable authority. Recompute the current WBS/graph/runtime frontier and continue the highest-priority genuinely eligible `AUTO_ALLOWED` work that can proceed without crossing those material-action fences.
+
+## TSK-0375 current accepted stable state — 2026-09-03
+
+`TSK-0375 — Implement minimal intake validation and routing engine`: **PASS** under current `ACC-0375 / VER-0375 / EVD-0375`, current durable PASS predecessor `TSK-0358`, and the active accountless-first privacy fence.
+
+- Current normalized WBS: **L6 / MEDIUM / A3 / `AUTO_ALLOWED`**; sole hard predecessor `TSK-0358` is current durable PASS.
+- Canonical implementation: PR `#76`; accepted head `b08d77d042dbf46f530aaef335c083b890ba71fe`; squash merge `fa4e2917ec8aef93302a36708064019277bbfa6b`.
+- Durable acceptance evidence: `TSK_0375_MINIMAL_INTAKE_ROUTING_ACCEPTANCE_2026-09-03.md`, blob `bfd5f4be99c3bb7e5056ecaeb42a81b1be04ac95`; guarded synchronization run `33728153747`.
+- Feature-head run/job `33723799253 / 100548279575`: **SUCCESS**.
+- Clean-main run/job `33724093783 / 100549157999`: **SUCCESS**; 68/68 contracts; lint zero errors with one inherited non-error warning; typecheck/build PASS; both audits 0 vulnerabilities; real Chromium and final TSK-0375 acceptance markers PASS.
+- Accepted scope: exact `{choice, locale}` intake, canonical `i18n.ts` locale authority, deterministic Android/iPhone routing, safe unsupported compatibility routing, prohibited/unknown-data rejection, and no persistent account/identity/history state.
+- Clean-main TSK-0359, TSK-0360 source, TSK-0243, and TSK-0629 regressions are **SUCCESS**. TSK-0360 remains non-PASS because source acceptance does not supply its missing supported-device/deployment evidence.
+- **Non-inference / fences:** no deployment, profile distribution, participant processing, runtime activation, market activation, launch, gate PASS, or downstream task PASS is inferred. `TSK-0360` remains TODO; `TSK-0455` remains WAITING; `TSK-0399` remains ineligible while TSK-0360 is non-PASS; no `GATE-0026` exists or is created.
+
+### Queue effect
+
+`TSK-0376` may consume TSK-0375 only after this exact evidence/runtime publication is merged and independently read-back verified and full current eligibility is recomputed; no downstream PASS is inferred.
