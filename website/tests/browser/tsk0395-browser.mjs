@@ -153,9 +153,7 @@ for (const locale of locales) {
               })
               .filter(
                 (entry) =>
-                  entry.left < -1 ||
-                  entry.right > viewportWidth + 1 ||
-                  entry.scrollWidth > entry.clientWidth + 1,
+                  entry.left < -1 || entry.right > viewportWidth + 1 || entry.scrollWidth > entry.clientWidth + 1,
               )
               .slice(0, 20);
           });
