@@ -34,8 +34,7 @@ export type ProtectionEvidence = {
 export type ProtectionEvaluation = {
   state: ProtectionState;
   reasonCode: ReasonCode;
-  primary: string;
-  supporting: string;
+  action: string | null;
 };
 
 export type CoreState = {
@@ -70,39 +69,25 @@ const locales = new Set<Locale>(['en-GB', 'tr-TR', 'ar']);
 const phases = new Set<CorePhase>(['route', 'native', 'dns', 'verify', 'protection', 'troubleshoot', 'recover', 'removed', 'complete']);
 const baseKeys = ['createdAt', 'hardExpiresAt', 'locale', 'loginRequired', 'phase', 'schemaVersion', 'scope'];
 
-function evaluation(state: ProtectionState, reasonCode: ReasonCode, primary: string, supporting: string): ProtectionEvaluation {
-  return { state, reasonCode, primary, supporting };
+function evaluation(state: ProtectionState, reasonCode: ReasonCode, action: string | null = null): ProtectionEvaluation {
+  return { state, reasonCode, action };
 }
 
 export function evaluateProtection(evidence: ProtectionEvidence): ProtectionEvaluation {
-  if (evidence.removal) {
-    return evaluation('removed', evidence.removal, 'Removed', 'This setup is no longer enrolled through UseSafeWeb.');
-  }
-  if (evidence.coverage === 'not-covered') {
-    return evaluation('not-covered', 'OUT_OF_SCOPE', 'Not covered', 'UseSafeWeb does not cover this on your current setup.');
-  }
-  if (evidence.uncertainty) {
-    return evaluation('uncertain/error', evidence.uncertainty, 'Protection status could not be verified', 'Retry verification or follow the troubleshooting steps before relying on this protection.');
-  }
+  if (evidence.removal) return evaluation('removed', evidence.removal);
+  if (evidence.coverage === 'not-covered') return evaluation('not-covered', 'OUT_OF_SCOPE');
+  if (evidence.uncertainty) return evaluation('uncertain/error', evidence.uncertainty);
   if (evidence.technical) {
-    if (!evidence.technical.fresh) {
-      return evaluation('uncertain/error', 'VERIFY_STALE', 'Protection status could not be verified', 'The previous verification is no longer current. Verify again before relying on this protection.');
-    }
-    if (evidence.technical.result === 'positive') {
-      return evaluation('protected/verified', 'TECH_VERIFIED', 'Protection verified', 'UseSafeWeb verified this protection step for this setup.');
-    }
+    if (!evidence.technical.fresh) return evaluation('uncertain/error', 'VERIFY_STALE');
+    if (evidence.technical.result === 'positive') return evaluation('protected/verified', 'TECH_VERIFIED');
     if (evidence.technical.result === 'negative') {
-      return evaluation('action-needed', evidence.action ? 'REMEDIATION_REQUIRED' : 'TECH_VERIFY_NEGATIVE', 'Action needed', evidence.action ?? 'Review this setup, correct the problem, then verify again.');
+      return evaluation('action-needed', evidence.action ? 'REMEDIATION_REQUIRED' : 'TECH_VERIFY_NEGATIVE', evidence.action);
     }
-    return evaluation('uncertain/error', 'EVIDENCE_CONFLICT', 'Protection status could not be verified', 'The current technical result is indeterminate. Retry verification before relying on this protection.');
+    return evaluation('uncertain/error', 'EVIDENCE_CONFLICT');
   }
-  if (evidence.action) {
-    return evaluation('action-needed', 'REMEDIATION_REQUIRED', 'Action needed', evidence.action);
-  }
-  if (evidence.configured) {
-    return evaluation('configured/parent-confirmed', 'CONFIG_CONFIRMED_NO_TECH_VERIFY', 'Setup confirmed', 'Protection has not yet been technically verified.');
-  }
-  return evaluation('action-needed', 'REMEDIATION_REQUIRED', 'Action needed', 'Complete the supported setup step, then verify again.');
+  if (evidence.action) return evaluation('action-needed', 'REMEDIATION_REQUIRED', evidence.action);
+  if (evidence.configured) return evaluation('configured/parent-confirmed', 'CONFIG_CONFIRMED_NO_TECH_VERIFY');
+  return evaluation('action-needed', 'REMEDIATION_REQUIRED');
 }
 
 function isLocale(value: unknown): value is Locale {
