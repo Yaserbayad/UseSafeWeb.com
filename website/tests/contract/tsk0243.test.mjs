@@ -17,6 +17,7 @@ async function loadApi() {
 const secret = 's'.repeat(64);
 const scope = 'ab'.repeat(16);
 const challenge = 'cd'.repeat(16);
+const otherChallenge = 'ef'.repeat(16);
 const now = 10_000;
 
 function observation(overrides = {}) {
@@ -41,10 +42,10 @@ test('cache-safe probe identity uses a fresh 128-bit challenge under the fixed v
   assert.throws(() => api.buildDnsProbeHostname('zz'.repeat(16)), /invalid dns verification challenge/i);
 });
 
-test('only an untampered fresh signed observation can become verified-fresh', async () => {
+test('only an untampered fresh proof bound to the current scope and challenge can become verified-fresh', async () => {
   const api = await loadApi();
   const token = api.signDnsVerificationObservation(observation(), secret);
-  const result = api.verifyDnsVerificationObservation(token, secret, now + 1_000, scope);
+  const result = api.verifyDnsVerificationObservation(token, secret, now + 1_000, scope, challenge);
   assert.deepEqual(result, {
     dnsPath: 'verified-fresh',
     reasonCode: 'TECH_VERIFIED',
@@ -54,8 +55,9 @@ test('only an untampered fresh signed observation can become verified-fresh', as
 
   const [payload, signature] = token.split('.');
   const tampered = `${payload.slice(0, -1)}${payload.endsWith('A') ? 'B' : 'A'}.${signature}`;
-  assert.equal(api.verifyDnsVerificationObservation(tampered, secret, now + 1_000, scope), null);
-  assert.equal(api.verifyDnsVerificationObservation(token, secret, now + 1_000, 'ef'.repeat(16)), null);
+  assert.equal(api.verifyDnsVerificationObservation(tampered, secret, now + 1_000, scope, challenge), null);
+  assert.equal(api.verifyDnsVerificationObservation(token, secret, now + 1_000, '12'.repeat(16), challenge), null);
+  assert.equal(api.verifyDnsVerificationObservation(token, secret, now + 1_000, scope, otherChallenge), null, 'a fresh proof from an earlier challenge must not be replayable for the current check');
 });
 
 test('stale, failed, uncertain and contradictory observations map fail-closed', async () => {
@@ -65,14 +67,14 @@ test('stale, failed, uncertain and contradictory observations map fail-closed', 
   const failed = api.signDnsVerificationObservation(observation({ outcome: 'failed', reasonCode: 'TECH_VERIFY_NEGATIVE' }), secret);
   const uncertain = api.signDnsVerificationObservation(observation({ outcome: 'uncertain', reasonCode: 'EVIDENCE_CONFLICT' }), secret);
 
-  assert.equal(api.verifyDnsVerificationObservation(stale, secret, now, scope).dnsPath, 'verified-stale');
-  assert.equal(api.verifyDnsVerificationObservation(failed, secret, now + 1_000, scope).dnsPath, 'failed');
-  assert.equal(api.verifyDnsVerificationObservation(uncertain, secret, now + 1_000, scope).dnsPath, 'uncertain');
-  assert.equal(api.reconcileDnsVerificationObservations([], secret, now, scope).dnsPath, 'not-run');
+  assert.equal(api.verifyDnsVerificationObservation(stale, secret, now, scope, challenge).dnsPath, 'verified-stale');
+  assert.equal(api.verifyDnsVerificationObservation(failed, secret, now + 1_000, scope, challenge).dnsPath, 'failed');
+  assert.equal(api.verifyDnsVerificationObservation(uncertain, secret, now + 1_000, scope, challenge).dnsPath, 'uncertain');
+  assert.equal(api.reconcileDnsVerificationObservations([], secret, now, scope, challenge).dnsPath, 'not-run');
 
   const conflicting = api.signDnsVerificationObservation(observation({ outcome: 'failed', reasonCode: 'TECH_VERIFY_NEGATIVE' }), secret);
-  assert.equal(api.reconcileDnsVerificationObservations([fresh, conflicting], secret, now + 1_000, scope).dnsPath, 'uncertain');
-  assert.equal(api.reconcileDnsVerificationObservations([fresh, conflicting], secret, now + 1_000, scope).reasonCode, 'EVIDENCE_CONFLICT');
+  assert.equal(api.reconcileDnsVerificationObservations([fresh, conflicting], secret, now + 1_000, scope, challenge).dnsPath, 'uncertain');
+  assert.equal(api.reconcileDnsVerificationObservations([fresh, conflicting], secret, now + 1_000, scope, challenge).reasonCode, 'EVIDENCE_CONFLICT');
 });
 
 test('proof parser rejects expanded fields, invalid timing, unsupported outcomes and weak signing secrets', async () => {
@@ -86,7 +88,7 @@ test('proof parser rejects expanded fields, invalid timing, unsupported outcomes
 test('approved event projection excludes challenge, scope, host, address and browsing/domain history', async () => {
   const api = await loadApi();
   const token = api.signDnsVerificationObservation(observation(), secret);
-  const verified = api.verifyDnsVerificationObservation(token, secret, now + 1_000, scope);
+  const verified = api.verifyDnsVerificationObservation(token, secret, now + 1_000, scope, challenge);
   const event = api.toApprovedDnsVerificationEvent(verified);
   assert.deepEqual(Object.keys(event).sort(), ['dnsPath', 'reasonCode', 'verifierVersion'].sort());
   assert.deepEqual(event, {
