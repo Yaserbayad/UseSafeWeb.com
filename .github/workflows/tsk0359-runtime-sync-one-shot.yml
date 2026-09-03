@@ -1,0 +1,80 @@
+name: TSK-0359 one-shot runtime-state sync
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/tsk0359-runtime-sync-one-shot.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync-current-state:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+      - name: Atomically patch CURRENT_STATE.md and self-remove
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPECTED_PARENT='6d20711889bcb94957fcaba86009984781acef05'
+          EXPECTED_STATE_BLOB='b78e3a220a6501dbcc45b0124d9656e2ddec9b45'
+          EXPECTED_STATE_BYTES='467840'
+          WORKFLOW='.github/workflows/tsk0359-runtime-sync-one-shot.yml'
+
+          test "$(git rev-parse HEAD^)" = "$EXPECTED_PARENT"
+          test "$(git hash-object CURRENT_STATE.md)" = "$EXPECTED_STATE_BLOB"
+          test "$(wc -c < CURRENT_STATE.md | tr -d ' ')" = "$EXPECTED_STATE_BYTES"
+          ! grep -Fq '## TSK-0359 current accepted stable state — 2026-09-03' CURRENT_STATE.md
+
+          SYNC_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          export SYNC_TIME
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          import subprocess
+
+          path = Path('CURRENT_STATE.md')
+          original = subprocess.check_output(['git', 'show', 'HEAD:CURRENT_STATE.md']).decode('utf-8')
+          assert original.encode('utf-8') == path.read_bytes()
+
+          lines = original.splitlines(keepends=True)
+          updated_indexes = [i for i, line in enumerate(lines) if line.startswith('**Updated:** ')]
+          assert updated_indexes == [2], updated_indexes
+          lines[2] = f"**Updated:** {os.environ['SYNC_TIME']}\n"
+          base = ''.join(lines)
+          assert '## TSK-0359 current accepted stable state — 2026-09-03' not in base
+
+          block = '''\n## TSK-0359 current accepted stable state — 2026-09-03 — POST-LG-07 LOCALIZATION IMPLEMENTATION\n\n`TSK-0359 — Implement externalized content, locale routing/fallback, RTL layout support, metadata, and locale-specific instruction selection`: **PASS** under current `ACC-0359 / VER-0359 / EVD-0359`.\n\n- Current normalized WBS: L6 / MEDIUM / A3 / `AUTO_ALLOWED`; hard predecessors `TSK-0311` and `TSK-0358` are current durable PASS; `LG-07` is current durable PASS.\n- Canonical implementation merged through PR `#62`; squash merge commit `70049dd6e4d5cb3ffbb5c68c8a143bce4e89053e`.\n- Durable acceptance evidence: `TSK_0359_LOCALIZATION_IMPLEMENTATION_ACCEPTANCE_2026-09-03.md`, blob `484766fc8836361c6f504790270ee96081ccbdec`, evidence commit `6d20711889bcb94957fcaba86009984781acef05`.\n- Final feature acceptance run/job `33706555973 / 100496805461`: **SUCCESS** on exact feature head `e7c1f89d72a47f729970d1b679908fa2338436df`.\n- Clean canonical-main acceptance run/job `33706792922 / 100497529049`: **SUCCESS** on merge SHA `70049dd6e4d5cb3ffbb5c68c8a143bce4e89053e`; 35/35 contract tests PASS, lint has zero errors, type-check and Next.js production build PASS, production/all dependency audits report 0 vulnerabilities, and real-browser markers `TSK0359_BROWSER_ACCEPTANCE=PASS`, `TSK0358_BROWSER_ACCEPTANCE=PASS`, `TSK0361_BROWSER_ACCEPTANCE=PASS`.\n- Accepted scope includes deterministic en-GB / tr-TR / ar locale fallback with fail-visible missing/cycle behavior, externalized operational journey content, Arabic RTL, source-bound locale/platform instruction selection for all nine current TSK-0307 instruction IDs, explicit operational noindex behavior, and single-authority non-activating locale availability from `locale-manifest.json`.\n- Protection Map evidence precedence remains unchanged: account state, journey completion, or configuration alone cannot manufacture technical verification. No new authentication requirement, analytics transport, browsing/domain-history collection, raw diagnostic persistence, external service, deployment path, or sensitive-data category was introduced.\n- Review defects were fixed test-first before acceptance: duplicate DNS-instruction rendering and duplicate market-activation authority.\n- **Non-inference / fences:** no deployment, profile distribution, production activation, participant processing, market activation, launch, or unrelated task/gate PASS is inferred. `TSK-0360` remains TODO pending its required supported-iPhone and related acceptance evidence; `TSK-0455` remains WAITING for a genuinely qualifying fresh Ubuntu 24.04 LTS target host and required target access/evidence; `TSK-0399` remains ineligible while `TSK-0360` is non-PASS. No `GATE-0026` exists or is created.\n\n### Queue status after TSK-0359 acceptance\n\nRecompute the complete current L6 executable frontier from canonical WBS/graph/runtime/gates/risks/interfaces and Action Authority. Preserve all unresolved material-action fences and execute only the highest-priority genuinely eligible `AUTO_ALLOWED` work.\n'''
+          expected = base + block
+          path.write_text(expected, encoding='utf-8')
+          assert path.read_text(encoding='utf-8') == expected
+          assert len(path.read_bytes()) > len(original.encode('utf-8'))
+          PY
+
+          NEW_STATE_BLOB="$(git hash-object CURRENT_STATE.md)"
+          NEW_STATE_BYTES="$(wc -c < CURRENT_STATE.md | tr -d ' ')"
+          test "$NEW_STATE_BLOB" != "$EXPECTED_STATE_BLOB"
+          test "$NEW_STATE_BYTES" -gt "$EXPECTED_STATE_BYTES"
+          grep -Fq 'TSK-0359 current accepted stable state — 2026-09-03' CURRENT_STATE.md
+          grep -Fq 'TSK-0360` remains TODO' CURRENT_STATE.md
+          grep -Fq 'TSK-0455` remains WAITING' CURRENT_STATE.md
+          grep -Fq 'No `GATE-0026` exists or is created.' CURRENT_STATE.md
+          git diff --check
+
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$(git rev-parse HEAD)"
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm "$WORKFLOW"
+          test "$(git diff --name-only | sort | paste -sd ' ' -)" = ".github/workflows/tsk0359-runtime-sync-one-shot.yml CURRENT_STATE.md"
+          git add CURRENT_STATE.md
+          git commit -m 'state: synchronize TSK-0359 PASS'
+          echo "TSK0359_STATE_SYNC_NEW_BLOB=$NEW_STATE_BLOB"
+          echo "TSK0359_STATE_SYNC_NEW_BYTES=$NEW_STATE_BYTES"
+          git push origin HEAD:main
