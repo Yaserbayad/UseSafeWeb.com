@@ -33,10 +33,17 @@ export default async function Page({ params, searchParams }: {
         summary={content.noteBody}
         noteTitle={content.noteTitle}
         noteBody={content.noteBody}
+        actions={[
+          {
+            href: `/${locale}/troubleshoot?platform=${platform}`,
+            label: protectionContent.troubleshootLabel,
+            secondary: true,
+          },
+        ]}
       >
         <CorePageGuard locale={locale} expectedPhase="verify" />
         <p data-content-release={failed.releaseId} data-content-status={failed.status}>
-          {content.noteBody}
+          <span className="sw-technical">{failed.status}</span> {stateLabels['uncertain/error']}
         </p>
       </SetupPage>
     );
