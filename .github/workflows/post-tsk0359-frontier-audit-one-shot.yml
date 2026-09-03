@@ -1,0 +1,132 @@
+name: Post-TSK-0359 canonical frontier audit
+
+on:
+  pull_request_target:
+    types: [reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  audit-frontier:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 1
+      - name: Derive current L6 frontier from canonical authorities
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv, json, re
+          from pathlib import Path
+
+          sha = __import__('subprocess').check_output(['git','rev-parse','HEAD'], text=True).strip()
+          print('AUDIT_SHA=' + sha)
+
+          wbs_path = Path('Plans/Master/WBS/master-wbs.csv')
+          state_path = Path('CURRENT_STATE.md')
+          graph_path = Path('Plans/Master/RELATIONSHIP_INDEX.yaml')
+          with wbs_path.open('r', encoding='utf-8-sig', newline='') as f:
+              reader = csv.DictReader(f)
+              fields = reader.fieldnames or []
+              rows = list(reader)
+          print('WBS_FIELDS=' + json.dumps(fields, ensure_ascii=False))
+          print('WBS_ROW_COUNT=' + str(len(rows)))
+
+          def exact_tsk_count(field):
+              return sum(bool(re.fullmatch(r'TSK-\d{4}', (r.get(field) or '').strip())) for r in rows)
+          id_col = max(fields, key=exact_tsk_count)
+          lifecycle_col = next((f for f in fields if 'lifecycle' in f.lower()), '')
+          authority_col = next((f for f in fields if 'action' in f.lower() and 'author' in f.lower()), '')
+          priority_col = next((f for f in fields if f.lower().strip() == 'priority' or 'priority' in f.lower()), '')
+          hard_dep_col = next((f for f in fields if 'hard' in f.lower() and 'depend' in f.lower()), '')
+          if not hard_dep_col:
+              hard_dep_col = next((f for f in fields if 'depend' in f.lower() and 'soft' not in f.lower()), '')
+          status_cols = [f for f in fields if 'status' in f.lower() or f.lower().strip() in {'state','disposition'}]
+          print('DETECTED=' + json.dumps({'id':id_col,'lifecycle':lifecycle_col,'authority':authority_col,'priority':priority_col,'hard_dependencies':hard_dep_col,'status_cols':status_cols}, ensure_ascii=False))
+
+          state = state_path.read_text(encoding='utf-8')
+          heading_re = re.compile(r'(?m)^##\s+(TSK-\d{4})[^\n]*$')
+          matches = list(heading_re.finditer(state))
+          runtime = {}
+          runtime_heading = {}
+          for i, m in enumerate(matches):
+              end = matches[i+1].start() if i+1 < len(matches) else len(state)
+              section = state[m.start():end]
+              status_match = re.search(r'(?m)^`?TSK-\d{4}[^\n]*?\*\*(PASS|WAITING|BLOCKED|TODO)\*\*', section[:2500])
+              if not status_match:
+                  status_match = re.search(r'\*\*(PASS|WAITING|BLOCKED|TODO)\*\*', section[:1200])
+              if status_match:
+                  runtime[m.group(1)] = status_match.group(1)
+                  runtime_heading[m.group(1)] = m.group(0)
+          print('RUNTIME_TASK_STATUS_COUNT=' + str(len(runtime)))
+
+          by_id = {(r.get(id_col) or '').strip(): r for r in rows}
+          def ids(text): return re.findall(r'TSK-\d{4}', text or '')
+          def hard_deps(row): return ids(row.get(hard_dep_col,'') if hard_dep_col else '')
+          def planning_status(row): return ' | '.join((row.get(c) or '').strip() for c in status_cols if (row.get(c) or '').strip())
+          def compact(row):
+              tid=(row.get(id_col) or '').strip()
+              return {
+                'wbs_index': rows.index(row)+2,
+                'id': tid,
+                'runtime': runtime.get(tid,'UNRECORDED'),
+                'lifecycle': (row.get(lifecycle_col) or '').strip() if lifecycle_col else '',
+                'authority': (row.get(authority_col) or '').strip() if authority_col else '',
+                'priority': (row.get(priority_col) or '').strip() if priority_col else '',
+                'planning_status': planning_status(row),
+                'hard_deps': hard_deps(row),
+                'hard_dep_runtime': {d:runtime.get(d,'UNRECORDED') for d in hard_deps(row)},
+                'row': row,
+              }
+
+          for tid in ['TSK-0318','TSK-0311','TSK-0358','TSK-0359','TSK-0360','TSK-0399','TSK-0455']:
+              if tid in by_id:
+                  print('KNOWN_ROW=' + json.dumps(compact(by_id[tid]), ensure_ascii=False, sort_keys=True))
+              else:
+                  print('KNOWN_ROW_MISSING=' + tid)
+
+          successors=[]
+          for row in rows:
+              if 'TSK-0359' in hard_deps(row): successors.append(compact(row))
+          print('TSK0359_DIRECT_SUCCESSORS=' + json.dumps(successors, ensure_ascii=False, sort_keys=True))
+
+          l6=[]
+          for row in rows:
+              life=(row.get(lifecycle_col) or '').strip() if lifecycle_col else ''
+              auth=(row.get(authority_col) or '').strip() if authority_col else ''
+              if life != 'L6' or auth != 'AUTO_ALLOWED':
+                  continue
+              item=compact(row)
+              if item['runtime']=='PASS':
+                  continue
+              ps=item['planning_status'].upper()
+              deps_ok=all(runtime.get(d)=='PASS' for d in item['hard_deps'])
+              item['deps_all_runtime_pass']=deps_ok
+              item['planning_exclusion']=any(x in ps for x in ['NOT_APPLICABLE','DEFERRED'])
+              item['runtime_fence']=item['runtime'] in {'WAITING','BLOCKED'}
+              l6.append(item)
+          print('L6_NONPASS_AUTO_COUNT=' + str(len(l6)))
+          for item in l6:
+              if item['deps_all_runtime_pass'] and not item['planning_exclusion'] and not item['runtime_fence']:
+                  print('FRONTIER_CANDIDATE=' + json.dumps(item, ensure_ascii=False, sort_keys=True))
+
+          graph_lines = graph_path.read_text(encoding='utf-8').splitlines()
+          candidate_ids=[x['id'] for x in l6 if x['deps_all_runtime_pass'] and not x['planning_exclusion'] and not x['runtime_fence']][:12]
+          for tid in candidate_ids:
+              hits=[i for i,line in enumerate(graph_lines) if tid in line]
+              snippets=[]
+              for i in hits[:4]:
+                  lo=max(0,i-3); hi=min(len(graph_lines),i+4)
+                  snippets.append('\n'.join(graph_lines[lo:hi]))
+              print('GRAPH_CONTEXT_' + tid + '=' + json.dumps(snippets, ensure_ascii=False))
+
+          for token in ['LG-07','TSK-0360','TSK-0455','TSK-0399','TSK-0359']:
+              pos=state.rfind(token)
+              if pos>=0:
+                  lo=max(0,pos-450); hi=min(len(state),pos+1250)
+                  print('STATE_CONTEXT_' + token + '=' + json.dumps(state[lo:hi], ensure_ascii=False))
+          PY
