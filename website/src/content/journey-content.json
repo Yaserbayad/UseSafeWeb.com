@@ -2,11 +2,6 @@
   "schemaVersion": "1.0.0",
   "defaultLocale": "en-GB",
   "supportedLocales": ["en-GB", "tr-TR", "ar"],
-  "marketActivation": {
-    "en-GB": false,
-    "tr-TR": false,
-    "ar": false
-  },
   "sections": {
     "verify": {
       "en-GB": {
