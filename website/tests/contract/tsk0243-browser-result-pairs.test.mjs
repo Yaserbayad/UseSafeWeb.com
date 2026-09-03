@@ -18,7 +18,10 @@ function jsonResponse(body) {
 }
 
 const scope = 'ab'.repeat(16);
-const proof = { challenge: 'cd'.repeat(16), observationToken: 'opaque-proof' };
+const challenge = 'cd'.repeat(16);
+const probeHost = `${challenge}.verify.usesafeweb.com`;
+const requestToken = 'request-token-value';
+const observationToken = 'observation-token-value';
 
 test('browser accepts only semantically consistent dnsPath/reasonCode pairs from the trusted result route', async () => {
   const api = await loadApi();
@@ -29,7 +32,14 @@ test('browser accepts only semantically consistent dnsPath/reasonCode pairs from
     { dnsPath: 'verified-stale', reasonCode: 'TECH_VERIFIED', verifierVersion: 'private-rewrite-v1' },
   ];
   for (const result of cases) {
-    const check = await api.revalidateDnsVerificationProof(scope, proof, async () => jsonResponse(result), 5_000);
-    assert.equal(check, null, `${result.dnsPath}/${result.reasonCode}`);
+    let call = 0;
+    const fetchImpl = async () => {
+      call += 1;
+      if (call === 1) return jsonResponse({ challenge, probeHost, requestToken, expiresAt: 120_000 });
+      if (call === 2) return jsonResponse({ observationToken });
+      return jsonResponse(result);
+    };
+    assert.equal(await api.runDnsVerification(scope, fetchImpl, 5_000), null, `${result.dnsPath}/${result.reasonCode}`);
+    assert.equal(call, 3);
   }
 });
