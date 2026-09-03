@@ -1,4 +1,3 @@
-export const DNS_VERIFICATION_STORAGE_KEY = 'usesafeweb:dns-verification:v1';
 const verificationSuffix = 'verify.usesafeweb.com';
 const challengePattern = /^[0-9a-f]{32}$/;
 const maxTokenBytes = 2048;
@@ -17,17 +16,6 @@ export type BrowserDnsVerificationCheck = {
   verifierVersion: 'private-rewrite-v1';
 };
 
-export type BrowserDnsVerificationProof = {
-  challenge: string;
-  observationToken: string;
-};
-
-export type BrowserDnsVerificationResult = {
-  check: BrowserDnsVerificationCheck;
-  proof: BrowserDnsVerificationProof;
-};
-
-type StorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
 
 function exactKeys(value: Record<string, unknown>, expected: readonly string[]): boolean {
@@ -104,8 +92,7 @@ async function fetchWithTimeout(fetchImpl: FetchLike, input: string, init: Reque
 }
 
 async function consumeObservation(
-  scope: string,
-  challenge: string,
+  requestToken: string,
   observationToken: string,
   fetchImpl: FetchLike,
   timeoutMs: number,
@@ -113,7 +100,7 @@ async function consumeObservation(
   const response = await fetchWithTimeout(fetchImpl, '/api/dns-verification/results', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ scope, challenge, observationToken }),
+    body: JSON.stringify({ requestToken, observationToken }),
     credentials: 'same-origin',
     cache: 'no-store',
   }, timeoutMs);
@@ -125,7 +112,7 @@ export async function runDnsVerification(
   scope: string,
   fetchImpl: FetchLike = fetch,
   timeoutMs = defaultTimeoutMs,
-): Promise<BrowserDnsVerificationResult | null> {
+): Promise<BrowserDnsVerificationCheck | null> {
   if (typeof scope !== 'string' || !challengePattern.test(scope)) return null;
   try {
     const requestResponse = await fetchWithTimeout(fetchImpl, '/api/dns-verification/requests', {
@@ -151,59 +138,8 @@ export async function runDnsVerification(
     const observationToken = parseObservationEnvelope(await probeResponse.json());
     if (!observationToken) return null;
 
-    const check = await consumeObservation(scope, issued.challenge, observationToken, fetchImpl, timeoutMs);
-    if (!check) return null;
-    return { check, proof: { challenge: issued.challenge, observationToken } };
+    return await consumeObservation(issued.requestToken, observationToken, fetchImpl, timeoutMs);
   } catch {
     return null;
-  }
-}
-
-export async function revalidateDnsVerificationProof(
-  scope: string,
-  proof: BrowserDnsVerificationProof,
-  fetchImpl: FetchLike = fetch,
-  timeoutMs = defaultTimeoutMs,
-): Promise<BrowserDnsVerificationCheck | null> {
-  if (typeof scope !== 'string' || !challengePattern.test(scope)) return null;
-  if (!proof || typeof proof !== 'object' || !challengePattern.test(proof.challenge) || !validToken(proof.observationToken)) return null;
-  try {
-    return await consumeObservation(scope, proof.challenge, proof.observationToken, fetchImpl, timeoutMs);
-  } catch {
-    return null;
-  }
-}
-
-export function writeDnsVerificationProof(storage: StorageLike, proof: BrowserDnsVerificationProof): boolean {
-  if (!proof || typeof proof !== 'object' || !challengePattern.test(proof.challenge) || !validToken(proof.observationToken)) return false;
-  try {
-    storage.setItem(DNS_VERIFICATION_STORAGE_KEY, JSON.stringify({ challenge: proof.challenge, observationToken: proof.observationToken }));
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export function readDnsVerificationProof(storage: StorageLike): BrowserDnsVerificationProof | null {
-  try {
-    const raw = storage.getItem(DNS_VERIFICATION_STORAGE_KEY);
-    if (!raw || new TextEncoder().encode(raw).byteLength > 4096) return null;
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
-    const candidate = parsed as Record<string, unknown>;
-    if (!exactKeys(candidate, ['challenge', 'observationToken'])) return null;
-    if (typeof candidate.challenge !== 'string' || !challengePattern.test(candidate.challenge)) return null;
-    if (!validToken(candidate.observationToken)) return null;
-    return { challenge: candidate.challenge, observationToken: candidate.observationToken };
-  } catch {
-    return null;
-  }
-}
-
-export function clearDnsVerificationProof(storage: StorageLike): void {
-  try {
-    storage.removeItem(DNS_VERIFICATION_STORAGE_KEY);
-  } catch {
-    // Storage failure never creates a positive verification state.
   }
 }
