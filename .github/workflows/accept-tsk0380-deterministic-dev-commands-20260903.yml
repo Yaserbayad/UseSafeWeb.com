@@ -3,6 +3,7 @@ name: TSK-0380 deterministic dev commands acceptance
 on:
   push:
     branches:
+      - main
       - feature/tsk-0380-deterministic-dev-commands-20260903
   pull_request:
     paths:
