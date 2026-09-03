@@ -18,14 +18,24 @@ function policyText() {
   return readFileSync(policyPath, 'utf8');
 }
 
+function dependencyInventory(policy) {
+  const rows = policy
+    .split('\n')
+    .filter((line) => line.startsWith('|') && !/^\|\s*-/.test(line))
+    .map((line) => line.split('|').slice(1, -1).map((cell) => cell.trim()))
+    .filter((cells) => cells.length >= 4 && cells[0] !== 'Package');
+  return new Map(rows.map(([name, requested]) => [name, requested]));
+}
+
 test('TSK-0491 keeps the npm dependency tree locked and inventories every direct dependency', () => {
   assert.equal(lock.lockfileVersion, 3);
   assert.deepEqual(lock.packages?.['']?.dependencies, pkg.dependencies);
   assert.deepEqual(lock.packages?.['']?.devDependencies, pkg.devDependencies);
 
   const policy = policyText();
+  const inventory = dependencyInventory(policy);
   for (const [name, requested] of Object.entries({ ...pkg.dependencies, ...pkg.devDependencies })) {
-    assert.equal(policy.includes(`| ${name} | ${requested} |`), true, `missing ${name} ${requested} inventory row`);
+    assert.equal(inventory.get(name), requested, `missing ${name} ${requested} inventory row`);
   }
   assert.match(policy, /container images[^\n]*none/i);
 });
