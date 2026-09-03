@@ -11,6 +11,14 @@ on:
       - 'Plans/Master/Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md'
       - 'Plans/Master/Tools/validate_master_plan.py'
       - 'tests/repository-structure/**'
+  pull_request:
+    paths:
+      - 'website/**'
+      - 'Plans/Master/WBS/master-wbs.csv'
+      - 'Plans/Master/Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md'
+      - 'Plans/Master/Tools/validate_master_plan.py'
+      - 'tests/repository-structure/**'
+      - '.github/workflows/accept-tsk0629-automated-checks-20260903.yml'
 
 permissions:
   contents: read

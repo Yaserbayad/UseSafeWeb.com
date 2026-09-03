@@ -12,6 +12,14 @@ on:
       - 'Plans/Master/Tools/validate_master_plan.py'
       - 'tests/repository-structure/**'
       - '.github/workflows/accept-tsk0359-localization-20260903.yml'
+  pull_request:
+    paths:
+      - 'website/**'
+      - 'Plans/Master/WBS/master-wbs.csv'
+      - 'Plans/Master/RELATIONSHIP_INDEX.yaml'
+      - 'Plans/Master/Tools/validate_master_plan.py'
+      - 'tests/repository-structure/**'
+      - '.github/workflows/accept-tsk0359-localization-20260903.yml'
 
 permissions:
   contents: read

@@ -51,7 +51,7 @@ async function setPhase(page, locale, phase, deviceFamily = 'android') {
 
 async function assertLocalizedPage(page, locale, dir, section, path, phase) {
   await setPhase(page, locale, phase);
-  const response = await page.goto(`${base}/${locale}${path}`, { waitUntil: 'networkidle' });
+  const response = await page.goto(`${base}/${locale}${path}`, { waitUntil: 'domcontentloaded' });
   assert.ok(response);
   assert.equal(response.status(), 200);
   assert.equal(await page.locator('html').getAttribute('lang'), locale);
@@ -82,15 +82,15 @@ for (const locale of locales) {
       ['iphone', 'INS-IOS-SETUP-01', 'INS-IOS-VERIFY-01', 'INS-IOS-REMOVE-01'],
     ]) {
       await setPhase(page, locale.id, 'dns', deviceFamily);
-      await page.goto(`${base}/${locale.id}/setup/dns?platform=${deviceFamily}`, { waitUntil: 'networkidle' });
+      await page.goto(`${base}/${locale.id}/setup/dns?platform=${deviceFamily}`, { waitUntil: 'domcontentloaded' });
       assert.match(await page.locator('body').innerText(), new RegExp(bindings.instructions[setupId].variants[locale.id].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 
       await setPhase(page, locale.id, 'verify', deviceFamily);
-      await page.goto(`${base}/${locale.id}/verify?platform=${deviceFamily}`, { waitUntil: 'networkidle' });
+      await page.goto(`${base}/${locale.id}/verify?platform=${deviceFamily}`, { waitUntil: 'domcontentloaded' });
       assert.match(await page.locator('body').innerText(), new RegExp(bindings.instructions[verifyId].variants[locale.id].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 
       await setPhase(page, locale.id, 'recover', deviceFamily);
-      await page.goto(`${base}/${locale.id}/recover?platform=${deviceFamily}`, { waitUntil: 'networkidle' });
+      await page.goto(`${base}/${locale.id}/recover?platform=${deviceFamily}`, { waitUntil: 'domcontentloaded' });
       assert.match(await page.locator('body').innerText(), new RegExp(bindings.instructions[removeId].variants[locale.id].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
     }
     await context.close();
@@ -101,7 +101,7 @@ await record('Arabic TSK-0359 operational page remains WCAG 2.2 AA and RTL', asy
   const context = await browser.newContext({ viewport: { width: 320, height: 720 } });
   const page = await context.newPage();
   await setPhase(page, 'ar', 'protection');
-  await page.goto(`${base}/ar/protection?platform=android`, { waitUntil: 'networkidle' });
+  await page.goto(`${base}/ar/protection?platform=android`, { waitUntil: 'domcontentloaded' });
   await page.addScriptTag({ content: axeSource });
   const result = await page.evaluate(async () => await window.axe.run(document, {
     runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'] },

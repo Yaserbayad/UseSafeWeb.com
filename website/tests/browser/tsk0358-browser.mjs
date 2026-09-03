@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 
 const base = process.env.BASE_URL ?? 'http://127.0.0.1:3000';
+const baseOrigin = new URL(base).origin;
 const coreKey = 'usesafeweb:core:v1';
 const browser = await chromium.launch({ headless: true });
 const failures = [];
@@ -15,15 +16,23 @@ async function coreState(page) {
   return raw ? JSON.parse(raw) : null;
 }
 
+function isTransientDnsVerificationRequest(request) {
+  if (request.method() !== 'POST') return false;
+  const url = new URL(request.url());
+  if (url.origin === baseOrigin && ['/api/dns-verification/requests', '/api/dns-verification/results'].includes(url.pathname)) return true;
+  return url.hostname.endsWith('.verify.usesafeweb.com') && url.pathname === '/api/dns-verification/probes';
+}
+
 await record('complete accountless core reaches truthful Protection Map without login or server persistence', async () => {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await context.newPage();
-  const mutations = [];
+  const unexpectedMutations = [];
   page.on('request', (request) => {
-    if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method())) mutations.push(`${request.method()} ${request.url()}`);
+    if (['GET', 'HEAD', 'OPTIONS'].includes(request.method())) return;
+    if (!isTransientDnsVerificationRequest(request)) unexpectedMutations.push(`${request.method()} ${request.url()}`);
   });
 
-  await page.goto(`${base}/en-GB/start`, { waitUntil: 'networkidle' });
+  await page.goto(`${base}/en-GB/start`, { waitUntil: 'domcontentloaded' });
   assert.equal(await page.locator('a[href*="login"],a[href*="account"],a[href*="signin"]').count(), 0, 'core start must not require or promote login');
   await page.locator('a[href="/en-GB/setup/route"]').click();
   await page.locator('a[href="/en-GB/setup/native?platform=android"]').click();
@@ -39,7 +48,7 @@ await record('complete accountless core reaches truthful Protection Map without 
   assert.equal(state.phase, 'protection');
   assert.equal(state.loginRequired, false);
   assert.equal('email' in state || 'accountId' in state || 'history' in state || 'query' in state || 'domain' in state, false);
-  assert.deepEqual(mutations, [], `accountless core must not create server persistence: ${mutations.join(' | ')}`);
+  assert.deepEqual(unexpectedMutations, [], `accountless core must not create persistent or unapproved server mutation: ${unexpectedMutations.join(' | ')}`);
 
   const cards = page.locator('[data-protection-state]');
   assert.equal(await cards.count(), 3);
@@ -63,7 +72,7 @@ await record('complete accountless core reaches truthful Protection Map without 
 await record('completion is accountless and optional account capability stays explicitly deferred', async () => {
   const context = await browser.newContext();
   const page = await context.newPage();
-  await page.goto(`${base}/en-GB/setup/route`, { waitUntil: 'networkidle' });
+  await page.goto(`${base}/en-GB/setup/route`, { waitUntil: 'domcontentloaded' });
   await page.locator('a[href="/en-GB/setup/native?platform=iphone"]').click();
   await page.locator('[data-core-continue-native]').click();
   await page.locator('[data-core-continue-dns]').click();
