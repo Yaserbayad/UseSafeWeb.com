@@ -1,3 +1,4 @@
+import { readBoundedUtf8Body } from '@/lib/bounded-request-body';
 import {
   DNS_VERIFICATION_MAX_HTTP_BODY_BYTES,
   createDnsProbeRequest,
@@ -20,19 +21,8 @@ function signingSecret(): string | null {
   return typeof value === 'string' && Buffer.byteLength(value, 'utf8') >= 32 ? value : null;
 }
 
-function declaredBodyTooLarge(request: Request): boolean {
-  const raw = request.headers.get('content-length');
-  if (raw === null) return false;
-  if (!/^\d+$/.test(raw)) return true;
-  return Number(raw) > DNS_VERIFICATION_MAX_HTTP_BODY_BYTES;
-}
-
 async function boundedJson(request: Request): Promise<unknown> {
-  if (declaredBodyTooLarge(request)) throw new RangeError('request body too large');
-  const raw = await request.text();
-  if (Buffer.byteLength(raw, 'utf8') > DNS_VERIFICATION_MAX_HTTP_BODY_BYTES) {
-    throw new RangeError('request body too large');
-  }
+  const raw = await readBoundedUtf8Body(request, DNS_VERIFICATION_MAX_HTTP_BODY_BYTES);
   return JSON.parse(raw);
 }
 
@@ -53,7 +43,7 @@ export async function POST(request: Request): Promise<Response> {
     body = await boundedJson(request);
   } catch (cause) {
     if (cause instanceof RangeError) return error(413, 'REQUEST_TOO_LARGE', 'Request body exceeds the allowed size.');
-    return error(400, 'INVALID_REQUEST', 'Request body must be valid JSON.');
+    return error(400, 'INVALID_REQUEST', 'Request body must be valid UTF-8 JSON.');
   }
 
   const scope = parseScope(body);
