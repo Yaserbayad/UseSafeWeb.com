@@ -30,7 +30,7 @@ function jsonResponse(body, status = 200, headers = {}) {
   });
 }
 
-test('browser orchestration performs request -> dedicated probe -> server result verification with minimal transport', async () => {
+test('browser orchestration performs request -> dedicated probe -> server result verification with minimal transient transport', async () => {
   const api = await loadClient();
   const calls = [];
   const fetchImpl = async (url, options) => {
@@ -45,10 +45,7 @@ test('browser orchestration performs request -> dedicated probe -> server result
   };
 
   const result = await api.runDnsVerification(scope, fetchImpl, 5_000);
-  assert.deepEqual(result, {
-    check: { dnsPath: 'verified-fresh', reasonCode: 'TECH_VERIFIED', verifierVersion: 'private-rewrite-v1' },
-    proof: { challenge, observationToken },
-  });
+  assert.deepEqual(result, { dnsPath: 'verified-fresh', reasonCode: 'TECH_VERIFIED', verifierVersion: 'private-rewrite-v1' });
   assert.equal(calls.length, 3);
   assert.equal(calls[0].url, '/api/dns-verification/requests');
   assert.equal(calls[0].options.method, 'POST');
@@ -65,7 +62,7 @@ test('browser orchestration performs request -> dedicated probe -> server result
 
   assert.equal(calls[2].url, '/api/dns-verification/results');
   assert.equal(calls[2].options.credentials, 'same-origin');
-  assert.deepEqual(JSON.parse(calls[2].options.body), { scope, challenge, observationToken });
+  assert.deepEqual(JSON.parse(calls[2].options.body), { requestToken, observationToken });
 });
 
 test('browser rejects arbitrary probe origins before any cross-origin request', async () => {
@@ -100,71 +97,58 @@ test('network, status, schema, timeout and server-verification failures stay fai
   assert.equal(await api.runDnsVerification(scope, malformed, 5_000), null);
 });
 
-test('stored proof is opaque/minimal and every positive restoration requires server revalidation', async () => {
+test('browser proof material remains transient and no verification token or challenge is persisted', async () => {
   const api = await loadClient();
-  const map = new Map();
-  const storage = {
-    getItem: (key) => map.has(key) ? map.get(key) : null,
-    setItem: (key, value) => map.set(key, value),
-    removeItem: (key) => map.delete(key),
-  };
-  assert.equal(api.DNS_VERIFICATION_STORAGE_KEY, 'usesafeweb:dns-verification:v1');
-  api.writeDnsVerificationProof(storage, { challenge, observationToken });
-  const raw = map.get(api.DNS_VERIFICATION_STORAGE_KEY);
-  assert.deepEqual(JSON.parse(raw), { challenge, observationToken });
-  for (const forbidden of ['dnsPath', 'reasonCode', 'working', 'verified', 'scope', 'domain', 'query', 'history', 'ip', 'account', 'child']) {
-    assert.equal(raw.toLowerCase().includes(forbidden.toLowerCase()), false, forbidden);
+  const source = readFileSync(clientPath, 'utf8');
+  for (const legacyExport of [
+    'DNS_VERIFICATION_STORAGE_KEY',
+    'writeDnsVerificationProof',
+    'readDnsVerificationProof',
+    'revalidateDnsVerificationProof',
+    'clearDnsVerificationProof',
+  ]) {
+    assert.equal(Object.prototype.hasOwnProperty.call(api, legacyExport), false, legacyExport);
+    assert.equal(source.includes(`export function ${legacyExport}`), false, legacyExport);
+    assert.equal(source.includes(`export async function ${legacyExport}`), false, legacyExport);
   }
-  assert.deepEqual(api.readDnsVerificationProof(storage), { challenge, observationToken });
-
-  const calls = [];
-  const check = await api.revalidateDnsVerificationProof(scope, { challenge, observationToken }, async (url, options) => {
-    calls.push({ url, options });
-    return jsonResponse({ dnsPath: 'verified-fresh', reasonCode: 'TECH_VERIFIED', verifierVersion: 'private-rewrite-v1' });
-  }, 5_000);
-  assert.deepEqual(check, { dnsPath: 'verified-fresh', reasonCode: 'TECH_VERIFIED', verifierVersion: 'private-rewrite-v1' });
-  assert.equal(calls.length, 1);
-  assert.equal(calls[0].url, '/api/dns-verification/results');
-
-  map.set(api.DNS_VERIFICATION_STORAGE_KEY, JSON.stringify({ challenge, observationToken, working: true }));
-  assert.equal(api.readDnsVerificationProof(storage), null);
+  assert.doesNotMatch(source, /sessionStorage|localStorage|\.setItem\(|\.getItem\(|\.removeItem\(/);
 });
 
-test('result route verifies HMAC server-side and emits only the approved check projection', () => {
+test('result route verifies both signed request and observation server-side and emits only the approved check projection', () => {
   assert.equal(existsSync(resultRoutePath), true, 'missing observation result verification route');
   const source = readFileSync(resultRoutePath, 'utf8');
   assert.match(source, /export const runtime = ['"]nodejs['"]/);
   assert.match(source, /export async function POST\(/);
   assert.match(source, /readBoundedUtf8Body/);
+  assert.match(source, /verifyDnsProbeRequest/);
   assert.match(source, /verifyDnsVerificationObservation/);
   assert.match(source, /toApprovedDnsVerificationEvent/);
   assert.match(source, /USESAFEWEB_DNS_VERIFICATION_SIGNING_SECRET/);
   assert.match(source, /Cache-Control['"]?\s*[:,]\s*['"]no-store['"]/);
+  assert.match(source, /requestToken/);
+  assert.match(source, /observationToken/);
+  assert.doesNotMatch(source, /body\.scope|body\.challenge/);
   assert.doesNotMatch(source, /x-forwarded-host/i);
   for (const forbidden of ['queryHistory', 'browsingHistory', 'childId', 'accountId', 'clientIp']) {
     assert.equal(source.includes(forbidden), false);
   }
 });
 
-test('verify and Protection Map use client components; no bare positive state is accepted from URL or storage', () => {
+test('verify and Protection Map perform fresh client checks; no bare positive state or proof is accepted from URL or storage', () => {
   assert.equal(existsSync(verifyPanelPath), true, 'missing live DNS verification panel');
-  assert.equal(existsSync(protectionCardPath), true, 'missing revalidating DNS Protection Map card');
+  assert.equal(existsSync(protectionCardPath), true, 'missing live DNS Protection Map card');
   const panel = readFileSync(verifyPanelPath, 'utf8');
   const card = readFileSync(protectionCardPath, 'utf8');
   const verifyPage = readFileSync(resolve(root, 'src/app/[locale]/verify/page.tsx'), 'utf8');
   const protectionPage = readFileSync(resolve(root, 'src/app/[locale]/protection/page.tsx'), 'utf8');
 
-  assert.match(panel, /runDnsVerification/);
-  assert.match(panel, /readCoreSession\(window\.sessionStorage/);
-  assert.match(panel, /writeDnsVerificationProof/);
-  assert.match(panel, /aria-live=['"]polite['"]/);
-  assert.doesNotMatch(panel, /searchParams|URLSearchParams/);
-
-  assert.match(card, /readDnsVerificationProof/);
-  assert.match(card, /revalidateDnsVerificationProof/);
-  assert.match(card, /readCoreSession\(window\.sessionStorage/);
-  assert.match(card, /aria-live=['"]polite['"]/);
-  assert.doesNotMatch(card, /searchParams|URLSearchParams/);
+  for (const source of [panel, card]) {
+    assert.match(source, /runDnsVerification/);
+    assert.match(source, /readCoreSession\(window\.sessionStorage/);
+    assert.match(source, /aria-live=['"]polite['"]/);
+    assert.doesNotMatch(source, /searchParams|URLSearchParams/);
+    assert.doesNotMatch(source, /writeDnsVerificationProof|readDnsVerificationProof|revalidateDnsVerificationProof|clearDnsVerificationProof/);
+  }
 
   assert.match(verifyPage, /DnsVerificationPanel/);
   assert.match(protectionPage, /DnsVerificationCard/);
