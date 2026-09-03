@@ -47,7 +47,7 @@ jobs:
         run: |
           set -euo pipefail
           cd website
-          PLAYWRIGHT_VERSION='1.55.0'
+          PLAYWRIGHT_VERSION='1.62.1'
           npm install --no-save --no-package-lock --ignore-scripts "playwright@${PLAYWRIGHT_VERSION}"
           npx --yes "playwright@${PLAYWRIGHT_VERSION}" install chromium
           test -z "$(git status --porcelain)"
