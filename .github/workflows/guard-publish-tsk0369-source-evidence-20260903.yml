@@ -53,6 +53,11 @@ jobs:
           cd ..
 
           python3 .github/scripts/publish_tsk0369_source_partial.py
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('CURRENT_STATE.md')
+          path.write_text(path.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')
+          PY
           git diff --check
           mapfile -t changed < <(git diff --name-only | sort)
           expected=(CURRENT_STATE.md TSK_0369_MINIMAL_SUPPORT_CAPTURE_SOURCE_IMPLEMENTATION_2026-09-03.md)
