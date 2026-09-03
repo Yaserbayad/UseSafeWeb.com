@@ -1,7 +1,7 @@
 export const PRODUCT_EVENT_SCHEMA_VERSION = '1.0.1' as const;
 export const ACCOUNTLESS_RAW_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 export const SYNTHETIC_RAW_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
-export const MEASUREMENT_MAX_AGE_MS = 13 * 31 * 24 * 60 * 60 * 1000;
+export const MEASUREMENT_MAX_AGE_MS = 13 * 30 * 24 * 60 * 60 * 1000;
 export const PRODUCT_EVENT_MAX_HTTP_BODY_BYTES = 4096;
 
 export const PRODUCT_EVENT_NAMES = [
@@ -195,12 +195,7 @@ export function createProductEventStore(options: { maxRecords?: number } = {}) {
 
   function cleanup(now: number): void {
     for (const [eventId, stored] of records) if (now >= stored.expiresAt) records.delete(eventId);
-    const liveSessions = new Set<string>();
-    for (const stored of records.values()) {
-      const sessionId = stored.event.journey_session_id;
-      if (typeof sessionId === 'string') liveSessions.add(sessionId);
-    }
-    for (const [sessionId, expiresAt] of sessionExpiry) if (now >= expiresAt || !liveSessions.has(sessionId)) sessionExpiry.delete(sessionId);
+    for (const [sessionId, expiresAt] of sessionExpiry) if (now >= expiresAt) sessionExpiry.delete(sessionId);
   }
 
   return {
@@ -211,7 +206,8 @@ export function createProductEventStore(options: { maxRecords?: number } = {}) {
       if (records.size >= maxRecords) throw new ProductEventCapacityError();
 
       const occurredAt = Date.parse(event.occurred_at);
-      let expiresAt = occurredAt + rawRetentionMs(event);
+      const retentionMs = rawRetentionMs(event);
+      let expiresAt = Math.min(occurredAt + retentionMs, now + retentionMs);
       const sessionId = event.journey_session_id;
       if (typeof sessionId === 'string') {
         const existing = sessionExpiry.get(sessionId);
