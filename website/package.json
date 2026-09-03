@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
-    "test:contract": "node --test tests/contract/tsk0361.test.mjs tests/contract/tsk0357.test.mjs tests/contract/tsk0358.test.mjs tests/contract/tsk0360.test.mjs tests/contract/tsk0359.test.mjs tests/contract/tsk0629.test.mjs tests/contract/tsk0243.test.mjs"
+    "test:contract": "node --test tests/contract/tsk0361.test.mjs tests/contract/tsk0357.test.mjs tests/contract/tsk0358.test.mjs tests/contract/tsk0360.test.mjs tests/contract/tsk0359.test.mjs tests/contract/tsk0629.test.mjs tests/contract/tsk0243.test.mjs tests/contract/tsk0243-csp.test.mjs"
   },
   "dependencies": {
     "next": "16.3.3",
@@ -18,7 +18,7 @@
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/react-dom": "^20",
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.3",
     "typescript": "^5"
