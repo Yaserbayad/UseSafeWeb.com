@@ -1,0 +1,128 @@
+name: TSK-0360 gated profile delivery source acceptance
+
+on:
+  push:
+    branches:
+      - main
+      - feature/tsk-0360-profile-delivery-gate-20260903
+  pull_request:
+    paths:
+      - 'website/**'
+      - '.github/workflows/accept-tsk0360-profile-delivery-20260903.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  accept-tsk0360-delivery:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.23.2'
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - name: Verify gated source delivery and local HTTP behavior
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
+          test "$(git hash-object website/package-lock.json)" = '14f9a62607489f965b96d98cdf0d825a363cd8bc'
+          python3 tests/repository-structure/verify_structure.py
+          python3 Plans/Master/Tools/validate_master_plan.py
+
+          cd website
+          npm ci --no-fund --no-audit
+          npm run test:contract
+          npm run lint
+          npm run typecheck
+          NEXT_TELEMETRY_DISABLED=1 npm run build
+          npm audit --audit-level=high
+          npm audit --omit=dev --audit-level=high
+
+          start_server() {
+            local port="$1"
+            NEXT_TELEMETRY_DISABLED=1 npm start -- --hostname 127.0.0.1 --port "$port" >"/tmp/tsk0360-next-${port}.log" 2>&1 &
+            SERVER_PID=$!
+            local ready=0
+            for _ in $(seq 1 30); do
+              if curl -fsS "http://127.0.0.1:${port}/en-GB" >/dev/null; then
+                ready=1
+                break
+              fi
+              sleep 1
+            done
+            if [ "$ready" -ne 1 ]; then
+              cat "/tmp/tsk0360-next-${port}.log"
+              return 1
+            fi
+          }
+
+          stop_server() {
+            if [ -n "${SERVER_PID:-}" ]; then
+              kill "$SERVER_PID" >/dev/null 2>&1 || true
+              wait "$SERVER_PID" >/dev/null 2>&1 || true
+              SERVER_PID=''
+            fi
+          }
+          trap stop_server EXIT
+
+          unset USESAFEWEB_IOS_PROFILE_DELIVERY_ENABLED
+          unset USESAFEWEB_IOS_PROFILE_PAYLOAD_UUID
+          unset USESAFEWEB_IOS_PROFILE_DNS_PAYLOAD_UUID
+          unset USESAFEWEB_IOS_PROFILE_EXPECTED_SHA256
+          start_server 3200
+          DISABLED_STATUS="$(curl -sS -D /tmp/tsk0360-disabled.headers -o /tmp/tsk0360-disabled.body -w '%{http_code}' 'http://127.0.0.1:3200/api/ios-doh-profile')"
+          test "$DISABLED_STATUS" = '404'
+          tr -d '\r' </tmp/tsk0360-disabled.headers | grep -iq '^cache-control: no-store$'
+          test ! -s /tmp/tsk0360-disabled.body
+          stop_server
+
+          export USESAFEWEB_IOS_PROFILE_DELIVERY_ENABLED='true'
+          export USESAFEWEB_IOS_PROFILE_PAYLOAD_UUID='11111111-2222-4333-8444-555555555555'
+          export USESAFEWEB_IOS_PROFILE_DNS_PAYLOAD_UUID='AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE'
+          unset USESAFEWEB_IOS_PROFILE_EXPECTED_SHA256
+          start_server 3201
+          NO_DIGEST_STATUS="$(curl -sS -D /tmp/tsk0360-no-digest.headers -o /tmp/tsk0360-no-digest.body -w '%{http_code}' 'http://127.0.0.1:3201/api/ios-doh-profile')"
+          test "$NO_DIGEST_STATUS" = '503'
+          tr -d '\r' </tmp/tsk0360-no-digest.headers | grep -iq '^cache-control: no-store$'
+          test ! -s /tmp/tsk0360-no-digest.body
+          stop_server
+
+          PROFILE_SHA256="$(node --experimental-strip-types --input-type=module -e "import { createHash } from 'node:crypto'; import { generateSafeWebIosDohProfile } from './src/lib/ios-doh-profile.ts'; const profile = generateSafeWebIosDohProfile({ payloadUuid: '11111111-2222-4333-8444-555555555555', dnsPayloadUuid: 'AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE' }); process.stdout.write(createHash('sha256').update(profile, 'utf8').digest('hex'));" 2>/dev/null)"
+          test "${#PROFILE_SHA256}" = '64'
+          printf '%s' "$PROFILE_SHA256" | grep -Eq '^[0-9a-f]{64}$'
+          export USESAFEWEB_IOS_PROFILE_EXPECTED_SHA256="$PROFILE_SHA256"
+          start_server 3202
+          ENABLED_STATUS="$(curl -sS -D /tmp/tsk0360-enabled.headers -o /tmp/tsk0360-enabled.mobileconfig -w '%{http_code}' 'http://127.0.0.1:3202/api/ios-doh-profile')"
+          test "$ENABLED_STATUS" = '200'
+          tr -d '\r' </tmp/tsk0360-enabled.headers | grep -iq '^cache-control: no-store$'
+          tr -d '\r' </tmp/tsk0360-enabled.headers | grep -iq '^content-type: application/x-apple-aspen-config$'
+          tr -d '\r' </tmp/tsk0360-enabled.headers | grep -iq '^content-disposition: attachment; filename="SafeWeb-DNS.mobileconfig"$'
+          tr -d '\r' </tmp/tsk0360-enabled.headers | grep -iq '^x-content-type-options: nosniff$'
+          test "$(sha256sum /tmp/tsk0360-enabled.mobileconfig | awk '{print $1}')" = "$PROFILE_SHA256"
+          grep -q '<string>https://dns.usesafeweb.com/dns-query</string>' /tmp/tsk0360-enabled.mobileconfig
+          grep -q '<string>11111111-2222-4333-8444-555555555555</string>' /tmp/tsk0360-enabled.mobileconfig
+          grep -q '<string>AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE</string>' /tmp/tsk0360-enabled.mobileconfig
+          grep -q '<string>com.usesafeweb.profile.doh</string>' /tmp/tsk0360-enabled.mobileconfig
+          grep -q '<string>com.usesafeweb.profile.doh.dns</string>' /tmp/tsk0360-enabled.mobileconfig
+          if grep -Eqi 'ClientID|credential|password|secret|protected/verified' /tmp/tsk0360-enabled.mobileconfig; then
+            echo 'forbidden profile material present'
+            exit 1
+          fi
+          stop_server
+
+          export USESAFEWEB_IOS_PROFILE_EXPECTED_SHA256='0000000000000000000000000000000000000000000000000000000000000000'
+          start_server 3203
+          MISMATCH_STATUS="$(curl -sS -D /tmp/tsk0360-mismatch.headers -o /tmp/tsk0360-mismatch.body -w '%{http_code}' 'http://127.0.0.1:3203/api/ios-doh-profile')"
+          test "$MISMATCH_STATUS" = '503'
+          tr -d '\r' </tmp/tsk0360-mismatch.headers | grep -iq '^cache-control: no-store$'
+          test ! -s /tmp/tsk0360-mismatch.body
+          stop_server
+          trap - EXIT
+
+          cd ..
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'TSK0360_GATED_PROFILE_DELIVERY_SOURCE_ACCEPTANCE=PASS'
