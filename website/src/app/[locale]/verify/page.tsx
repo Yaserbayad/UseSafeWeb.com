@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { CoreActionButton } from '@/components/core-action-button';
 import { CorePageGuard } from '@/components/core-page-guard';
 import { SetupPage, operationalMetadata } from '@/components/setup-page';
-import { isLocale } from '@/lib/i18n';
+import { getInstructionVariant, getJourneyContent, isLocale } from '@/lib/i18n';
 
 export const metadata = operationalMetadata;
 
@@ -16,22 +16,29 @@ export default async function Page({ params, searchParams }: {
   const platform = typeof query.platform === 'string' ? query.platform : undefined;
   if (platform !== 'android' && platform !== 'iphone') notFound();
 
+  const content = getJourneyContent(locale, 'verify').value;
+  const instructionId = platform === 'iphone' ? 'INS-IOS-VERIFY-01' : 'INS-AND-VERIFY-01';
+  const instruction = getInstructionVariant(locale, instructionId);
+
   return (
     <SetupPage
-      kicker="Verification"
-      title="Check what is known before relying on protection"
-      summary="This step does not invent technical verification. TSK-0358 has no qualifying E1 verifier yet, so the Protection Map will distinguish parent-confirmed setup, unavailable verification, and unsupported coverage."
-      noteTitle="Fail-closed verification"
-      noteBody="If technical evidence is unavailable, stale, conflicting, or indeterminate, SafeWeb must not label the setup protected or verified."
+      kicker={content.kicker}
+      title={content.title}
+      summary={content.summary}
+      noteTitle={content.noteTitle}
+      noteBody={content.noteBody}
     >
       <CorePageGuard locale={locale} expectedPhase="verify" />
+      <p data-instruction-id={instruction.instructionId} data-instruction-source-locale={instruction.sourceLocale}>
+        {instruction.value}
+      </p>
       <div className="sw-actions">
         <CoreActionButton
           locale={locale}
           deviceFamily={platform}
           event={{ type: 'VERIFICATION_RESULT' }}
           href={`/${locale}/protection?platform=${platform}`}
-          label="View Protection Map"
+          label={content.actionLabel}
           dataAttribute="data-core-view-protection"
         />
       </div>
