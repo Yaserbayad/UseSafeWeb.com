@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feature/tsk-0359-localization-20260903
+      - main
     paths:
       - 'website/**'
       - 'Plans/Master/WBS/master-wbs.csv'
