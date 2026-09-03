@@ -1,0 +1,1 @@
+Trigger only. Do not merge. This branch exists solely to fire the default-branch one-shot TSK-0243 CURRENT_STATE.md synchronizer.
