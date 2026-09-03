@@ -167,7 +167,7 @@ test('positive observation is derived only from valid request token plus exact c
   assert.equal(api.createDnsVerificationObservationFromProbeRequest(issued.requestToken, issued.probeHost, secret, issued.expiresAt), null);
 });
 
-test('route handlers expose POST-only node interfaces with bounded JSON, no-store responses and no client-selected positive outcome', () => {
+test('route handlers expose POST-only node interfaces with bounded input, no-store responses and no client-selected positive outcome', () => {
   assert.equal(existsSync(requestRoutePath), true, 'missing DNS verification request route');
   assert.equal(existsSync(probeRoutePath), true, 'missing DNS verification probe route');
   const requestRoute = readFileSync(requestRoutePath, 'utf8');
@@ -176,7 +176,7 @@ test('route handlers expose POST-only node interfaces with bounded JSON, no-stor
   for (const source of [requestRoute, probeRoute]) {
     assert.match(source, /export const runtime = ['"]nodejs['"]/);
     assert.match(source, /export async function POST\(/);
-    assert.doesNotMatch(source, /export (?:async )?function (?:GET|PUT|PATCH|DELETE)\(/);
+    assert.doesNotMatch(source, /export (?:async )?function (?:GET|PUT|PATCH|DELETE|OPTIONS)\(/);
     assert.match(source, /Cache-Control['"]?\s*[:,]\s*['"]no-store['"]/);
     assert.match(source, /DNS_VERIFICATION_MAX_HTTP_BODY_BYTES/);
     assert.doesNotMatch(source, /x-forwarded-host/i);
@@ -186,8 +186,16 @@ test('route handlers expose POST-only node interfaces with bounded JSON, no-stor
   }
 
   assert.match(requestRoute, /createDnsProbeRequest/);
+  assert.match(requestRoute, /JSON\.parse/);
   assert.doesNotMatch(requestRoute, /createDnsVerificationObservationFromProbeRequest/);
+
   assert.match(probeRoute, /request\.headers\.get\(['"]host['"]\)/);
+  assert.match(probeRoute, /request\.headers\.get\(['"]origin['"]\)/);
+  assert.match(probeRoute, /USESAFEWEB_PUBLIC_ORIGIN/);
+  assert.match(probeRoute, /Access-Control-Allow-Origin/);
+  assert.match(probeRoute, /Vary['"]?\s*[:,]\s*['"]Origin['"]/);
+  assert.match(probeRoute, /request\.text\(\)/, 'probe POST uses an opaque text token so browser CORS preflight is not required');
+  assert.doesNotMatch(probeRoute, /JSON\.parse/);
   assert.match(probeRoute, /createDnsVerificationObservationFromProbeRequest/);
   assert.doesNotMatch(probeRoute, /\b(?:outcome|reasonCode|challenge|probeHost)\s*=/, 'probe route must not derive positive evidence from client-selected body fields');
 });
