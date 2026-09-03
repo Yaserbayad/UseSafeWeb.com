@@ -40,7 +40,6 @@ jobs:
           npm ci --no-fund --no-audit
           NEXT_TELEMETRY_DISABLED=1 npm run validate
           npm audit --audit-level=high
-          npm audit --omit=dev --audit-level=high
           cd ..
 
           git diff --check
