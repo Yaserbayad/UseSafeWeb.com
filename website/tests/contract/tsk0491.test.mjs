@@ -25,15 +25,14 @@ test('TSK-0491 keeps the npm dependency tree locked and inventories every direct
 
   const policy = policyText();
   for (const [name, requested] of Object.entries({ ...pkg.dependencies, ...pkg.devDependencies })) {
-    assert.match(policy, new RegExp(`\\| ${name.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&')} \\|`), `missing ${name} from inventory`);
-    assert.match(policy, new RegExp(requested.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&')), `missing requested version/range for ${name}`);
+    assert.equal(policy.includes(`| ${name} | ${requested} |`), true, `missing ${name} ${requested} inventory row`);
   }
   assert.match(policy, /container images[^\n]*none/i);
 });
 
 test('TSK-0491 documents Security ownership and deterministic update/severity disposition', () => {
   const policy = policyText();
-  assert.match(policy, /Owner:\s*Security/i);
+  assert.match(policy, /Owner:\*\*\s*Security/i);
   assert.match(policy, /critical/i);
   assert.match(policy, /high/i);
   assert.match(policy, /moderate/i);
