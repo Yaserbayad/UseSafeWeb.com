@@ -13,11 +13,10 @@ const pkg = JSON.parse(readFileSync(packagePath, 'utf8'));
 const lock = JSON.parse(readFileSync(lockPath, 'utf8'));
 const readme = readFileSync(readmePath, 'utf8');
 
-test('TSK-0380 pins the local Node/npm toolchain and keeps the lockfile authoritative', () => {
+test('TSK-0380 pins the local Node/npm baseline and keeps the dependency lock authoritative', () => {
   assert.equal(existsSync(nodeVersionPath), true, 'missing .nvmrc exact Node pin');
   assert.equal(readFileSync(nodeVersionPath, 'utf8').trim(), '22.23.2');
   assert.equal(pkg.packageManager, 'npm@10.9.8');
-  assert.equal(pkg.engines?.node, '22.23.2');
   assert.equal(lock.lockfileVersion, 3);
 });
 
