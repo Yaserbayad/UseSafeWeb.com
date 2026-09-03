@@ -10,10 +10,10 @@ const json = (path) => JSON.parse(read(path));
 const modulePath = 'src/lib/versioned-content.ts';
 const releasePath = 'src/content/content-release.json';
 const bindingPath = 'src/content/instruction-bindings.json';
-const pagePaths = [
+const deliverySurfaces = [
   'src/app/[locale]/setup/dns/page.tsx',
   'src/app/[locale]/verify/page.tsx',
-  'src/app/[locale]/cleanup/page.tsx',
+  'src/components/revocation-gated-cleanup.tsx',
 ];
 
 async function loadApi() {
@@ -23,7 +23,7 @@ async function loadApi() {
 }
 
 test('TSK-0374 artifacts exist and the full contract suite includes this task', () => {
-  for (const path of [modulePath, releasePath, bindingPath, ...pagePaths]) {
+  for (const path of [modulePath, releasePath, bindingPath, ...deliverySurfaces]) {
     assert.equal(existsSync(resolve(root, path)), true, `missing ${path}`);
   }
   assert.match(json('package.json').scripts['test:contract'], /tsk0374\.test\.mjs/);
@@ -111,12 +111,12 @@ test('release selection and delivery fail closed for stale, withdrawn, malformed
   }).status, 'unsupported');
 });
 
-test('i18n delivery integration exposes release/status metadata and operational delivery pages stop hard-coding instruction IDs', () => {
+test('i18n delivery integration exposes release/status metadata and operational delivery surfaces stop hard-coding instruction IDs', () => {
   const i18n = read('src/lib/i18n.ts');
   assert.match(i18n, /getVersionedInstruction/);
   assert.match(i18n, /resolveContentDelivery/);
   assert.match(i18n, /contentRelease/);
-  for (const path of pagePaths) {
+  for (const path of deliverySurfaces) {
     const source = read(path);
     assert.match(source, /getVersionedInstruction/);
     assert.match(source, /data-content-release/);
@@ -126,16 +126,16 @@ test('i18n delivery integration exposes release/status metadata and operational 
 });
 
 test('non-ready delivery is visibly fail-closed and retains a localized safe recovery route', () => {
-  const setup = read(pagePaths[0]);
+  const setup = read(deliverySurfaces[0]);
   assert.match(setup, /\{instruction\.status\}/, 'setup must visibly expose its non-ready content status');
   assert.match(setup, /href: `\/\$\{locale\}\/help`/, 'setup failure must retain Help');
 
-  const verify = read(pagePaths[1]);
+  const verify = read(deliverySurfaces[1]);
   assert.match(verify, /\{failed\.status\}/, 'verify must visibly expose its non-ready content status');
   assert.match(verify, /protectionContent\.troubleshootLabel/, 'verify failure must retain localized troubleshooting');
   assert.match(verify, /href: `\/\$\{locale\}\/troubleshoot\?platform=\$\{platform\}`/, 'verify failure must route to troubleshooting');
 
-  const cleanup = read(pagePaths[2]);
+  const cleanup = read(deliverySurfaces[2]);
   assert.match(cleanup, /getContent/, 'cleanup failure needs localized shell actions');
   assert.match(cleanup, /\{instruction\.status\}/, 'cleanup must visibly expose its non-ready content status');
   assert.match(cleanup, /href: `\/\$\{locale\}\/help`/, 'cleanup failure must retain Help');
