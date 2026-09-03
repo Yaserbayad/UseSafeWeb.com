@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { CoreActionButton } from '@/components/core-action-button';
 import { SetupPage, operationalMetadata } from '@/components/setup-page';
-import { getContent, isLocale } from '@/lib/i18n';
+import { getContent, getInstructionVariant, getJourneyContent, isLocale } from '@/lib/i18n';
 
 export const metadata = operationalMetadata;
 
@@ -20,12 +20,16 @@ export default async function Page({
   if (platform !== 'android' && platform !== 'iphone') notFound();
 
   const c = getContent(locale);
+  const verifyContent = getJourneyContent(locale, 'verify').value;
   const isIphone = platform === 'iphone';
+  const instructionId = isIphone ? 'INS-IOS-SETUP-01' : 'INS-AND-SETUP-01';
+  const instruction = getInstructionVariant(locale, instructionId);
+
   return (
     <SetupPage
       kicker={c.dns.kicker}
       title={isIphone ? c.dns.iphoneTitle : c.dns.androidTitle}
-      summary={isIphone ? c.dns.iphoneIntro : c.dns.androidIntro}
+      summary={instruction.value}
       noteTitle={c.dns.noteTitle}
       noteBody={c.dns.noteBody}
       actions={[
@@ -33,15 +37,9 @@ export default async function Page({
         { href: `/${locale}/setup/route`, label: c.dns.backLabel, secondary: true },
       ]}
     >
-      {!isIphone && (
-        <ol className="sw-instruction-list">
-          {c.dns.androidSteps.map((step) => (
-            <li key={step}>
-              {step.includes(c.common.dnsHostname) ? <span className="sw-technical">{step}</span> : step}
-            </li>
-          ))}
-        </ol>
-      )}
+      <p data-instruction-id={instruction.instructionId} data-instruction-source-locale={instruction.sourceLocale}>
+        {instruction.value}
+      </p>
       {isIphone && <p className="sw-technical">{c.common.dohUrl}</p>}
       <div className="sw-actions">
         <CoreActionButton
@@ -49,7 +47,7 @@ export default async function Page({
           deviceFamily={platform}
           event={{ type: 'CONTINUE_DNS' }}
           href={`/${locale}/verify?platform=${platform}`}
-          label="I saved this DNS setting — check protection"
+          label={verifyContent.dnsContinueLabel}
           dataAttribute="data-core-continue-dns"
         />
       </div>
