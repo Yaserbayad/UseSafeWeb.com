@@ -25,12 +25,13 @@ jobs:
           runners = set()
           install_lines = []
           npx_lines = []
+          expression_prefix = '$' + '{{'
           for path in workflows:
               if path.name.startswith('tmp-tsk0491-supply-chain-scan-'):
                   continue
               text = path.read_text(encoding='utf-8')
               actions.update(x for x in re.findall(r'^\s*-?\s*uses:\s*([^\s#]+)', text, re.M) if not x.startswith('./'))
-              runners.update(x.strip("'\"") for x in re.findall(r'^\s*runs-on:\s*([^\s#]+)', text, re.M) if '${{' not in x)
+              runners.update(x.strip("'\"") for x in re.findall(r'^\s*runs-on:\s*([^\s#]+)', text, re.M) if expression_prefix not in x)
               for line in text.splitlines():
                   s = line.strip()
                   if re.search(r'\bnpm\s+(?:install|i)\b', s):
