@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-02T23:57:02Z
+**Updated:** 2026-09-03T02:37:41Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -3002,3 +3002,21 @@ Recompute the complete current L6 executable frontier from canonical WBS/graph, 
 ### Queue effect
 
 Recompute the complete current L6 executable frontier from canonical WBS/graph/runtime/gates/risks/interfaces and Action Authority. `TSK-0455` remains non-PASS and non-executable until the owner-provided fresh Ubuntu 24.04 target host plus required DNS/TLS/monitoring access exists for mandatory `VER-0455` target-host execution.
+
+## TSK-0359 current accepted stable state — 2026-09-03 — POST-LG-07 LOCALIZATION IMPLEMENTATION
+
+`TSK-0359 — Implement externalized content, locale routing/fallback, RTL layout support, metadata, and locale-specific instruction selection`: **PASS** under current `ACC-0359 / VER-0359 / EVD-0359`.
+
+- Current normalized WBS: L6 / MEDIUM / A3 / `AUTO_ALLOWED`; hard predecessors `TSK-0311` and `TSK-0358` are current durable PASS; `LG-07` is current durable PASS.
+- Canonical implementation merged through PR `#62`; squash merge commit `70049dd6e4d5cb3ffbb5c68c8a143bce4e89053e`.
+- Durable acceptance evidence: `TSK_0359_LOCALIZATION_IMPLEMENTATION_ACCEPTANCE_2026-09-03.md`, blob `484766fc8836361c6f504790270ee96081ccbdec`, evidence commit `6d20711889bcb94957fcaba86009984781acef05`.
+- Final feature acceptance run/job `33706555973 / 100496805461`: **SUCCESS** on exact feature head `e7c1f89d72a47f729970d1b679908fa2338436df`.
+- Clean canonical-main acceptance run/job `33706792922 / 100497529049`: **SUCCESS** on merge SHA `70049dd6e4d5cb3ffbb5c68c8a143bce4e89053e`; 35/35 contract tests PASS, lint has zero errors, type-check and Next.js production build PASS, production/all dependency audits report 0 vulnerabilities, and real-browser markers `TSK0359_BROWSER_ACCEPTANCE=PASS`, `TSK0358_BROWSER_ACCEPTANCE=PASS`, `TSK0361_BROWSER_ACCEPTANCE=PASS`.
+- Accepted scope includes deterministic en-GB / tr-TR / ar locale fallback with fail-visible missing/cycle behavior, externalized operational journey content, Arabic RTL, source-bound locale/platform instruction selection for all nine current TSK-0307 instruction IDs, explicit operational noindex behavior, and single-authority non-activating locale availability from `locale-manifest.json`.
+- Protection Map evidence precedence remains unchanged: account state, journey completion, or configuration alone cannot manufacture technical verification. No new authentication requirement, analytics transport, browsing/domain-history collection, raw diagnostic persistence, external service, deployment path, or sensitive-data category was introduced.
+- Review defects were fixed test-first before acceptance: duplicate DNS-instruction rendering and duplicate market-activation authority.
+- **Non-inference / fences:** no deployment, profile distribution, production activation, participant processing, market activation, launch, or unrelated task/gate PASS is inferred. `TSK-0360` remains TODO pending its required supported-iPhone and related acceptance evidence; `TSK-0455` remains WAITING for a genuinely qualifying fresh Ubuntu 24.04 LTS target host and required target access/evidence; `TSK-0399` remains ineligible while `TSK-0360` is non-PASS. No `GATE-0026` exists or is created.
+
+### Queue status after TSK-0359 acceptance
+
+Recompute the complete current L6 executable frontier from canonical WBS/graph/runtime/gates/risks/interfaces and Action Authority. Preserve all unresolved material-action fences and execute only the highest-priority genuinely eligible `AUTO_ALLOWED` work.
