@@ -1,14 +1,15 @@
 import { readBoundedUtf8Body } from '@/lib/bounded-request-body';
 import {
   DNS_VERIFICATION_MAX_HTTP_BODY_BYTES,
+  DNS_VERIFICATION_MAX_TOKEN_BYTES,
   toApprovedDnsVerificationEvent,
+  verifyDnsProbeRequest,
   verifyDnsVerificationObservation,
 } from '@/lib/dns-verification-proof';
 
 export const runtime = 'nodejs';
 
 const noStoreHeaders = { 'Cache-Control': 'no-store' } as const;
-const challengePattern = /^[0-9a-f]{32}$/;
 
 function response(status: number, body: unknown): Response {
   return Response.json(body, { status, headers: noStoreHeaders });
@@ -23,15 +24,19 @@ function signingSecret(): string | null {
   return typeof value === 'string' && Buffer.byteLength(value, 'utf8') >= 32 ? value : null;
 }
 
-function parseBody(value: unknown): { scope: string; challenge: string; observationToken: string } | null {
+function validToken(value: unknown): value is string {
+  return typeof value === 'string'
+    && value.length > 0
+    && Buffer.byteLength(value, 'utf8') <= DNS_VERIFICATION_MAX_TOKEN_BYTES;
+}
+
+function parseBody(value: unknown): { requestToken: string; observationToken: string } | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const body = value as Record<string, unknown>;
   const keys = Object.keys(body).sort();
-  if (keys.length !== 3 || keys[0] !== 'challenge' || keys[1] !== 'observationToken' || keys[2] !== 'scope') return null;
-  if (typeof body.scope !== 'string' || !challengePattern.test(body.scope)) return null;
-  if (typeof body.challenge !== 'string' || !challengePattern.test(body.challenge)) return null;
-  if (typeof body.observationToken !== 'string' || body.observationToken.length === 0 || Buffer.byteLength(body.observationToken, 'utf8') > 2048) return null;
-  return { scope: body.scope, challenge: body.challenge, observationToken: body.observationToken };
+  if (keys.length !== 2 || keys[0] !== 'observationToken' || keys[1] !== 'requestToken') return null;
+  if (!validToken(body.requestToken) || !validToken(body.observationToken)) return null;
+  return { requestToken: body.requestToken, observationToken: body.observationToken };
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -54,12 +59,16 @@ export async function POST(request: Request): Promise<Response> {
   const secret = signingSecret();
   if (!secret) return error(503, 'VERIFIER_UNAVAILABLE', 'DNS verification is not configured.');
 
+  const nowMs = Date.now();
+  const issued = verifyDnsProbeRequest(body.requestToken, secret, nowMs);
+  if (!issued) return error(403, 'PROOF_NOT_AUTHORIZED', 'DNS verification request is not valid for the current check.');
+
   const verified = verifyDnsVerificationObservation(
     body.observationToken,
     secret,
-    Date.now(),
-    body.scope,
-    body.challenge,
+    nowMs,
+    issued.scope,
+    issued.challenge,
   );
   if (!verified) return error(403, 'PROOF_NOT_AUTHORIZED', 'DNS verification proof is not valid for the current check.');
 
