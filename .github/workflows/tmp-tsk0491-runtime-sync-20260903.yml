@@ -1,0 +1,59 @@
+name: Temporary TSK-0491 runtime PASS sync
+
+on:
+  push:
+    branches:
+      - publication/tsk-0491-pass-20260903
+
+permissions:
+  contents: write
+
+jobs:
+  sync-runtime:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: publication/tsk-0491-pass-20260903
+          fetch-depth: 1
+      - name: Guard, append TSK-0491 PASS, validate, and commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object CURRENT_STATE.md)" = '8f31e24fc50e29d550f4d03912cda35ab880477a'
+          test "$(git hash-object TSK_0491_DEPENDENCY_INVENTORY_SBOM_EVIDENCE_2026-09-03.md)" = 'f86efe6a6ebddd640d1f33f33588f91482df2e5c'
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
+          ! grep -q '^## TSK-0491 current accepted stable state' CURRENT_STATE.md
+
+          cat >> CURRENT_STATE.md <<'EOF'
+
+## TSK-0491 current accepted stable state — 2026-09-03
+
+`TSK-0491 — Establish dependency inventory, update policy, lock files, and SBOM generation`: **PASS** under current `ACC-0491 / VER-0491 / EVD-0491`.
+
+- Current WBS: L6 / MEDIUM / Security / A3 / `AUTO_ALLOWED`; hard dependency `TSK-0380` is current durable PASS.
+- Accepted evidence: `TSK_0491_DEPENDENCY_INVENTORY_SBOM_EVIDENCE_2026-09-03.md`, blob `f86efe6a6ebddd640d1f33f33588f91482df2e5c`.
+- Canonical source implementation: `main` commit `59113366b14eca72101c1bc12bec0985cfd186c0`, tree `e6c8b05171b48df857f6393b6453baf93534b6bd`; accepted source blobs include `website/package.json` `860b3045edf9bbba9e885f96367fe70bd92f4a35`, unchanged `website/package-lock.json` `6ff91d845bc5f3099b6a00f5f43673eed80a3ba5`, policy `9f05741929e03e886e60daee35c12c63a78631e9`, focused contract `c7edfac073d8547b141ff3c68e2245751d42c9e6`, and acceptance workflow `c7aa69093f6f18ba14fb464963ddff33a174a502`.
+- Exact-head PR gate `33764883108 / 100680073956`: SUCCESS; all 12 exact-head PR regression workflows reached terminal SUCCESS before merge.
+- Clean-main TSK-0491 gate `33765234931 / 100681290132`: SUCCESS. All 12 workflows triggered by exact canonical source commit `59113366b14eca72101c1bc12bec0985cfd186c0` reached terminal SUCCESS with zero failed, queued, or in-progress runs; final browser-heavy TSK-0359 run/job `33765234882 / 100681289522` also completed SUCCESS.
+- Accepted control state: every current direct npm dependency is inventoried; committed lockfile remains the exact resolved-tree authority; the application SPDX 2.3 SBOM is generated from lockfile-only state in CI; Security owns update/severity/exception disposition; current tracked container-image inventory is none and any future image must be inventoried and immutable-digest pinned.
+- Both final full and production-only npm audits reported zero vulnerabilities. One pre-existing non-blocking `_accountState` lint warning remains outside TSK-0491 scope and does not invalidate current acceptance.
+- Independent PR/canonical read-back review found no blocking correctness, security, architecture, or scope issue and no unresolved dependency exception requiring disposition.
+- **Non-inference:** TSK-0491 PASS creates no deployment, live-device/profile/certificate action, service removal/revocation, participant processing, telemetry activation, production/public activation, market/launch authority, service-revocation interface, `TSK-0374` PASS, `TSK-0417` PASS, or `TSK-0499` PASS. PR #86 remains draft and unmerged.
+
+### Queue status after TSK-0491 acceptance
+
+Recompute the residual executable frontier from current WBS/graph/runtime/gates and current owner decisions. `TSK-0453` remains WAITING on GitHub platform review-enforcement proof and `TSK-0417` remains non-PASS at its real-target material-action boundary; neither prevents independent eligible `AUTO_ALLOWED` work elsewhere.
+EOF
+
+          python3 tests/repository-structure/verify_structure.py
+          python3 Plans/Master/Tools/validate_master_plan.py
+          git diff --check
+          test "$(git diff --name-only)" = 'CURRENT_STATE.md'
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state(TSK-0491): record dependency inventory SBOM PASS'
+          git push origin HEAD:publication/tsk-0491-pass-20260903
