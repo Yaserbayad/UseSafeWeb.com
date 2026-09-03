@@ -50,12 +50,13 @@ export function selectContentRelease(
 ):
   | { status: 'ready'; releaseId: string; release: ContentRelease }
   | { status: 'stale' | 'withdrawn'; releaseId: string; release: ContentRelease }
-  | { status: 'missing_release'; releaseId: string } {
+  | { status: 'missing_release' | 'invalid_release'; releaseId: string } {
   const release = releases[releaseId];
   if (!release) return { status: 'missing_release', releaseId };
   if (release.status === 'stale' || release.status === 'withdrawn') {
     return { status: release.status, releaseId, release };
   }
+  if (release.status !== 'current') return { status: 'invalid_release', releaseId };
   return { status: 'ready', releaseId, release };
 }
 
