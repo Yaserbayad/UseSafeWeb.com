@@ -1,0 +1,181 @@
+name: TSK-0375 guarded runtime state sync
+
+on:
+  push:
+    branches:
+      - evidence/tsk-0375-runtime-sync-20260903
+
+permissions:
+  contents: write
+
+jobs:
+  guarded-sync:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+      - name: Guard canonical base and publish exact TSK-0375 state delta
+        shell: bash
+        env:
+          EXPECTED_BASE: fa4e2917ec8aef93302a36708064019277bbfa6b
+          EXPECTED_STATE_BLOB: ab864134cbe38408e10f4e05c3f1352fa97e9d5f
+          EXPECTED_STATE_SIZE: '481601'
+          OLD_UPDATED: '**Updated:** 2026-09-03T05:25:39Z'
+          EVIDENCE_FILE: TSK_0375_MINIMAL_INTAKE_ROUTING_ACCEPTANCE_2026-09-03.md
+        run: |
+          set -euo pipefail
+
+          test "$(git rev-parse HEAD^)" = "$EXPECTED_BASE"
+          test "$(git rev-parse "$EXPECTED_BASE:CURRENT_STATE.md")" = "$EXPECTED_STATE_BLOB"
+          test "$(git hash-object CURRENT_STATE.md)" = "$EXPECTED_STATE_BLOB"
+          test "$(wc -c < CURRENT_STATE.md | tr -d ' ')" = "$EXPECTED_STATE_SIZE"
+          test "$(grep -Fxc "$OLD_UPDATED" CURRENT_STATE.md)" = '1'
+          if grep -Fq '## TSK-0375 current accepted stable state' CURRENT_STATE.md; then
+            echo 'TSK-0375 runtime section already exists; refusing duplicate mutation.' >&2
+            exit 1
+          fi
+          test ! -e "$EVIDENCE_FILE"
+          test "$(tail -c 1 CURRENT_STATE.md | od -An -tuC | tr -d ' ')" = '10'
+
+          git show "$EXPECTED_BASE:CURRENT_STATE.md" > /tmp/base-state
+          test "$(git hash-object /tmp/base-state)" = "$EXPECTED_STATE_BLOB"
+          cmp -s /tmp/base-state CURRENT_STATE.md
+
+          cat > "$EVIDENCE_FILE" <<'EVIDENCE'
+          # TSK-0375 — Minimal intake routing implementation acceptance evidence
+
+          **Date:** 2026-09-03  
+          **Task:** TSK-0375 — Implement minimal intake validation and routing engine  
+          **Lifecycle / authority:** L6 / MEDIUM / A3 / `AUTO_ALLOWED`  
+          **Hard predecessor:** TSK-0358 PASS  
+          **Result:** PASS evidence complete for the current TSK-0375 acceptance contract.
+
+          ## Canonical implementation
+
+          - Pull request: #76 — `TSK-0375: implement minimal intake routing engine`.
+          - Accepted feature head: `b08d77d042dbf46f530aaef335c083b890ba71fe`.
+          - Canonical squash merge: `fa4e2917ec8aef93302a36708064019277bbfa6b`.
+          - Intake-routing implementation blob: `ac718dd21f6c7fc7c0af6e45a4e73f49a3eb75d5`.
+          - Contract-test blob: `383db75a9a422fba68dcd2811fe817f318e2edf2`.
+          - Real-browser-test blob: `067c08ccd82d3485966f05b11c016aa542e6e449`.
+          - Acceptance-workflow blob: `88884a7e871196bfba5fc876ba7d6b9cf4d5b71b`.
+          - Locale validation is bound to the canonical `website/src/lib/i18n.ts` authority rather than a duplicated locale list.
+
+          ## Direct acceptance evidence
+
+          | Evidence | Run / job | Result | Purpose |
+          | --- | --- | --- | --- |
+          | Exact feature-head acceptance | `33723799253` / `100548279575` | SUCCESS | Proved the corrected PR head passed repository/master-plan validation, locked install, contracts, lint/typecheck/build, dependency audits, exact browser tooling, real-browser intake acceptance, and clean-tree checks. |
+          | Canonical clean-main acceptance | `33724093783` / `100549157999` | SUCCESS | Re-ran the TSK-0375 acceptance on canonical merge `fa4e2917ec8aef93302a36708064019277bbfa6b`. |
+          | Clean-main localization regression | `33724093699` | SUCCESS | Preserved accepted TSK-0359 localization behavior. |
+          | Clean-main TSK-0360 source regression | `33724093742` | SUCCESS | Preserved the accepted TSK-0360 source slice; this does not satisfy its missing device/deployment acceptance. |
+          | Clean-main DNS-verification regression | `33724093708` | SUCCESS | Preserved accepted TSK-0243 behavior. |
+          | Clean-main accountless-flow regression | `33724093736` | SUCCESS | Preserved the inherited accountless-flow contract. |
+
+          Clean-main TSK-0375 observations: repository structure `183/183` PASS; master-plan validation `0` errors / `0` warnings; contract suite `68/68` PASS; lint `0` errors with one inherited non-error React-hooks warning; typecheck PASS; Next.js production build PASS; both dependency audits `0 vulnerabilities`; Playwright `1.62.1`; real Chromium markers `TSK0375_INTAKE_ROUTING_BROWSER_ACCEPTANCE=PASS` and `TSK0375_INTAKE_ROUTING_ACCEPTANCE=PASS`; clean git/diff checks PASS.
+
+          ## ACC-0375 / VER-0375 mapping
+
+          1. **Every approved combination is deterministic and tested.**
+             - The exact intake contract accepts only `{choice, locale}`.
+             - Canonical locales are consumed from `i18n.ts`; Android and iPhone route deterministically to the native setup path, and `other` routes deterministically to the compatibility path.
+             - Contract and real-browser acceptance exercise the canonical locale set across the approved device choices.
+          2. **Boundary/error behavior fails closed.**
+             - Non-object, array, malformed choice, invalid locale, missing key, and extra-key inputs are rejected rather than partially routed.
+          3. **Prohibited data is rejected and not requested.**
+             - The exact-key contract rejects added identity/account, child, domain/query-history, diagnostic, or other unapproved fields; the implementation adds no persistent account/session/history dependency.
+          4. **Unsupported combinations return a clear safe state.**
+             - `choice=other` returns `state=unsupported`, no device family, and a locale-scoped compatibility route rather than an unsafe partial setup.
+          5. **Canonical locale authority is singular.**
+             - Production routing imports `isLocale` from `@/lib/i18n`; the PR review removed the duplicated locale list from the routing engine and acceptance layers.
+
+          ## Security, privacy, and target-environment verification
+
+          - No authentication requirement, persistent identity, browsing/query history, raw diagnostic persistence, analytics transport, deployment path, external service, or new sensitive-data category was introduced by TSK-0375.
+          - The applicable VER-0375 target environment is the built Next.js production server exercised by real Chromium in GitHub-hosted Ubuntu; no public/production deployment or participant processing is inferred.
+          - Unsupported and malformed inputs fail closed without manufacturing protection/verification state.
+          - Source rollback is the ordinary revert of canonical merge `fa4e2917ec8aef93302a36708064019277bbfa6b`; TSK-0375 itself introduced no external runtime side effect requiring runtime rollback.
+
+          ## Guarded runtime publication
+
+          - This evidence/state synchronization starts only from canonical base `fa4e2917ec8aef93302a36708064019277bbfa6b` and exact pre-mutation `CURRENT_STATE.md` blob `ab864134cbe38408e10f4e05c3f1352fa97e9d5f` (`481601` bytes).
+          - Guarded synchronization run: `__GUARD_RUN_ID__`.
+          - The guard proves all pre-existing `CURRENT_STATE.md` bytes are unchanged except the single existing `Updated` timestamp line, then appends one new TSK-0375 section; no whole-file reconstruction is used.
+
+          ## Preserved unresolved fences
+
+          - TSK-0360 remains TODO until its required real supported-iPhone/device/deployment `ACC-0360 / VER-0360 / EVD-0360` evidence exists.
+          - TSK-0455 remains WAITING for a genuinely qualifying fresh Ubuntu 24.04 LTS target host and required access/evidence.
+          - TSK-0399 remains ineligible while TSK-0360 is non-PASS.
+          - No deployment, configuration-profile distribution, participant processing, runtime activation, market activation, launch, downstream task/gate PASS, or `GATE-0026` is created or inferred.
+          EVIDENCE
+          sed -i "s/__GUARD_RUN_ID__/${GITHUB_RUN_ID}/g" "$EVIDENCE_FILE"
+          EVIDENCE_BLOB="$(git hash-object "$EVIDENCE_FILE")"
+
+          SYNC_TS="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+          NEW_UPDATED="**Updated:** ${SYNC_TS}"
+          test "${#NEW_UPDATED}" -eq "${#OLD_UPDATED}"
+          export OLD_UPDATED NEW_UPDATED
+          perl -0pi -e '$c += s/\Q$ENV{OLD_UPDATED}\E/$ENV{NEW_UPDATED}/g; END { die "updated-line replacement count=$c\n" unless $c == 1 }' CURRENT_STATE.md
+
+          cat > /tmp/tsk0375-section <<'STATE'
+          ## TSK-0375 current accepted stable state — 2026-09-03
+
+          `TSK-0375 — Implement minimal intake validation and routing engine`: **PASS** under current `ACC-0375 / VER-0375 / EVD-0375`, current durable PASS predecessor `TSK-0358`, and the active accountless-first privacy fence.
+
+          - Current normalized WBS: **L6 / MEDIUM / A3 / `AUTO_ALLOWED`**; sole hard predecessor `TSK-0358` is current durable PASS.
+          - Canonical implementation merged through PR `#76`; accepted feature head `b08d77d042dbf46f530aaef335c083b890ba71fe`; squash merge `fa4e2917ec8aef93302a36708064019277bbfa6b`.
+          - Durable acceptance evidence: `TSK_0375_MINIMAL_INTAKE_ROUTING_ACCEPTANCE_2026-09-03.md`, blob `__EVIDENCE_BLOB__`; guarded synchronization run `__GUARD_RUN_ID__`.
+          - Feature-head run/job `33723799253 / 100548279575`: **SUCCESS**.
+          - Clean-main run/job `33724093783 / 100549157999`: **SUCCESS**; 68/68 contracts; lint zero errors with one inherited non-error warning; typecheck/build PASS; both audits 0 vulnerabilities; real Chromium `TSK0375_INTAKE_ROUTING_BROWSER_ACCEPTANCE=PASS`; final `TSK0375_INTAKE_ROUTING_ACCEPTANCE=PASS`.
+          - Accepted scope: exact `{choice, locale}` intake, canonical `i18n.ts` locale authority, deterministic Android/iPhone routing, safe unsupported compatibility routing, prohibited/unknown data rejection, and no persistent account/identity/history state.
+          - Clean-main TSK-0359, TSK-0360 source, TSK-0243, and TSK-0629 regressions are all **SUCCESS**. TSK-0360 remains non-PASS because source acceptance does not supply its missing supported-device/deployment evidence.
+          - **Non-inference / fences:** no deployment, profile distribution, participant processing, runtime activation, market activation, launch, gate PASS, or downstream task PASS is inferred. `TSK-0360` remains TODO; `TSK-0455` remains WAITING; `TSK-0399` remains ineligible while TSK-0360 is non-PASS; no `GATE-0026` exists or is created.
+
+          ### Queue effect
+
+          `TSK-0376` may consume TSK-0375 only after this exact evidence/runtime publication is merged and independently read-back verified and full current eligibility is recomputed; no downstream PASS is inferred.
+          STATE
+          sed -i "s/__EVIDENCE_BLOB__/${EVIDENCE_BLOB}/g; s/__GUARD_RUN_ID__/${GITHUB_RUN_ID}/g" /tmp/tsk0375-section
+
+          printf '\n' >> CURRENT_STATE.md
+          cat /tmp/tsk0375-section >> CURRENT_STATE.md
+
+          head -c "$EXPECTED_STATE_SIZE" CURRENT_STATE.md > /tmp/new-prefix
+          cp /tmp/base-state /tmp/base-normalized
+          cp /tmp/new-prefix /tmp/new-normalized
+          perl -0pi -e 's/\Q$ENV{OLD_UPDATED}\E/**Updated:** __SYNC_TIMESTAMP__/g' /tmp/base-normalized
+          perl -0pi -e 's/\Q$ENV{NEW_UPDATED}\E/**Updated:** __SYNC_TIMESTAMP__/g' /tmp/new-normalized
+          cmp -s /tmp/base-normalized /tmp/new-normalized
+
+          printf '\n' > /tmp/expected-append
+          cat /tmp/tsk0375-section >> /tmp/expected-append
+          tail -c +$((EXPECTED_STATE_SIZE + 1)) CURRENT_STATE.md > /tmp/actual-append
+          cmp -s /tmp/expected-append /tmp/actual-append
+
+          test "$(grep -Fxc "$NEW_UPDATED" CURRENT_STATE.md)" = '1'
+          test "$(grep -Fc '## TSK-0375 current accepted stable state — 2026-09-03' CURRENT_STATE.md)" = '1'
+          test "$(git hash-object "$EVIDENCE_FILE")" = "$EVIDENCE_BLOB"
+
+          python3 tests/repository-structure/verify_structure.py
+          python3 Plans/Master/Tools/validate_master_plan.py
+          git diff --check
+
+          mapfile -t CHANGED < <(git diff --name-only | sort)
+          test "${#CHANGED[@]}" -eq 2
+          test "${CHANGED[0]}" = 'CURRENT_STATE.md'
+          test "${CHANGED[1]}" = "$EVIDENCE_FILE"
+
+          git diff -- CURRENT_STATE.md "$EVIDENCE_FILE"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md "$EVIDENCE_FILE"
+          git commit -m 'evidence: accept TSK-0375 and sync runtime state'
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+          echo "TSK0375_GUARDED_STATE_SYNC=PASS"
+          echo "TSK0375_BASE=${EXPECTED_BASE}"
+          echo "TSK0375_PREVIOUS_STATE_BLOB=${EXPECTED_STATE_BLOB}"
+          echo "TSK0375_EVIDENCE_BLOB=${EVIDENCE_BLOB}"
+          echo "TSK0375_SYNC_TIMESTAMP=${SYNC_TS}"
