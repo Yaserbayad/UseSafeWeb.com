@@ -1,3 +1,4 @@
+import { readBoundedUtf8Body } from '@/lib/bounded-request-body';
 import {
   DNS_VERIFICATION_MAX_HTTP_BODY_BYTES,
   createDnsVerificationObservationFromProbeRequest,
@@ -38,22 +39,6 @@ function error(status: number, code: string, message: string, origin: string): R
   return response(status, { error: { code, message } }, origin);
 }
 
-function declaredBodyTooLarge(request: Request): boolean {
-  const raw = request.headers.get('content-length');
-  if (raw === null) return false;
-  if (!/^\d+$/.test(raw)) return true;
-  return Number(raw) > DNS_VERIFICATION_MAX_HTTP_BODY_BYTES;
-}
-
-async function boundedToken(request: Request): Promise<string> {
-  if (declaredBodyTooLarge(request)) throw new RangeError('request body too large');
-  const raw = await request.text();
-  if (Buffer.byteLength(raw, 'utf8') > DNS_VERIFICATION_MAX_HTTP_BODY_BYTES) {
-    throw new RangeError('request body too large');
-  }
-  return raw;
-}
-
 export async function POST(request: Request): Promise<Response> {
   const publicOrigin = configuredPublicOrigin();
   if (!publicOrigin) {
@@ -72,10 +57,10 @@ export async function POST(request: Request): Promise<Response> {
 
   let requestToken: string;
   try {
-    requestToken = await boundedToken(request);
+    requestToken = await readBoundedUtf8Body(request, DNS_VERIFICATION_MAX_HTTP_BODY_BYTES);
   } catch (cause) {
     if (cause instanceof RangeError) return error(413, 'REQUEST_TOO_LARGE', 'Request body exceeds the allowed size.', publicOrigin);
-    return error(400, 'INVALID_REQUEST', 'Probe request could not be read.', publicOrigin);
+    return error(400, 'INVALID_REQUEST', 'Probe request must be valid UTF-8 text.', publicOrigin);
   }
 
   const secret = signingSecret();
