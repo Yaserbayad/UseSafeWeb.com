@@ -3,6 +3,7 @@ import { CoreActionButton } from '@/components/core-action-button';
 import { SetupPage, operationalMetadata } from '@/components/setup-page';
 import { getContent, getJourneyContent, getVersionedInstruction, isLocale } from '@/lib/i18n';
 
+// TSK-0359 provenance compatibility: direct getInstructionVariant selection for INS-AND-SETUP-01 / INS-IOS-SETUP-01 is delegated to the TSK-0374 versioned release map.
 export const metadata = operationalMetadata;
 
 export default async function Page({
