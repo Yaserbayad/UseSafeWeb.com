@@ -71,6 +71,44 @@ for tid in ['TSK-0146','TSK-0052','TSK-0398','TSK-0524']:
 old_note='deferred_exception exc-0001: account/persistence capability is not in the current accountless baseline'
 for r in rows:
     if old_note in r['Notes'].lower(): err('stale EXC-0001 task note '+r['Task_ID'])
+# CR-0011 reconciliation invariants
+recurring_ids={r['Task_ID'] for r in rows if r['Plan_Status']=='PLANNED_RECURRING'}
+recurring_hard=[]
+for r in rows:
+    for d in [x.strip() for x in re.split(r'[;,]',r['Dependencies']) if x.strip()]:
+        if d in recurring_ids:
+            recurring_hard.append((r['Task_ID'],d))
+stats['recurring_hard_predecessors']=len(recurring_hard)
+for child,parent in recurring_hard:
+    err(f'recurring hard predecessor {child}->{parent}')
+
+decisions_text=(ROOT/'Registers'/'DECISIONS_TRIGGERS.md').read_text(encoding='utf-8')
+gates_text=(ROOT/'Registers'/'GATES.md').read_text(encoding='utf-8')
+layer5_text=(ROOT/'Layers'/'LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md').read_text(encoding='utf-8')
+root_plan_text=(ROOT/'MASTER_PLAN.md').read_text(encoding='utf-8')
+manifest_text=MAN.read_text(encoding='utf-8')
+if re.search(r'\b100(?:-|\s+)(?:active(?:-|\s+)?)?users?\b', decisions_text+'\n'+gates_text, re.I):
+    err('unsupported current 100-user scale trigger present')
+if '500-active-user threshold' not in decisions_text or 'internal scale/formalisation review trigger only' not in decisions_text:
+    err('500-user formalisation-only control missing')
+if 'LG-16' not in decisions_text or 'DEC-0030' not in decisions_text:
+    err('independent geographic-expansion control missing')
+if 'TSK-0438' not in by or 'DNS/registrar control and renewal state' not in by['TSK-0438']['Title'] or 'renewal' not in by['TSK-0438']['Acceptance_Criteria'].lower():
+    err('direct domain-control verification control missing')
+if 'TSK-0012' not in by or 'ClickUp' not in by['TSK-0012']['Title']:
+    err('current ClickUp derived-view control missing')
+if 'TSK-0013' not in by or 'Monday' not in by['TSK-0013']['Title']:
+    err('current Monday derived-view control missing')
+if 'derived_modules_never_authoritative: true' not in manifest_text:
+    err('manifest derived-view authority fence missing')
+if 'Derived hierarchy roll-up invariant' not in layer5_text:
+    err('derived hierarchy roll-up invariant missing')
+if 'Recurring/event dependency invariant' not in layer5_text:
+    err('recurring/event dependency invariant missing')
+if 'CR-0011 / DEC-0058' not in root_plan_text:
+    err('root CR-0011 authority marker missing')
+stats['cr0011_invariants']='PASS' if not recurring_hard else 'FAIL'
+
 # publication tree semantics
 for tid in ['TSK-0009','TSK-0011','TSK-0017']:
     if 'Plans/' not in by[tid]['Acceptance_Criteria'] and 'Plans/' not in by[tid]['Title']: err('publication not modular '+tid)
