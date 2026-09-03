@@ -3215,3 +3215,22 @@ TSK-0453 WAITING blocks only work that requires its completed review-enforcement
 ### Queue status after TSK-0491 acceptance
 
 Recompute the residual executable frontier from current WBS/graph/runtime/gates and current owner decisions. `TSK-0453` remains WAITING on GitHub platform review-enforcement proof and `TSK-0417` remains non-PASS at its real-target material-action boundary; neither prevents independent eligible `AUTO_ALLOWED` work elsewhere.
+
+## TSK-0395 current accepted stable state — 2026-09-03
+
+`TSK-0395 — Build landing page`: **PASS** under current `ACC-0395 / VER-0395 / EVD-0395`.
+
+- Current WBS authority: L6 / BUILD / A4 / `AUTO_ALLOWED`; hard dependencies `TSK-0322` and `TSK-0324` are current durable PASS, and `LG-07` is current durable PASS.
+- Accepted evidence: `TSK_0395_LANDING_IMPLEMENTATION_ACCEPTANCE_2026-09-03.md`, blob `7e5ef7ea1ad2c2e6e03992a3fe48e06e10444568`.
+- Canonical implementation lineage: PR #93 merge `cdaaf73dd33f423d5f2a77a878f9b37e3808090e`; target-acceptance/focused reflow PR #96 merge `ccbed0d70ab0e7f17bdd3809183fef58d73f0d1e`, tree `eb32301af511cc937970be395a0a3c42b1655877`.
+- Canonical-main TSK-0395 target acceptance run/job `33801214869 / 100800898380`: terminal SUCCESS on exact `main` SHA `ccbed0d70ab0e7f17bdd3809183fef58d73f0d1e`; final marker `TSK0395_BROWSER_ACCEPTANCE=PASS`.
+- Source/governance acceptance in that clean run passed repository/master-plan validation, formatting, lint with zero errors, typecheck, production build, both dependency audits with zero vulnerabilities, and all `111/111` contract tests.
+- Real Chromium acceptance covered `en-GB`, `tr-TR`, and `ar` at 320/768/1024/1440 px, 200% text reflow at 320 px, zero tested WCAG 2 A/AA and WCAG 2.2 AA axe violations, clear CTA/routes, privacy/limits/help paths, unsupported-locale 404 behavior, no pre-setup form, unchanged cookies, empty local/session storage, and no off-origin requests.
+- Performance verification recorded finite/non-negative navigation duration, DOMContentLoaded timing, and transfer size for every tested locale/viewport. `ACC-0395 / VER-0395` defines no numeric performance budget; no unstated Core Web Vitals or other threshold is inferred.
+- Rollback/recovery disposition: the task changed repository source/tests only and never mutated production/public state. Exact Git ancestry/PR provenance provides the applicable reversible source backout through ordinary Git revert; a production rollback drill is not applicable and is not fabricated.
+- Retained non-blocking observations: one inherited `_accountState` lint warning, one bounded server-readiness retry, and a `NoFallbackError` stderr line after the intentional unsupported-locale negative path/teardown; the asserted 404 passed and the canonical job remained SUCCESS.
+- **Non-inference:** TSK-0395 PASS creates no deployment, public activation, live DNS/AdGuard change, service removal/revocation, participant processing, telemetry activation, account/dashboard activation, launch authority, or PASS for any other task. Existing TSK-0374, TSK-0417, TSK-0453, and TSK-0499 material-action/evidence fences remain unchanged.
+
+### Queue status after TSK-0395 acceptance
+
+Recompute the residual executable frontier from current canonical WBS/graph/runtime/gates and owner decisions. Continue only independently eligible `AUTO_ALLOWED` work; do not cross any preserved deployment, live-device, service-revocation/removal, participant, telemetry, activation, launch, or target-evidence fence.
