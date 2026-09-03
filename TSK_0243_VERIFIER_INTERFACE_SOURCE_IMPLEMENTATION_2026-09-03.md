@@ -6,24 +6,25 @@
 **Date:** 2026-09-03  
 **Status:** **PARTIAL SOURCE IMPLEMENTATION / TODO — NOT PASS**  
 **Canonical base:** `main` at `c8fb700cbe76355bad5f2f910f7169de9712250b`  
-**Verified source head before this evidence note:** `643b92a5f053279fc17de99df1e765809451f55d`
+**Verified source head before this evidence update:** `cbaa9c663446e8303045626ccb5397d815077dec`
 
 ## 1. Scope completed
 
-This slice adds the server-side request/probe interface needed to consume the previously accepted TSK-0243 proof contract. It is source-only. It does not create or mutate any DNS record/rewrite, TLS certificate, reverse-proxy route, signing secret, deployed environment, profile distribution, user/participant state, market state, or production activation.
+This slice adds the server-side request/probe interface needed to consume the previously accepted TSK-0243 proof contract. It is source-only. It does not create or mutate any DNS record/rewrite, TLS certificate, reverse-proxy route, deployed signing secret, external environment, profile distribution, user/participant state, market state, or production activation.
 
-Current source artifacts at verified head `643b92a5f053279fc17de99df1e765809451f55d`:
+Current source artifacts at the accepted source head include:
 
 - `website/src/lib/dns-verification-proof.ts` — blob `470095e20ee7a51ec06ea02fc561743a78cb5012`
 - `website/src/lib/bounded-request-body.ts` — blob `37a56b8a1853aa2fb5dcd8bffdc9a2c48be17ed9`
 - `website/src/app/api/dns-verification/requests/route.ts` — blob `327a7a8a743e959382c9fc5110185ff81007c0bb`
 - `website/src/app/api/dns-verification/probes/route.ts` — blob `4bf11a4e78260b495f305fbfeb00382af107d7be`
 - `website/next.config.ts` — blob `540a2442651bd713a9c0abe00166857a0614b3b4`
+- `.github/workflows/accept-tsk0243-dns-verification-20260903.yml` — blob `5b707a516e68a9cd85be4d4da9f9987484a6a0cc`
 
 The source now provides:
 
 1. **domain-separated server-issued probe-request tokens** under protocol `usesafeweb-dns-probe-request-v1`;
-2. server-generated CSPRNG 128-bit challenge creation, so callers cannot select the current verification challenge;
+2. server-generated CSPRNG 128-bit challenges, so callers cannot select the current verification challenge;
 3. exact request binding to anonymous scope, challenge, issue time and a maximum 120-second expiry;
 4. a same-origin request-issuance route that accepts only the exact `{ scope }` JSON shape and returns no-store responses;
 5. a cross-origin probe route that accepts an opaque text token and derives a positive observation only from a valid signed request token plus the actual request `Host` matching the current challenge hostname;
@@ -33,7 +34,8 @@ The source now provides:
 9. a shared streaming request-body reader that enforces the 4,096-byte boundary while reading, including chunked/missing/lying `Content-Length` cases, and rejects malformed UTF-8;
 10. server-only signing-secret lookup through `USESAFEWEB_DNS_VERIFICATION_SIGNING_SECRET`, requiring at least 32 bytes and emitting no secret value in responses/tests/evidence;
 11. Node Route Handler runtime and POST-only application methods for the two verifier interfaces; no application GET/PUT/PATCH/DELETE route is implemented;
-12. structured fail-closed 4xx/503 responses and no-store caching behavior.
+12. structured fail-closed 4xx/503 responses and no-store caching behavior;
+13. a CI-local production-server HTTP acceptance that exercises the built handlers without any external DNS/TLS/runtime mutation.
 
 ## 2. TDD, review and correction evidence
 
@@ -58,7 +60,7 @@ The first interface contract intentionally failed before implementation. The des
 Review found that the existing `connect-src 'self'` policy would block the browser from calling the random verification subdomain.
 
 - CSP RED run/job `33712932609 / 100516062008`: 51/52 tests passed; only the missing dedicated verification `connect-src` allowance failed.
-- a subsequent run `33713028525 / 100516347282` exposed an **over-broad regression assertion** that rejected the dedicated wildcard it had just required. This was a test defect, not a product defect; the assertion was corrected to require `https://*.verify.usesafeweb.com` while rejecting broad `https://*.usesafeweb.com` and generic wildcard connectivity.
+- run `33713028525 / 100516347282` then exposed an **over-broad regression assertion** that rejected the dedicated wildcard it had just required. This was a test defect, not a product defect; the assertion was corrected to require `https://*.verify.usesafeweb.com` while rejecting broad `https://*.usesafeweb.com` and generic wildcard connectivity.
 - the product CSP change remains one narrow source expression: `connect-src 'self' https://*.verify.usesafeweb.com`.
 
 ### Streaming-body security review
@@ -66,9 +68,26 @@ Review found that the existing `connect-src 'self'` policy would block the brows
 Review found a real resource-boundary defect: the initial routes called `request.text()` before validating the actual received body size when `Content-Length` was absent or false, allowing an untrusted chunked body to be buffered before rejection.
 
 - streaming RED run/job `33713186793 / 100516820380`: the corrected CSP regression passed; exactly four streaming-boundary assertions failed because the bounded reader did not exist and the two routes still used whole-body buffering.
-- final GREEN run/job `33713306518 / 100517177903`: **SUCCESS** on exact source head `643b92a5f053279fc17de99df1e765809451f55d`.
+- source GREEN run/job `33713306518 / 100517177903`: **SUCCESS** on exact source head `643b92a5f053279fc17de99df1e765809451f55d`.
 
-Final source-head observations:
+### Evidence-inclusive source gate
+
+- run `33713501803`: **SUCCESS** on evidence-bearing head `bb3fa6ec30c826fd998e25899f23a6441627c563` before the local HTTP acceptance was added.
+
+### CI-local production HTTP acceptance
+
+A final review improvement added actual local HTTP execution of the built Next production server while remaining entirely inside the disposable GitHub Actions runner.
+
+- run/job `33713591139 / 100518017563`: **SUCCESS** on exact source head `cbaa9c663446e8303045626ccb5397d815077dec`;
+- marker `TSK0243_LOCAL_HTTP_VERIFIER_ACCEPTANCE=PASS` was emitted;
+- request issuance returned HTTP 201 with `Cache-Control: no-store`, a generated 128-bit challenge and matching probe hostname;
+- wrong-origin probe returned HTTP 403;
+- wrong-Host probe returned HTTP 403;
+- exact current probe Host + configured public Origin + opaque `text/plain` request token returned HTTP 200 with an observation token;
+- the accepted probe response included `Cache-Control: no-store`, exact `Access-Control-Allow-Origin: https://usesafeweb.com`, and `Vary: Origin`;
+- the first readiness probe briefly saw connection refused before the local Next server was ready; the bounded readiness loop then succeeded and the acceptance completed normally. This is expected startup sequencing, not an application failure.
+
+Final source-head observations on `cbaa9c663446e8303045626ccb5397d815077dec`:
 
 - repository-structure verification: PASS;
 - modular Master Plan validation: PASS — 641 tasks, 858 dependency edges, 4,587 relationship entities, 18,152 relationship targets, 0 broken links, 0 generated missing task IDs;
@@ -79,6 +98,7 @@ Final source-head observations:
 - 57/57 static pages generated where applicable; both verifier routes are present as dynamic server routes;
 - `npm audit --audit-level=high`: 0 vulnerabilities;
 - `npm audit --omit=dev --audit-level=high`: 0 vulnerabilities;
+- CI-local verifier HTTP acceptance: PASS;
 - `git diff --check`: PASS;
 - clean working-tree assertion: PASS.
 
@@ -97,7 +117,7 @@ These sources support the source/interface design only. They do not prove the ta
 
 ## 4. Acceptance still missing — why TSK-0243 remains TODO
 
-`VER-0243` still requires target-environment functional, negative, configuration, security/privacy, failure/conflict and rollback evidence. In particular, source code cannot establish the key target trust boundary by itself.
+`VER-0243` still requires target-environment functional, negative, configuration, security/privacy, failure/conflict and rollback evidence. In particular, source code and CI-local HTTP execution cannot establish the key target trust boundary by themselves.
 
 Before TSK-0243 can become PASS, the target environment must independently prove at least:
 
@@ -114,10 +134,10 @@ Before TSK-0243 can become PASS, the target environment must independently prove
 
 ## 5. Security/trust-boundary limitations
 
-- `Origin`/CORS controls whether conforming browser script can read a cross-origin response; they are **not authentication** and can be spoofed by non-browser clients. The target network/proxy topology must therefore enforce the positive-signer path independently.
+- `Origin`/CORS controls whether conforming browser script can read a cross-origin response; it is **not authentication** and can be spoofed by non-browser clients. The target network/proxy topology must therefore enforce the positive-signer path independently.
 - `Host` binding proves that the application received the expected hostname; it does not by itself prove how an arbitrary client resolved or routed that hostname. Target acceptance must prove the DNS/TLS/network path that gives `Host` binding its intended evidentiary meaning.
 - The request token is integrity-protected and short-lived but not an encrypted confidentiality token; the random scope remains a correlation value rather than an authorization credential.
-- Source CI proves deterministic code behavior only. It is not evidence of deployed DNS resolution, TLS routing, reverse-proxy enforcement, rate limiting or real-device behavior.
+- The CI-local HTTP check proves actual built Route Handler behavior on a disposable loopback server only. It is not evidence of deployed DNS resolution, TLS routing, reverse-proxy enforcement, rate limiting or real-device behavior.
 
 ## 6. Non-inference / preserved fences
 
@@ -128,8 +148,8 @@ Before TSK-0243 can become PASS, the target environment must independently prove
 - `TSK-0455` remains WAITING for a genuinely qualifying owner-provided fresh Ubuntu 24.04 LTS target host/access.
 - `TSK-0399` remains ineligible while `TSK-0360` is non-PASS.
 - No `GATE-0026` exists or is created.
-- No DNS rewrite/record, TLS certificate, reverse-proxy/runtime configuration, signing secret, deployment, profile distribution, production/runtime activation, participant processing, market activation, payment, launch, or unrelated task/gate PASS is inferred or performed.
+- No DNS rewrite/record, TLS certificate, reverse-proxy/runtime configuration, deployed signing secret, deployment, profile distribution, production/runtime activation, participant processing, market activation, payment, launch, or unrelated task/gate PASS is inferred or performed.
 
 ## 7. Stable outcome
 
-The verifier request/probe **source interface** is implementation-complete for this bounded slice and has passed source-level tests/review. It is safe to integrate as durable partial work. TSK-0243 must remain TODO until the target DNS/TLS/proxy trust boundary and end-to-end product path are actually observed and independently accepted.
+The verifier request/probe **source interface** is implementation-complete for this bounded slice and has passed source-level tests, review, production build and CI-local HTTP execution. It is safe to integrate as durable partial work. TSK-0243 must remain TODO until the target DNS/TLS/proxy trust boundary and end-to-end product path are actually observed and independently accepted.
