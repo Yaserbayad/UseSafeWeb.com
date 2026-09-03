@@ -116,3 +116,15 @@ export function classifyAutomatedChecks(value: unknown): AutomatedVerificationOu
       return uncertain(input.configured, 'VERIFY_UNREACHABLE');
   }
 }
+
+export function getCurrentAutomatedVerification(): AutomatedVerificationOutcome {
+  // Until a trusted internal producer supplies approved fresh E1 DNS-path evidence,
+  // the current product must remain fail-closed and offer recovery rather than infer success.
+  return classifyAutomatedChecks({
+    support: 'unknown',
+    service: 'unknown',
+    dnsPath: 'not-run',
+    configured: true,
+    removed: false,
+  });
+}
