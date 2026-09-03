@@ -4,6 +4,7 @@ import { DnsVerificationPanel } from '@/components/dns-verification-panel';
 import { SetupPage, operationalMetadata } from '@/components/setup-page';
 import { getJourneyContent, getVersionedInstruction, isLocale } from '@/lib/i18n';
 
+// TSK-0359 provenance compatibility: INS-AND-VERIFY-01 / INS-IOS-VERIFY-01 selection is delegated to the TSK-0374 versioned release map.
 export const metadata = operationalMetadata;
 
 export default async function Page({ params, searchParams }: {
