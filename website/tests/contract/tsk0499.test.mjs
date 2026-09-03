@@ -96,11 +96,11 @@ test('preserves six protection states and never converts parent confirmation int
   assert.throws(() => api.parseProductEvent(verifierEvent), /invalid product event/i);
 });
 
-test('enforces non-sliding 24h accountless retention, 30d synthetic retention, 13m cost retention, dedupe and deletion', async () => {
+test('enforces non-sliding 24h accountless retention, 30d synthetic retention, conservative 13m cost retention, dedupe and deletion', async () => {
   const api = await loadEventsApi();
   assert.equal(api.ACCOUNTLESS_RAW_MAX_AGE_MS, 24 * 60 * 60 * 1000);
   assert.equal(api.SYNTHETIC_RAW_MAX_AGE_MS, 30 * 24 * 60 * 60 * 1000);
-  assert.equal(api.MEASUREMENT_MAX_AGE_MS, 13 * 31 * 24 * 60 * 60 * 1000);
+  assert.ok(api.MEASUREMENT_MAX_AGE_MS <= 13 * 30 * 24 * 60 * 60 * 1000, 'fixed-duration measurement retention must not exceed the conservative 13-month bound');
   const store = api.createProductEventStore({ maxRecords: 4 });
   const t0 = Date.parse(OCCURRED_AT);
   const first = store.capture(journeyStarted, t0);
@@ -125,6 +125,27 @@ test('enforces non-sliding 24h accountless retention, 30d synthetic retention, 1
   };
   assert.equal(api.rawRetentionMs(api.parseProductEvent(cost)), api.MEASUREMENT_MAX_AGE_MS);
   assert.throws(() => api.parseProductEvent({ ...cost, journey_session_id: UUID_B }), /invalid product event/i);
+});
+
+test('client timestamps cannot extend raw retention and deletion cannot reset an accountless session hard-expiry', async () => {
+  const api = await loadEventsApi();
+  const t0 = Date.parse(OCCURRED_AT);
+
+  const futureStore = api.createProductEventStore({ maxRecords: 4 });
+  const future = futureStore.capture({
+    ...journeyStarted,
+    occurred_at: new Date(t0 + 48 * 60 * 60 * 1000).toISOString(),
+  }, t0);
+  assert.ok(future.expiresAt <= t0 + api.ACCOUNTLESS_RAW_MAX_AGE_MS, 'client-controlled occurred_at must not extend retention beyond receipt time + TTL');
+
+  const resetStore = api.createProductEventStore({ maxRecords: 4 });
+  const original = resetStore.capture(journeyStarted, t0);
+  assert.equal(resetStore.delete(UUID_A, t0 + 60 * 60 * 1000), true);
+  const later = resetStore.capture({
+    ...stepEntered,
+    occurred_at: new Date(t0 + 12 * 60 * 60 * 1000).toISOString(),
+  }, t0 + 12 * 60 * 60 * 1000);
+  assert.equal(later.expiresAt, original.expiresAt, 'deleting the last raw record must not reset the originating session TTL');
 });
 
 test('requires complete KPI metadata and refuses to manufacture percentages without a usable denominator', async () => {
