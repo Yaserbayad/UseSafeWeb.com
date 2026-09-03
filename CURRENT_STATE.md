@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-03T09:20:39Z
+**Updated:** 2026-09-03T09:46:33Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -3119,3 +3119,22 @@ Continue with the highest-priority genuinely executable work that can supply or 
 ### Queue effect
 
 Successors requiring `TSK-0369` remain dependency-blocked while this task is `TODO`. After this evidence/runtime publication is merged and independently read back, recompute the current WBS/graph/runtime frontier; unrelated eligible `AUTO_ALLOWED` work may continue without crossing the preserved material-action fences.
+
+## TSK-0499 current accepted stable state — 2026-09-03 — SOURCE IMPLEMENTATION PARTIAL
+
+`TSK-0499 — Implement approved product events and metric validation`: **TODO**. The privacy-safe, default-disabled source implementation is durably integrated and independently source-verified, but `VER-0499` still requires authorized target-environment functional, negative, configuration, security/privacy, and rollback evidence before PASS.
+
+- Canonical source implementation: PR `#82`; starting canonical base `278a27b267ecfdcdd9510d2a348391f49cb4c96c`; accepted feature head `cdf9b218d0633b553e26eda2966cc600b58d41d5`; squash merge `9221aeed32c131597e8356a9d7d0660eb893b1c5`; merge tree `3d0f6b7657e05d72f4a37776c991a20a47ce2c84`.
+- Canonical source blobs: `website/src/lib/product-events.ts` `909aeb5ca8b6c1cc8e142abea0fda3002015c48d`; `website/src/app/api/product-events/route.ts` `ac810d8969fd99cea87662600e0a9a01f93813a5`; `website/tests/contract/tsk0499.test.mjs` `1cdbb60005a0b9c05d19231bce2c5df7918e7843`; `website/package.json` `831ee3edf37fc8b4c28b814cfea22b317f54f72f`; acceptance workflow `4b7ba5bf31180911b71f1a66f6c49d48fb8af8ff`.
+- TDD evidence: initial RED `33739090936 / 100596537910`; initial GREEN `33739331776 / 100597297103`; review-driven retention RED `33739604943 / 100598167709`; accepted feature-head GREEN `33739736623 / 100598582675`.
+- Clean-main TSK-0499 acceptance on exact merge `9221aeed...`: run/job `33740074174 / 100599668788`; focused contract 7/7; complete website contract suite 87/87; repository/Master-Plan validators PASS; lint has zero errors and one inherited non-error warning; typecheck/build PASS; both npm audits report 0 vulnerabilities; marker `TSK0499_PRODUCT_EVENTS_METRICS_ACCEPTANCE=PASS`.
+- Clean-main inherited regressions are terminal-success: TSK-0369 `33740074186 / 100599668981`; TSK-0360 `33740074191 / 100599668975`; TSK-0375 including real-browser intake `33740074159 / 100599669083`; TSK-0629 including real-browser acceptance `33740074167 / 100599669034`; TSK-0243 including real-browser DNS verification `33740074196 / 100599668995`; TSK-0376 `33740074152 / 100599668559`; TSK-0359 including real-browser localization/accountless acceptance `33740074143 / 100599668763`.
+- Event/data boundary: schema `1.0.1` accepts exactly the twelve TSK-0498 event names with exact-key fail-closed validation; browsing/domain/DNS-query/URL/child-activity, identity/account/device linkage, free text, secrets/tokens/cookies/headers and arbitrary fields are rejected. Aggregate projection removes event ID, raw timestamp, journey-session ID and cost source reference.
+- Protection/metric boundary: the six authoritative protection states remain distinct; parent/config confirmation cannot become positive technical verification; rate metrics require explicit source/formula/numerator/denominator/window/release-or-cohort/owner/guardrail/decision action and return null instead of fabricating a percentage when the denominator is missing or zero.
+- Retention/transport boundary: accountless raw/session state hard-expires non-sliding within 24 hours; synthetic/recovery raw data uses 30 days; measurement/cost raw retention uses a conservative fixed 390-day ceiling; client timestamps cannot extend receipt-time TTL; deleting the last raw event cannot reset a session TTL. The HTTP route is bounded, `no-store`, exposes no public GET/list endpoint, contains no third-party analytics transport or payload logging, and POST remains disabled unless `USESAFEWEB_PRODUCT_EVENTS_ENABLED=1`.
+- Remaining `VER-0499` evidence: authorized target deployment/enablement plus target functional/negative/configuration/security/privacy/rollback checks, including rate/abuse/capacity/concurrency behavior, process/restart/topology behavior, target deletion/expiry, direct confirmation that forbidden persistent logs/data are absent, and catalogue/data-quality semantics under target use.
+- Preserved fences: no telemetry/analytics activation, deployment, production/runtime enablement, participant processing, optional-account event expansion, third-party analytics integration, market activation, launch, lifecycle-gate PASS, downstream task PASS, or target acceptance is inferred.
+
+### Queue effect
+
+Successors requiring `TSK-0499` remain dependency-blocked while this task is `TODO`. After this evidence/runtime publication is merged and independently read back, recompute the current WBS/graph/runtime frontier; unrelated eligible `AUTO_ALLOWED` work may continue without crossing the preserved material-action fences.
