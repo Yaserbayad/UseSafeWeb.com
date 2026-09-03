@@ -110,3 +110,38 @@ jobs:
           cd ..
           git diff --check
           test -z "$(git status --porcelain)"
+      - name: Run real-browser TSK-0243 orchestration acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd website
+          PLAYWRIGHT_VERSION='1.55.0'
+          npm install --no-save --no-package-lock --ignore-scripts "playwright@${PLAYWRIGHT_VERSION}"
+          npx --yes "playwright@${PLAYWRIGHT_VERSION}" install chromium
+          test -z "$(git status --porcelain)"
+
+          export USESAFEWEB_DNS_VERIFICATION_SIGNING_SECRET='ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss'
+          export USESAFEWEB_PUBLIC_ORIGIN='https://usesafeweb.com'
+          NEXT_TELEMETRY_DISABLED=1 npm start -- --hostname 127.0.0.1 --port 3100 >/tmp/tsk0243-browser-next.log 2>&1 &
+          SERVER_PID=$!
+          cleanup() {
+            kill "$SERVER_PID" >/dev/null 2>&1 || true
+            wait "$SERVER_PID" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+          READY=0
+          for _ in $(seq 1 30); do
+            if curl -fsS 'http://127.0.0.1:3100/en-GB' >/dev/null; then
+              READY=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$READY" -ne 1 ]; then
+            cat /tmp/tsk0243-browser-next.log
+            exit 1
+          fi
+          LOCAL_BASE_URL='http://127.0.0.1:3100' PUBLIC_BASE_URL='https://usesafeweb.com' node tests/browser/tsk0243-browser-orchestration.mjs
+          cleanup
+          trap - EXIT
+          test -z "$(git status --porcelain)"
