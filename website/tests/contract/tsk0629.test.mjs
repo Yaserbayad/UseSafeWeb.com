@@ -7,12 +7,17 @@ import { stripTypeScriptTypes } from 'node:module';
 const root = resolve(import.meta.dirname, '../..');
 const modulePath = resolve(root, 'src/lib/automated-verification.ts');
 const stateMachinePath = resolve(root, 'src/lib/core-state-machine.ts');
+const journeyPath = resolve(root, 'src/lib/journey-state.ts');
+const dataUrl = (source) => `data:text/javascript;base64,${Buffer.from(source).toString('base64')}`;
 
 async function loadTypeScriptModule(path, missingMessage) {
   assert.equal(existsSync(path), true, missingMessage);
-  const source = readFileSync(path, 'utf8');
-  const js = stripTypeScriptTypes(source, { mode: 'strip' });
-  return import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
+  let source = readFileSync(path, 'utf8');
+  if (source.includes("from './journey-state'")) {
+    const journeySource = readFileSync(journeyPath, 'utf8');
+    source = source.replace("from './journey-state'", `from '${dataUrl(stripTypeScriptTypes(journeySource, { mode: 'strip' }))}'`);
+  }
+  return import(dataUrl(stripTypeScriptTypes(source, { mode: 'strip' })));
 }
 
 async function loadApi() {
