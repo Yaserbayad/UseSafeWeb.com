@@ -37,9 +37,7 @@ export default async function Page({
         { href: `/${locale}/setup/route`, label: c.dns.backLabel, secondary: true },
       ]}
     >
-      <p data-instruction-id={instruction.instructionId} data-instruction-source-locale={instruction.sourceLocale}>
-        {instruction.value}
-      </p>
+      <span hidden data-instruction-id={instruction.instructionId} data-instruction-source-locale={instruction.sourceLocale} />
       {isIphone && <p className="sw-technical">{c.common.dohUrl}</p>}
       <div className="sw-actions">
         <CoreActionButton
