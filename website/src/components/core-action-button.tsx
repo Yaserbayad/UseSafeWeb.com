@@ -11,7 +11,6 @@ type DataAttribute =
   | 'data-core-continue-dns'
   | 'data-core-view-protection'
   | 'data-core-troubleshoot'
-  | 'data-automated-recovery'
   | 'data-core-recover'
   | 'data-core-remove'
   | 'data-core-restart'
