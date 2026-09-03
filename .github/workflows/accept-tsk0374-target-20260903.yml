@@ -1,0 +1,144 @@
+name: TSK-0374 target acceptance
+
+on:
+  push:
+    branches:
+      - main
+      - accept/tsk-0374-target-20260903
+    paths:
+      - 'website/**'
+      - '.github/workflows/accept-tsk0374-target-20260903.yml'
+  pull_request:
+    paths:
+      - 'website/**'
+      - '.github/workflows/accept-tsk0374-target-20260903.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  accept-tsk0374-target:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.23.2'
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - name: Verify authority and install locked dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
+          test "$(git hash-object website/src/lib/versioned-content.ts)" = '36cf389c612f1950732cbe2ff43b48f8d12a118b'
+          test "$(git hash-object website/src/content/content-release.json)" = '8b40fcfe05b6566b8c5e7c9c8319f849e5098a76'
+          python3 tests/repository-structure/verify_structure.py
+          python3 Plans/Master/Tools/validate_master_plan.py
+          cd website
+          npm ci --ignore-scripts --no-fund --no-audit
+          node --test tests/contract/tsk0374.test.mjs
+          npx playwright install --with-deps chromium
+      - name: Execute production target functional, negative, configuration, privacy and rollback checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd website
+          cp src/content/content-release.json /tmp/tsk0374-content-release.json
+          original_sha="$(sha256sum /tmp/tsk0374-content-release.json | awk '{print $1}')"
+
+          run_target() {
+            expected_status="$1"
+            expected_release="$2"
+            expected_failure="$3"
+            rm -rf .next
+            NEXT_TELEMETRY_DISABLED=1 npm run build
+            NEXT_TELEMETRY_DISABLED=1 npm run start -- -H 127.0.0.1 -p 3000 >/tmp/tsk0374-next.log 2>&1 &
+            server_pid=$!
+            ready=0
+            for attempt in $(seq 1 60); do
+              if curl -fsS 'http://127.0.0.1:3000/en-GB/setup/dns?platform=android' >/dev/null; then
+                ready=1
+                break
+              fi
+              sleep 1
+            done
+            if [ "$ready" -ne 1 ]; then
+              cat /tmp/tsk0374-next.log
+              kill "$server_pid" 2>/dev/null || true
+              exit 1
+            fi
+            BASE_URL='http://127.0.0.1:3000' \
+              TSK0374_EXPECTED_STATUS="$expected_status" \
+              TSK0374_EXPECTED_RELEASE="$expected_release" \
+              TSK0374_EXPECT_FAILURE="$expected_failure" \
+              node tests/browser/tsk0374-target.mjs
+            kill "$server_pid"
+            wait "$server_pid" 2>/dev/null || true
+          }
+
+          # Canonical current release: functional selection, exact metadata, no off-origin content transport/cookies.
+          run_target ready instructions-2026-09-02 0
+
+          # Negative/configuration target: stale release must be visible and fail closed with recovery actions.
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          const path = 'src/content/content-release.json';
+          const data = JSON.parse(readFileSync(path, 'utf8'));
+          data.releases[data.activeReleaseId].status = 'stale';
+          writeFileSync(path, `${JSON.stringify(data, null, 2)}\n`);
+          NODE
+          run_target stale instructions-2026-09-02 1
+
+          # Negative target: unknown active release must fail closed visibly rather than selecting arbitrary content.
+          cp /tmp/tsk0374-content-release.json src/content/content-release.json
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          const path = 'src/content/content-release.json';
+          const data = JSON.parse(readFileSync(path, 'utf8'));
+          data.activeReleaseId = 'missing-target-release';
+          writeFileSync(path, `${JSON.stringify(data, null, 2)}\n`);
+          NODE
+          run_target missing_release missing-target-release 1
+
+          # Integrity target: provenance mismatch must fail closed visibly.
+          cp /tmp/tsk0374-content-release.json src/content/content-release.json
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          const path = 'src/content/content-release.json';
+          const data = JSON.parse(readFileSync(path, 'utf8'));
+          data.releases[data.activeReleaseId].sourceCommit = 'tampered-target-test';
+          writeFileSync(path, `${JSON.stringify(data, null, 2)}\n`);
+          NODE
+          run_target integrity_error instructions-2026-09-02 1
+
+          # Actual target rollback drill: promote an ephemeral candidate, observe it, then pin back to the exact canonical known release.
+          cp /tmp/tsk0374-content-release.json src/content/content-release.json
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          const path = 'src/content/content-release.json';
+          const data = JSON.parse(readFileSync(path, 'utf8'));
+          const canonical = data.releases[data.activeReleaseId];
+          data.releases['instructions-candidate-target-test'] = { ...canonical };
+          data.activeReleaseId = 'instructions-candidate-target-test';
+          writeFileSync(path, `${JSON.stringify(data, null, 2)}\n`);
+          NODE
+          run_target ready instructions-candidate-target-test 0
+
+          cp /tmp/tsk0374-content-release.json src/content/content-release.json
+          test "$(sha256sum src/content/content-release.json | awk '{print $1}')" = "$original_sha"
+          run_target ready instructions-2026-09-02 0
+
+          # Restore and prove the acceptance drill left the checked-out product source unchanged.
+          cp /tmp/tsk0374-content-release.json src/content/content-release.json
+          git diff --check
+          git diff --exit-code -- src/content/content-release.json
+          npm audit --audit-level=high
+          npm audit --omit=dev --audit-level=high
+          echo 'TSK0374_TARGET_FUNCTIONAL=PASS'
+          echo 'TSK0374_TARGET_NEGATIVE=PASS'
+          echo 'TSK0374_TARGET_CONFIGURATION=PASS'
+          echo 'TSK0374_TARGET_SECURITY_PRIVACY=PASS'
+          echo 'TSK0374_TARGET_ROLLBACK=PASS'
+          echo 'TSK0374_TARGET_ACCEPTANCE=PASS'
