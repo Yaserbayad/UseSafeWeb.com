@@ -26,7 +26,7 @@ test('TSK-0380 exposes one deterministic validation command that fails closed th
     pkg.scripts?.validate,
     'npm run test:contract && npm run lint && npm run typecheck && npm run build',
   );
-  assert.match(pkg.scripts?.test\:contract ?? '', /tsk0380\.test\.mjs/);
+  assert.match(pkg.scripts?.['test:contract'] ?? '', /tsk0380\.test\.mjs/);
 });
 
 test('TSK-0380 documents clean setup and baseline validation without an undocumented manual step', () => {
