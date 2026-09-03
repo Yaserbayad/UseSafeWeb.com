@@ -5,7 +5,7 @@
 **Verification:** `VER-0376`  
 **Evidence:** `EVD-0376`  
 **Acceptance:** `ACC-0376`  
-**Result:** __RESULT__
+**Result:** PASS — ACC-0376 fully evidenced; runtime publication guard passed.
 
 ## Canonical authority and implementation
 
@@ -62,8 +62,8 @@ Observed clean-main results:
 
 - Starting canonical implementation head: `ce48a5f5fd754e95775a7fab571dba1b2d65ee81`.
 - Exact pre-mutation `CURRENT_STATE.md` blob: `7e8230993f5a3fa487857754d095a8f9598b36b5`.
-- Publication guard run: `__SYNC_RUN_ID__`.
-- Publication timestamp: `__SYNC_TIMESTAMP__`.
+- Publication guard run: `33734329037`.
+- Publication timestamp: `2026-09-03T08:37:55Z`.
 - Responsible verifier: governed ChatGPT execution using canonical GitHub authority plus GitHub Actions acceptance/guard runs and post-merge canonical read-back.
 - Deviations: one non-blocking lint warning (`_accountState` unused) observed in the accepted clean-main run; no acceptance failure and no security/privacy deviation identified.
 
