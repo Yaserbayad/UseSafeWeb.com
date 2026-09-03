@@ -1,0 +1,56 @@
+name: Apply CR-0011 stale-candidate reconciliation
+
+on:
+  push:
+    branches:
+      - change/cr0011-stale-candidate-reconciliation-r4
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-audit:
+    if: ${{ !contains(github.event.head_commit.message, '[cr0011-generated]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact branch head
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Apply audit-harness corrections only
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('.github/scripts/apply_cr0011_stale_candidate_reconciliation_20260903.py')
+          s = p.read_text(encoding='utf-8')
+          old_run = '''def run(*args):\n    return subprocess.run(args, cwd=ROOT, text=True, check=True, capture_output=True).stdout\n'''
+          new_run = '''def run(*args):\n    p = subprocess.run(args, cwd=ROOT, text=True, capture_output=True)\n    if p.returncode:\n        if p.stdout:\n            print(p.stdout)\n        if p.stderr:\n            print(p.stderr, file=sys.stderr)\n        fail(f"command failed ({p.returncode}): {args}")\n    return p.stdout\n'''
+          if old_run not in s:
+              raise SystemExit('CR0011_DIAG_PATCH_MARKER_MISSING')
+          s = s.replace(old_run, new_run, 1)
+          old_geo = "if 'LG-16' not in decisions_text or 'Official geographic/market expansion' not in decisions_text:\n    err('independent geographic-expansion control missing')"
+          new_geo = "if 'LG-16' not in decisions_text or 'DEC-0030' not in decisions_text:\n    err('independent geographic-expansion control missing')"
+          if old_geo not in s:
+              raise SystemExit('CR0011_GEO_PATCH_MARKER_MISSING')
+          s = s.replace(old_geo, new_geo, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Apply bounded CR-0011 reconciliation and audit
+        run: python .github/scripts/apply_cr0011_stale_candidate_reconciliation_20260903.py
+      - name: Verify final diff and immutable authorities
+        run: |
+          git diff --check
+          test ! -e .github/scripts/apply_cr0011_stale_candidate_reconciliation_20260903.py
+          test ! -e .github/workflows/apply-cr0011-stale-candidate-reconciliation-20260903.yml
+          git diff --quiet HEAD^ -- Plans/Master/WBS/master-wbs.csv
+          git diff --quiet HEAD^ -- Plans/Master/RELATIONSHIP_INDEX.yaml
+          git diff --quiet HEAD^ -- Plans/Master/Registers/GATES.md
+      - name: Commit audited CR-0011 candidate
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "[cr0011-generated] Reconcile stale candidate intent onto current canonical plan" -m "Preserve all 641 WBS tasks, 858 dependency edges, relationship authority, runtime PASS/evidence and material-action fences. Add only DEC-0058/CR-0011, derived hierarchy roll-up and recurring-dependency invariants, validator hardening, generated/checksum refresh and bounded audit evidence. No deployment, live-device/profile/certificate action, service removal/revocation, participant processing, telemetry activation, production/public activation, market/launch authority, TSK-0374 PASS, TSK-0417 PASS or TSK-0499 PASS is inferred. PR #86 remains draft and unmerged."
+          git push origin HEAD:${GITHUB_REF_NAME}
