@@ -1,11 +1,8 @@
 name: TSK-0359 one-shot runtime-state sync
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/tsk0359-runtime-sync-one-shot.yml'
+  pull_request_target:
+    types: [opened]
 
 permissions:
   contents: write
@@ -16,17 +13,19 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
+          ref: main
           fetch-depth: 2
-      - name: Atomically patch CURRENT_STATE.md and self-remove
+      - name: Atomically patch CURRENT_STATE.md, self-remove, and verify remote read-back
         shell: bash
         run: |
           set -euo pipefail
-          EXPECTED_PARENT='6d20711889bcb94957fcaba86009984781acef05'
+          EXPECTED_EVIDENCE_COMMIT='6d20711889bcb94957fcaba86009984781acef05'
           EXPECTED_STATE_BLOB='b78e3a220a6501dbcc45b0124d9656e2ddec9b45'
           EXPECTED_STATE_BYTES='467840'
           WORKFLOW='.github/workflows/tsk0359-runtime-sync-one-shot.yml'
 
-          test "$(git rev-parse HEAD^)" = "$EXPECTED_PARENT"
+          git merge-base --is-ancestor "$EXPECTED_EVIDENCE_COMMIT" HEAD
+          test "$(git diff --name-only "$EXPECTED_EVIDENCE_COMMIT"..HEAD | sort | paste -sd ' ' -)" = "$WORKFLOW"
           test "$(git hash-object CURRENT_STATE.md)" = "$EXPECTED_STATE_BLOB"
           test "$(wc -c < CURRENT_STATE.md | tr -d ' ')" = "$EXPECTED_STATE_BYTES"
           ! grep -Fq '## TSK-0359 current accepted stable state — 2026-09-03' CURRENT_STATE.md
@@ -72,9 +71,21 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git rm "$WORKFLOW"
-          test "$(git diff --name-only | sort | paste -sd ' ' -)" = ".github/workflows/tsk0359-runtime-sync-one-shot.yml CURRENT_STATE.md"
           git add CURRENT_STATE.md
           git commit -m 'state: synchronize TSK-0359 PASS'
+          test "$(git diff --name-only "$EXPECTED_EVIDENCE_COMMIT"..HEAD | sort | paste -sd ' ' -)" = 'CURRENT_STATE.md'
           echo "TSK0359_STATE_SYNC_NEW_BLOB=$NEW_STATE_BLOB"
           echo "TSK0359_STATE_SYNC_NEW_BYTES=$NEW_STATE_BYTES"
           git push origin HEAD:main
+
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$(git rev-parse HEAD)"
+          git show origin/main:CURRENT_STATE.md > /tmp/current-state-readback.md
+          cmp -s CURRENT_STATE.md /tmp/current-state-readback.md
+          test "$(git hash-object /tmp/current-state-readback.md)" = "$NEW_STATE_BLOB"
+          test "$(wc -c < /tmp/current-state-readback.md | tr -d ' ')" = "$NEW_STATE_BYTES"
+          grep -Fq 'TSK-0359 current accepted stable state — 2026-09-03' /tmp/current-state-readback.md
+          grep -Fq 'TSK-0360` remains TODO' /tmp/current-state-readback.md
+          grep -Fq 'TSK-0455` remains WAITING' /tmp/current-state-readback.md
+          grep -Fq 'No `GATE-0026` exists or is created.' /tmp/current-state-readback.md
+          echo 'TSK0359_STATE_SYNC_REMOTE_READBACK=PASS'
