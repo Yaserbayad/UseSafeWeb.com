@@ -1,0 +1,7 @@
+# Critical/governance paths. GitHub only enforces these approvals when branch protection/rulesets require Code Owner review.
+/.github/ @Yaserbayad
+/Plans/Master/ @Yaserbayad
+/CURRENT_STATE.md @Yaserbayad
+/infrastructure/ @Yaserbayad
+/website/src/app/api/ @Yaserbayad
+/website/src/lib/ios-doh-profile.ts @Yaserbayad
