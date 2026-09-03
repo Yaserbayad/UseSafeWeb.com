@@ -47,7 +47,7 @@ test('account ownership, journey completion, and configuration never manufacture
   }
 });
 
-test('accountless core transitions cover setup, verification, Protection Map, troubleshooting, recovery/removal and completion without login', async () => {
+test('accountless core transitions cover setup, verification, Protection Map, troubleshooting, ordered recovery/removal and completion without login', async () => {
   const api = await loadApi();
   let state = api.createCoreState('en-GB', 'ab'.repeat(16), 1_000, 10_000);
   const events = [
@@ -57,6 +57,7 @@ test('accountless core transitions cover setup, verification, Protection Map, tr
     [{ type: 'VERIFICATION_RESULT', evidence: parentConfirmedEvidence }, 'protection'],
     [{ type: 'OPEN_TROUBLESHOOT' }, 'troubleshoot'],
     [{ type: 'OPEN_RECOVERY' }, 'recover'],
+    [{ type: 'SERVICE_REVOCATION_RESULT', evidence: { ...baseEvidence, removal: 'REVOKED' } }, 'cleanup'],
     [{ type: 'REMOVE_CONFIGURATION' }, 'removed'],
     [{ type: 'RESTART_SETUP' }, 'route'],
     [{ type: 'SELECT_DEVICE', deviceFamily: 'android' }, 'native'],
