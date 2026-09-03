@@ -51,8 +51,11 @@ test('TSK-0491 exposes a lockfile-derived SPDX application SBOM command through 
 test('TSK-0491 generates and validates the SBOM in CI without a live target dependency', () => {
   assert.equal(existsSync(workflowPath), true, 'missing TSK-0491 acceptance workflow');
   const workflow = readFileSync(workflowPath, 'utf8');
-  assert.match(workflow, /npm run sbom > .*sbom\.spdx\.json/);
+  assert.match(workflow, /npm --silent run sbom > .*sbom\.spdx\.json/);
   assert.match(workflow, /SPDX-2\.3/);
   assert.match(workflow, /npm audit --audit-level=high/);
+  assert.match(workflow, /npm audit --omit=dev --audit-level=high/);
+  assert.match(workflow, /npm run validate/);
+  assert.match(workflow, /npm run format:check/);
   assert.doesNotMatch(workflow, /deploy|production|wrangler|ssh|kubectl/i);
 });
