@@ -1,20 +1,104 @@
-name: TSK-0376 publication workflow diagnostic
+name: TSK-0376 evidence and runtime-state publication guard
 
 on:
   push:
     branches:
       - state/tsk-0376-evidence-pass-20260903
+  pull_request:
+    paths:
+      - 'CURRENT_STATE.md'
+      - 'TSK_0376_ACCOUNTLESS_STATE_MACHINE_ACCEPTANCE_2026-09-03.md'
+      - '.github/scripts/tsk0376_state_publication.py'
+      - '.github/workflows/accept-tsk0376-evidence-state-sync-20260903.yml'
 
 permissions:
-  contents: read
+  contents: write
+
+env:
+  EVIDENCE_FILE: TSK_0376_ACCOUNTLESS_STATE_MACHINE_ACCEPTANCE_2026-09-03.md
 
 jobs:
-  diagnostic:
+  guard-and-sync:
     runs-on: ubuntu-24.04
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v6
-      - name: Confirm workflow execution
+        with:
+          fetch-depth: 10
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.23.2'
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Determine and validate publication state
+        shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object CURRENT_STATE.md)" = '7e8230993f5a3fa487857754d095a8f9598b36b5'
-          echo 'TSK0376_PUBLICATION_WORKFLOW_DIAGNOSTIC=PASS'
+          needs_sync="$(python3 .github/scripts/tsk0376_state_publication.py status)"
+          test "$needs_sync" = 'true' || test "$needs_sync" = 'false'
+          if [ "$needs_sync" = 'true' ]; then
+            test "$GITHUB_EVENT_NAME" = 'push'
+          else
+            python3 .github/scripts/tsk0376_state_publication.py verify
+          fi
+          echo "NEEDS_SYNC=$needs_sync" >> "$GITHUB_ENV"
+
+      - name: Verify immutable TSK-0376 authority and accepted artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
+          test "$(git hash-object website/package-lock.json)" = '14f9a62607489f965b96d98cdf0d825a363cd8bc'
+          test "$(git hash-object website/src/lib/core-state-machine.ts)" = '8bebd5f429cdaf03c416c9c64e93fc7ed804ee6a'
+          test "$(git hash-object website/src/lib/journey-state.ts)" = '9f7a9dcf4a18e001869350d956c68bd5fc492632'
+          test "$(git hash-object website/src/components/dns-verification-panel.tsx)" = '6eeba1ff230ba672a8bf053fa2500a10227e4d91'
+          test "$(git hash-object website/tests/contract/tsk0376.test.mjs)" = '2c83ae1bfecf59545518b383e6cdb323749a8847'
+          test "$(git hash-object .github/workflows/accept-tsk0376-accountless-state-machine-20260903.yml)" = '7297bcd05032da3c388da66daac38dc27a6c4e5a'
+          grep -Fq '33730514968' "$EVIDENCE_FILE"
+          grep -Fq '33730835303' "$EVIDENCE_FILE"
+          grep -Fq 'ACC-0376' "$EVIDENCE_FILE"
+          grep -Fq 'VER-0376' "$EVIDENCE_FILE"
+          grep -Fq 'EVD-0376' "$EVIDENCE_FILE"
+
+      - name: Run applicable repository and TSK-0376 acceptance guards
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tests/repository-structure/verify_structure.py
+          python3 Plans/Master/Tools/validate_master_plan.py
+          cd website
+          npm ci --no-fund --no-audit
+          node --test tests/contract/tsk0376.test.mjs
+          npm run test:contract
+          npm run lint
+          npm run typecheck
+          NEXT_TELEMETRY_DISABLED=1 npm run build
+          npm audit --audit-level=high
+          npm audit --omit=dev --audit-level=high
+          cd ..
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'TSK0376_EVIDENCE_STATE_GUARD=PASS'
+
+      - name: Synchronize EVD-0376 and CURRENT_STATE after guards pass
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_EVENT_NAME" != 'push' ] || [ "$NEEDS_SYNC" != 'true' ]; then
+            echo 'No synchronization required on this run.'
+            exit 0
+          fi
+          sync_timestamp="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          python3 .github/scripts/tsk0376_state_publication.py sync --run-id "$GITHUB_RUN_ID" --timestamp "$sync_timestamp"
+          python3 .github/scripts/tsk0376_state_publication.py verify
+          git diff --check
+          changed="$(git diff --name-only | sort)"
+          expected="$(printf '%s\n' CURRENT_STATE.md "$EVIDENCE_FILE" | sort)"
+          test "$changed" = "$expected"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md "$EVIDENCE_FILE"
+          git commit -m 'TSK-0376: publish acceptance evidence and runtime PASS'
+          git push origin "HEAD:$GITHUB_REF_NAME"
+          echo 'TSK0376_EVIDENCE_STATE_SYNC=PASS'
