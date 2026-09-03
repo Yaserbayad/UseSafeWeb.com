@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
-    "test:contract": "node --test tests/contract/tsk0361.test.mjs tests/contract/tsk0357.test.mjs tests/contract/tsk0358.test.mjs tests/contract/tsk0360.test.mjs tests/contract/tsk0359.test.mjs tests/contract/tsk0375.test.mjs tests/contract/tsk0376.test.mjs tests/contract/tsk0629.test.mjs tests/contract/tsk0243.test.mjs tests/contract/tsk0243-csp.test.mjs tests/contract/tsk0243-http-body.test.mjs tests/contract/tsk0243-browser-orchestration.test.mjs tests/contract/tsk0243-browser-result-pairs.test.mjs"
+    "test:contract": "node --test tests/contract/tsk0361.test.mjs tests/contract/tsk0357.test.mjs tests/contract/tsk0358.test.mjs tests/contract/tsk0360.test.mjs tests/contract/tsk0359.test.mjs tests/contract/tsk0375.test.mjs tests/contract/tsk0376.test.mjs tests/contract/tsk0369.test.mjs tests/contract/tsk0629.test.mjs tests/contract/tsk0243.test.mjs tests/contract/tsk0243-csp.test.mjs tests/contract/tsk0243-http-body.test.mjs tests/contract/tsk0243-browser-orchestration.test.mjs tests/contract/tsk0243-browser-result-pairs.test.mjs"
   },
   "dependencies": {
     "next": "16.3.3",
