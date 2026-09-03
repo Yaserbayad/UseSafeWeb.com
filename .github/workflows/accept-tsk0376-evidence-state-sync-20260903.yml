@@ -11,7 +11,7 @@ on:
       - '.github/workflows/accept-tsk0376-evidence-state-sync-20260903.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 env:
   CANONICAL_IMPL_HEAD: ce48a5f5fd754e95775a7fab571dba1b2d65ee81
@@ -19,13 +19,9 @@ env:
   EVIDENCE_FILE: TSK_0376_ACCOUNTLESS_STATE_MACHINE_ACCEPTANCE_2026-09-03.md
 
 jobs:
-  guard:
+  guard-and-sync:
     runs-on: ubuntu-24.04
     timeout-minutes: 35
-    permissions:
-      contents: read
-    outputs:
-      needs_sync: ${{ steps.state.outputs.needs_sync }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -36,22 +32,18 @@ jobs:
           cache: npm
           cache-dependency-path: website/package-lock.json
 
-      - id: state
-        name: Verify publication shape and determine whether synchronization is required
+      - name: Verify publication shape
         shell: bash
         run: |
           set -euo pipefail
           state_blob="$(git hash-object CURRENT_STATE.md)"
           if [ "$state_blob" = "$PRE_STATE_BLOB" ]; then
-            test "${{ github.event_name }}" = 'push'
+            test "$GITHUB_EVENT_NAME" = 'push'
             grep -Fq '**Result:** __RESULT__' "$EVIDENCE_FILE"
             grep -Fq '__SYNC_RUN_ID__' "$EVIDENCE_FILE"
             grep -Fq '__SYNC_TIMESTAMP__' "$EVIDENCE_FILE"
-            if grep -Fq '## TSK-0376 current accepted stable state' CURRENT_STATE.md; then
-              echo 'unexpected pre-existing TSK-0376 runtime section' >&2
-              exit 1
-            fi
-            echo 'needs_sync=true' >> "$GITHUB_OUTPUT"
+            test "$(grep -Fc '## TSK-0376 current accepted stable state' CURRENT_STATE.md)" = '0'
+            echo 'NEEDS_SYNC=true' >> "$GITHUB_ENV"
           else
             grep -Fq '**Result:** PASS — ACC-0376 fully evidenced; runtime publication guard passed.' "$EVIDENCE_FILE"
             if grep -Eq '__RESULT__|__SYNC_RUN_ID__|__SYNC_TIMESTAMP__' "$EVIDENCE_FILE"; then
@@ -61,7 +53,7 @@ jobs:
             test "$(grep -Fc '## TSK-0376 current accepted stable state — PASS' CURRENT_STATE.md)" = '1'
             grep -Fq 'Runtime state: **PASS**.' CURRENT_STATE.md
             grep -Fq 'EVD-0376' CURRENT_STATE.md
-            echo 'needs_sync=false' >> "$GITHUB_OUTPUT"
+            echo 'NEEDS_SYNC=false' >> "$GITHUB_ENV"
           fi
 
       - name: Verify immutable TSK-0376 authority and accepted artifacts
@@ -82,17 +74,16 @@ jobs:
           grep -Fq 'EVD-0376' "$EVIDENCE_FILE"
 
       - name: Verify synchronized CURRENT_STATE byte preservation
-        if: steps.state.outputs.needs_sync == 'false'
         shell: bash
         run: |
           set -euo pipefail
-          git cat-file -e "$CANONICAL_IMPL_HEAD^{commit}" || git fetch --no-tags --depth=1 origin "$CANONICAL_IMPL_HEAD"
-          git show "$CANONICAL_IMPL_HEAD:CURRENT_STATE.md" > /tmp/tsk0376-pre-state.md
-          test "$(git hash-object /tmp/tsk0376-pre-state.md)" = "$PRE_STATE_BLOB"
-          python3 - <<'PY'
+          if [ "$NEEDS_SYNC" = 'false' ]; then
+            git cat-file -e "$CANONICAL_IMPL_HEAD^{commit}" || git fetch --no-tags --depth=1 origin "$CANONICAL_IMPL_HEAD"
+            git show "$CANONICAL_IMPL_HEAD:CURRENT_STATE.md" > /tmp/tsk0376-pre-state.md
+            test "$(git hash-object /tmp/tsk0376-pre-state.md)" = "$PRE_STATE_BLOB"
+            python3 - <<'PY'
           from pathlib import Path
           import re
-
           old = Path('/tmp/tsk0376-pre-state.md').read_bytes()
           new = Path('CURRENT_STATE.md').read_bytes()
           stamp = re.compile(rb'\*\*Updated:\*\* [^\n]+\n')
@@ -103,9 +94,10 @@ jobs:
           new_normalized = new[:new_match.start()] + b'**Updated:** <STAMP>\n' + new[new_match.end():]
           assert new_normalized.startswith(old_normalized)
           suffix = new_normalized[len(old_normalized):]
-          assert suffix.startswith(b'\n## TSK-0376 current accepted stable state') or suffix.startswith(b'\n\n## TSK-0376 current accepted stable state')
           assert suffix.count(b'## TSK-0376 current accepted stable state') == 1
+          assert suffix.startswith(b'\n## TSK-0376 current accepted stable state') or suffix.startswith(b'\n\n## TSK-0376 current accepted stable state')
           PY
+          fi
 
       - name: Run applicable repository and TSK-0376 acceptance guards
         shell: bash
@@ -127,26 +119,19 @@ jobs:
           test -z "$(git status --porcelain)"
           echo 'TSK0376_EVIDENCE_STATE_GUARD=PASS'
 
-  synchronize:
-    if: github.event_name == 'push' && needs.guard.outputs.needs_sync == 'true'
-    needs: guard
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 5
-      - name: Publish EVD-0376 and minimal guarded CURRENT_STATE synchronization
+      - name: Synchronize EVD-0376 and CURRENT_STATE after guards pass
         shell: bash
         run: |
           set -euo pipefail
+          if [ "$GITHUB_EVENT_NAME" != 'push' ] || [ "$NEEDS_SYNC" != 'true' ]; then
+            echo 'No synchronization required on this run.'
+            exit 0
+          fi
           test "$(git hash-object CURRENT_STATE.md)" = "$PRE_STATE_BLOB"
           test "$(grep -Fc '## TSK-0376 current accepted stable state' CURRENT_STATE.md)" = '0'
           sync_timestamp="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
           export SYNC_TIMESTAMP="$sync_timestamp"
-          export SYNC_RUN_ID="${GITHUB_RUN_ID}"
+          export SYNC_RUN_ID="$GITHUB_RUN_ID"
           python3 - <<'PY'
           from pathlib import Path
           import os
@@ -170,7 +155,6 @@ jobs:
           assert len(stamp.findall(old)) == 1
           updated = stamp.sub(f"**Updated:** {os.environ['SYNC_TIMESTAMP']}\n".encode(), old, count=1)
           assert b'## TSK-0376 current accepted stable state' not in old
-
           section = f'''## TSK-0376 current accepted stable state — PASS (2026-09-03)
 
 - Runtime state: **PASS**.
@@ -186,11 +170,9 @@ jobs:
 
 - Current successors may consume TSK-0376 only after this exact evidence/runtime publication is merged to canonical `main` and independently read-back verified; no downstream task or gate PASS is inferred.
 '''.encode()
-
           separator = b'\n' if updated.endswith(b'\n') else b'\n\n'
           new = updated + separator + section
           assert new.count(b'## TSK-0376 current accepted stable state') == 1
-
           old_match = stamp.search(old)
           new_match = stamp.search(new)
           assert old_match and new_match
@@ -212,5 +194,5 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add CURRENT_STATE.md "$EVIDENCE_FILE"
           git commit -m 'TSK-0376: publish acceptance evidence and runtime PASS'
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          git push origin "HEAD:$GITHUB_REF_NAME"
           echo 'TSK0376_EVIDENCE_STATE_SYNC=PASS'
