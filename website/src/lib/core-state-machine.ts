@@ -143,6 +143,7 @@ export function transitionCoreState(state: CoreState, event: CoreEvent, nowMs: n
     case 'native:CONTINUE_NATIVE': return withPhase(state, 'dns');
     case 'dns:CONTINUE_DNS': return withPhase(state, 'verify');
     case 'verify:VERIFICATION_RESULT': return withPhase(state, 'protection');
+    case 'verify:OPEN_TROUBLESHOOT': return withPhase(state, 'troubleshoot');
     case 'protection:OPEN_TROUBLESHOOT': return withPhase(state, 'troubleshoot');
     case 'troubleshoot:OPEN_RECOVERY': return withPhase(state, 'recover');
     case 'recover:REMOVE_CONFIGURATION': return withPhase(state, 'removed');
