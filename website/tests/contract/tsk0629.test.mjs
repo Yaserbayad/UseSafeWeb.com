@@ -119,7 +119,7 @@ test('uncertain verification can enter troubleshooting directly without bypassin
   assert.equal(state.loginRequired, false);
 });
 
-test('current product check authority is server-revalidated proof feeding the TSK-0629 classifier, not page constants or shared action state', async () => {
+test('current product check authority is fresh server-verified proof feeding the TSK-0629 classifier, not page constants or shared action state', async () => {
   const automatedSource = readFileSync(modulePath, 'utf8');
   const verifySource = readFileSync(resolve(root, 'src/app/[locale]/verify/page.tsx'), 'utf8');
   const protectionSource = readFileSync(resolve(root, 'src/app/[locale]/protection/page.tsx'), 'utf8');
@@ -138,11 +138,13 @@ test('current product check authority is server-revalidated proof feeding the TS
   }
   assert.match(panelSource, /runDnsVerification/);
   assert.match(panelSource, /classifyAutomatedChecks/);
-  assert.match(cardSource, /revalidateDnsVerificationProof/);
+  assert.match(cardSource, /runDnsVerification/);
   assert.match(cardSource, /classifyAutomatedChecks/);
+  assert.match(resultRoute, /verifyDnsProbeRequest/);
   assert.match(resultRoute, /verifyDnsVerificationObservation/);
   assert.match(resultRoute, /toApprovedDnsVerificationEvent/);
   assert.match(browserSource, /\/api\/dns-verification\/results/);
+  assert.doesNotMatch(browserSource, /sessionStorage|localStorage|DNS_VERIFICATION_STORAGE_KEY/);
   assert.doesNotMatch(actionSource, /data-automated-recovery|data-verification-outcome/);
-  assert.match(panelSource, /data-core-verify-recovery/);
+  assert.match(panelSource, /data-core-troubleshoot/);
 });
