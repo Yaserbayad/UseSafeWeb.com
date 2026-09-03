@@ -1,6 +1,9 @@
+import { JOURNEY_MAX_AGE_MS } from './journey-state';
+
 export type Locale = 'en-GB' | 'tr-TR' | 'ar';
 export type DeviceFamily = 'android' | 'iphone';
 export type CorePhase = 'route' | 'native' | 'dns' | 'verify' | 'protection' | 'troubleshoot' | 'recover' | 'removed' | 'complete';
+export type CoreJourneyStage = 'phone' | 'internet' | 'services';
 export type ProtectionState = 'protected/verified' | 'configured/parent-confirmed' | 'action-needed' | 'not-covered' | 'uncertain/error' | 'removed';
 export type ReasonCode =
   | 'TECH_VERIFIED'
@@ -37,6 +40,8 @@ export type ProtectionEvaluation = {
   action: string | null;
 };
 
+export const CORE_MAX_VERIFICATION_RETRIES = 3;
+
 export type CoreState = {
   schemaVersion: 1;
   scope: string;
@@ -45,6 +50,7 @@ export type CoreState = {
   locale: Locale;
   phase: CorePhase;
   loginRequired: false;
+  retryCount: number;
   deviceFamily?: DeviceFamily;
 };
 
@@ -52,8 +58,9 @@ export type CoreEvent =
   | { type: 'SELECT_DEVICE'; deviceFamily?: DeviceFamily }
   | { type: 'CONTINUE_NATIVE'; deviceFamily?: DeviceFamily }
   | { type: 'CONTINUE_DNS'; deviceFamily?: DeviceFamily }
-  | { type: 'VERIFICATION_RESULT'; deviceFamily?: DeviceFamily }
+  | { type: 'VERIFICATION_RESULT'; deviceFamily?: DeviceFamily; evidence: ProtectionEvidence }
   | { type: 'OPEN_TROUBLESHOOT'; deviceFamily?: DeviceFamily }
+  | { type: 'RETRY_VERIFICATION'; deviceFamily?: DeviceFamily }
   | { type: 'OPEN_RECOVERY'; deviceFamily?: DeviceFamily }
   | { type: 'REMOVE_CONFIGURATION'; deviceFamily?: DeviceFamily }
   | { type: 'RESTART_SETUP'; deviceFamily?: DeviceFamily }
@@ -67,7 +74,25 @@ export type OptionalAccountState = {
 
 const locales = new Set<Locale>(['en-GB', 'tr-TR', 'ar']);
 const phases = new Set<CorePhase>(['route', 'native', 'dns', 'verify', 'protection', 'troubleshoot', 'recover', 'removed', 'complete']);
-const baseKeys = ['createdAt', 'hardExpiresAt', 'locale', 'loginRequired', 'phase', 'schemaVersion', 'scope'];
+const reasonCodes = new Set<ReasonCode>([
+  'TECH_VERIFIED',
+  'CONFIG_CONFIRMED_NO_TECH_VERIFY',
+  'TECH_VERIFY_NEGATIVE',
+  'REMEDIATION_REQUIRED',
+  'OUT_OF_SCOPE',
+  'UNSUPPORTED_PATH',
+  'VERIFY_STALE',
+  'VERIFY_TIMEOUT',
+  'VERIFY_UNREACHABLE',
+  'VERIFICATION_SERVICE_ERROR',
+  'EVIDENCE_CONFLICT',
+  'BYPASS_OR_CONTEXT_UNCERTAIN',
+  'REMOVED_BY_PARENT',
+  'REVOKED',
+  'REINSTALLED_AWAITING_VERIFY',
+]);
+const baseKeys = ['createdAt', 'hardExpiresAt', 'locale', 'loginRequired', 'phase', 'retryCount', 'schemaVersion', 'scope'];
+const journeyEvidenceKeys = ['action', 'configured', 'coverage', 'removal', 'technical', 'uncertainty'];
 
 function evaluation(state: ProtectionState, reasonCode: ReasonCode, action: string | null = null): ProtectionEvaluation {
   return { state, reasonCode, action };
@@ -90,6 +115,29 @@ export function evaluateProtection(evidence: ProtectionEvidence): ProtectionEval
   return evaluation('action-needed', 'REMEDIATION_REQUIRED');
 }
 
+function hasExactKeys(candidate: Record<string, unknown>, expected: string[]): boolean {
+  const actual = Object.keys(candidate).sort();
+  const sorted = [...expected].sort();
+  return actual.length === sorted.length && actual.every((key, index) => key === sorted[index]);
+}
+
+function isJourneyProtectionEvidence(value: unknown): value is ProtectionEvidence {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const candidate = value as Record<string, unknown>;
+  if (!hasExactKeys(candidate, journeyEvidenceKeys)) return false;
+  if (candidate.coverage !== 'covered' && candidate.coverage !== 'not-covered') return false;
+  if (typeof candidate.configured !== 'boolean') return false;
+  if (candidate.action !== null && typeof candidate.action !== 'string') return false;
+  if (candidate.removal !== null && candidate.removal !== 'REMOVED_BY_PARENT' && candidate.removal !== 'REVOKED') return false;
+  if (candidate.uncertainty !== null && !reasonCodes.has(candidate.uncertainty as ReasonCode)) return false;
+  if (candidate.technical === null) return true;
+  if (!candidate.technical || typeof candidate.technical !== 'object' || Array.isArray(candidate.technical)) return false;
+  const technical = candidate.technical as Record<string, unknown>;
+  if (!hasExactKeys(technical, ['fresh', 'result'])) return false;
+  if (typeof technical.fresh !== 'boolean') return false;
+  return technical.result === 'positive' || technical.result === 'negative' || technical.result === 'indeterminate';
+}
+
 function isLocale(value: unknown): value is Locale {
   return typeof value === 'string' && locales.has(value as Locale);
 }
@@ -100,9 +148,7 @@ function isDevice(value: unknown): value is DeviceFamily {
 
 function exactCoreKeys(candidate: Record<string, unknown>): boolean {
   const expected = candidate.phase === 'route' ? baseKeys : [...baseKeys, 'deviceFamily'];
-  const actual = Object.keys(candidate).sort();
-  const sorted = [...expected].sort();
-  return actual.length === sorted.length && actual.every((key, index) => key === sorted[index]);
+  return hasExactKeys(candidate, expected);
 }
 
 function isCoreState(value: unknown, nowMs: number): value is CoreState {
@@ -113,7 +159,8 @@ function isCoreState(value: unknown, nowMs: number): value is CoreState {
   if (!Number.isSafeInteger(candidate.createdAt) || !Number.isSafeInteger(candidate.hardExpiresAt)) return false;
   const createdAt = candidate.createdAt as number;
   const hardExpiresAt = candidate.hardExpiresAt as number;
-  if (createdAt < 0 || hardExpiresAt <= createdAt || nowMs < createdAt || nowMs >= hardExpiresAt) return false;
+  if (!Number.isSafeInteger(nowMs) || createdAt < 0 || hardExpiresAt <= createdAt || hardExpiresAt - createdAt > JOURNEY_MAX_AGE_MS || nowMs < createdAt || nowMs >= hardExpiresAt) return false;
+  if (!Number.isSafeInteger(candidate.retryCount) || (candidate.retryCount as number) < 0 || (candidate.retryCount as number) > CORE_MAX_VERIFICATION_RETRIES) return false;
   if (!isLocale(candidate.locale) || typeof candidate.phase !== 'string' || !phases.has(candidate.phase as CorePhase)) return false;
   if (!exactCoreKeys(candidate)) return false;
   if (candidate.phase !== 'route' && !isDevice(candidate.deviceFamily)) return false;
@@ -123,15 +170,31 @@ function isCoreState(value: unknown, nowMs: number): value is CoreState {
 export function createCoreState(locale: Locale, scope: string, createdAt: number, hardExpiresAt: number): CoreState {
   if (!isLocale(locale) || !/^[0-9a-f]{32}$/.test(scope)) throw new TypeError('invalid core identity');
   if (!Number.isSafeInteger(createdAt) || !Number.isSafeInteger(hardExpiresAt) || createdAt < 0 || hardExpiresAt <= createdAt) throw new TypeError('invalid core lifetime');
-  return { schemaVersion: 1, scope, createdAt, hardExpiresAt, locale, phase: 'route', loginRequired: false };
+  if (hardExpiresAt - createdAt > JOURNEY_MAX_AGE_MS) throw new TypeError('core lifetime exceeds Journey-0 limit');
+  return { schemaVersion: 1, scope, createdAt, hardExpiresAt, locale, phase: 'route', loginRequired: false, retryCount: 0 };
 }
 
 function withPhase(state: CoreState, phase: CorePhase, deviceFamily = state.deviceFamily): CoreState {
   if (phase === 'route') {
-    return { schemaVersion: 1, scope: state.scope, createdAt: state.createdAt, hardExpiresAt: state.hardExpiresAt, locale: state.locale, phase, loginRequired: false };
+    return {
+      schemaVersion: 1,
+      scope: state.scope,
+      createdAt: state.createdAt,
+      hardExpiresAt: state.hardExpiresAt,
+      locale: state.locale,
+      phase,
+      loginRequired: false,
+      retryCount: 0,
+    };
   }
   if (!deviceFamily) throw new Error('device selection required');
   return { ...state, phase, loginRequired: false, deviceFamily };
+}
+
+export function coreJourneyStage(state: CoreState): CoreJourneyStage {
+  if (state.phase === 'route' || state.phase === 'native') return 'phone';
+  if (state.phase === 'protection' || state.phase === 'complete') return 'services';
+  return 'internet';
 }
 
 export function transitionCoreState(state: CoreState, event: CoreEvent, nowMs: number): CoreState {
@@ -142,9 +205,22 @@ export function transitionCoreState(state: CoreState, event: CoreEvent, nowMs: n
       return withPhase(state, 'native', event.deviceFamily);
     case 'native:CONTINUE_NATIVE': return withPhase(state, 'dns');
     case 'dns:CONTINUE_DNS': return withPhase(state, 'verify');
-    case 'verify:VERIFICATION_RESULT': return withPhase(state, 'protection');
+    case 'verify:VERIFICATION_RESULT': {
+      if (event.type !== 'VERIFICATION_RESULT' || !isJourneyProtectionEvidence(event.evidence)) {
+        throw new Error('verification evidence required');
+      }
+      const result = evaluateProtection(event.evidence);
+      if (result.state === 'protected/verified' || result.state === 'configured/parent-confirmed') {
+        return withPhase(state, 'protection');
+      }
+      if (result.state === 'removed') return withPhase(state, 'removed');
+      return withPhase(state, 'troubleshoot');
+    }
     case 'verify:OPEN_TROUBLESHOOT': return withPhase(state, 'troubleshoot');
     case 'protection:OPEN_TROUBLESHOOT': return withPhase(state, 'troubleshoot');
+    case 'troubleshoot:RETRY_VERIFICATION':
+      if (state.retryCount >= CORE_MAX_VERIFICATION_RETRIES) throw new Error('retry limit reached');
+      return { ...withPhase(state, 'verify'), retryCount: state.retryCount + 1 };
     case 'troubleshoot:OPEN_RECOVERY': return withPhase(state, 'recover');
     case 'recover:REMOVE_CONFIGURATION': return withPhase(state, 'removed');
     case 'removed:RESTART_SETUP': return withPhase(state, 'route');

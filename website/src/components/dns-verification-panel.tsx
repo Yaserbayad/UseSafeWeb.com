@@ -54,7 +54,7 @@ export function DnsVerificationPanel({
 
   const protection = evaluateProtection(outcome.evidence);
   const supporting = protection.action ?? reasonCopy[protection.reasonCode] ?? reasonCopy.default;
-  const showRecovery = protection.state === 'uncertain/error' || protection.state === 'action-needed';
+  const canContinueToServices = protection.state === 'protected/verified' || protection.state === 'configured/parent-confirmed';
 
   return (
     <>
@@ -71,7 +71,16 @@ export function DnsVerificationPanel({
         <p className="sw-technical">{protection.reasonCode}</p>
       </section>
       <div className="sw-actions">
-        {showRecovery ? (
+        {canContinueToServices ? (
+          <CoreActionButton
+            locale={locale}
+            deviceFamily={deviceFamily}
+            event={{ type: 'VERIFICATION_RESULT', evidence: outcome.evidence }}
+            href={`/${locale}/protection?platform=${deviceFamily}`}
+            label={viewProtectionLabel}
+            dataAttribute="data-core-view-protection"
+          />
+        ) : (
           <CoreActionButton
             locale={locale}
             deviceFamily={deviceFamily}
@@ -80,16 +89,7 @@ export function DnsVerificationPanel({
             label={troubleshootLabel}
             dataAttribute="data-core-troubleshoot"
           />
-        ) : null}
-        <CoreActionButton
-          locale={locale}
-          deviceFamily={deviceFamily}
-          event={{ type: 'VERIFICATION_RESULT' }}
-          href={`/${locale}/protection?platform=${deviceFamily}`}
-          label={viewProtectionLabel}
-          dataAttribute="data-core-view-protection"
-          secondary={showRecovery}
-        />
+        )}
       </div>
     </>
   );
