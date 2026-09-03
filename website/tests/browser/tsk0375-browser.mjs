@@ -33,8 +33,8 @@ try {
         assert.equal(routeResponse?.status(), 200);
 
         const expectedHref = testCase.href(locale);
-        const link = page.locator(`a[href="${expectedHref}"]`);
-        assert.equal(await link.count(), 1, `${locale}/${testCase.choice} route link count`);
+        const link = page.locator(`.sw-actions a[href="${expectedHref}"]`);
+        assert.equal(await link.count(), 1, `${locale}/${testCase.choice} route action count`);
 
         const sessionEntries = await page.evaluate(() => Object.entries(sessionStorage));
         assertMinimalSession(sessionEntries);
