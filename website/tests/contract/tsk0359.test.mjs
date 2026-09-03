@@ -127,7 +127,7 @@ test('DNS and recovery surfaces select current instruction IDs by locale and pla
   assert.match(dns, /INS-AND-SETUP-01/);
   assert.match(dns, /INS-IOS-SETUP-01/);
   assert.doesNotMatch(dns, /label="I saved this DNS setting/);
-  assert.doesNotMatch(dns, /summary=\{instruction\.value\}/, 'DNS setup must not repeat the exact source-bound instruction as both summary and instruction body');
+  assert.equal((dns.match(/\{instruction\.value\}/g) ?? []).length, 1, 'DNS setup must render the exact source-bound instruction only once');
   const verify = read('src/app/[locale]/verify/page.tsx');
   assert.match(verify, /INS-AND-VERIFY-01/);
   assert.match(verify, /INS-IOS-VERIFY-01/);
