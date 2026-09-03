@@ -118,3 +118,18 @@ test('uncertain verification can enter troubleshooting directly without bypassin
   assert.equal(state.phase, 'troubleshoot');
   assert.equal(state.loginRequired, false);
 });
+
+test('current product check state has one source authority and TSK-0629 markers do not leak into shared action API', async () => {
+  const automatedSource = readFileSync(modulePath, 'utf8');
+  const verifySource = readFileSync(resolve(root, 'src/app/[locale]/verify/page.tsx'), 'utf8');
+  const protectionSource = readFileSync(resolve(root, 'src/app/[locale]/protection/page.tsx'), 'utf8');
+  const actionSource = readFileSync(resolve(root, 'src/components/core-action-button.tsx'), 'utf8');
+
+  assert.match(automatedSource, /export function getCurrentAutomatedVerification\(/);
+  for (const source of [verifySource, protectionSource]) {
+    assert.match(source, /getCurrentAutomatedVerification\(\)/);
+    assert.doesNotMatch(source, /classifyAutomatedChecks\(\{\s*support:/s);
+  }
+  assert.doesNotMatch(actionSource, /data-automated-recovery/);
+  assert.match(verifySource, /data-automated-recovery/);
+});
