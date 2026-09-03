@@ -17,9 +17,8 @@ async function loadApi() {
   return import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
 }
 
-function verifiedRelease(overrides = {}) {
+function releaseMetadata(overrides = {}) {
   return {
-    artifactStatus: 'verified',
     version: 2,
     payloadUuid,
     dnsPayloadUuid,
@@ -27,9 +26,9 @@ function verifiedRelease(overrides = {}) {
   };
 }
 
-test('verified iPhone release generates only the canonical SafeWeb DoH profile contract', async () => {
+test('release metadata generates only the current canonical SafeWeb DoH profile contract', async () => {
   const api = await loadApi();
-  const profile = api.generateSafeWebIosDohProfile(verifiedRelease());
+  const profile = api.generateSafeWebIosDohProfile(releaseMetadata());
 
   assert.match(profile, /<key>DNSProtocol<\/key>\s*<string>HTTPS<\/string>/);
   assert.match(profile, new RegExp(`<key>ServerURL<\\/key>\\s*<string>${canonicalServerUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}<\\/string>`));
@@ -48,39 +47,41 @@ test('verified iPhone release generates only the canonical SafeWeb DoH profile c
   assert.doesNotMatch(profile, /srv\.usesafeweb\.com|ClientID|credential|password|secret|protected\/verified/i);
 });
 
-test('generator fails closed unless release artifact approval is explicit and complete', async () => {
+test('generator fails closed on invalid or incomplete release metadata', async () => {
   const api = await loadApi();
   for (const input of [
-    verifiedRelease({ artifactStatus: 'pending' }),
-    verifiedRelease({ artifactStatus: true }),
-    verifiedRelease({ version: 0 }),
-    verifiedRelease({ version: -1 }),
-    verifiedRelease({ version: 1.5 }),
-    verifiedRelease({ version: Number.MAX_SAFE_INTEGER + 1 }),
-    verifiedRelease({ payloadUuid: 'not-a-uuid' }),
-    verifiedRelease({ dnsPayloadUuid: 'not-a-uuid' }),
-    verifiedRelease({ dnsPayloadUuid: payloadUuid }),
+    null,
+    {},
+    releaseMetadata({ version: 0 }),
+    releaseMetadata({ version: -1 }),
+    releaseMetadata({ version: 1.5 }),
+    releaseMetadata({ version: Number.MAX_SAFE_INTEGER + 1 }),
+    releaseMetadata({ payloadUuid: 'not-a-uuid' }),
+    releaseMetadata({ dnsPayloadUuid: 'not-a-uuid' }),
+    releaseMetadata({ dnsPayloadUuid: payloadUuid }),
   ]) {
     assert.throws(() => api.generateSafeWebIosDohProfile(input));
   }
 });
 
-test('generator rejects endpoint overrides, secrets, identifiers, and other undeclared input', async () => {
+test('generator rejects endpoint overrides, invented approval state, secrets, identifiers, and other undeclared input', async () => {
   const api = await loadApi();
   for (const extra of [
     { serverUrl: 'https://example.invalid/dns-query' },
     { endpoint: canonicalServerUrl },
+    { artifactStatus: 'verified' },
+    { approved: true },
     { adminUrl: 'https://srv.usesafeweb.com' },
     { clientId: 'child-1' },
     { token: 'secret' },
     { payloadIdentifier: 'com.example.override' },
   ]) {
-    assert.throws(() => api.generateSafeWebIosDohProfile(verifiedRelease(extra)));
+    assert.throws(() => api.generateSafeWebIosDohProfile(releaseMetadata(extra)));
   }
 });
 
-test('generator output is deterministic for the same approved release metadata', async () => {
+test('generator output is deterministic for the same release metadata', async () => {
   const api = await loadApi();
-  const input = verifiedRelease();
+  const input = releaseMetadata();
   assert.equal(api.generateSafeWebIosDohProfile(input), api.generateSafeWebIosDohProfile(input));
 });
