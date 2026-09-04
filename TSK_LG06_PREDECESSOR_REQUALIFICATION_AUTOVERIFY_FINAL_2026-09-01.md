@@ -1,8 +1,8 @@
 # LG-06 predecessor requalification — final automated verification
 
 **Disposition:** PASS  
-**Source commit:** `fd94a4b89f2def4bd5ead473dc72762554fdc051`  
-**GitHub Actions run:** `33860136849` / attempt `1`  
+**Source commit:** `74936d44fa30a3a846bd3f4d5754a49407350c11`  
+**GitHub Actions run:** `33876182712` / attempt `1`  
 **Verifier:** GitHub-hosted Ubuntu source-only CI
 
 The repository-current verifier completed successfully against the current WBS, requirement register, traceability matrix, TSK-0309 dual-mode baseline, exact TSK-0333 source blobs, final TSK-0321 accessibility evidence, post-CR-0006 TSK-0628 operating model, current TSK-0043 conflict review, and CR-0006/CR-0007 change authority.
