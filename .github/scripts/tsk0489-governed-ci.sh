@@ -4,6 +4,16 @@ set -Eeuo pipefail
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
 
+: "${TSK0489_SOURCE_SHA:?TSK0489_SOURCE_SHA must be set by the workflow}"
+ACTUAL_HEAD="$(git rev-parse HEAD)"
+if [[ "$ACTUAL_HEAD" != "$TSK0489_SOURCE_SHA" ]]; then
+  echo "TSK0489_SOURCE_SHA_BINDING=FAIL expected=$TSK0489_SOURCE_SHA actual=$ACTUAL_HEAD"
+  echo 'TSK0489_PROMOTION_ELIGIBLE=NO'
+  exit 87
+fi
+echo "TSK0489_SOURCE_SHA=$TSK0489_SOURCE_SHA"
+echo 'TSK0489_SOURCE_SHA_BINDING=PASS'
+
 PROBE='.github/tsk0489-deliberate-failure.probe'
 if [[ -e "$PROBE" ]]; then
   echo 'TSK0489_DELIBERATE_FAILURE=OBSERVED'
@@ -49,6 +59,7 @@ for path, needle in [
 PY
 
 echo 'TSK0489_AUTHORITY_BINDINGS=PASS'
+python3 .github/scripts/verify_tsk0489_workflow_governance.py
 python3 tests/repository-structure/verify_structure.py
 python3 Plans/Master/Tools/validate_master_plan.py
 
