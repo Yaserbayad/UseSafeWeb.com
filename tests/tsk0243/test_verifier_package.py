@@ -70,14 +70,15 @@ class VerifierPackageContract(unittest.TestCase):
         spec.loader.exec_module(module)
 
         class FakeApi:
-            def __init__(self, statistics_enabled: bool) -> None:
+            def __init__(self, statistics_enabled: bool, statistics_interval: int = 1) -> None:
                 self.statistics_enabled = statistics_enabled
+                self.statistics_interval = statistics_interval
 
             def request(self, endpoint: str, payload=None):
                 if endpoint == "/querylog/config":
                     return {"enabled": False}
                 if endpoint == "/stats/config":
-                    return {"enabled": self.statistics_enabled}
+                    return {"enabled": self.statistics_enabled, "interval": self.statistics_interval}
                 raise AssertionError(endpoint)
 
         with tempfile.TemporaryDirectory() as directory:
@@ -114,12 +115,18 @@ class VerifierPackageContract(unittest.TestCase):
             write_statistics(True)
             with self.assertRaises(SystemExit):
                 module.validate_privacy(FakeApi(False), config)
+            with self.assertRaises(SystemExit):
+                module.validate_privacy(FakeApi(True, 7), config)
 
     def test_deployment_rollback_restores_release_identity_and_cleans_first_failure(self) -> None:
         deploy = self.read("infrastructure/web-server/deploy-release.sh")
         self.assertIn('previous_release_sha=', deploy)
         self.assertIn('set_release_binding "${previous_release_sha}"', deploy)
+        self.assertIn('CURRENT_UPDATED=0', deploy)
+        self.assertIn('RELEASE_INSTALLED=0', deploy)
+        self.assertIn('systemctl stop "${SERVICE}"', deploy)
         self.assertIn('rm -f "${current}"', deploy)
+        self.assertIn('rm -rf -- "${release}"', deploy)
         self.assertRegex(
             deploy,
             r'set_release_binding "\$\{previous_release_sha\}"[\s\S]+systemctl restart "\$\{SERVICE\}"',
