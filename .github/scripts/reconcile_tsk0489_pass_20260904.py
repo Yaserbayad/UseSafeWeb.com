@@ -48,11 +48,11 @@ WBS_PATH.write_bytes(new_raw)
 assert not EVIDENCE_PATH.exists(), f'{EVIDENCE_PATH} already exists'
 evidence = f'''# EVD-0489 — Governed CI and conditional promotion evidence
 
-**Task:** TSK-0489 — Add CI pipeline and automated checks  
-**Acceptance:** ACC-0489  
-**Verification:** VER-0489  
-**Evidence:** EVD-0489  
-**Disposition:** PASS  
+**Task:** TSK-0489 — Add CI pipeline and automated checks
+**Acceptance:** ACC-0489
+**Verification:** VER-0489
+**Evidence:** EVD-0489
+**Disposition:** PASS
 **Canonical implementation merge:** `{EXPECTED_MAIN}` (PR #99)
 
 ## Verified acceptance chain
