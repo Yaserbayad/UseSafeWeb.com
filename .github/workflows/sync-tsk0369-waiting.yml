@@ -1,0 +1,70 @@
+name: Sync TSK-0369 WAITING
+
+on:
+  push:
+    branches:
+      - runtime/tsk0369-waiting-20260904
+    paths:
+      - .github/workflows/sync-tsk0369-waiting.yml
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: runtime/tsk0369-waiting-20260904
+          fetch-depth: 0
+      - name: Persist exact TSK-0369 WAITING boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git merge-base HEAD 75f5c8276909cda6dbf51222c882eab1666aa79a)" = "75f5c8276909cda6dbf51222c882eab1666aa79a"
+          python3 - <<'PY'
+          from datetime import datetime, timezone
+          from pathlib import Path
+          p=Path('CURRENT_STATE.md')
+          text=p.read_text(encoding='utf-8')
+          marker='## TSK-0369 current accepted stable state — 2026-09-04 — TARGET DEPLOYMENT/EVIDENCE WAITING'
+          if marker in text:
+              raise SystemExit('TSK-0369 WAITING already recorded; refusing replay')
+          if '`TSK-0369 — Implement minimal support, feedback, false-positive, and abandonment capture`: **TODO**.' not in text:
+              raise SystemExit('current checkpoint does not prove TSK-0369 TODO; refusing mutation')
+          if '`TSK-0376 current accepted stable state — PASS' not in text and 'TSK-0376 —' not in text:
+              raise SystemExit('TSK-0376 PASS proof not found; refusing mutation')
+          section='\n'.join([
+              '## TSK-0369 current accepted stable state — 2026-09-04 — TARGET DEPLOYMENT/EVIDENCE WAITING',
+              '',
+              '`TSK-0369 — Implement minimal support, feedback, false-positive, and abandonment capture`: **WAITING** under current `ACC-0369 / VER-0369 / EVD-0369`; the task is not PASS.',
+              '',
+              '- Current eligibility was revalidated after TSK-0360 moved to WAITING: L6 / MEDIUM / A3 / `AUTO_ALLOWED`; sole hard predecessor `TSK-0376` is durable PASS.',
+              '- Existing source implementation and source/CI evidence are preserved and were not replayed: PR #80 merged the default-off, privacy-minimal support-capture implementation; its focused/full contract, lint, typecheck, build and dependency-audit evidence is already accepted.',
+              '- Remaining `VER-0369` acceptance is target-environment evidence and cannot be truthfully manufactured by repository-only execution. It requires an authorized target deployment/enablement and access to observe target functional, negative, configuration, security/privacy and rollback behavior, including runtime expiry/deletion, restart/process topology, concurrency/capacity/abuse controls, and absence of forbidden persistence/logging.',
+              '- **Deterministic WAITING condition:** resume TSK-0369 only after current durable authority explicitly permits the required target deployment/enablement and the exact target runtime/environment access needed for the remaining checks is available. Recheck the current source/version and material-action fences immediately before any such target mutation.',
+              '- No deployment or runtime enablement, participant processing, analytics/telemetry activation, service mutation, payment, production/public or market activation, or launch action was performed or authorized by this synchronization.',
+              '',
+              '### Queue effect',
+              '',
+              'Do not select TSK-0369 again until the deterministic WAITING condition is observed as satisfied. Its successors remain dependency-blocked while TSK-0369 is non-PASS. Recompute the independent governed frontier immediately after canonical publication/read-back.'
+          ])
+          lines=text.splitlines()
+          stamp=datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+          for i,line in enumerate(lines):
+              if line.startswith('**Updated:**'):
+                  lines[i]=f'**Updated:** {stamp}'
+                  break
+          else:
+              raise SystemExit('Updated line missing')
+          p.write_text('\n'.join(lines).rstrip()+'\n\n'+section+'\n',encoding='utf-8')
+          PY
+          grep -F 'TSK-0369 current accepted stable state — 2026-09-04 — TARGET DEPLOYMENT/EVIDENCE WAITING' CURRENT_STATE.md
+          grep -F 'Deterministic WAITING condition' CURRENT_STATE.md | tail -n 1
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'Record TSK-0369 target evidence WAITING'
+          git push origin HEAD:runtime/tsk0369-waiting-20260904
