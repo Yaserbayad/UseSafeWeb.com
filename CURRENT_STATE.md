@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-03T18:46:59Z
+**Updated:** 2026-09-04T06:57:39Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -3257,3 +3257,15 @@ Recompute the residual executable frontier from current canonical WBS/graph/runt
 - Hard-dependent `TSK-0456`, `TSK-0457`, and `TSK-0492` remain dependency-blocked until `TSK-0455` actually passes. The project may move past this branch only by selecting independent eligible work.
 - Interim use of one working server is a sequencing decision, not a permanent single-server production-architecture decision and not evidence of clean recovery capability.
 - **Material-action fences remain unchanged:** no deployment/public activation, participant processing, telemetry activation, service removal/revocation, geographic/market activation, payment, launch, or unrelated task/gate PASS is authorized by this change.
+
+## TSK-0451 current accepted stable state — 2026-09-04
+
+`TSK-0451 — Implement only the post-VM server-configuration baseline: SSH hardening, firewall rules, Fail2ban, unattended upgrades, and verifier-ready evidence`: **PASS** under current `ACC-0451 / VER-0451 / EVD-0451`.
+
+- Action authority: **A4 / AUTO_ALLOWED**; predecessor `TSK-0375` remained PASS and current CR-0012 sequencing permits independent work while `TSK-0455` remains deferred/non-PASS.
+- Exact target: repository-scoped self-hosted runner on production `adguardvm`, Ubuntu 24.04 LTS, `azureusr`, using the existing approved non-interactive sudo execution bridge.
+- Source: `infrastructure/adguard-server/tsk-0451-post-vm-security-baseline.sh`, blob `1a409508b5d71e379787b95f212f41c8a5573cdb`, SHA-256 `9ec0a319464ff87b5c9e94353f409db604284e384c355fa77bfcfaa15a0c375e`, source commit `b1cab12c5dff3d5cbe8eec1ca790cbda1c60a61f`.
+- Durable evidence: `TSK_0451_POST_VM_SERVER_BASELINE_EVIDENCE_2026-09-04.md`, blob `e942a2aee228ddfcfd0710a0cd1d7f2f136a4d60`; GitHub Actions run/attempt `33846507277 / 1`.
+- Verification: `sshd -t`; effective `sshd -T` for root/password authentication; `ufw status verbose` plus SSH rule; `fail2ban-client -t` and `fail2ban-client status sshd`; enabled/active Fail2ban; enabled unattended-upgrades/APT timers; exact `20auto-upgrades` daily settings. A separate verification job independently re-ran VER-0451 after mutation on the same approved production target.
+- Security/privacy: no SSH/UFW rewrite occurred in TSK-0451; Fail2ban configuration is validated before activation and restored on activation failure; evidence omits authentication logs, banned IPs, credentials, keys, tokens, secrets, and unnecessary personal data.
+- **Non-inference:** `TSK-0455` remains DEFERRED / WAITING under DEC-0059 / CR-0012 with unchanged ACC/VER/EVD; its dependents remain blocked. No application/DNS/TLS deployment, profile/certificate distribution, service revocation, participant processing, telemetry, public/market activation, launch, or downstream gate PASS is inferred.
