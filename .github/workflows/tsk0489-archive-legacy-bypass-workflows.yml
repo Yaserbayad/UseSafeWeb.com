@@ -1,0 +1,39 @@
+name: TSK-0489 one-shot archive legacy promotion bypass workflows
+
+on:
+  push:
+    branches:
+      - repair/tsk-0489-ag009-20260904
+    paths:
+      - .github/scripts/archive_tsk0489_legacy_bypass_workflows.py
+      - .github/workflows/tsk0489-archive-legacy-bypass-workflows.yml
+
+permissions:
+  contents: write
+
+jobs:
+  archive:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: repair/tsk-0489-ag009-20260904
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Archive only executable promotion-bypass workflows
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 .github/scripts/archive_tsk0489_legacy_bypass_workflows.py | tee /tmp/tsk0489-archive.txt
+          git diff --check
+          git status --short
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A .github/workflows .github/workflow-archive
+          if git diff --cached --quiet; then
+            echo 'TSK0489_ARCHIVE_COMMIT=NOOP'
+            exit 0
+          fi
+          git commit -m 'fix: archive legacy CI promotion bypass workflows'
+          git push origin HEAD:repair/tsk-0489-ag009-20260904
