@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-04T09:47:33Z
+**Updated:** 2026-09-04T11:16:54Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -3315,3 +3315,13 @@ Recompute the residual executable frontier from current canonical WBS/graph/runt
 - Durable evidence: `TSK_0490_SECRETS_IDENTITY_PRIVILEGED_ACCESS_EVIDENCE_2026-09-04.md`, blob `1a2bdbd924be70d6ddf8fb8745875f9ddb2e8ba1`; authoritative v2 run/attempt `33854838835 / 1`. Earlier run-3 evidence is superseded for verification-quality purposes.
 - Material actions: **none**. No production credential rotation/revocation, deployment, telemetry activation, participant processing, service revocation/removal, payment, public/market activation or launch occurred.
 - Non-inference: TSK-0453 is PASS under DEC-0060 / CR-0013; TSK-0455 remains DEFERRED / WAITING under DEC-0059 / CR-0012 with unchanged ACC-0455 / VER-0455 / EVD-0455; TSK-0456, TSK-0457 and TSK-0492 remain dependency-blocked; no successor or gate PASS is inferred.
+
+## Owner-reported web/Firebase readiness synchronization — 2026-09-04
+
+- The Project Owner reports that the designated UseSafeWeb web host is provisioned at `20.71.90.212` and is the intended deployment target. A prior project-session read-only probe reported the `hmgweb` self-hosted runner/machine, aaPanel/Nginx/TLS/Node baseline and `/www/wwwroot/usesafeweb` application root; those environment facts are retained as deployment inputs but are **not re-verified by this synchronization** and do not create task/gate PASS.
+- The Project Owner reports that the Firebase project has been created, the Firebase Web app registered, Google Authentication enabled, and `usesafeweb.com` plus `www.usesafeweb.com` added as authorized domains.
+- Firebase billing remains intentionally deferred. No Identity Platform upgrade is inferred.
+- The Project Owner reported manually running `npm install firebase` on the web host before the governed dependency/release step. Cleanup of any resulting untracked `node_modules`, `package.json`, or `package-lock.json` artifacts is **not yet independently verified** and must be rechecked before governed deployment; canonical dependency versions remain owned by the repository lockfile/package contract.
+- Firebase web configuration values/production runtime binding are not claimed configured by this synchronization. No service-account private key, admin credential, production token, AdGuard credential, or other secret is recorded here or authorized for Git.
+- These owner-reported facts are eligible as inputs to the relevant Firebase/authentication, release and deployment-readiness tasks (including `TSK-0377` and `TSK-0469`) only after the task's own current dependencies/gates are satisfied; their acceptance criteria still require independent target/configuration verification before PASS.
+- **Non-inference / fences:** no deployment, production activation, participant/user processing, billing/payment, telemetry activation, broader public launch, task PASS, gate PASS or legal/compliance conclusion is created by this synchronization. The owner instruction to wait for plan/gate deployment eligibility remains controlling.
