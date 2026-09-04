@@ -15,6 +15,7 @@ ROOT_DIR="$(cd -- "${SCRIPT_DIR}/../.." && pwd)"
 RUNBOOK="${SCRIPT_DIR}/TLS_CERTIFICATE_RENEWAL_RUNBOOK.md"
 DNS_DECISION="${SCRIPT_DIR}/DNS_ENDPOINT_DECISION.md"
 MONITOR="${ROOT_DIR}/.github/workflows/certificate-expiry-monitor.yml"
+STATE="${ROOT_DIR}/CURRENT_STATE.md"
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf -- "${TMP_DIR}"' EXIT
 
@@ -146,30 +147,32 @@ check_tls_external() {
 }
 
 check_target_dns_identity() {
-  python3 - "${HOST}" <<'PY'
-import json, socket, sys, urllib.request
-host = sys.argv[1]
-
-def metadata(path):
-    req = urllib.request.Request(
-        'http://169.254.169.254/metadata/instance/' + path,
-        headers={'Metadata': 'true'})
-    with urllib.request.urlopen(req, timeout=4) as r:
-        return json.load(r)
-
-compute = metadata('compute?api-version=2021-02-01')
+  require_file_marker "${STATE}" '- `TSK-0435` — Azure VM handoff — evidence blob'
+  require_file_marker "${STATE}" '### TSK-0441 accepted stable state'
+  curl --silent --show-error --fail --noproxy '*' --connect-timeout 4 --max-time 8 \
+    --header 'Metadata:true' \
+    --output "${TMP_DIR}/imds-compute.json" \
+    'http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01' \
+    || fail 'Azure instance metadata lookup failed'
+  python3 - "${TMP_DIR}/imds-compute.json" <<'PY'
+import json, sys
+with open(sys.argv[1], encoding='utf-8') as f:
+    compute = json.load(f)
 if str(compute.get('location', '')).lower().replace(' ', '') != 'westeurope':
     raise SystemExit(1)
-network = metadata('network/interface?api-version=2021-02-01')
-public = {
-    item.get('publicIpAddress')
-    for iface in network
-    for ipconf in iface.get('ipv4', {}).get('ipAddress', [])
-    for item in [ipconf]
-    if item.get('publicIpAddress')
-}
+PY
+  rm -f -- "${TMP_DIR}/imds-compute.json"
+  python3 - "${STATE}" "${HOST}" <<'PY'
+import re, socket, sys
+state_path, host = sys.argv[1], sys.argv[2]
+with open(state_path, encoding='utf-8') as f:
+    state = f.read()
+pattern = rf"resolve `{re.escape(host)}` to `([0-9]+(?:\.[0-9]+){{3}})`"
+accepted = re.findall(pattern, state)
+if not accepted:
+    raise SystemExit(1)
 resolved = {x[4][0] for x in socket.getaddrinfo(host, 443, socket.AF_INET, socket.SOCK_STREAM)}
-if not public or not resolved or public.isdisjoint(resolved):
+if accepted[-1] not in resolved:
     raise SystemExit(1)
 PY
   printf 'TARGET_AZURE_REGION=PASS\n'
