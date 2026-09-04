@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-04T16:45:35Z
+**Updated:** 2026-09-04T16:54:52Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -3361,3 +3361,33 @@ Queue consequence:
 
 - This synchronization publishes partial evidence only; it creates no task/gate/milestone status transition.
 - After canonical promotion and read-back, recompute the deterministic eligible frontier from the current durable Master Plan and checkpoint before further governed work.
+
+## TSK-0629 current accepted stable state — 2026-09-04 — TARGET ACCEPTANCE PASS
+
+`TSK-0629 — Implement privacy-safe automated checks that confirm what can be technically verified and clearly label everything else`: **PASS** under current `ACC-0629 / VER-0629 / EVD-0629`.
+
+Accepted evidence:
+
+- `TSK_0629_TARGET_ACCEPTANCE_2026-09-04.md`.
+- Exact-current source requalification head `761779ef0b8f89669d22416390f286061d8d3ab7`; run/job `33896808860 / 101101264905`: **PASS** — source binding, 7/7 focused contracts, lint, type-check, production build, zero-vulnerability audits, real-browser fail-closed/recovery acceptance, clean read-only disposition.
+- Trusted isolated E1 target proof head `5a60d95197948d5d46f96224765345e10c73dcde`; run/job `33888891780 / 101075410406`: **PASS** — actual DNS rewrite, TLS-authenticated probe, signed fresh result, browser `working / protected/verified`, Protection Map, negative/tamper/rate/privacy/teardown guards.
+- Current product connects verify and Protection Map to `runDnsVerification(...)`; the signed result route projects only approved fields after validating the issued request and DNS observation.
+- Relevant current website source remained byte-identical across the exact-current requalification and subsequent canonical documentation-only changes through the publication basis.
+
+Acceptance result:
+
+- Working, failed, uncertain and removed states are deterministically distinguished; only fresh trusted DNS-path evidence can produce technical success.
+- Parent confirmation remains separate and cannot manufacture technical verification.
+- Non-positive recoverable states provide the controlled troubleshooting route.
+- Privacy/security evidence includes exact-field allowlists, signed proof validation, fail-closed malformed/untrusted inputs, absent DNS-verification query-history storage, clean audits and unchanged live AdGuard state.
+- Functional, negative, configuration, security/privacy and rollback/recovery dimensions required by `VER-0629` are durably evidenced.
+
+Preserved boundaries:
+
+- `TSK-0243` remains `TODO`: its stricter contract still requires the remaining production/public externally routed DNS/TLS/proxy trust-boundary evidence. TSK-0629 PASS does not imply TSK-0243 PASS.
+- No WBS, dependency, gate, requirement, interface or action-authority semantics changed by this evidence publication.
+- No deployment, production/public DNS/proxy/certificate/profile/service mutation, participant processing, payment, telemetry activation, market activation or launch occurred or is authorized.
+
+Queue consequence:
+
+- Recompute the complete current governed frontier from canonical WBS/graph/runtime/gates/risks/interfaces and Action Authority after canonical promotion/read-back; do not preselect a successor from this synchronization.
