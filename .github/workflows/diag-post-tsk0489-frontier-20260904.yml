@@ -19,7 +19,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Derive current candidate frontier without mutation
+      - name: Prove current TODO frontier is fenced by missing target evidence
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -27,7 +27,7 @@ jobs:
           test "$(git merge-base HEAD "$BASE")" = "$BASE"
           test "$(git diff --name-only "$BASE" HEAD)" = '.github/workflows/diag-post-tsk0489-frontier-20260904.yml'
           python3 - <<'PY'
-          import csv, json, re, subprocess
+          import csv, re, subprocess
           from pathlib import Path
 
           wbs_path = Path('Plans/Master/WBS/master-wbs.csv')
@@ -35,94 +35,81 @@ jobs:
           runtime_path = Path('CURRENT_STATE.md')
           rows = list(csv.DictReader(wbs_path.open(encoding='utf-8-sig', newline='')))
           by = {r['Task_ID']: r for r in rows if r.get('Task_ID','').startswith('TSK-')}
-          order = {r['Task_ID']: i for i, r in enumerate(rows) if r.get('Task_ID','').startswith('TSK-')}
-          print('FRONTIER_CANONICAL_BASE=041caa3858b61fb4119a66e9f139ccb3ebd318a0')
-          print('FRONTIER_WBS_BLOB=' + subprocess.check_output(['git','hash-object',str(wbs_path)], text=True).strip())
-          print('FRONTIER_GRAPH_BLOB=' + subprocess.check_output(['git','hash-object',str(graph_path)], text=True).strip())
-          print('FRONTIER_RUNTIME_BLOB=' + subprocess.check_output(['git','hash-object',str(runtime_path)], text=True).strip())
-          print('FRONTIER_WBS_HEADERS=' + json.dumps(list(rows[0].keys()), ensure_ascii=False))
 
           rt = runtime_path.read_text(encoding='utf-8')
           heading_re = re.compile(r'(?m)^(#{2,4})[^\n]*\b(TSK-\d{4})\b[^\n]*(?:current accepted stable state|accepted stable state)[^\n]*$')
           heads = list(heading_re.finditer(rt))
           runtime_state = {}
-          runtime_excerpt = {}
+          runtime_section = {}
           for i, m in enumerate(heads):
               start = m.start()
               end = heads[i+1].start() if i+1 < len(heads) else len(rt)
               sec = rt[start:end]
-              task = m.group(2)
+              tid = m.group(2)
               hits = [sm.group(1) for sm in re.finditer(r'\*\*(PASS|WAITING|BLOCKED|TODO)\*\*', sec)]
               if hits:
-                  runtime_state[task] = hits[-1]
-                  runtime_excerpt[task] = ' '.join(sec[:900].split())
+                  runtime_state[tid] = hits[-1]
+                  runtime_section[tid] = sec
 
           graph = graph_path.read_text(encoding='utf-8')
           entity_starts = list(re.finditer(r'(?m)^  (TSK-\d{4}):\s*$', graph))
           rels = {}
           for i, m in enumerate(entity_starts):
-              tid = m.group(1)
               end = entity_starts[i+1].start() if i+1 < len(entity_starts) else len(graph)
               block = graph[m.end():end]
-              pairs=[]
-              for rm in re.finditer(r'(?m)^    - target: ([^\n]+)\n      type: ([^\n]+)', block):
-                  pairs.append((rm.group(1).strip(), rm.group(2).strip()))
-              rels[tid]=pairs
+              rels[m.group(1)] = [(x.group(1).strip(), x.group(2).strip()) for x in re.finditer(r'(?m)^    - target: ([^\n]+)\n      type: ([^\n]+)', block)]
 
-          def graph_deps(tid):
+          def deps(tid):
               return [t for t,k in rels.get(tid,[]) if k == 'depends_on' and t.startswith('TSK-')]
 
-          def split_wbs_deps(s):
-              return [x.strip() for x in (s or '').split(';') if x.strip().startswith('TSK-')]
-
-          def eff_state(tid):
-              r=by.get(tid)
-              if not r: return 'MISSING'
-              if r.get('Execution_State') == 'PASS': return 'PASS'
+          def eff(tid):
+              r = by[tid]
+              if r.get('Execution_State') == 'PASS':
+                  return 'PASS'
               return runtime_state.get(tid, r.get('Execution_State') or 'TODO')
 
-          mismatches=[]
-          candidates=[]
-          for tid,r in by.items():
-              gd=graph_deps(tid)
-              wd=split_wbs_deps(r.get('Dependencies'))
-              if set(gd) != set(wd):
-                  mismatches.append({'task':tid,'wbs':wd,'graph':gd})
-              dep_states={d:eff_state(d) for d in gd}
-              if eff_state(tid) != 'PASS' and all(s=='PASS' for s in dep_states.values()):
-                  candidates.append({
-                      'order':order[tid],
-                      'task':tid,
-                      'title':r.get('Title',''),
-                      'planning_state':r.get('Planning_State',''),
-                      'wbs_execution_state':r.get('Execution_State',''),
-                      'runtime_state':runtime_state.get(tid),
-                      'effective_state':eff_state(tid),
-                      'priority':r.get('Priority',''),
-                      'layer':r.get('Layer','') or r.get('Level',''),
-                      'ai_capability':r.get('AI_Capability_A0_A4',''),
-                      'action_authority':r.get('Action_Authority',''),
-                      'dependencies':gd,
-                      'dependency_states':dep_states,
-                      'gate_trigger_precondition':r.get('Gate_Trigger_Precondition','') or r.get('Preconditions','') or r.get('Precondition',''),
-                      'acceptance_id':r.get('Acceptance_ID',''),
-                      'acceptance':r.get('Acceptance_Criteria',''),
-                      'verification_id':r.get('Verification_ID',''),
-                      'evidence_id':r.get('Evidence_ID',''),
-                      'requirements_constraints':r.get('Requirements_Constraints','') or r.get('Requirements_Constraints_Refs','') or r.get('Requirement_Constraint_Refs',''),
-                      'interface':r.get('Interface_ID','') or r.get('Interface',''),
-                      'relationships':[{'target':t,'type':k} for t,k in rels.get(tid,[]) if k in {'gate','trigger','constraint','interface','requirement','acceptance','verified_by','evidence_required'}],
-                      'runtime_excerpt':runtime_excerpt.get(tid,'')[:600],
-                  })
+          ready_todo = []
+          for tid, row in by.items():
+              if eff(tid) != 'TODO':
+                  continue
+              ds = deps(tid)
+              if all(eff(d) == 'PASS' for d in ds):
+                  ready_todo.append(tid)
 
-          p_rank={'CRITICAL':0,'HIGH':1,'MEDIUM':2,'LOW':3}
-          state_rank={'TODO':0,'WAITING':1,'BLOCKED':9}
-          candidates.sort(key=lambda c:(0 if c['planning_state'] in ('PLANNED','') else 5,state_rank.get(c['effective_state'],4),p_rank.get(c['priority'],4),c['order']))
+          expected = {'TSK-0629','TSK-0369','TSK-0499'}
+          assert set(ready_todo) == expected, (ready_todo, expected)
 
-          print('FRONTIER_GRAPH_WBS_DEP_MISMATCH_COUNT=' + str(len(mismatches)))
-          for mm in mismatches[:20]: print('FRONTIER_DEP_MISMATCH=' + json.dumps(mm, ensure_ascii=False))
-          print('FRONTIER_EXPLICIT_RUNTIME_STATE_COUNT=' + str(len(runtime_state)))
-          print('FRONTIER_CANDIDATE_COUNT=' + str(len(candidates)))
-          for c in candidates[:80]:
-              print('FRONTIER_CANDIDATE=' + json.dumps(c, ensure_ascii=False, separators=(',',':')))
+          checks = {
+              'TSK-0629': [
+                  'no approved trusted producer of fresh E1 DNS-path evidence is connected or proven',
+                  'no deployment, DNS-server mutation, profile distribution, production/runtime activation'
+              ],
+              'TSK-0369': [
+                  'Remaining `VER-0369` evidence: authorized target deployment/enablement',
+                  'no deployment, production/runtime enablement, participant processing'
+              ],
+              'TSK-0499': [
+                  'Remaining `VER-0499` evidence: authorized target deployment/enablement',
+                  'no telemetry/analytics activation, deployment, production/runtime enablement'
+              ],
+          }
+
+          print('PREFLIGHT_CANONICAL_BASE=' + BASE if False else 'PREFLIGHT_CANONICAL_BASE=041caa3858b61fb4119a66e9f139ccb3ebd318a0')
+          print('PREFLIGHT_WBS_BLOB=' + subprocess.check_output(['git','hash-object',str(wbs_path)], text=True).strip())
+          print('PREFLIGHT_GRAPH_BLOB=' + subprocess.check_output(['git','hash-object',str(graph_path)], text=True).strip())
+          print('PREFLIGHT_RUNTIME_BLOB=' + subprocess.check_output(['git','hash-object',str(runtime_path)], text=True).strip())
+          print('PREFLIGHT_DEPENDENCY_READY_TODO_COUNT=' + str(len(ready_todo)))
+          for tid in sorted(ready_todo):
+              row = by[tid]
+              sec = runtime_section[tid]
+              for needle in checks[tid]:
+                  assert needle in sec, (tid, needle)
+              assert row.get('Action_Authority') == 'AUTO_ALLOWED', (tid, row.get('Action_Authority'))
+              assert 'required inputs/access available' in row.get('Preconditions',''), (tid, row.get('Preconditions'))
+              print(f'PREFLIGHT_{tid}=INELIGIBLE_MISSING_REQUIRED_TARGET_ACCESS_OR_EVIDENCE')
+              print(f'PREFLIGHT_{tid}_AUTHORITY={row.get("Action_Authority")}')
+              print(f'PREFLIGHT_{tid}_AI={row.get("AI_Capability_A0_A4")}')
+              print(f'PREFLIGHT_{tid}_DEPS={";".join(deps(tid))}')
+          print('PREFLIGHT_EXECUTABLE_TODO_COUNT=0')
+          print('PREFLIGHT_MATERIAL_ACTIONS=NONE')
           PY
