@@ -16,37 +16,37 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: diag/post-cr0015-frontier-20260904-v1
+          ref: 38acee6500d21aa55856ff794306a8151fd294cd
           fetch-depth: 1
-      - name: Inspect selected TSK-0146 contract
+      - name: Inspect authoritative TSK-0360 frontier contract
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
-          import csv, json
+          import csv, json, re
           from pathlib import Path
+
           with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='') as f:
               rows=list(csv.DictReader(f))
-          todo=[r for r in rows if r['Execution_State']=='TODO' and r['Plan_Status']!='DEFERRED']
-          print('TODO_COUNT='+str(len(todo)))
-          for r in todo: print('TODO_ROW='+json.dumps(r,sort_keys=True))
-          r=next(x for x in rows if x['Task_ID']=='TSK-0146')
-          print('TSK0146_ROW='+json.dumps(r,sort_keys=True))
-          needles=['ACC-0146','VER-0146','EVD-0146','DEC-0053','CR-0006','TSK-0146']
-          roots=[Path('Plans/Master'),Path('CURRENT_STATE.md'),Path('docs'),Path('contracts'),Path('evidence')]
-          seen=set()
+          by={r['Task_ID']:r for r in rows}
+          for tid in ['TSK-0360','TSK-0358','TSK-0317','TSK-0369','TSK-0243','TSK-0418']:
+              if tid in by: print('ROW='+json.dumps(by[tid],sort_keys=True))
+
+          state=Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          for tid in ['TSK-0360','TSK-0358','TSK-0317','TSK-0369','TSK-0243','TSK-0418']:
+              print('STATE_MATCHES='+tid)
+              for i,line in enumerate(state.splitlines(),1):
+                  if tid in line and re.search(r'PASS|TODO|WAITING|BLOCKED|non-PASS',line,re.I):
+                      print(f'{i}:{line}')
+
+          roots=[Path('website'),Path('evidence'),Path('contracts'),Path('docs'),Path('.github/workflows')]
+          needles=['TSK-0360','ACC-0360','VER-0360','EVD-0360','TSK0360']
           for root in roots:
-              paths=[root] if root.is_file() else (list(root.rglob('*')) if root.exists() else [])
-              for p in paths:
-                  if not p.is_file() or p.suffix.lower() not in {'.md','.txt','.csv','.yaml','.yml','.json'}: continue
+              if not root.exists(): continue
+              for p in root.rglob('*'):
+                  if not p.is_file() or p.suffix.lower() not in {'.md','.txt','.json','.js','.mjs','.ts','.tsx','.yml','.yaml','.sh'}: continue
                   try: text=p.read_text(encoding='utf-8')
                   except Exception: continue
-                  for n in needles:
-                      if n not in text or (str(p),n) in seen: continue
-                      seen.add((str(p),n)); print(f'MATCH={p}::{n}')
-                      lines=text.splitlines()
-                      hits=[i for i,line in enumerate(lines) if n in line]
-                      for i in hits[:3]:
-                          lo=max(0,i-1); hi=min(len(lines),i+2)
-                          for j in range(lo,hi): print(f'SNIP[{j+1}]={lines[j]}')
+                  if any(n in text for n in needles):
+                      print('RELATED='+str(p))
           PY
