@@ -18,49 +18,35 @@ jobs:
         with:
           ref: diag/post-cr0015-frontier-20260904-v1
           fetch-depth: 1
-      - name: Recompute frontier from canonical WBS
+      - name: Inspect selected TSK-0146 contract
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
           import csv, json
-          from collections import Counter
           from pathlib import Path
-
-          wbs = Path('Plans/Master/WBS/master-wbs.csv')
-          with wbs.open(encoding='utf-8-sig', newline='') as f:
-              rows = list(csv.DictReader(f))
-          print('HEADER=' + json.dumps(list(rows[0].keys())))
-          print('TASKS=' + str(len(rows)))
-          print('PLAN_STATUS=' + json.dumps(Counter(r.get('Plan_Status','') for r in rows), sort_keys=True))
-          print('EXECUTION_STATE=' + json.dumps(Counter(r.get('Execution_State','') for r in rows), sort_keys=True))
-          by = {r['Task_ID']: r for r in rows}
-          passset = {r['Task_ID'] for r in rows if r.get('Execution_State') == 'PASS'}
-          deferred = {r['Task_ID'] for r in rows if r.get('Plan_Status') == 'DEFERRED'}
-          candidates = []
-          for r in rows:
-              tid = r['Task_ID']
-              if tid in deferred or r.get('Execution_State') == 'PASS':
-                  continue
-              deps = [d.strip() for d in r.get('Dependencies','').split(';') if d.strip()]
-              unmet = [d for d in deps if d not in passset]
-              if not unmet:
-                  candidates.append(r)
-          print('RAW_ELIGIBLE_COUNT=' + str(len(candidates)))
-          priority_fields = [k for k in rows[0].keys() if any(x in k.lower() for x in ('priority','order','sequence','override','authority','gate','status','state','lifecycle'))]
-          print('PRIORITY_FIELDS=' + json.dumps(priority_fields))
-          def compact(r):
-              keys=['Task_ID','Lifecycle_Stage','Title','Plan_Status','Execution_State','Priority','Critical_Path','Dependencies','Action_Authority','Owner','Gate_ID','Trigger','Relative_Timing','Notes']
-              for k in priority_fields:
-                  if k not in keys: keys.append(k)
-              return {k:r.get(k,'') for k in keys if k in r}
-          for r in candidates[:80]:
-              print('ELIGIBLE=' + json.dumps(compact(r), sort_keys=True))
-          focus=['TSK-0243','TSK-0360','TSK-0369','TSK-0399','TSK-0418','TSK-0419','TSK-0420','TSK-0414','TSK-0244','TSK-0372','TSK-0371','TSK-0368','TSK-0245','TSK-0455']
-          for tid in focus:
-              if tid in by:
-                  r=by[tid]
-                  deps=[d.strip() for d in r.get('Dependencies','').split(';') if d.strip()]
-                  print('FOCUS=' + json.dumps({'row':compact(r),'unmet':[d for d in deps if d not in passset]}, sort_keys=True))
-          print('DEFERRED_CR0015_PRESENT=' + json.dumps(sorted(set(['TSK-0630','TSK-0421','TSK-0415','TSK-0416','TSK-0370','TSK-0499','TSK-0242']) & deferred)))
+          with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='') as f:
+              rows=list(csv.DictReader(f))
+          todo=[r for r in rows if r['Execution_State']=='TODO' and r['Plan_Status']!='DEFERRED']
+          print('TODO_COUNT='+str(len(todo)))
+          for r in todo: print('TODO_ROW='+json.dumps(r,sort_keys=True))
+          r=next(x for x in rows if x['Task_ID']=='TSK-0146')
+          print('TSK0146_ROW='+json.dumps(r,sort_keys=True))
+          needles=['ACC-0146','VER-0146','EVD-0146','DEC-0053','CR-0006','TSK-0146']
+          roots=[Path('Plans/Master'),Path('CURRENT_STATE.md'),Path('docs'),Path('contracts'),Path('evidence')]
+          seen=set()
+          for root in roots:
+              paths=[root] if root.is_file() else (list(root.rglob('*')) if root.exists() else [])
+              for p in paths:
+                  if not p.is_file() or p.suffix.lower() not in {'.md','.txt','.csv','.yaml','.yml','.json'}: continue
+                  try: text=p.read_text(encoding='utf-8')
+                  except Exception: continue
+                  for n in needles:
+                      if n not in text or (str(p),n) in seen: continue
+                      seen.add((str(p),n)); print(f'MATCH={p}::{n}')
+                      lines=text.splitlines()
+                      hits=[i for i,line in enumerate(lines) if n in line]
+                      for i in hits[:3]:
+                          lo=max(0,i-1); hi=min(len(lines),i+2)
+                          for j in range(lo,hi): print(f'SNIP[{j+1}]={lines[j]}')
           PY
