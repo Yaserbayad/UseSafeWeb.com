@@ -46,40 +46,92 @@ release="${INSTALL_ROOT}/releases/${RELEASE_SHA}"
 current="${INSTALL_ROOT}/current"
 previous=""
 previous_release_sha=""
+RELEASE_INSTALLED=0
+CURRENT_UPDATED=0
+
 if [[ -e "${current}" && ! -L "${current}" ]]; then
   fail current_not_managed_symlink
 fi
 if [[ -L "${current}" ]]; then
-  previous="$(readlink -f "${current}")"
+  previous="$(readlink -f "${current}")" || fail previous_release_path
   previous_release_sha="${previous##*/}"
   [[ "${previous_release_sha}" =~ ^[0-9a-f]{40}$ ]] || fail previous_release_identity
   [[ "${previous}" == "${INSTALL_ROOT}/releases/${previous_release_sha}" ]] || fail previous_release_path
   [[ -d "${previous}" ]] || fail previous_release_missing
 fi
+
 rollback(){
   rc=$?
   trap - EXIT
   if (( rc != 0 )); then
     rm -rf -- "${release}.new" >/dev/null 2>&1 || true
     if [[ -n "${previous}" && -d "${previous}" ]]; then
-      ln -sfn "${previous}" "${current}"
-      if set_release_binding "${previous_release_sha}"; then
-        if systemctl restart "${SERVICE}" >/dev/null 2>&1; then
-          printf 'USESAFEWEB_DEPLOY_ROLLBACK=RESTORED\n' >&2
-        else
-          printf 'USESAFEWEB_DEPLOY_ROLLBACK=SERVICE_RESTART_FAILED\n' >&2
+      current_restored=1
+      if [[ "${CURRENT_UPDATED}" == 1 ]]; then
+        current_restored=0
+        if ln -sfn "${previous}" "${current}" >/dev/null 2>&1; then
+          restored_target="$(readlink -f "${current}" 2>/dev/null || true)"
+          if [[ "${restored_target}" == "${previous}" ]]; then
+            current_restored=1
+          fi
         fi
+      fi
+
+      identity_restored=0
+      if set_release_binding "${previous_release_sha}"; then
+        identity_restored=1
+      fi
+
+      if [[ "${CURRENT_UPDATED}" == 1 ]]; then
+        if [[ "${current_restored}" == 1 && "${identity_restored}" == 1 ]]; then
+          if systemctl restart "${SERVICE}" >/dev/null 2>&1; then
+            printf 'USESAFEWEB_DEPLOY_ROLLBACK=RESTORED\n' >&2
+          else
+            printf 'USESAFEWEB_DEPLOY_ROLLBACK=SERVICE_RESTART_FAILED\n' >&2
+          fi
+        else
+          systemctl stop "${SERVICE}" >/dev/null 2>&1 || true
+          if [[ "${current_restored}" != 1 ]]; then
+            printf 'USESAFEWEB_DEPLOY_ROLLBACK=CURRENT_RESTORE_FAILED\n' >&2
+          fi
+          if [[ "${identity_restored}" != 1 ]]; then
+            printf 'USESAFEWEB_DEPLOY_ROLLBACK=IDENTITY_RESTORE_FAILED\n' >&2
+          fi
+        fi
+      elif [[ "${identity_restored}" == 1 ]]; then
+        printf 'USESAFEWEB_DEPLOY_ROLLBACK=ENV_RESTORED\n' >&2
       else
         printf 'USESAFEWEB_DEPLOY_ROLLBACK=IDENTITY_RESTORE_FAILED\n' >&2
       fi
+
+      if [[ "${RELEASE_INSTALLED}" == 1 && "${current_restored}" == 1 ]]; then
+        rm -rf -- "${release}" >/dev/null 2>&1 || true
+      fi
     else
-      rm -f "${current}"
+      if [[ "${CURRENT_UPDATED}" == 1 ]]; then
+        systemctl stop "${SERVICE}" >/dev/null 2>&1 || true
+        rm -f "${current}" >/dev/null 2>&1 || true
+      fi
+      if [[ "${RELEASE_INSTALLED}" == 1 ]]; then
+        rm -rf -- "${release}" >/dev/null 2>&1 || true
+      fi
       printf 'USESAFEWEB_DEPLOY_ROLLBACK=FIRST_DEPLOY_CLEANED\n' >&2
     fi
   fi
   exit "${rc}"
 }
 trap rollback EXIT
+
+if [[ -e "${release}" || -L "${release}" ]]; then
+  [[ "${previous}" == "${release}" ]] || fail release_path_exists
+  [[ -f "${release}/.release-sha" ]] || fail existing_release_marker
+  [[ "$(tr -d '\r\n' < "${release}/.release-sha")" == "${RELEASE_SHA}" ]] || fail existing_release_marker
+  systemctl is-active --quiet "${SERVICE}" || fail existing_release_service
+  curl --silent --show-error --fail --max-time 2 http://127.0.0.1:3100/api/health/ready >/dev/null || fail existing_release_readiness
+  trap - EXIT
+  printf 'USESAFEWEB_DEPLOY=PASS release=%s already_current=1\n' "${RELEASE_SHA}"
+  exit 0
+fi
 
 cd "${SOURCE_ROOT}/website"
 npm ci --ignore-scripts --no-fund --no-audit
@@ -97,8 +149,14 @@ if [[ -d public ]]; then cp -a public "${release}.new/public"; fi
 install -o usesafeweb-web -g usesafeweb-web -m 0550 \
   "${SOURCE_ROOT}/infrastructure/web-server/validate-runtime.mjs" "${release}.new/validate-runtime.mjs"
 chown -R usesafeweb-web:usesafeweb-web "${release}.new"
+printf '%s\n' "${RELEASE_SHA}" > "${release}.new/.release-sha"
+chown root:root "${release}.new/.release-sha"
+chmod 0444 "${release}.new/.release-sha"
+
 mv "${release}.new" "${release}"
+RELEASE_INSTALLED=1
 ln -sfn "${release}" "${current}"
+CURRENT_UPDATED=1
 systemctl daemon-reload
 systemctl restart "${SERVICE}"
 
