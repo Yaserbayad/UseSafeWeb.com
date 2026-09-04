@@ -1,4 +1,4 @@
-name: Diagnose TSK-0243 contents write permission
+name: Diagnose TSK-0243 checkout startup
 
 on:
   push:
@@ -15,6 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Prove contents-write workflow startup boundary
+      - name: Checkout exact staging branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Prove checkout startup boundary
         shell: bash
-        run: echo 'TSK0243_STAGE_CONTENTS_WRITE_STARTUP=PASS'
+        run: echo 'TSK0243_STAGE_CHECKOUT_STARTUP=PASS'
