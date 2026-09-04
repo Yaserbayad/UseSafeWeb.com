@@ -8,7 +8,7 @@ on:
       - .github/workflows/diag-checkpoint-migration-20260905.yml
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   diagnose:
@@ -17,35 +17,102 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          persist-credentials: true
-      - name: Execute validated checkpoint candidate generator
+          persist-credentials: false
+      - name: Analyze preserved PASS evidence bindings
         shell: bash
         run: |
           set -Eeuo pipefail
           python - <<'PY'
+          import csv
+          import re
+          from collections import Counter
           from pathlib import Path
-          source = Path('.github/workflows/generate-checkpoint-migration-candidate-20260905.yml').read_text(encoding='utf-8')
-          marker = '        run: |\n'
-          if marker not in source:
-              raise SystemExit('generator run block not found')
-          block = source.split(marker, 1)[1]
-          lines = block.splitlines()
-          out = []
-          for line in lines:
-              if line and not line.startswith('          '):
-                  raise SystemExit(f'unexpected generator indentation: {line!r}')
-              out.append(line[10:] if line else '')
-          script = '\n'.join(out) + '\n'
-          replacements = {
-              '357c35318f8b2698c2ebe44be3ea67cc60e51213': '357c5e1be3b455e7efddd329d6a2468e3125b502',
-              'e919d8654ac37bd1f46febb809936b2e186472e9': 'da35db0fe16009dfb5ce0e24caab05d6d02c84ed',
-              '00ead35d2e8a2aa55358c0a14f437f208860cc8c': '5010ac13c7cbb41817d0b3753633c742d777e241',
-              "forbidden = ['\"RUNNING\"', 'active_claim', 'claim_owner', 'lease', 'heartbeat', 'next_work', 'current_phase', 'conversation_id']": "forbidden = ['\"RUNNING\"', '\"active_claim\"', '\"claim_owner\"', '\"lease\"', '\"heartbeat\"', '\"next_work\"', '\"current_phase\"', '\"conversation_id\"']",
-          }
-          for old, new in replacements.items():
-              if old not in script:
-                  raise SystemExit(f'expected generator text not found: {old}')
-              script = script.replace(old, new)
-          Path('/tmp/generate-checkpoint-candidate.sh').write_text(script, encoding='utf-8')
+
+          rows = list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='')))
+          legacy = Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          by_id = {r['Task_ID'].strip(): r for r in rows}
+
+          heading_re = re.compile(r'^##\s+(TSK-\d{4})\b([^\n]*)$', re.M)
+          matches = list(heading_re.finditer(legacy))
+          explicit = {}
+          sections = {}
+          for i, m in enumerate(matches):
+              tid = m.group(1)
+              end = matches[i + 1].start() if i + 1 < len(matches) else len(legacy)
+              section = legacy[m.start():end]
+              head = m.group(0)
+              status = None
+              if re.search(r'(?i)\bcurrent accepted stable state\b|\bTARGET ACCEPTANCE PASS\b|\bTARGET ACCEPTANCE COMPLETE\b|\bPASS UNDER\b', head):
+                  if re.search(r'(?i)(?:\*\*|`)?PASS(?:\*\*|`)?\b|Runtime state:\s*`?PASS`?', section):
+                      status = 'PASS'
+              if re.search(r'(?i)\bWAITING\b|\bDEFERRED\b', head): status = 'WAITING'
+              if re.search(r'(?i)\bremains\s+`?TODO`?\b|:\s*\*\*TODO\*\*|Runtime state:\s*`?TODO`?', section): status = 'TODO'
+              if re.search(r'(?i)\bRuntime state:\s*`?PASS`?\b', section): status = 'PASS'
+              if re.search(r'(?i)^`?TSK-\d{4}[^\n]*:\s*\*\*PASS\*\*', section, re.M): status = 'PASS'
+              if re.search(r'(?i)^`?TSK-\d{4}[^\n]*:\s*\*\*WAITING(?:\s*/[^*]+)?\*\*', section, re.M): status = 'WAITING'
+              if status:
+                  explicit[tid] = status
+                  sections[tid] = section
+
+          states = {r['Task_ID'].strip(): (r.get('Execution_State') or '').strip().upper() for r in rows}
+          states.update(explicit)
+          fixed_wait = {'TSK-0243','TSK-0360','TSK-0369','TSK-0455','TSK-0631','TSK-0633','TSK-0634','TSK-0635','TSK-0637','TSK-0640','TSK-0630','TSK-0421','TSK-0415','TSK-0416','TSK-0370','TSK-0499','TSK-0242'}
+          for tid in fixed_wait: states[tid] = 'WAITING'
+          states['TSK-0146'] = 'PASS'
+
+          pass_ids = [tid for tid, st in states.items() if st == 'PASS']
+          print(f'PASS_TOTAL={len(pass_ids)}')
+          print(f'PASS_EXPLICIT={sum(1 for tid in pass_ids if explicit.get(tid)=="PASS")}')
+          print(f'PASS_WBS_ONLY={sum(1 for tid in pass_ids if explicit.get(tid)!="PASS")}')
+
+          def classify_text(text):
+              t = text or ''
+              cats = []
+              if re.search(r'(?i)\b(?:run|workflow|job|actions?)\b[^\n]{0,120}\b\d{6,12}\b|\b\d{6,12}\s*/\s*\d{6,12}\b', t): cats.append('TEST_RESULT_HINT')
+              if re.search(r'(?i)\bblob\b[^\n]{0,120}\b[0-9a-f]{40}\b|\b[0-9a-f]{40}\b[^\n]{0,120}\bblob\b', t): cats.append('BLOB_HINT')
+              if re.search(r'(?i)\b(?:commit|head|source)\b[^\n]{0,120}\b[0-9a-f]{40}\b|\b[0-9a-f]{40}\b[^\n]{0,120}\b(?:commit|head|source)\b', t): cats.append('COMMIT_HINT')
+              if re.search(r'(?i)\bowner\s+(?:approval|authority|decision)|human\s+approval|explicit\s+Project\s+Owner', t): cats.append('HUMAN_HINT')
+              if re.search(r'(?i)https?://', t): cats.append('URL_HINT')
+              if not cats: cats.append('NONE')
+              return cats
+
+          wbs_counts = Counter()
+          legacy_counts = Counter()
+          no_evidence = []
+          for tid in pass_ids:
+              row = by_id[tid]
+              ev = (row.get('Evidence_Reference') or '').strip()
+              if explicit.get(tid) == 'PASS':
+                  text = sections.get(tid, '')
+                  cats = classify_text(text)
+                  for c in cats: legacy_counts[c] += 1
+                  if cats == ['NONE']:
+                      no_evidence.append(('LEGACY', tid, row.get('Title',''), ev, text[:500].replace('\n',' ')))
+              else:
+                  cats = classify_text(ev)
+                  for c in cats: wbs_counts[c] += 1
+                  if cats == ['NONE']:
+                      no_evidence.append(('WBS', tid, row.get('Title',''), ev, ''))
+
+          print('WBS_PASS_EVIDENCE_HINTS=' + repr(dict(sorted(wbs_counts.items()))))
+          print('LEGACY_PASS_EVIDENCE_HINTS=' + repr(dict(sorted(legacy_counts.items()))))
+          print(f'PASS_WITH_NO_EVIDENCE_HINT={len(no_evidence)}')
+          for rec in no_evidence[:200]:
+              print('NOHINT|' + '|'.join(str(x).replace('|','/') for x in rec))
+
+          print('--- WBS_ONLY_PASS_REFS ---')
+          for tid in pass_ids:
+              if explicit.get(tid) != 'PASS':
+                  row = by_id[tid]
+                  print('WBSREF|' + tid + '|' + (row.get('Acceptance_ID') or '') + '|' + (row.get('Title') or '').replace('|','/') + '|' + (row.get('Evidence_Reference') or '').replace('|','/'))
+
+          print('--- EXPLICIT_PASS_PROOF_LINES ---')
+          for tid in pass_ids:
+              if explicit.get(tid) == 'PASS':
+                  section = sections.get(tid,'')
+                  lines = []
+                  for line in section.splitlines():
+                      if re.search(r'(?i)\b(?:evidence|verification|run|job|blob|commit|source|approval|authority)\b', line):
+                          lines.append(line.strip())
+                  print('LEGREF|' + tid + '|' + (by_id[tid].get('Acceptance_ID') or '') + '|' + (by_id[tid].get('Title') or '').replace('|','/') + '|' + ' || '.join(lines[:12]).replace('|','/'))
           PY
-          bash /tmp/generate-checkpoint-candidate.sh
