@@ -17,6 +17,7 @@ server {
     listen 443 ssl;
     listen [::]:443 ssl;
     server_name __PUBLIC_APPLICATION_HOST__;
+    if ($ssl_server_name != $host) { return 421; }
 
     ssl_certificate "__PUBLIC_TLS_CERTIFICATE__";
     ssl_certificate_key "__PUBLIC_TLS_PRIVATE_KEY__";
@@ -65,6 +66,7 @@ server {
     listen 443 ssl;
     listen [::]:443 ssl;
     server_name "~^[0-9a-f]{32}\.verify\.usesafeweb\.com$";
+    if ($ssl_server_name != $host) { return 421; }
 
     ssl_certificate "__TLS_CERTIFICATE__";
     ssl_certificate_key "__TLS_PRIVATE_KEY__";
