@@ -68,7 +68,9 @@ EOF
           test "$(git diff-tree --no-commit-id --name-only -r HEAD)" = 'CURRENT_STATE.md'
 
           NEW_COMMIT="$(git rev-parse HEAD)"
-          git push origin HEAD:main --force-with-lease=refs/heads/main:$EXPECTED_PARENT
+          REMOTE_BEFORE_PUSH="$(git ls-remote origin refs/heads/main | awk '{print $1}')"
+          test "$REMOTE_BEFORE_PUSH" = "$EXPECTED_PARENT"
+          git push origin HEAD:refs/heads/main
 
           echo "RUNTIME_SYNC_COMMIT=$NEW_COMMIT"
           echo "RUNTIME_SYNC_BLOB=$NEW_BLOB"
