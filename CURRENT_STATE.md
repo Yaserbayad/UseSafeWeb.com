@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-04T08:42:10Z
+**Updated:** 2026-09-04T08:45:31Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -3310,8 +3310,8 @@ Recompute the residual executable frontier from current canonical WBS/graph/runt
 
 `TSK-0490 - Implement secrets, identity, and privileged-access controls`: **PASS** under current `ACC-0490 / VER-0490 / EVD-0490`.
 - Eligibility: TSK-0450 is current durable PASS; WBS authority is A3 / AUTO_ALLOWED.
-- Verification: full-history secret/private-key/provider-token and forbidden encrypted-secret-container scan; job-scoped external secret injection; isolated rotation/revocation/break-glass/cleanup/rollback tests; existing `adguardvm` least-privilege and root-capable path read-only verification; independent synthetic rerun.
-- Versioned verifier: `infrastructure/adguard-server/tsk-0490-security-controls-verifier.sh`, blob `2d6222126223d22f40b073e4d281251303af0195`, SHA-256 `f58a93ead9acb4405b703804a0bb16c3b88f811955d113af1c6e11eb459d8136`; workflow blob `f777b880891e80e31c8b3ce283368ac46ff11eab`; source commit `af8e4d3d1ebf1b958bf40e3c41b01f0ecd4a659c`.
-- Durable evidence: `TSK_0490_SECRETS_IDENTITY_PRIVILEGED_ACCESS_EVIDENCE_2026-09-04.md`, blob `07ac87a9b2b76b57125906fadc2cad2dd5ec68d4`; run/attempt `33854568788 / 1`.
-- Material actions: **none**. No production credential rotation/revocation, deployment, telemetry activation, participant processing, profile/certificate distribution, service revocation/removal, payment, public/market activation or launch action occurred.
-- **Non-inference:** TSK-0453 remains WAITING; TSK-0455 remains DEFERRED / WAITING under DEC-0059 / CR-0012 with unchanged ACC-0455 / VER-0455 / EVD-0455; TSK-0456, TSK-0457 and TSK-0492 remain dependency-blocked; no successor or gate PASS is inferred.
+- Hardened v2 verification: full-history credential/private-key scan; job-scoped external secret injection; isolated rotation/revocation/break-glass/cleanup/rollback; read-only `adguardvm` least-privilege/root-capable-path verification; independent synthetic rerun; sanitized-transcript complete-PEM/provider-credential scan.
+- Verifier: `infrastructure/adguard-server/tsk-0490-security-controls-verifier.sh`, blob `2d6222126223d22f40b073e4d281251303af0195`, SHA-256 `f58a93ead9acb4405b703804a0bb16c3b88f811955d113af1c6e11eb459d8136`; v2 workflow blob `0ac50bd25fd25970cf99ac4f80b021b7ac4047b4`; source commit `4cbc7e3e1fa6e6c4ea248f289de906ff0b2bf580`.
+- Durable evidence: `TSK_0490_SECRETS_IDENTITY_PRIVILEGED_ACCESS_EVIDENCE_2026-09-04.md`, blob `1a2bdbd924be70d6ddf8fb8745875f9ddb2e8ba1`; authoritative v2 run/attempt `33854838835 / 1`. Earlier run-3 evidence is superseded for verification-quality purposes.
+- Material actions: **none**. No production credential rotation/revocation, deployment, telemetry activation, participant processing, service revocation/removal, payment, public/market activation or launch occurred.
+- Non-inference: TSK-0453 remains WAITING; TSK-0455 remains DEFERRED / WAITING under DEC-0059 / CR-0012 with unchanged ACC-0455 / VER-0455 / EVD-0455; TSK-0456, TSK-0457 and TSK-0492 remain dependency-blocked; no successor or gate PASS is inferred.
