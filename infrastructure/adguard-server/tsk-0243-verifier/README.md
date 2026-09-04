@@ -14,9 +14,12 @@ python3 manage-rewrite.py --apply --verifier-ipv4 192.0.2.10
 ```
 
 The tool requires the exact AdGuard version, loopback control API, query/file
-logging disabled, statistics disabled, ECS disabled, anonymization enabled, and
-filtering enabled. It preserves all unrelated user rules. A failed update is
-rolled back to the exact prior rule list without printing it.
+logging disabled, ECS disabled, anonymization enabled, and filtering enabled.
+Statistics may remain disabled or may use the currently authorized minimum
+anonymized aggregate mode with exactly one-day retention; any enabled longer
+retention or runtime/persisted disagreement fails closed. It preserves all
+unrelated user rules. A failed update is rolled back to the exact prior rule
+list without printing it.
 An existing managed rule pointing to a different address must be removed
 explicitly before applying the replacement, so an address conflict cannot be
 silently overwritten.
