@@ -1,0 +1,203 @@
+name: Apply owner CR-0014 Release-1 deferrals
+
+on:
+  push:
+    branches:
+      - owner-cr0014-diagnostic-20260904
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Guard base and apply exact owner change
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          EXPECTED_BASE='8032580e19299c8f960d3704a8cb78bbf87c7071'
+          CANDIDATE_BRANCH='owner-cr0014-candidate-20260904'
+          test "$(git rev-parse HEAD)" = "$EXPECTED_BASE"
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$EXPECTED_BASE"
+          test -z "$(git ls-remote origin refs/heads/$CANDIDATE_BRANCH)"
+          cp Plans/Master/WBS/master-wbs.csv /tmp/wbs-before.csv
+
+          python3 - <<'PY'
+          import csv, io
+          from pathlib import Path
+
+          root = Path('.')
+          affected = {
+              'TSK-0631': ('ACC-0631', 'VER-0631', 'EVD-0631'),
+              'TSK-0633': ('ACC-0633', 'VER-0633', 'EVD-0633'),
+              'TSK-0634': ('ACC-0634', 'VER-0634', 'EVD-0634'),
+              'TSK-0635': ('ACC-0635', 'VER-0635', 'EVD-0635'),
+              'TSK-0637': ('ACC-0637', 'VER-0637', 'EVD-0637'),
+              'TSK-0640': ('ACC-0640', 'VER-0640', 'EVD-0640'),
+          }
+          unaffected = {'TSK-0630', 'TSK-0632', 'TSK-0636', 'TSK-0638', 'TSK-0639', 'TSK-0641'}
+          trigger = 'Reactivated after Release 1 controlled testing with approximately 10-20 people is complete, or earlier only by explicit Project Owner reactivation.'
+          timing = 'Deferred until after Release 1 controlled testing with approximately 10-20 people.'
+          note = 'Owner Release-1 scope override 2026-09-04 / DEC-0061 / CR-0014: deferred as nonessential for the initial controlled 10-20 person test release; task remains non-PASS and its ACC/VER/EVD contract is preserved.'
+
+          wbs = root / 'Plans/Master/WBS/master-wbs.csv'
+          lines = wbs.read_text(encoding='utf-8-sig').splitlines(keepends=True)
+          header = next(csv.reader([lines[0].rstrip('\r\n')]))
+          idx = {k: i for i, k in enumerate(header)}
+          seen = set()
+          for line_no in range(1, len(lines)):
+              row = next(csv.reader([lines[line_no].rstrip('\r\n')]))
+              tid = row[idx['Task_ID']]
+              if tid not in affected:
+                  continue
+              assert tid not in seen, tid
+              seen.add(tid)
+              acc, ver, evd = affected[tid]
+              assert row[idx['Plan_Status']] == 'PLANNED', (tid, row[idx['Plan_Status']])
+              assert row[idx['Execution_State']] == 'WAITING', (tid, row[idx['Execution_State']])
+              assert row[idx['Acceptance_ID']] == acc, tid
+              assert row[idx['Verification_ID']] == ver, tid
+              assert row[idx['Evidence_ID']] == evd, tid
+              row[idx['Plan_Status']] = 'DEFERRED'
+              row[idx['Trigger']] = trigger
+              row[idx['Relative_Timing']] = timing
+              row[idx['Notes']] = note
+              buf = io.StringIO(newline='')
+              csv.writer(buf, lineterminator='\n').writerow(row)
+              lines[line_no] = buf.getvalue()
+          assert seen == set(affected), (seen, set(affected))
+          wbs.write_text(''.join(lines), encoding='utf-8')
+
+          decisions = root / 'Plans/Master/Registers/DECISIONS_TRIGGERS.md'
+          text = decisions.read_text(encoding='utf-8')
+          assert '| DEC-0061 |' not in text
+          anchor = [line for line in text.splitlines() if line.startswith('| DEC-0060 |')]
+          assert len(anchor) == 1, len(anchor)
+          new = '| DEC-0061 | New | Release-1 limited-test deferral of nonessential support, research and retention work | ACTIVE OWNER DECISION — Release 1 is a controlled test with approximately 10-20 people. Defer `TSK-0631`, `TSK-0633`, `TSK-0634`, `TSK-0635`, `TSK-0637` and `TSK-0640` until after Release 1 because the Project Owner classified them as nonessential to that limited test release. These tasks remain non-PASS and retain their complete acceptance, verification and evidence contracts. No other task is deferred by this decision. | Explicit Project Owner instruction 2026-09-04; reactivate after Release-1 controlled testing is complete or earlier only by explicit Project Owner instruction. | Preserve each affected task dependency and ACC/VER/EVD contract unchanged. `TSK-0641` is not deferred, but because it depends on `TSK-0633` it remains dependency-blocked until `TSK-0633` is reactivated and passes. | Project Owner | TSK-0631; TSK-0633; TSK-0634; TSK-0635; TSK-0637; TSK-0640; TSK-0641 dependency consequence; CR-0014 | Explicit Project Owner instruction 2026-09-04 |'
+          text = text.replace(anchor[0], anchor[0] + '\n' + new, 1)
+          decisions.write_text(text, encoding='utf-8')
+
+          changes = root / 'Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md'
+          text = changes.read_text(encoding='utf-8')
+          assert '| CR-0014 |' not in text
+          anchor = [line for line in text.splitlines() if line.startswith('| CR-0013 |')]
+          assert len(anchor) == 1, len(anchor)
+          new = '| CR-0014 | Project Owner | 2026-09-04 | Defer exactly six owner-selected nonessential tasks until after the Release-1 controlled 10-20 person test: `TSK-0631`, `TSK-0633`, `TSK-0634`, `TSK-0635`, `TSK-0637`, `TSK-0640`. | Only those six WBS rows Plan_Status/Trigger/Relative_Timing/Notes; DEC-0061; manifest latest-change metadata; generated reconstruction/checksums; runtime reconciliation. No task ID, dependency edge, acceptance, verification, evidence, action authority, requirement, interface, risk, gate, milestone or material-action fence is weakened or removed. | Explicit Project Owner instruction 2026-09-04 naming the six tasks to defer for the limited Release-1 test. | Project Owner DEC-0061; actual safety/security/platform/technical reality remains higher authority. | Set only the six named tasks to DEFERRED with deterministic post-Release-1 reactivation; keep Execution_State non-PASS; preserve every dependency and ACC/VER/EVD contract; leave `TSK-0630`, `TSK-0632`, `TSK-0636`, `TSK-0638`, `TSK-0639` and `TSK-0641` undeferred; rebuild/checksum/validate; publish/read back; synchronize CURRENT_STATE; recompute the queue. | Explicit Project Owner reversal may reactivate any named task earlier; restore PLANNED sequencing only after current authority is reread. No evidence is discarded and no task is treated as PASS. | Validator PASS with 641 tasks and 858 dependency edges; parsed WBS comparison proves exactly six changed rows and only Plan_Status/Trigger/Relative_Timing/Notes changed; all nonselected TSK-0630..TSK-0641 rows are otherwise unchanged and TSK-0641 still depends on TSK-0633; exact GitHub commit/blob read-back and runtime reconciliation required. | ACTIVE — creates no PASS, deployment, participant processing, telemetry activation, service removal/revocation, payment, production/public activation, geographic/market activation, launch or other material-action authority. |'
+          text = text.replace(anchor[0], anchor[0] + '\n' + new, 1)
+          changes.write_text(text, encoding='utf-8')
+
+          manifest = root / 'Plans/Master/MANIFEST.yaml'
+          lines = manifest.read_text(encoding='utf-8').splitlines()
+          in_source = False
+          changed = 0
+          for i, line in enumerate(lines):
+              if line == 'source_plan:':
+                  in_source = True
+                  continue
+              if in_source and line and not line.startswith(' '):
+                  in_source = False
+              if in_source and line.startswith('  status:'):
+                  assert 'CR_0014' not in line
+                  lines[i] = line + ' / OWNER_RELEASE1_LIMITED_TEST_DEFERRALS_CR_0014'
+                  changed += 1
+          assert changed == 1, changed
+          manifest.write_text('\n'.join(lines) + '\n', encoding='utf-8')
+          PY
+
+          python3 Plans/Master/Tools/rebuild_master_plan.py
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          plans = Path('Plans')
+          sums = plans / 'SHA256SUMS.txt'
+          out = []
+          for line in sums.read_text(encoding='utf-8').splitlines():
+              if not line.strip():
+                  continue
+              _, rel = line.split('  ', 1)
+              p = plans / rel
+              assert p.is_file(), rel
+              out.append(hashlib.sha256(p.read_bytes()).hexdigest() + '  ' + rel)
+          sums.write_text('\n'.join(out) + '\n', encoding='utf-8')
+          PY
+
+          python3 Plans/Master/Tools/validate_master_plan.py
+
+          python3 - <<'PY'
+          import csv
+
+          affected = {'TSK-0631', 'TSK-0633', 'TSK-0634', 'TSK-0635', 'TSK-0637', 'TSK-0640'}
+          unaffected = {'TSK-0630', 'TSK-0632', 'TSK-0636', 'TSK-0638', 'TSK-0639', 'TSK-0641'}
+          allowed = ['Plan_Status', 'Trigger', 'Relative_Timing', 'Notes']
+
+          def load(path):
+              with open(path, encoding='utf-8-sig', newline='') as f:
+                  return list(csv.DictReader(f))
+
+          old = load('/tmp/wbs-before.csv')
+          new = load('Plans/Master/WBS/master-wbs.csv')
+          assert len(old) == len(new) == 641
+          bo = {r['Task_ID']: r for r in old}
+          bn = {r['Task_ID']: r for r in new}
+          assert bo.keys() == bn.keys()
+          changed = []
+          for tid in bo:
+              diffs = [key for key in bo[tid] if bo[tid][key] != bn[tid][key]]
+              if diffs:
+                  changed.append((tid, diffs))
+          assert [tid for tid, _ in changed] == [tid for tid in bo if tid in affected], changed
+          assert {tid for tid, _ in changed} == affected, changed
+          for tid, diffs in changed:
+              assert diffs == allowed, (tid, diffs)
+              assert bo[tid]['Plan_Status'] == 'PLANNED'
+              assert bn[tid]['Plan_Status'] == 'DEFERRED'
+              assert bn[tid]['Execution_State'] == 'WAITING'
+          for tid in unaffected:
+              assert bo[tid] == bn[tid], tid
+          assert bn['TSK-0641']['Dependencies'] == 'TSK-0633'
+          edges = lambda rows: sum(len([x for x in r['Dependencies'].replace(',', ';').split(';') if x.strip()]) for r in rows)
+          assert edges(old) == edges(new) == 858
+          print('CR0014_SEMANTIC_ASSERTIONS=PASS')
+          print('CR0014_DEFERRED=' + ','.join(sorted(affected)))
+          print('CR0014_UNDEFERRED_NEIGHBORS=' + ','.join(sorted(unaffected)))
+          print('TSK0641_DEPENDENCY=TSK-0633')
+          print('DEPENDENCY_EDGES=858')
+          PY
+
+          git diff --check
+          expected_paths=$(cat <<'EOF'
+          Plans/Master/Generated/MASTER_PLAN_FULL.md
+          Plans/Master/MANIFEST.yaml
+          Plans/Master/Registers/DECISIONS_TRIGGERS.md
+          Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md
+          Plans/Master/WBS/master-wbs.csv
+          Plans/SHA256SUMS.txt
+          EOF
+          )
+          actual_paths="$(git diff --name-only | sort)"
+          test "$actual_paths" = "$(printf '%s\n' "$expected_paths" | sort)"
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Plans/Master/WBS/master-wbs.csv Plans/Master/Registers/DECISIONS_TRIGGERS.md Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md Plans/Master/MANIFEST.yaml Plans/Master/Generated/MASTER_PLAN_FULL.md Plans/SHA256SUMS.txt
+          git commit -m 'Apply CR-0014 Release-1 limited-test task deferrals'
+          new_commit="$(git rev-parse HEAD)"
+          test "$(git rev-parse HEAD^)" = "$EXPECTED_BASE"
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$EXPECTED_BASE"
+          test -z "$(git ls-remote origin refs/heads/$CANDIDATE_BRANCH)"
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          echo "CR0014_CANDIDATE_COMMIT=$new_commit"
+          echo "CR0014_WBS_BLOB=$(git rev-parse HEAD:Plans/Master/WBS/master-wbs.csv)"
+          echo "CR0014_DECISIONS_BLOB=$(git rev-parse HEAD:Plans/Master/Registers/DECISIONS_TRIGGERS.md)"
+          echo "CR0014_CHANGE_BLOB=$(git rev-parse HEAD:Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md)"
+          echo "CR0014_MANIFEST_BLOB=$(git rev-parse HEAD:Plans/Master/MANIFEST.yaml)"
+          echo "CR0014_GENERATED_BLOB=$(git rev-parse HEAD:Plans/Master/Generated/MASTER_PLAN_FULL.md)"
+          echo "CR0014_SUMS_BLOB=$(git rev-parse HEAD:Plans/SHA256SUMS.txt)"
