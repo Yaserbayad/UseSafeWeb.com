@@ -28,15 +28,37 @@ import re
 import subprocess
 import sys
 
-# High-confidence credential/key signatures. Patterns are deliberately expressed
-# as fragments so the scanner source does not contain a literal credential.
-patterns = [
-    ("private_key", re.compile(("-----BEGIN " + r"(?:ENCRYPTED |RSA |EC |OPENSSH )?PRIVATE KEY-----").encode())),
+# High-confidence provider credential signatures. Private-key detection is handled
+# separately and requires a complete PEM block, avoiding false positives from
+# source code that merely names a prohibited PEM header as a negative assertion.
+provider_patterns = [
     ("github_token", re.compile(("gh" + r"[pousr]_[A-Za-z0-9_]{20,}").encode())),
     ("aws_access_key", re.compile(("AK" + r"IA[0-9A-Z]{16}").encode())),
     ("google_api_key", re.compile(("AI" + r"za[0-9A-Za-z_-]{35}").encode())),
     ("stripe_secret", re.compile(("sk_" + r"(?:live|test)_[0-9A-Za-z]{16,}").encode())),
 ]
+
+# Build PEM markers from fragments so this scanner source does not itself contain
+# a complete private-key marker. Require both a matching begin/end boundary and
+# plausible encoded material between them before treating a blob as key material.
+key_labels = (b"PRIVATE KEY", b"ENCRYPTED PRIVATE KEY", b"RSA PRIVATE KEY", b"EC PRIVATE KEY", b"OPENSSH PRIVATE KEY")
+base64ish = re.compile(rb"^[A-Za-z0-9+/=\r\n]+$")
+
+def contains_complete_private_key(data: bytes) -> bool:
+    for label in key_labels:
+        begin = b"-----BEGIN " + label + b"-----"
+        end = b"-----END " + label + b"-----"
+        start = data.find(begin)
+        while start != -1:
+            body_start = start + len(begin)
+            finish = data.find(end, body_start)
+            if finish != -1:
+                body = data[body_start:finish].strip()
+                compact = b"".join(body.split())
+                if len(compact) >= 80 and base64ish.fullmatch(body):
+                    return True
+            start = data.find(begin, body_start)
+    return False
 
 # Encrypted/private-key container formats are forbidden in Git for this project
 # because an encrypted production secret is still a committed secret.
@@ -75,30 +97,34 @@ for oid in objects:
     if meta != "blob":
         continue
     size = int(subprocess.check_output(["git", "cat-file", "-s", oid], text=True).strip())
-    # Credential material is expected to be small text/binary configuration.
-    # Still scan blobs up to 8 MiB; larger assets are rejected if they use a
-    # forbidden secret-container suffix above.
     if size > 8 * 1024 * 1024:
         continue
     data = subprocess.check_output(["git", "cat-file", "blob", oid])
     scanned_blobs += 1
     scanned_bytes += len(data)
-    for name, pattern in patterns:
-        if pattern.search(data):
-            print(f"SECRET_SCAN_MATCH_CLASS={name}")
-            print(f"SECRET_SCAN_MATCH_OBJECT={oid}")
-            matched_paths = sorted(paths.get(oid, {"<unknown>"}))
-            for path in matched_paths:
-                print(f"SECRET_SCAN_MATCH_PATH={path}")
-            commits = subprocess.check_output(
-                ["git", "log", "--all", "--format=%H", "--find-object", oid],
-                text=True,
-                errors="replace",
-            ).splitlines()
-            for commit in commits[:20]:
-                if commit:
-                    print(f"SECRET_SCAN_MATCH_COMMIT={commit}")
-            sys.exit(12)
+    match_class = None
+    if contains_complete_private_key(data):
+        match_class = "private_key"
+    else:
+        for name, pattern in provider_patterns:
+            if pattern.search(data):
+                match_class = name
+                break
+    if match_class:
+        print(f"SECRET_SCAN_MATCH_CLASS={match_class}")
+        print(f"SECRET_SCAN_MATCH_OBJECT={oid}")
+        matched_paths = sorted(paths.get(oid, {"<unknown>"}))
+        for path in matched_paths:
+            print(f"SECRET_SCAN_MATCH_PATH={path}")
+        commits = subprocess.check_output(
+            ["git", "log", "--all", "--format=%H", "--find-object", oid],
+            text=True,
+            errors="replace",
+        ).splitlines()
+        for commit in commits[:20]:
+            if commit:
+                print(f"SECRET_SCAN_MATCH_COMMIT={commit}")
+        sys.exit(12)
 
 print(f"SECRET_SCAN_BLOBS={scanned_blobs}")
 print(f"SECRET_SCAN_BYTES={scanned_bytes}")
@@ -146,8 +172,6 @@ synthetic_controls() {
   if secret_state_accepts "$bgstate" "$breakglass"; then fail 'breakglass_not_resealed'; fi
   echo 'BREAK_GLASS_RECOVERY_TEST=PASS enabled_boundedly=1 resealed=1'
 
-  # Negative permission test: the transient control directory must not expose
-  # material to group/other users.
   local mode
   mode="$(stat -c '%a' "$work")"
   [[ "$mode" == 700 ]] || fail "unsafe_temp_mode_${mode}"
@@ -189,8 +213,6 @@ target_readonly() {
   grep -qx 'permitrootlogin no' <<<"$effective"
   grep -qx 'passwordauthentication no' <<<"$effective"
 
-  # Exercise only read-only root-capable commands. The GitHub job itself is the
-  # audit envelope: exact task/source/target are recorded without secret values.
   sudo systemctl is-active --quiet "$unit"
   sudo test -r /etc/sudoers
 
