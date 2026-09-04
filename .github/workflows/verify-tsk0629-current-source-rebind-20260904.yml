@@ -1,0 +1,93 @@
+name: TSK-0629 exact-current source requalification
+
+on:
+  push:
+    branches:
+      - verify/tsk0629-current-source-rebind-20260904
+    paths:
+      - .github/workflows/verify-tsk0629-current-source-rebind-20260904.yml
+
+permissions:
+  contents: read
+
+jobs:
+  requalify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact verification branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Bind exact canonical source
+        shell: bash
+        run: |
+          set -euo pipefail
+          base='5f08f91aa8e95c0650bff9ddf876de9da9dd573d'
+          workflow='.github/workflows/verify-tsk0629-current-source-rebind-20260904.yml'
+          test "${GITHUB_REF}" = 'refs/heads/verify/tsk0629-current-source-rebind-20260904'
+          test "$(git rev-parse HEAD^)" = "${base}"
+          test "$(git diff --name-only "${base}" HEAD)" = "${workflow}"
+          test "$(git hash-object website/src/lib/automated-verification.ts)" = '1caabf798ef0c2872a771ee97888a61c945836da'
+          test "$(git hash-object website/src/components/dns-verification-panel.tsx)" = '60e0276024836be599a6be7915022321fabcf98c'
+          test "$(git hash-object website/tests/contract/tsk0629.test.mjs)" = '6212c972219fc997fb84d4753014d30f0508db7f'
+          test "$(git hash-object website/tests/browser/tsk0629-browser.mjs)" = '2e457c06e33e0d7bd6ac8681073d690771cba899'
+          test "$(git hash-object website/package.json)" = '14327607fe699b34d62345b66f3b27c3fd68cd06'
+          echo 'TSK0629_CURRENT_SOURCE_BINDING=PASS'
+
+      - name: Set up exact Node runtime
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22.23.2'
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Requalify focused contract and build
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd website
+          npm ci --no-fund --no-audit
+          node --test tests/contract/tsk0629.test.mjs
+          npm run lint
+          npm run typecheck
+          NEXT_TELEMETRY_DISABLED=1 npm run build
+          npm audit --omit=dev --audit-level=high
+          npm audit --audit-level=high
+          echo 'TSK0629_CURRENT_SOURCE_CONTRACT=PASS'
+          echo 'TSK0629_CURRENT_SOURCE_BUILD=PASS'
+
+      - name: Requalify browser fail-closed and recovery states
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd website
+          npm install --no-save --no-package-lock --ignore-scripts playwright@1.62.1
+          npx --yes playwright@1.62.1 install --with-deps chromium
+          NEXT_TELEMETRY_DISABLED=1 npm start -- --hostname 127.0.0.1 --port 3100 >"${RUNNER_TEMP}/tsk0629-next.log" 2>&1 &
+          app_pid=$!
+          cleanup(){ kill "${app_pid}" >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          ready=0
+          for _ in $(seq 1 40); do
+            if curl -fsS --max-time 2 http://127.0.0.1:3100/en-GB >/dev/null 2>&1; then ready=1; break; fi
+            sleep 1
+          done
+          if test "${ready}" -ne 1; then
+            tail -n 120 "${RUNNER_TEMP}/tsk0629-next.log" || true
+            exit 1
+          fi
+          BASE_URL=http://127.0.0.1:3100 node tests/browser/tsk0629-browser.mjs
+          echo 'TSK0629_CURRENT_SOURCE_BROWSER=PASS'
+
+      - name: Verify clean read-only disposition
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(git status --porcelain)"
+          echo 'TSK0629_CURRENT_SOURCE_REBIND=PASS'
+          echo 'TSK0629_PRODUCTION_MUTATION=NONE'
+          echo 'TSK0629_DNS_PROXY_CERT_PROFILE_ACTION=NONE'
+          echo 'TSK0629_PARTICIPANT_PAYMENT_LAUNCH_ACTION=NONE'
