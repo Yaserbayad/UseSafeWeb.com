@@ -17,13 +17,15 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          fetch-depth: 2
+          fetch-depth: 0
           persist-credentials: false
       - name: Derive current candidate frontier without mutation
         shell: bash
         run: |
           set -Eeuo pipefail
-          test "$(git rev-parse HEAD^)" = '041caa3858b61fb4119a66e9f139ccb3ebd318a0'
+          BASE='041caa3858b61fb4119a66e9f139ccb3ebd318a0'
+          test "$(git merge-base HEAD "$BASE")" = "$BASE"
+          test "$(git diff --name-only "$BASE" HEAD)" = '.github/workflows/diag-post-tsk0489-frontier-20260904.yml'
           python3 - <<'PY'
           import csv, json, re, subprocess
           from pathlib import Path
@@ -36,6 +38,8 @@ jobs:
           order = {r['Task_ID']: i for i, r in enumerate(rows) if r.get('Task_ID','').startswith('TSK-')}
           print('FRONTIER_CANONICAL_BASE=041caa3858b61fb4119a66e9f139ccb3ebd318a0')
           print('FRONTIER_WBS_BLOB=' + subprocess.check_output(['git','hash-object',str(wbs_path)], text=True).strip())
+          print('FRONTIER_GRAPH_BLOB=' + subprocess.check_output(['git','hash-object',str(graph_path)], text=True).strip())
+          print('FRONTIER_RUNTIME_BLOB=' + subprocess.check_output(['git','hash-object',str(runtime_path)], text=True).strip())
           print('FRONTIER_WBS_HEADERS=' + json.dumps(list(rows[0].keys()), ensure_ascii=False))
 
           rt = runtime_path.read_text(encoding='utf-8')
