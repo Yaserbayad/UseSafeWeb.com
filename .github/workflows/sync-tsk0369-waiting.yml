@@ -33,7 +33,7 @@ jobs:
               raise SystemExit('TSK-0369 WAITING already recorded; refusing replay')
           if '`TSK-0369 — Implement minimal support, feedback, false-positive, and abandonment capture`: **TODO**.' not in text:
               raise SystemExit('current checkpoint does not prove TSK-0369 TODO; refusing mutation')
-          if '`TSK-0376 current accepted stable state — PASS' not in text and 'TSK-0376 —' not in text:
+          if '## TSK-0376 current accepted stable state — PASS' not in text:
               raise SystemExit('TSK-0376 PASS proof not found; refusing mutation')
           section='\n'.join([
               '## TSK-0369 current accepted stable state — 2026-09-04 — TARGET DEPLOYMENT/EVIDENCE WAITING',
