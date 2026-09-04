@@ -14,40 +14,29 @@ jobs:
   stage-checkpoint:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    env:
-      BRANCH: evidence/tsk0243-isolated-target-partial-20260904
-      EXPECTED_PARENT: 545e10c3c8721a78e8a8fcea1b9de35b8da3e447
-      EXPECTED_STATE_BLOB: 7fe19e2f3df94974764bc27ae903c781cb8f9734
-      EXPECTED_WBS_BLOB: 142a0d45b381136567d78545f063333f1e74901f
-      EXPECTED_EVIDENCE_BLOB: 4884685af21f73629b3b98979075649b5b105e67
-      EVIDENCE_FILE: TSK_0243_ISOLATED_TARGET_PARTIAL_EVIDENCE_2026-09-04.md
-      WORKFLOW_FILE: .github/workflows/stage-tsk0243-partial-checkpoint-20260904.yml
     steps:
       - name: Checkout exact staging branch
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          persist-credentials: false
 
-      - name: Validate exact staging inputs
+      - name: Guard patch self-remove and push source branch
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git log -1 --pretty=%s)" = 'apply TSK-0243 checkpoint synchronizer'
-          test "${GITHUB_REF_NAME}" = "${BRANCH}"
-          test "$(git rev-parse HEAD^)" = "${EXPECTED_PARENT}"
-          test "$(git hash-object CURRENT_STATE.md)" = "${EXPECTED_STATE_BLOB}"
-          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "${EXPECTED_WBS_BLOB}"
-          test "$(git hash-object "${EVIDENCE_FILE}")" = "${EXPECTED_EVIDENCE_BLOB}"
+          branch='evidence/tsk0243-isolated-target-partial-20260904'
+          workflow='.github/workflows/stage-tsk0243-partial-checkpoint-20260904.yml'
+          evidence='TSK_0243_ISOLATED_TARGET_PARTIAL_EVIDENCE_2026-09-04.md'
+          test "$(git log -1 --pretty=%s)" = 'apply simplified TSK-0243 checkpoint synchronizer'
+          test "${GITHUB_REF_NAME}" = "${branch}"
+          test "$(git rev-parse HEAD^)" = '0033c6cdc6ded4c3ec4f87c983a209a14b91b18f'
+          test "$(git hash-object CURRENT_STATE.md)" = '7fe19e2f3df94974764bc27ae903c781cb8f9734'
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = '142a0d45b381136567d78545f063333f1e74901f'
+          test "$(git hash-object "${evidence}")" = '4884685af21f73629b3b98979075649b5b105e67'
           grep -Fq 'TSK-0243 remains `TODO`' CURRENT_STATE.md
           grep -Fq 'No deployment, live-device/profile/certificate action' CURRENT_STATE.md
-          grep -Fq 'Evidence status: partial only; `TSK-0243 = TODO`.' "${EVIDENCE_FILE}"
-          echo 'TSK0243_STAGE_INPUT_BINDING=PASS'
+          grep -Fq 'Evidence status: partial only; `TSK-0243 = TODO`.' "${evidence}"
 
-      - name: Patch checkpoint in place and self-remove synchronizer
-        shell: bash
-        run: |
-          set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
           import datetime
@@ -92,26 +81,19 @@ Queue consequence:
 '''
           path.write_text(updated.rstrip() + block + '\n', encoding='utf-8')
           PY
-          rm "${WORKFLOW_FILE}"
+
+          rm "${workflow}"
           git diff --check
           changed="$(git status --short | awk '{print $2}' | sort)"
-          expected="$(printf '%s\n%s\n' "${WORKFLOW_FILE}" 'CURRENT_STATE.md' | sort)"
+          expected="$(printf '%s\n%s\n' "${workflow}" 'CURRENT_STATE.md' | sort)"
           test "${changed}" = "${expected}"
-          echo 'TSK0243_CHECKPOINT_PATCH=PASS'
-
-      - name: Commit and push branch-only checkpoint synchronization
-        shell: bash
-        env:
-          GH_PUSH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add CURRENT_STATE.md "${WORKFLOW_FILE}"
+          git add CURRENT_STATE.md "${workflow}"
           staged="$(git diff --cached --name-only | sort)"
-          expected="$(printf '%s\n%s\n' "${WORKFLOW_FILE}" 'CURRENT_STATE.md' | sort)"
           test "${staged}" = "${expected}"
           git commit -m 'checkpoint: record TSK-0243 isolated target partial proof'
-          auth="$(printf 'x-access-token:%s' "${GH_PUSH_TOKEN}" | base64 -w0)"
-          git -c http.https://github.com/.extraheader="AUTHORIZATION: basic ${auth}" push origin "HEAD:refs/heads/${BRANCH}"
+          git push origin "HEAD:refs/heads/${branch}"
+          echo 'TSK0243_STAGE_INPUT_BINDING=PASS'
+          echo 'TSK0243_CHECKPOINT_PATCH=PASS'
           echo 'TSK0243_BRANCH_ONLY_SYNC_PUSH=PASS'
