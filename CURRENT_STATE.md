@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-04T08:45:31Z
+**Updated:** 2026-09-04T09:33:25Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -10,13 +10,15 @@
 
 **ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0011 PUBLISHED, RECONCILED, READ-BACK VERIFIED.**
 
-- Latest post-freeze planning change: `CR-0011` / `DEC-0058`, explicitly authorized by the Project Owner on 2026-09-03 as a current-state rebase/reconciliation of stale correction intent onto CR-0010 authority, not verbatim stale-candidate publication.
+- Latest post-freeze planning change: `CR-0013` / `DEC-0060`, explicitly authorized by the Project Owner on 2026-09-04: mandatory human/Code Owner merge approval is removed from TSK-0453 and replaced by deterministic automated critical-path quality/change-policy verification; all genuine separate human/material-action boundaries remain unchanged.
+- `CR-0012` / `DEC-0059` remains active and unchanged: TSK-0455 stays DEFERRED / WAITING until the integrated environment is fully working and no earlier than the owner re-evaluation window; TSK-0456, TSK-0457 and TSK-0492 remain dependency-blocked.
+- Prior post-freeze planning change: `CR-0011` / `DEC-0058`, explicitly authorized by the Project Owner on 2026-09-03 as a current-state rebase/reconciliation of stale correction intent onto CR-0010 authority, not verbatim stale-candidate publication.
 - CR-0011 canonical publication commit: `cf8672200d0f4a1f395e1f458d35ceef42be44ae`; exact published tree: `1cc60ae26c6eb1e995792401ae0646ae5457aac0`, identical to audited candidate commit `58a5bbce384547b1606d5e44fea7c2f27753e239` tree.
 - CR-0011 audit run/job `33791810309` / `100769937576`: **PASS** — 641 WBS tasks, 858 hard dependency edges, 0 recurring hard predecessors; WBS, relationship index and gates unchanged; deterministic master-plan validator PASS.
 - CR-0011 evidence: `CR_0011_STALE_CANDIDATE_RECONCILIATION_EVIDENCE_2026-09-03.md`, publication-tree blob `cce616a888893d4db252a6c563bdbf81e987f6f0`.
 - CR-0011 changes governance invariants only: hierarchy roll-up is derived rather than a second mutable state, recurring/cadence work cannot become an endless hard predecessor, and existing trigger/geography/domain-control/derived-view semantics are explicitly protected. It creates **no task, gate or milestone PASS**.
 - Post-publication commit `98d85c0c0618684777acffc2965f074fc8f7939c` changed only `TSK_LG06_PREDECESSOR_REQUALIFICATION_AUTOVERIFY_FINAL_2026-09-01.md`; CR-0011 planning authority and runtime states remain unchanged by that evidence-only update.
-- Runtime preservation: `TSK-0491` remains PASS; `TSK-0453` remains WAITING on its existing enforcement-proof boundary; `TSK-0417` remains non-PASS at its real-target material-action boundary; `TSK-0374` and `TSK-0499` remain non-PASS/partial as previously recorded; PR #86 remains draft and unmerged unless later independently verified otherwise.
+- Runtime preservation: `TSK-0491` remains PASS; `TSK-0453` is PASS under DEC-0060/CR-0013 after revised acceptance and complete automated verification; `TSK-0417` remains non-PASS at its real-target material-action boundary; `TSK-0374` and `TSK-0499` remain non-PASS/partial as previously recorded; PR #86 remains draft and unmerged unless later independently verified otherwise.
 - No deployment, live-device/profile/certificate action, service removal/revocation, participant processing, telemetry activation, production/public activation, geographic/market activation, launch authority, service-revocation interface/authority, or other fenced material action is inferred from CR-0011.
 
 - Prior post-freeze change: `CR-0010` / `DEC-0057`, explicit Project Owner activation approval 2026-09-02: canonical Master-Plan structural normalization removes redundant hierarchy wrappers while preserving task/readiness/gate/evidence semantics.
@@ -3179,24 +3181,22 @@ Recompute the current executable frontier from canonical WBS/graph, runtime evid
 
 Recompute the residual L6 frontier from current WBS/graph/runtime/gates. Direct successors such as `TSK-0453` or `TSK-0491` may consume TSK-0380 only if every other current dependency, gate, authority, input, and preserved material-action fence is independently satisfied.
 
-## TSK-0453 current accepted stable state — 2026-09-03 — SOURCE/POLICY VERIFIED; REVIEW ENFORCEMENT WAITING
+## TSK-0453 current accepted stable state — 2026-09-04 — PASS UNDER DEC-0060 / CR-0013
 
-`TSK-0453 — Configure formatting, linting, type checking, commit/change, and code-review rules`: **WAITING** under current `ACC-0453 / VER-0453 / EVD-0453`. Source/policy controls are durably implemented and independently verified, but critical-path Code Owner review is not yet proven as a mandatory GitHub merge condition.
+`TSK-0453 — Configure formatting, linting, type checking, commit/change, and code-review rules`: **PASS** under the owner-revised `ACC-0453 / VER-0453 / EVD-0453`.
 
-- Current normalized WBS: L6 / MEDIUM / A3 / `AUTO_ALLOWED`; hard predecessor `TSK-0380` is current durable PASS.
-- Canonical source checkpoint: merge commit `b1f3fcad1265b40b5d5b414bb4c31d1f7bad80c2`, tree `7d5907146ba63b58d3309cdd6b782853ff55fe3f`; source PR `#89`, final exact head `b4fc1246d2fbff201cc067fee6b4a543509bc962`.
-- Durable evidence: `TSK_0453_QUALITY_AND_REVIEW_RULES_SOURCE_CHECKPOINT_2026-09-03.md`, evidence blob `2a06fed6987bd81e465f21a7fd5adeae0442a0ab` on the publication branch before merge.
-- Source controls include exact Prettier `3.9.6`, deterministic formatting/lint/type checks, CODEOWNERS routing for critical/governance paths, generated/configuration change coverage, explicit time-bounded exceptions, pull-request metadata, and a non-deploying TSK-0453 CI gate.
-- RED run/job `33755212839 / 100647896639` failed only the intended missing controls; final source gate `33755786032 / 100649749364` succeeded.
-- Exact PR-head regression matrix: **11/11 SUCCESS**; focused TSK-0453 run/job `33757539847 / 100655477984`.
-- Exact canonical clean-main regression matrix on `b1f3fcad1265b40b5d5b414bb4c31d1f7bad80c2`: **11/11 SUCCESS, zero failures**; focused TSK-0453 run/job `33758148342 / 100657497458`. Browser-heavy TSK-0243, TSK-0359, and TSK-0629 suites also succeeded.
-- Current GitHub read-back for `main` reports `protected=false`, protection disabled, and required-status-check enforcement off. The repository-rulesets endpoint is not readable through the current integration/plan, so absence of rulesets is not inferred. PR `#89` nevertheless merged without a required approving Code Owner review, so merge-blocking critical-path review is not proven for the governed execution path.
-- **WAIT condition / deterministic check:** configure and read back effective `main` repository controls requiring pull-request Code Owner approval for the intended critical paths and the intended quality/status checks, with no unapproved ordinary-governed bypass; then rerun `VER-0453`. Only complete current acceptance evidence may move this task to PASS.
-- **Non-inference / fences:** this WAITING checkpoint does not deploy, touch a live device, remove/revoke a profile or service, process participants, activate telemetry or production/public service, launch, invent a service-revocation interface/authority, or mark `TSK-0374`, `TSK-0417`, or `TSK-0499` PASS. PR `#86` remains draft and unmerged. Blocked real-target TSK-0417 work is not whole-project completion.
+- Owner authority: explicit Project Owner decision 2026-09-04 that mandatory human/Code Owner merge approval and branch protection are not required for ordinary governed `AUTO_ALLOWED` critical-path changes.
+- Revised ACC-0453: Checks run locally/CI; critical-path changes are subject to deterministic automated quality/change-policy verification without mandatory human or Code Owner approval; generated/configuration changes are included; exceptions are documented and time-bounded.
+- CR-0013 source commit/tree: `df2c9eb7d1ec12a5cfe7689cd92c082749233828` / `d98714163ebbfd8018c88260517463c775edd153`.
+- Verification run/attempt: `33858461175 / 1` — repository structure, deterministic Master Plan validation, focused TSK-0453 contract, formatting, lint, typecheck, full contracts, production build, high-threshold dependency audits, negative formatter propagation/cleanup and clean-worktree checks all passed.
+- Durable evidence: `TSK_0453_CR0013_AUTONOMOUS_REVIEW_ACCEPTANCE_EVIDENCE_2026-09-04.md`; the 2026-09-03 source checkpoint remains valid for unchanged source-control evidence, while its former review-enforcement WAIT condition is superseded only by DEC-0060/CR-0013.
+- WBS invariants: 641 tasks and 858 dependency edges; the only task-field mutation is TSK-0453 `Acceptance_Criteria`. TSK-0455/0456/0457/0492 rows and every material-action fence are unchanged.
+- CODEOWNERS remains advisory routing metadata; it is not a human approval gate. Separate genuine human-only/approval-required or higher-authority safety/security/legal/platform/strategic/irreversible boundaries remain controlling.
+- **Non-inference / fences:** no deployment, telemetry activation, participant-facing mutation, production credential/service revocation, payment, activation, launch, live-device/profile/certificate action or service removal/revocation occurred or is authorized by this PASS.
 
-### Queue effect after TSK-0453 WAITING checkpoint
+### Queue effect after TSK-0453 PASS
 
-TSK-0453 WAITING blocks only work that requires its completed review-enforcement acceptance. Recompute the complete current executable frontier from canonical WBS/graph/runtime/gates/risks/interfaces and Action Authority; continue independent eligible `AUTO_ALLOWED` work without crossing the preserved material-action fences.
+`TSK-0489` may consume TSK-0453 only after a fresh eligibility check confirms its other predecessors (`TSK-0491`, `TSK-0422`), gates, inputs, authority and preserved material-action fences. TSK-0453 PASS does not itself authorize deployment-fenced TSK-0452 or any other consequential action.
 
 ## TSK-0491 current accepted stable state — 2026-09-03
 
@@ -3229,7 +3229,7 @@ Recompute the residual executable frontier from current WBS/graph/runtime/gates 
 - Performance verification recorded finite/non-negative navigation duration, DOMContentLoaded timing, and transfer size for every tested locale/viewport. `ACC-0395 / VER-0395` defines no numeric performance budget; no unstated Core Web Vitals or other threshold is inferred.
 - Rollback/recovery disposition: the task changed repository source/tests only and never mutated production/public state. Exact Git ancestry/PR provenance provides the applicable reversible source backout through ordinary Git revert; a production rollback drill is not applicable and is not fabricated.
 - Retained non-blocking observations: one inherited `_accountState` lint warning, one bounded server-readiness retry, and a `NoFallbackError` stderr line after the intentional unsupported-locale negative path/teardown; the asserted 404 passed and the canonical job remained SUCCESS.
-- **Non-inference:** TSK-0395 PASS creates no deployment, public activation, live DNS/AdGuard change, service removal/revocation, participant processing, telemetry activation, account/dashboard activation, launch authority, or PASS for any other task. Existing TSK-0374, TSK-0417, TSK-0453, and TSK-0499 material-action/evidence fences remain unchanged.
+- **Non-inference:** TSK-0395 PASS creates no deployment, public activation, live DNS/AdGuard change, service removal/revocation, participant processing, telemetry activation, account/dashboard activation, launch authority, or PASS for any other task. Existing TSK-0374, TSK-0417, and TSK-0499 material-action/evidence fences remain unchanged; the former TSK-0453 review-enforcement wait is superseded by DEC-0060/CR-0013.
 
 ### Queue status after TSK-0395 acceptance
 
@@ -3314,4 +3314,4 @@ Recompute the residual executable frontier from current canonical WBS/graph/runt
 - Verifier: `infrastructure/adguard-server/tsk-0490-security-controls-verifier.sh`, blob `2d6222126223d22f40b073e4d281251303af0195`, SHA-256 `f58a93ead9acb4405b703804a0bb16c3b88f811955d113af1c6e11eb459d8136`; v2 workflow blob `0ac50bd25fd25970cf99ac4f80b021b7ac4047b4`; source commit `4cbc7e3e1fa6e6c4ea248f289de906ff0b2bf580`.
 - Durable evidence: `TSK_0490_SECRETS_IDENTITY_PRIVILEGED_ACCESS_EVIDENCE_2026-09-04.md`, blob `1a2bdbd924be70d6ddf8fb8745875f9ddb2e8ba1`; authoritative v2 run/attempt `33854838835 / 1`. Earlier run-3 evidence is superseded for verification-quality purposes.
 - Material actions: **none**. No production credential rotation/revocation, deployment, telemetry activation, participant processing, service revocation/removal, payment, public/market activation or launch occurred.
-- Non-inference: TSK-0453 remains WAITING; TSK-0455 remains DEFERRED / WAITING under DEC-0059 / CR-0012 with unchanged ACC-0455 / VER-0455 / EVD-0455; TSK-0456, TSK-0457 and TSK-0492 remain dependency-blocked; no successor or gate PASS is inferred.
+- Non-inference: TSK-0453 is PASS under DEC-0060 / CR-0013; TSK-0455 remains DEFERRED / WAITING under DEC-0059 / CR-0012 with unchanged ACC-0455 / VER-0455 / EVD-0455; TSK-0456, TSK-0457 and TSK-0492 remain dependency-blocked; no successor or gate PASS is inferred.
