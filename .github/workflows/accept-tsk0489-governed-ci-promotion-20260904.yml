@@ -41,19 +41,18 @@ jobs:
           set -Eeuo pipefail
           workflow='.github/workflows/accept-tsk0489-governed-ci-promotion-20260904.yml'
           python3 - "$workflow" <<'PY'
-          import re
           import sys
           from pathlib import Path
           text = Path(sys.argv[1]).read_text(encoding='utf-8')
-          assert 'permissions:\n  contents: read' in text
-          assert text.count('runs-on: ubuntu-24.04') == 2
-          assert 'persist-credentials: false' in text
-          assert not re.search(r'(?m)^\s+contents:\s+write\s*$', text)
-          assert not re.search(r'(?m)^\s+deployments:\s+write\s*$', text)
-          assert not re.search(r'(?m)^\s+id-token:\s+write\s*$', text)
-          assert not re.search(r'(?m)^\s+environment\s*:', text)
-          assert not re.search(r'(?m)^\s+runs-on:\s*(?:\[[^\]]*self-hosted[^\]]*\]|self-hosted)\s*$', text)
-          uses = re.findall(r'(?m)^\s*-\s+uses:\s+([^\s]+)\s*$', text)
+          lines = [line.strip() for line in text.splitlines()]
+          assert lines.count('contents: read') == 3, lines.count('contents: read')
+          assert lines.count('runs-on: ubuntu-24.04') == 2, lines.count('runs-on: ubuntu-24.04')
+          assert lines.count('persist-credentials: false') == 1
+          for forbidden in ('contents: write', 'deployments: write', 'id-token: write'):
+              assert forbidden not in lines, forbidden
+          assert not any(line == 'environment:' or line.startswith('environment: ') for line in lines)
+          assert not any(line == 'runs-on: self-hosted' or (line.startswith('runs-on: [') and 'self-hosted' in line) for line in lines)
+          uses = [line.removeprefix('- uses: ').strip() for line in lines if line.startswith('- uses: ')]
           allowed = {'actions/checkout@v6', 'actions/setup-node@v6', 'actions/upload-artifact@v4'}
           assert uses and set(uses) <= allowed, uses
           PY
