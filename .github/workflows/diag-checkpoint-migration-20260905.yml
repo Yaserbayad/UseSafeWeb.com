@@ -34,7 +34,7 @@ jobs:
           test "$(git diff --name-only "$SOURCE" "$CANDIDATE")" = 'CURRENT_STATE.md'
           git checkout -B main origin/main
           git checkout "$CANDIDATE" -- CURRENT_STATE.md
-          test "$(git diff --name-only)" = 'CURRENT_STATE.md'
+          test "$(git diff HEAD --name-only)" = 'CURRENT_STATE.md'
           test "$(git hash-object CURRENT_STATE.md)" = "$CANDIDATE_BLOB"
           python - <<'PY'
           import json
