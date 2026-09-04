@@ -31,7 +31,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = '142a0d45b381136567d78545f063333f1e74901f'
           test "$(git hash-object website/package-lock.json)" = '6ff91d845bc5f3099b6a00f5f43673eed80a3ba5'
           test "$(git hash-object content/TSK-0323/CATALOGUE.json)" = '79753cc4916d38ed8d2f0ed6d01890e62df3fb04'
           test "$(git hash-object website/src/content/instruction-bindings.json)" = '32441b56f5b2daf2c9924584685fd35fb416438e'
