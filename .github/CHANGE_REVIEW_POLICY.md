@@ -16,6 +16,10 @@ npm run test:contract
 
 The TSK-0453 GitHub Actions workflow runs formatting, linting, type checking, and the focused change-policy contract on pull requests and `main`. Existing task-specific workflows continue to own their acceptance boundaries.
 
+Under DEC-0060/CR-0013, the permanent governed promotion context is the TSK-0489 workflow job `governed-ci`, with `promotion-eligibility` proving the same exact head is eligible only after the gate succeeds. It runs on every pull request and every `main` push and invokes the repository-local `npm run validate` entrypoint plus governance validation, dependency/SBOM audits, and the approved synthetic security-control verifier. In the absence of native required-status protection, the governor must re-read the exact pull-request head immediately before merge and may merge only when `governed-ci`, `promotion-eligibility`, and every other path-applicable current check on that exact head have completed successfully. A failed, cancelled, timed-out, action-required, stale, or missing applicable check is not promotion evidence. Any bypass requires explicit owner authority and the bounded exception record required below.
+
+The TSK-0489 workflow is read-only with respect to repository/deployment authority: it does not deploy, activate, mutate participant/service state, perform payment actions, or launch. Passing CI therefore proves source/promotion readiness only and never implies deployment or release authority.
+
 ## Change scope
 
 Every pull request must identify application/source, generated, configuration, infrastructure, workflow, documentation, and governance impact when applicable. Generated artifacts are changed only when their owning process requires durable publication; otherwise regenerate them during verification and keep them out of Git.
