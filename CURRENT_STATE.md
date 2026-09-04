@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-04T21:07:33Z
+**Updated:** 2026-09-04T21:20:36Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -3451,3 +3451,17 @@ Planning publication: PR `#111`; canonical merge `2ac022bd71326fda69d1db0ff61b95
 Publication also repaired stale whole-WBS snapshot pins in the existing `TSK-0629` and `TSK-0359` acceptance workflows. Those repairs removed only obsolete global WBS hash assertions, set checkout credentials non-persistent, and preserved the actual repository/master-plan validators, package/version pins, build, contract, audit and browser acceptance checks; all repaired exact-head checks passed. No product/runtime source changed.
 
 **Non-inference / fences:** this decision creates no PASS, deployment, participant processing, telemetry activation, service mutation/removal/revocation, payment, production/public activation, geographic/market activation, launch, live-device/profile/certificate action or other material-action authority.
+
+## TSK-0360 current accepted stable state — 2026-09-04 — SUPPORTED-DEVICE/TARGET EVIDENCE WAITING
+
+`TSK-0360 — Implement safe generation/delivery of supported configuration profiles or endpoint instructions without exposing admin secrets`: **WAITING** under current `ACC-0360 / VER-0360 / EVD-0360`; the task is not PASS.
+
+- Current authority/eligibility was revalidated from canonical main after CR-0015: L6 / HIGH / A3 / `AUTO_ALLOWED`; hard predecessors `TSK-0358` and `TSK-0317` are durable PASS and `LG-07` is durable PASS.
+- Existing source work is preserved and was not redundantly replayed: PR #61 provides the fail-closed iPhone DoH profile generator; PR #75 provides disabled-by-default, exact-SHA-256-gated profile delivery. Existing clean-main/source regressions remain accepted evidence only.
+- Remaining acceptance cannot be established by repository/CI repetition. `VER-0360` requires supported-device/target observations including actual supported-iPhone install, verification, remove/revoke/reinstall behavior, integrity/distribution behavior, applicable privacy/rate-abuse controls, and supported-platform validation.
+- **Deterministic WAITING condition:** resume TSK-0360 only when an authorized supported iPhone/device test target and the required target/profile-delivery access are available so the remaining functional, negative, configuration, security/privacy and rollback checks can be performed against the exact intended release artifact. Any real profile distribution/install remains subject to the existing material-action fence and must not be inferred from this state change.
+- No deployment, profile distribution/install, certificate action, participant processing, telemetry activation, payment, production/public activation, market activation or launch action was performed or authorized by this synchronization.
+
+### Queue effect
+
+Do not select TSK-0360 again until the deterministic WAITING condition is observed as satisfied. `TSK-0399` remains dependency-blocked while TSK-0360 is non-PASS. Recompute the independent governed frontier immediately after canonical publication/read-back.
