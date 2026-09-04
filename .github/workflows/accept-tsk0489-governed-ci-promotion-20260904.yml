@@ -16,10 +16,48 @@ jobs:
     permissions:
       contents: read
     steps:
+      - name: Resolve authoritative source SHA
+        id: source
+        shell: bash
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PUSH_SHA: ${{ github.sha }}
+        run: |
+          set -Eeuo pipefail
+          if [[ "$GITHUB_EVENT_NAME" == 'pull_request' ]]; then
+            source_sha="$PR_HEAD_SHA"
+          else
+            source_sha="$PUSH_SHA"
+          fi
+          [[ "$source_sha" =~ ^[0-9a-f]{40}$ ]]
+          echo "sha=$source_sha" >> "$GITHUB_OUTPUT"
+          echo "TSK0489_AUTHORITATIVE_SOURCE_SHA=$source_sha"
       - uses: actions/checkout@v6
         with:
+          ref: ${{ steps.source.outputs.sha }}
           fetch-depth: 0
           persist-credentials: false
+      - name: Prove checkout is the authoritative source SHA
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          echo 'TSK0489_CHECKOUT_SOURCE_SHA_BINDING=PASS'
+      - name: Prove mismatched source SHA is rejected fail-closed
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mismatch='0000000000000000000000000000000000000000'
+          set +e
+          TSK0489_SOURCE_SHA="$mismatch" bash .github/scripts/tsk0489-governed-ci.sh > /tmp/tsk0489-sha-mismatch.txt 2>&1
+          rc=$?
+          set -e
+          test "$rc" -eq 87
+          grep -Fq 'TSK0489_SOURCE_SHA_BINDING=FAIL' /tmp/tsk0489-sha-mismatch.txt
+          grep -Fq 'TSK0489_PROMOTION_ELIGIBLE=NO' /tmp/tsk0489-sha-mismatch.txt
+          echo 'TSK0489_SHA_MISMATCH_REJECTION=PASS'
       - uses: actions/setup-node@v6
         with:
           node-version: '22.23.2'
@@ -30,6 +68,7 @@ jobs:
         continue-on-error: true
         shell: bash
         env:
+          TSK0489_SOURCE_SHA: ${{ steps.source.outputs.sha }}
           TSK0490_EXTERNAL_SECRET: ${{ github.token }}
         run: |
           set -o pipefail
@@ -60,7 +99,6 @@ jobs:
           decisions = Path('Plans/Master/Registers/DECISIONS_TRIGGERS.md').read_text(encoding='utf-8')
           changes = Path('Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md').read_text(encoding='utf-8')
           runtime = Path('CURRENT_STATE.md').read_text(encoding='utf-8')
-
           assert 'DEC-0060' in decisions
           assert 'Separate genuine human-only, strategic, safety, security, legal, identity, contract, material-spend or irreversible-action boundaries remain unchanged.' in decisions
           assert 'CR-0013' in changes
@@ -80,16 +118,20 @@ jobs:
       - name: Capture immutable run evidence
         if: always()
         shell: bash
+        env:
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
         run: |
           set -Eeuo pipefail
           touch /tmp/tsk0489-gate.txt
           {
             echo "TSK0489_EVENT=${GITHUB_EVENT_NAME}"
-            echo "TSK0489_HEAD_SHA=${GITHUB_SHA}"
+            echo "TSK0489_SOURCE_SHA=${SOURCE_SHA}"
+            echo "TSK0489_CHECKED_OUT_SHA=$(git rev-parse HEAD)"
             echo "TSK0489_RUN_ID=${GITHUB_RUN_ID}"
             echo "TSK0489_RUN_ATTEMPT=${GITHUB_RUN_ATTEMPT}"
             echo "TSK0489_GATE_STEP_OUTCOME=${{ steps.gate.outcome }}"
             echo "TSK0489_GATE_SCRIPT_BLOB=$(git hash-object .github/scripts/tsk0489-governed-ci.sh)"
+            echo "TSK0489_WORKFLOW_AUDIT_BLOB=$(git hash-object .github/scripts/verify_tsk0489_workflow_governance.py)"
             echo "TSK0489_WORKFLOW_BLOB=$(git hash-object .github/workflows/accept-tsk0489-governed-ci-promotion-20260904.yml)"
           } >> /tmp/tsk0489-gate.txt
       - uses: actions/upload-artifact@v4
@@ -104,6 +146,8 @@ jobs:
         run: |
           set -Eeuo pipefail
           test '${{ steps.gate.outcome }}' = 'success'
+          grep -Fq 'TSK0489_SOURCE_SHA_BINDING=PASS' /tmp/tsk0489-gate.txt
+          grep -Fq 'TSK0489_WORKFLOW_GOVERNANCE=PASS' /tmp/tsk0489-gate.txt
           grep -Fq 'TSK0489_PROMOTION_ELIGIBLE=YES' /tmp/tsk0489-gate.txt
           grep -Fq 'TSK0489_MATERIAL_ACTION_FENCES=PASS' /tmp/tsk0489-gate.txt
           echo 'TSK0489_GOVERNED_CI=PASS'
@@ -114,11 +158,20 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Declare exact-head governed promotion eligibility
+      - name: Declare exact-source-head governed promotion eligibility
         shell: bash
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PUSH_SHA: ${{ github.sha }}
         run: |
           set -Eeuo pipefail
-          echo "TSK0489_PROMOTION_HEAD=${GITHUB_SHA}"
+          if [[ "$GITHUB_EVENT_NAME" == 'pull_request' ]]; then
+            source_sha="$PR_HEAD_SHA"
+          else
+            source_sha="$PUSH_SHA"
+          fi
+          [[ "$source_sha" =~ ^[0-9a-f]{40}$ ]]
+          echo "TSK0489_PROMOTION_HEAD=$source_sha"
           echo 'TSK0489_PROMOTION_CONDITION=ALL_APPLICABLE_EXACT_HEAD_CHECKS_MUST_PASS'
           echo 'TSK0489_PROMOTION_ELIGIBLE=YES'
           echo 'TSK0489_DEPLOYMENT_AUTHORITY=NONE'
