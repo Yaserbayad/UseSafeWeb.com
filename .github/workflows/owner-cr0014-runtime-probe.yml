@@ -1,0 +1,12 @@
+name: CR0014 runtime probe
+
+on:
+  push:
+    branches:
+      - owner-cr0014-runtime-diagnostic-20260904
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: echo CR0014_PROBE_OK
