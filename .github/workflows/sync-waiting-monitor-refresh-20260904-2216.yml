@@ -1,0 +1,50 @@
+name: Sync waiting-state monitoring refresh 2216
+
+on:
+  push:
+    branches:
+      - runtime/waiting-monitor-refresh-20260904-2216
+    paths:
+      - .github/workflows/sync-waiting-monitor-refresh-20260904-2216.yml
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: runtime/waiting-monitor-refresh-20260904-2216
+          fetch-depth: 0
+      - name: Persist fresh WAITING monitor checkpoint
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE='694e9f1331868174f053ff300cc6f057d0d59ee3'
+          STATE_BLOB='04f855c364c0d84c22ad6c5a77e28d015a2bbd44'
+          test "$(git rev-parse HEAD^)" = "${BASE}"
+          test "$(git hash-object CURRENT_STATE.md)" = "${STATE_BLOB}"
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('CURRENT_STATE.md')
+          text = path.read_text(encoding='utf-8')
+          heading = '## Waiting-state monitoring refresh — 2026-09-04T22:16:38Z'
+          if heading in text:
+              raise SystemExit('checkpoint heading already present')
+          text, n = re.subn(r'\*\*Updated:\*\* [^\n]+', '**Updated:** 2026-09-04T22:16:38Z', text, count=1)
+          if n != 1:
+              raise SystemExit('Updated timestamp replacement failed')
+          text += '''\n\n## Waiting-state monitoring refresh — 2026-09-04T22:16:38Z\n\nFresh authorized waiting-state monitoring found no changed resolution condition and no eligible governed frontier. This checkpoint creates no task/gate PASS and no material-action authority.\n\n- Canonical `main` and `CURRENT_STATE.md` were revalidated before monitoring at commit `694e9f1331868174f053ff300cc6f057d0d59ee3`, state blob `04f855c364c0d84c22ad6c5a77e28d015a2bbd44`: project identity remains UseSafeWeb.com, mode remains `SERIAL LIGHT`, status remains ACTIVE / OWNER-FROZEN with CR-0015 current. No new canonical planning, authority, deferral, dependency, gate, or runtime-state mutation was present.\n- The authorized bounded read-only `TSK-0243` public preflight was rerun as workflow run `33900198638`, attempt `3`, job `101190856386`, terminal **SUCCESS**. It made no repository/runtime/participant/payment/launch mutation.\n- Fresh external observations are materially unchanged: `usesafeweb.com` -> `20.71.90.212`; `dns.usesafeweb.com` -> `52.157.109.120`; TLS verification passes for `usesafeweb.com:443`, `dns.usesafeweb.com:443`, and `dns.usesafeweb.com:853`; read-only GET `/dns-query` returns HTTP 400. `verify.usesafeweb.com` and the deterministic 32-hex challenge host remain unresolved; `https://usesafeweb.com/` and read-only GET `/api/dns-verification/requests` remain HTTP 502; the challenge-host probe remains HTTP 000. Preflight result remains `NOT_DEPLOYED_OR_NOT_EXTERNALLY_ROUTABLE`.\n- Therefore `TSK-0243` remains **WAITING** under its existing deterministic condition. No separately authorized verifier-route/TLS-proxy/application deployment is evidenced, so functional public-target proof remains fenced.\n- `TSK-0360` remains **WAITING**: no authorized supported iPhone/device target plus required profile-delivery access is present in current durable authority. No profile/device/certificate action was attempted.\n- `TSK-0369` remains **WAITING**: current durable authority still does not explicitly permit its required target deployment/enablement and no qualifying target-runtime access is established. No runtime enablement was attempted.\n- `TSK-0455` remains **WAITING / DEFERRED BY OWNER SEQUENCING** under `CR-0012 / DEC-0059`: the fully-working integrated-environment plus fresh Ubuntu 24.04 LTS target and DNS/TLS/monitoring-access condition is not durably evidenced as satisfied. `TSK-0456`, `TSK-0457`, and `TSK-0492` remain dependency-blocked.\n- `CR-0014 / DEC-0061` and `CR-0015 / DEC-0062` deferrals remain active and unchanged; their dependency-blocked successors remain blocked by ordinary dependency rules. `TSK-0399` remains blocked while `TSK-0360` is non-PASS. Other recorded non-PASS real-target/material-action boundaries remain unchanged because no new canonical authority or qualifying target evidence appeared.\n- Deterministic frontier recomputation: the durable WBS/runtime/gates/authority inputs are unchanged and none of the externally checkable WAITING conditions became true; therefore no genuinely eligible `TODO` work exists. The stale WBS snapshot for `TSK-0146` does not override its authoritative runtime PASS state and does not make it selectable.\n- Monitoring continuation remains unchanged: only the bounded read-only `TSK-0243` public preflight may be reused to test whether its routing prerequisites changed. Do not cross deployment, live-device/profile/certificate, participant, telemetry, payment, service-removal/revocation, production/public activation, market activation, launch, or other unresolved material-action fences without new durable authority.\n'''
+          path.write_text(text, encoding='utf-8')
+          PY
+          git diff --check -- CURRENT_STATE.md
+          test -n "$(git status --porcelain -- CURRENT_STATE.md)"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'Record 22:16 waiting-state monitor result'
+          git push origin HEAD:runtime/waiting-monitor-refresh-20260904-2216
