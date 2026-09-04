@@ -23,6 +23,7 @@ class VerifierPackageContract(unittest.TestCase):
         self.assertIn("limit_except POST", config)
         self.assertIn("client_max_body_size 4k", config)
         self.assertIn('if ($args != "") { return 404; }', config)
+        self.assertEqual(config.count('if ($ssl_server_name != $host) { return 421; }'), 2)
         self.assertIn("limit_req_status 429", config)
         self.assertIn("access_log off", config)
         self.assertIn("error_log /dev/null crit", config)
