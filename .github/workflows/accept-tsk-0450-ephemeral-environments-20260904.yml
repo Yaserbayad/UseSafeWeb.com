@@ -56,7 +56,9 @@ jobs:
           grep -Fq 'CR-0012' Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md
           grep -Fq 'DEC-0054' Plans/Master/Registers/DECISIONS_TRIGGERS.md
           grep -Fq 'DEC-0059' Plans/Master/Registers/DECISIONS_TRIGGERS.md
-          grep -Fq 'No task may create/configure Azure control-plane resources unless the owner explicitly reopens this boundary.' Plans/Master/Registers/CONSTRAINTS.md
+          grep -Fq 'CON-0004' Plans/Master/Registers/CONSTRAINTS.md
+          grep -Fq 'Azure control-plane provisioning/configuration is owner-managed.' Plans/Master/Registers/CONSTRAINTS.md
+          grep -Fq 'No task may create or configure Azure control-plane resources unless owner explicitly reopens that boundary;' Plans/Master/Registers/CONSTRAINTS.md
           script='infrastructure/adguard-server/tsk-0450-ephemeral-environment-verifier.sh'
           bash -n "${script}"
           bash "${script}" --ephemeral | tee /tmp/tsk-0450-ephemeral.txt
