@@ -1,0 +1,404 @@
+name: Generate checkpoint migration candidate
+
+on:
+  push:
+    branches:
+      - governance/checkpoint-migration-diagnostic-20260905
+    paths:
+      - .github/workflows/generate-checkpoint-migration-candidate-20260905.yml
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Generate and validate clean candidate
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          SOURCE='20e2763c0be2124378e3158ac559aed826bc6765'
+          CANDIDATE='governance/checkpoint-migration-candidate-20260905'
+          git fetch origin "${CANDIDATE}"
+          test "$(git rev-parse "origin/${CANDIDATE}")" = "${SOURCE}"
+          git checkout -B "${CANDIDATE}" "origin/${CANDIDATE}"
+          test "$(git rev-parse HEAD)" = "${SOURCE}"
+          test "$(git hash-object CURRENT_STATE.md)" = 'd45c7b1f98ceba6265944aabd970c250dc7be2d2'
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = '357c35318f8b2698c2ebe44be3ea67cc60e51213'
+          test "$(git hash-object Plans/Master/MANIFEST.yaml)" = 'e919d8654ac37bd1f46febb809936b2e186472e9'
+          test "$(git hash-object Plans/Master/MASTER_PLAN.md)" = '00ead35d2e8a2aa55358c0a14f437f208860cc8c'
+
+          python - <<'PY'
+          import csv
+          import json
+          import re
+          from collections import Counter, deque
+          from pathlib import Path
+
+          SOURCE = '20e2763c0be2124378e3158ac559aed826bc6765'
+          LEGACY_BLOB = 'd45c7b1f98ceba6265944aabd970c250dc7be2d2'
+          WBS_BLOB = '357c35318f8b2698c2ebe44be3ea67cc60e51213'
+          MANIFEST_BLOB = 'e919d8654ac37bd1f46febb809936b2e186472e9'
+          MASTER_BLOB = '00ead35d2e8a2aa55358c0a14f437f208860cc8c'
+          PREFLIGHT_RUN = '33900198638'
+          PREFLIGHT_ATTEMPT = '4'
+          PREFLIGHT_JOB = '101194904055'
+
+          wbs_path = Path('Plans/Master/WBS/master-wbs.csv')
+          legacy_path = Path('CURRENT_STATE.md')
+          rows = list(csv.DictReader(wbs_path.open(encoding='utf-8-sig', newline='')))
+          legacy = legacy_path.read_text(encoding='utf-8')
+
+          if len(rows) != 641:
+              raise SystemExit(f'expected 641 WBS tasks, got {len(rows)}')
+          ids = [r['Task_ID'].strip() for r in rows]
+          if len(ids) != len(set(ids)):
+              raise SystemExit('duplicate Task_ID')
+          idset = set(ids)
+          if any(not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:-]*', tid) for tid in ids):
+              raise SystemExit('invalid task id syntax')
+          if any(not (r.get('Title') or '').strip() for r in rows):
+              raise SystemExit('missing title')
+          if any(not (r.get('Acceptance_ID') or '').strip() or not (r.get('Acceptance_Criteria') or '').strip() for r in rows):
+              raise SystemExit('missing acceptance contract')
+
+          heading_re = re.compile(r'^##\s+(TSK-\d{4})\b([^\n]*)$', re.M)
+          matches = list(heading_re.finditer(legacy))
+          explicit = {}
+          for i, m in enumerate(matches):
+              tid = m.group(1)
+              end = matches[i + 1].start() if i + 1 < len(matches) else len(legacy)
+              section = legacy[m.start():end]
+              head = m.group(0)
+              status = None
+              if re.search(r'(?i)\bcurrent accepted stable state\b|\bTARGET ACCEPTANCE PASS\b|\bTARGET ACCEPTANCE COMPLETE\b|\bPASS UNDER\b', head):
+                  if re.search(r'(?i)(?:\*\*|`)?PASS(?:\*\*|`)?\b|Runtime state:\s*`?PASS`?', section):
+                      status = 'PASS'
+              if re.search(r'(?i)\bWAITING\b|\bDEFERRED\b', head):
+                  status = 'WAITING'
+              if re.search(r'(?i)\bremains\s+`?TODO`?\b|:\s*\*\*TODO\*\*|Runtime state:\s*`?TODO`?', section):
+                  status = 'TODO'
+              if re.search(r'(?i)\bRuntime state:\s*`?PASS`?\b', section):
+                  status = 'PASS'
+              if re.search(r'(?i)^`?TSK-\d{4}[^\n]*:\s*\*\*PASS\*\*', section, re.M):
+                  status = 'PASS'
+              if re.search(r'(?i)^`?TSK-\d{4}[^\n]*:\s*\*\*WAITING(?:\s*/[^*]+)?\*\*', section, re.M):
+                  status = 'WAITING'
+              if status:
+                  explicit[tid] = status
+
+          initial_states = {}
+          for r in rows:
+              tid = r['Task_ID'].strip()
+              state = (r.get('Execution_State') or '').strip().upper()
+              if state not in {'PASS', 'TODO', 'WAITING'}:
+                  raise SystemExit(f'unsupported WBS Execution_State for {tid}: {state!r}')
+              initial_states[tid] = state
+
+          states = dict(initial_states)
+          states.update(explicit)
+
+          cr0014 = {'TSK-0631','TSK-0633','TSK-0634','TSK-0635','TSK-0637','TSK-0640'}
+          cr0015 = {'TSK-0630','TSK-0421','TSK-0415','TSK-0416','TSK-0370','TSK-0499','TSK-0242'}
+          fixed_waiting = {'TSK-0243','TSK-0360','TSK-0369','TSK-0455'} | cr0014 | cr0015
+          for tid in fixed_waiting:
+              if tid not in idset:
+                  raise SystemExit(f'missing fixed WAITING task {tid}')
+              states[tid] = 'WAITING'
+
+          # TSK-0146 is the documented stale-WBS exception and must preserve runtime PASS.
+          if explicit.get('TSK-0146') != 'PASS':
+              raise SystemExit('TSK-0146 runtime PASS was not recovered from legacy checkpoint')
+          states['TSK-0146'] = 'PASS'
+
+          priority_map = {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3}
+          priority_values = sorted(set((r.get('Priority') or '').strip().upper() for r in rows))
+          unknown_priority = [p for p in priority_values if p and p not in priority_map]
+          if unknown_priority:
+              raise SystemExit(f'unsupported priority values: {unknown_priority}')
+
+          dependencies = {}
+          edge_count = 0
+          for r in rows:
+              tid = r['Task_ID'].strip()
+              deps = sorted(set(re.findall(r'TSK-\d{4}', (r.get('Dependencies') or ''))))
+              if tid in deps:
+                  raise SystemExit(f'self dependency: {tid}')
+              missing = [d for d in deps if d not in idset]
+              if missing:
+                  raise SystemExit(f'missing dependencies for {tid}: {missing}')
+              dependencies[tid] = deps
+              edge_count += len(deps)
+          if edge_count != 858:
+              raise SystemExit(f'expected 858 dependency edges, got {edge_count}')
+
+          indeg = {tid: 0 for tid in ids}
+          succ = {tid: [] for tid in ids}
+          for tid, deps in dependencies.items():
+              indeg[tid] = len(deps)
+              for dep in deps:
+                  succ[dep].append(tid)
+          q = deque(sorted(tid for tid, n in indeg.items() if n == 0))
+          seen = 0
+          while q:
+              node = q.popleft()
+              seen += 1
+              for nxt in succ[node]:
+                  indeg[nxt] -= 1
+                  if indeg[nxt] == 0:
+                      q.append(nxt)
+          if seen != len(ids):
+              raise SystemExit('dependency graph is cyclic')
+
+          legacy_ref = f'CURRENT_STATE.md@{SOURCE}; blob {LEGACY_BLOB}'
+          wbs_ref = f'Plans/Master/WBS/master-wbs.csv@{SOURCE}; blob {WBS_BLOB}'
+          manifest_ref = f'Plans/Master/MANIFEST.yaml@{SOURCE}; blob {MANIFEST_BLOB}'
+          master_ref = f'Plans/Master/MASTER_PLAN.md@{SOURCE}; blob {MASTER_BLOB}'
+
+          objectives = [
+              {
+                  'id': 'OBJ-USESAFEWEB-V1',
+                  'summary': 'Execute the current owner-frozen UseSafeWeb.com Master Plan through the current Version-1 and controlled Release-1 scope without weakening its requirements, evidence, authority, gates, risks, interfaces, or material-action boundaries.',
+                  'reference': manifest_ref + '; ' + master_ref,
+              }
+          ]
+
+          policies = [
+              ('POL-001', 'This JSON is a controlled serialization migration of the existing ACTIVE UseSafeWeb.com project. checkpoint_revision=1 and baseline.version=1 are migration-origin counters only; they do not reinitialize, reactivate, redesign, or reset the project.'),
+              ('POL-002', f'The owner-frozen modular planning authority remains external and unchanged at {manifest_ref}. This checkpoint mirrors the 641 canonical WBS task identities, titles, hard dependencies, priorities, acceptance criteria and runtime states; the external plan remains controlling for full task semantics, lifecycle gates, verification/evidence contracts, risks, interfaces and action authority.'),
+              ('POL-003', f'Migration runtime states were reconstructed mechanically from WBS Execution_State at {wbs_ref}, then superseded by later explicit current-runtime records in the immutable legacy checkpoint {legacy_ref}, plus current owner deferrals CR-0012/CR-0014/CR-0015. After this migration, runtime.items in this checkpoint are current runtime authority; stale WBS execution snapshots must never overwrite later confirmed checkpoint state.'),
+              ('POL-004', 'Empty baseline.gates and per-item gates arrays are a representation bridge, not a waiver. Before any TODO becomes executable, reload and enforce every applicable current lifecycle gate, trigger, precondition, interface, risk, action-authority and evidence rule from the owner-frozen modular Master Plan; any mismatch fails closed.'),
+              ('POL-005', 'DEC-0059 / CR-0012 remains active: TSK-0455 stays WAITING until the integrated environment is fully working and a fresh Ubuntu 24.04 LTS target plus required DNS/TLS/monitoring access are durably available; TSK-0456, TSK-0457 and TSK-0492 remain dependency-blocked until TSK-0455 actually passes.'),
+              ('POL-006', 'DEC-0061 / CR-0014 remains active: exactly TSK-0631, TSK-0633, TSK-0634, TSK-0635, TSK-0637 and TSK-0640 are deferred until after the controlled Release-1 test with approximately 10-20 people. They remain non-PASS and their dependencies and ACC/VER/EVD obligations are preserved.'),
+              ('POL-007', 'DEC-0062 / CR-0015 remains active: exactly TSK-0630, TSK-0421, TSK-0415, TSK-0416, TSK-0370, TSK-0499 and TSK-0242 are deferred until after Version 1 / the controlled Release-1 test with approximately 10-20 people. They remain non-PASS and their dependencies and ACC/VER/EVD obligations are preserved; successors remain undeferred and obey ordinary dependency blocking.'),
+              ('POL-008', 'DEC-0056 / CR-0009 remains active: pure legal/regulatory/compliance work is owner-external and nonblocking for governed sequencing only; no legal PASS, legal conclusion, filing, signature, consent, professional approval or compliance fact is fabricated. Mixed tasks still require every non-legal criterion.'),
+              ('POL-009', 'DEC-0054 / CR-0007 remains active: maximize evidence-driven AI autonomy within the frozen scope and use the approved production-only active lifecycle after integrated readiness; this creates no PASS or material action by itself and never bypasses actual legal, safety, security, platform, consent or technical prohibitions.'),
+              ('POL-010', 'DEC-0055 / CR-0008 remains active: use minimum sufficient durable evidence without weakening acceptance, security/privacy/recovery independence, dependency semantics or action authority.'),
+              ('POL-011', 'DEC-0060 / CR-0013 remains active: ordinary governed AUTO_ALLOWED critical-path changes use deterministic automated quality/change-policy verification without mandatory human or Code Owner approval; genuinely separate human/material-action boundaries remain controlling.'),
+              ('POL-012', 'DEC-0053 / CR-0006 remains the Version-1 product boundary: accountless core plus optional parent account/session/minimum ownership persistence/lightweight dashboard/device management; mandatory login for core value, browsing/query/activity history, child accounts and unrestricted customer DNS administration remain excluded.'),
+              ('POL-013', 'No deployment, live-device/profile/certificate action, service removal or revocation, participant processing, telemetry activation, production/public activation, geographic/market activation, payment, launch, or other fenced material action is inferred from this checkpoint migration. Such actions require their current independent authority and evidence boundary.'),
+              ('POL-014', f'Pre-migration runtime and detailed evidence history remains reconstructable and immutable at {legacy_ref}. Migration preserves valid historical evidence by reference and creates no new task, gate or milestone PASS.'),
+              ('POL-015', 'Legacy automation that assumes CURRENT_STATE.md is Markdown is not checkpoint authority. Any such automation must be treated as incompatible until independently verified or updated; checkpoint mutation must use the qualified SERIAL LIGHT read/write/reread-confirm procedure and may not reconstruct authority from a parser assumption.'),
+          ]
+          policy_rules = [{'id': pid, 'text': text} for pid, text in sorted(policies)]
+
+          def special_wait(tid, row):
+              ref = f'{wbs_ref}#{tid}; {legacy_ref}'
+              if tid == 'TSK-0243':
+                  return {
+                      'condition': 'Public DNS service is present but the required verify.usesafeweb.com / challenge-host verifier routing remains absent, while the public web origin and dns-verification request route remain HTTP 502. Functional public-target proof is therefore not yet available.',
+                      'resolution_check': f'Rerun only the authorized bounded read-only TSK-0243 public trust-boundary preflight (run family {PREFLIGHT_RUN}). Treat the wait as resolved only when verifier wildcard/challenge routing and the required public web/API trust boundary are externally present and eligible for the task functional proof without crossing any deployment or activation fence.',
+                      'reference': ref + f'; preflight run {PREFLIGHT_RUN} attempt {PREFLIGHT_ATTEMPT} job {PREFLIGHT_JOB}',
+                  }
+              if tid == 'TSK-0360':
+                  return {
+                      'condition': 'No authorized supported iPhone/device target plus required profile-delivery access is durably available for the current target acceptance boundary.',
+                      'resolution_check': 'Confirm an authorized supported device/target and the exact required profile-delivery access are durably available under current authority; then re-evaluate current task acceptance and material-action fences before transitioning to TODO.',
+                      'reference': ref,
+                  }
+              if tid == 'TSK-0369':
+                  return {
+                      'condition': 'Current durable authority does not yet explicitly permit the required target deployment/enablement and no qualifying target-runtime access is established.',
+                      'resolution_check': 'Confirm current explicit authority for the required target deployment/enablement and qualifying target-runtime access, then re-evaluate current acceptance and material-action fences before transitioning to TODO.',
+                      'reference': ref,
+                  }
+              if tid == 'TSK-0455':
+                  return {
+                      'condition': 'Owner sequencing under DEC-0059 / CR-0012 defers fresh-host deployment/recovery verification until the integrated environment is fully working and a fresh Ubuntu 24.04 LTS target plus required DNS/TLS/monitoring access are durably available.',
+                      'resolution_check': 'Verify the integrated environment is fully working and a fresh Ubuntu 24.04 LTS target with required DNS/TLS/monitoring access is durably available; then re-evaluate TSK-0455 under its unchanged ACC/VER/EVD before transitioning to TODO.',
+                      'reference': ref + '; DEC-0059 / CR-0012',
+                  }
+              if tid in cr0014:
+                  return {
+                      'condition': 'Deferred by DEC-0061 / CR-0014 until after the controlled Release-1 test with approximately 10-20 people.',
+                      'resolution_check': 'Confirm the controlled Release-1 test has completed and the current owner-frozen authority no longer defers this exact task; then re-evaluate dependencies, gates and acceptance before transitioning to TODO.',
+                      'reference': ref + '; DEC-0061 / CR-0014',
+                  }
+              if tid in cr0015:
+                  return {
+                      'condition': 'Deferred by DEC-0062 / CR-0015 until after Version 1 / the controlled Release-1 test with approximately 10-20 people.',
+                      'resolution_check': 'Confirm the Version-1 / controlled Release-1 deferral boundary has passed and current owner-frozen authority no longer defers this exact task; then re-evaluate dependencies, gates and acceptance before transitioning to TODO.',
+                      'reference': ref + '; DEC-0062 / CR-0015',
+                  }
+              parts = []
+              for key in ('Trigger', 'Preconditions'):
+                  value = (row.get(key) or '').strip()
+                  if value:
+                      parts.append(f'{key}: {value}')
+              condition = 'Canonical migrated runtime records this task as WAITING.'
+              if parts:
+                  condition += ' ' + ' '.join(parts)
+              return {
+                  'condition': condition,
+                  'resolution_check': 'Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.',
+                  'reference': ref,
+              }
+
+          work_items = []
+          runtime_items = []
+          for order, row in enumerate(rows, start=1):
+              tid = row['Task_ID'].strip()
+              ac_id = row['Acceptance_ID'].strip()
+              item = {
+                  'id': tid,
+                  'title': row['Title'].strip(),
+                  'wbs_path': [tid],
+                  'order': order,
+                  'depends_on': dependencies[tid],
+                  'acceptance_criteria': [
+                      {'id': ac_id, 'condition': row['Acceptance_Criteria'].strip()}
+                  ],
+                  'required_for_completion': (row.get('Plan_Status') or '').strip().upper() not in {'DEFERRED', 'NOT_APPLICABLE', 'SUPERSEDED_BASELINE'} and tid not in cr0014 and tid not in cr0015,
+              }
+              p = (row.get('Priority') or '').strip().upper()
+              if p:
+                  item['plan_priority'] = priority_map[p]
+              item['gates'] = []
+              item['execution_context'] = 'ACTIVE_ONLY'
+              item['spec_reference'] = f'{wbs_ref}#{tid}; Acceptance={ac_id}; Verification={(row.get("Verification_ID") or "").strip()}; Evidence={(row.get("Evidence_ID") or "").strip()}'
+              work_items.append(item)
+
+              status = states[tid]
+              rt = {'id': tid, 'status': status}
+              if status == 'PASS':
+                  if explicit.get(tid) == 'PASS':
+                      proof_ref = f'{legacy_ref}#{tid}'
+                      proof_summary = f'Migration preserves current runtime PASS for {tid} from the immutable legacy checkpoint under unchanged acceptance semantics.'
+                  else:
+                      proof_ref = f'{wbs_ref}#{tid}'
+                      proof_summary = f'Migration preserves existing WBS execution PASS for {tid}; no later explicit legacy runtime record contradicts it.'
+                  ev = (row.get('Evidence_Reference') or '').strip()
+                  verification_context = f'Migration source {SOURCE}; legacy checkpoint blob {LEGACY_BLOB}; WBS blob {WBS_BLOB}.'
+                  if ev:
+                      verification_context += f' WBS Evidence_Reference: {ev}'
+                  rt['acceptance_references'] = [
+                      {
+                          'ac_id': ac_id,
+                          'evidence_type': 'CHECKPOINT_SUMMARY',
+                          'reference': proof_ref,
+                          'summary': proof_summary,
+                          'verification_context': verification_context,
+                      }
+                  ]
+              elif status == 'WAITING':
+                  rt['wait'] = special_wait(tid, row)
+                  rt['acceptance_references'] = []
+              elif status == 'TODO':
+                  rt['acceptance_references'] = []
+              elif status == 'BLOCKED':
+                  raise SystemExit(f'unexpected BLOCKED state during migration: {tid}')
+              runtime_items.append(rt)
+
+          checkpoint = {
+              'checkpoint_schema': 'serial-light-checkpoint-v1',
+              'project_id': 'UseSafeWeb.com',
+              'governance_mode': 'SERIAL_LIGHT',
+              'checkpoint_revision': 1,
+              'baseline': {
+                  'version': 1,
+                  'objectives': objectives,
+                  'policy_rules': policy_rules,
+                  'gates': [],
+                  'work_items': work_items,
+                  'closure_criteria': [
+                      {
+                          'id': 'CLOSE-USESAFEWEB-V1',
+                          'condition': 'All obligations required for completion by the current owner-frozen modular Master Plan, after current explicit deferrals and owner-external exclusions, are satisfied with valid durable proof; all mandatory current lifecycle gates and closure conditions are satisfied; and no project-wide governance blocker remains.'
+                      }
+                  ],
+              },
+              'runtime': {
+                  'project_status': 'ACTIVE',
+                  'governance_blocker': None,
+                  'items': runtime_items,
+                  'gate_satisfactions': [],
+                  'human_constraints': [],
+                  'closure_references': [],
+              },
+          }
+
+          # Schema-shape and semantic validation for this exact candidate.
+          required_top = ['checkpoint_schema','project_id','governance_mode','checkpoint_revision','baseline','runtime']
+          if list(checkpoint) != required_top:
+              raise SystemExit('top-level key order/shape invalid')
+          if checkpoint['checkpoint_schema'] != 'serial-light-checkpoint-v1' or checkpoint['project_id'] != 'UseSafeWeb.com' or checkpoint['governance_mode'] != 'SERIAL_LIGHT':
+              raise SystemExit('identity invalid')
+          if checkpoint['checkpoint_revision'] != 1 or checkpoint['baseline']['version'] != 1 or checkpoint['runtime']['project_status'] != 'ACTIVE':
+              raise SystemExit('migration origin lifecycle invalid')
+          if checkpoint['runtime']['governance_blocker'] is not None:
+              raise SystemExit('unexpected governance blocker')
+          if len(work_items) != 641 or len(runtime_items) != 641:
+              raise SystemExit('item cardinality invalid')
+          if [w['id'] for w in work_items] != [r['id'] for r in runtime_items]:
+              raise SystemExit('runtime/baseline one-to-one order invalid')
+          if len({w['order'] for w in work_items}) != 641 or min(w['order'] for w in work_items) != 1 or max(w['order'] for w in work_items) != 641:
+              raise SystemExit('work order invalid')
+          for w, rt in zip(work_items, runtime_items):
+              if w['wbs_path'][-1] != w['id']:
+                  raise SystemExit(f'wbs_path invalid for {w["id"]}')
+              acs = [a['id'] for a in w['acceptance_criteria']]
+              if len(acs) != len(set(acs)) or not acs:
+                  raise SystemExit(f'acceptance ids invalid for {w["id"]}')
+              refs = rt['acceptance_references']
+              if rt['status'] == 'PASS':
+                  if set(r['ac_id'] for r in refs) != set(acs) or len(refs) != len(acs) or 'wait' in rt or 'blocker' in rt:
+                      raise SystemExit(f'PASS payload invalid for {w["id"]}')
+              elif rt['status'] == 'WAITING':
+                  if 'wait' not in rt or 'blocker' in rt or not rt['wait'].get('condition') or not rt['wait'].get('resolution_check'):
+                      raise SystemExit(f'WAITING payload invalid for {w["id"]}')
+              elif rt['status'] == 'TODO':
+                  if 'wait' in rt or 'blocker' in rt:
+                      raise SystemExit(f'TODO payload invalid for {w["id"]}')
+              else:
+                  raise SystemExit(f'unsupported runtime state {rt["status"]}')
+
+          counts = Counter(states.values())
+          print('MIGRATED_STATUS_COUNTS=' + repr(dict(sorted(counts.items()))))
+          print('PRIORITY_VALUES=' + repr(priority_values))
+          print(f'DEPENDENCY_EDGES={edge_count}')
+          print(f'EXPLICIT_RUNTIME_OVERRIDES={len(explicit)}')
+          print(f'REQUIRED_FOR_COMPLETION={sum(1 for w in work_items if w["required_for_completion"])}')
+          for tid in sorted(fixed_waiting):
+              rt = runtime_items[ids.index(tid)]
+              if rt['status'] != 'WAITING':
+                  raise SystemExit(f'fixed wait lost: {tid}')
+          if runtime_items[ids.index('TSK-0146')]['status'] != 'PASS':
+              raise SystemExit('TSK-0146 PASS lost')
+
+          text = json.dumps(checkpoint, ensure_ascii=False, indent=2) + '\n'
+          forbidden = ['"RUNNING"', 'active_claim', 'claim_owner', 'lease', 'heartbeat', 'next_work', 'current_phase', 'conversation_id']
+          for token in forbidden:
+              if token in text:
+                  raise SystemExit(f'forbidden serialized control field/token: {token}')
+          secret_patterns = [r'gh[pousr]_[A-Za-z0-9_]{20,}', r'-----BEGIN (?:RSA |EC |OPENSSH |)?PRIVATE KEY-----']
+          for pat in secret_patterns:
+              if re.search(pat, text):
+                  raise SystemExit(f'possible secret matched {pat}')
+
+          legacy_path.write_text(text, encoding='utf-8', newline='\n')
+          if legacy_path.read_bytes().startswith(b'\xef\xbb\xbf'):
+              raise SystemExit('BOM detected')
+          print(f'CHECKPOINT_BYTES={legacy_path.stat().st_size}')
+          print('CHECKPOINT_GENERATION=PASS')
+          PY
+
+          python -m json.tool CURRENT_STATE.md >/dev/null
+          git diff --check -- CURRENT_STATE.md
+          test "$(git status --porcelain | wc -l)" -eq 1
+          test -n "$(git status --porcelain -- CURRENT_STATE.md)"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'governance: migrate CURRENT_STATE to SERIAL LIGHT checkpoint schema'
+          CANDIDATE_COMMIT="$(git rev-parse HEAD)"
+          CANDIDATE_BLOB="$(git hash-object CURRENT_STATE.md)"
+          echo "CANDIDATE_COMMIT=${CANDIDATE_COMMIT}"
+          echo "CANDIDATE_BLOB=${CANDIDATE_BLOB}"
+          test "$(git diff --name-only "${SOURCE}"..HEAD)" = 'CURRENT_STATE.md'
+          git push origin HEAD:"${CANDIDATE}"
+          echo 'CANDIDATE_PUSH=PASS'
