@@ -1,0 +1,176 @@
+name: Diagnose governed frontier after TSK-0629
+
+on:
+  push:
+    branches:
+      - diag/frontier-after-tsk0629-20260904
+    paths:
+      - .github/workflows/diag-frontier-after-tsk0629-20260904.yml
+
+permissions:
+  contents: read
+
+jobs:
+  derive-frontier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact diagnostic head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Derive exact current dependency-ready frontier
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE='ef1efc463bd45e6773776ff3475f321888106d48'
+          test "${GITHUB_REF_NAME}" = 'diag/frontier-after-tsk0629-20260904'
+          test "$(git rev-parse HEAD^)" = "${BASE}"
+          test "$(git hash-object CURRENT_STATE.md)" = '9e9617db4f27cc9479751210b650f9e9e3ee224c'
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = '142a0d45b381136567d78545f063333f1e74901f'
+          test "$(git hash-object Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md)" = 'a4d2daf2ff880f0c3976ce52414890355a56d974'
+          test "$(git hash-object Plans/Master/Registers/GATES.md)" = '87cf9060954a82e1d5a092200d3c922f1986a5da'
+          test -z "$(git diff --name-only "${BASE}" HEAD -- . ':!.github/workflows/diag-frontier-after-tsk0629-20260904.yml')"
+          echo 'FRONTIER_AUTHORITY_BINDING=PASS'
+
+          python3 - <<'PY'
+          import csv
+          import re
+          from pathlib import Path
+
+          wbs_path = Path('Plans/Master/WBS/master-wbs.csv')
+          state_text = Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          rows = list(csv.DictReader(wbs_path.open(encoding='utf-8', newline='')))
+          by_id = {r['Task_ID']: r for r in rows if r.get('Task_ID', '').startswith('TSK-')}
+
+          allowed = {'PASS', 'TODO', 'WAITING', 'BLOCKED'}
+          runtime = {}
+
+          # Canonical stable-state sections are authoritative runtime overlays. For each
+          # section, accept only an explicit bold status on a line that names the same task.
+          lines = state_text.splitlines()
+          section_re = re.compile(r'^##\s+(TSK-\d{4})(?:\s*/[^ ]+)?\s+current accepted stable state\b')
+          explicit_re = re.compile(r'`(TSK-\d{4})(?:\s+—[^`]*)?`[^\n]*?\*\*(PASS|TODO|WAITING|BLOCKED)\*\*')
+          for i, line in enumerate(lines):
+              sm = section_re.search(line)
+              if not sm:
+                  continue
+              tid = sm.group(1)
+              for later in lines[i + 1:i + 14]:
+                  if later.startswith('## '):
+                      break
+                  for em in explicit_re.finditer(later):
+                      if em.group(1) == tid:
+                          runtime[tid] = em.group(2)
+                          break
+                  if tid in runtime:
+                      break
+
+          # Also accept exact direct task-status lines outside a stable-state section.
+          for line in lines:
+              matches = list(explicit_re.finditer(line))
+              if len(matches) == 1:
+                  runtime[matches[0].group(1)] = matches[0].group(2)
+
+          def effective(tid):
+              row = by_id.get(tid)
+              if not row:
+                  return 'MISSING'
+              raw = (row.get('Execution_State') or '').strip().upper()
+              base = raw if raw in allowed else 'UNKNOWN'
+              return runtime.get(tid, base)
+
+          # Guard the known post-mutation semantics so a stale-heading heuristic cannot pass.
+          assert effective('TSK-0629') == 'PASS', effective('TSK-0629')
+          assert effective('TSK-0243') == 'TODO', effective('TSK-0243')
+
+          lg07_pass = bool(re.search(r'`LG-07\s+—[^`]+`:\s*\*\*PASS\*\*', state_text))
+          lg08_pass = bool(re.search(r'`LG-08\s+—[^`]+`:\s*\*\*PASS\*\*', state_text))
+          assert lg07_pass, 'LG-07 current PASS not found'
+          active_max_stage = 7 if lg08_pass else 6
+
+          prio = {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3}
+          candidates = []
+          for order, row in enumerate(rows):
+              tid = row.get('Task_ID', '')
+              if not tid.startswith('TSK-'):
+                  continue
+              if effective(tid) != 'TODO':
+                  continue
+              if (row.get('Action_Authority') or '').strip() != 'AUTO_ALLOWED':
+                  continue
+              plan_status = (row.get('Plan_Status') or '').strip().upper()
+              if plan_status in {'DEFERRED', 'NOT_APPLICABLE'}:
+                  continue
+              m = re.fullmatch(r'L(\d+)', (row.get('Lifecycle_Stage') or '').strip())
+              if not m or int(m.group(1)) > active_max_stage:
+                  continue
+              deps = re.findall(r'TSK-\d{4}', row.get('Dependencies') or '')
+              dep_states = [(d, effective(d)) for d in deps]
+              unresolved = [(d, s) for d, s in dep_states if s != 'PASS']
+              candidates.append({
+                  'order': order,
+                  'id': tid,
+                  'priority': (row.get('Priority') or '').strip().upper(),
+                  'critical': (row.get('Critical_Path') or '').strip().upper(),
+                  'stage': (row.get('Lifecycle_Stage') or '').strip(),
+                  'title': row.get('Title') or '',
+                  'deps': dep_states,
+                  'unresolved': unresolved,
+                  'trigger': row.get('Trigger') or '',
+                  'pre': row.get('Preconditions') or '',
+                  'risk': row.get('Risk_Reference') or '',
+                  'iface': row.get('Interface_Reference') or '',
+                  'req': row.get('Requirement_Reference') or '',
+                  'acceptance': row.get('Acceptance_ID') or '',
+                  'verification': row.get('Verification_ID') or '',
+                  'evidence': row.get('Evidence_ID') or '',
+                  'plan_status': plan_status,
+              })
+
+          candidates.sort(key=lambda c: (prio.get(c['priority'], 99), 0 if c['critical'] == 'YES' else 1, c['order'], c['id']))
+          ready = [c for c in candidates if not c['unresolved']]
+
+          print(f'FRONTIER_TASK_COUNT={len(rows)}')
+          print(f'FRONTIER_RUNTIME_OVERLAYS={len(runtime)}')
+          print('FRONTIER_LG07=PASS')
+          print(f'FRONTIER_LG08={"PASS" if lg08_pass else "NON_PASS"}')
+          print(f'FRONTIER_ACTIVE_MAX_STAGE=L{active_max_stage}')
+          print(f'FRONTIER_TODO_AUTO_ACTIVE={len(candidates)}')
+          print(f'FRONTIER_DEPENDENCY_READY={len(ready)}')
+          print('FRONTIER_TSK0629=PASS')
+          print('FRONTIER_TSK0243=TODO')
+
+          print('=== DEPENDENCY_READY_CANDIDATES ===')
+          for c in ready[:40]:
+              deptext = ';'.join(f'{d}:{s}' for d, s in c['deps']) or '-'
+              print(
+                  'CANDIDATE'
+                  f'|{c["id"]}|priority={c["priority"]}|critical={c["critical"]}|stage={c["stage"]}'
+                  f'|order={c["order"]}|plan={c["plan_status"]}|deps={deptext}'
+                  f'|accept={c["acceptance"]}|verify={c["verification"]}|evidence={c["evidence"]}'
+                  f'|risk={c["risk"]}|iface={c["iface"]}|req={c["req"]}'
+                  f'|title={c["title"]}|trigger={c["trigger"]}|pre={c["pre"]}'
+              )
+
+          print('=== TOP_BLOCKED_BY_DEPENDENCY ===')
+          for c in [x for x in candidates if x['unresolved']][:25]:
+              unresolved = ';'.join(f'{d}:{s}' for d, s in c['unresolved'])
+              print(
+                  'BLOCKED_CANDIDATE'
+                  f'|{c["id"]}|priority={c["priority"]}|critical={c["critical"]}|stage={c["stage"]}'
+                  f'|order={c["order"]}|unresolved={unresolved}|title={c["title"]}'
+              )
+
+          if not ready:
+              print('FRONTIER_NO_DEPENDENCY_READY=YES')
+          else:
+              first = ready[0]
+              print(f'FRONTIER_FIRST_DEPENDENCY_READY={first["id"]}')
+          print('FRONTIER_DIAGNOSTIC=PASS')
+          PY
+
+          test -z "$(git status --porcelain)"
+          echo 'FRONTIER_READ_ONLY=PASS'
