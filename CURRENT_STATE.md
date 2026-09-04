@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-04T07:22:51Z
+**Updated:** 2026-09-04T07:52:29Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -3281,4 +3281,17 @@ Recompute the residual executable frontier from current canonical WBS/graph/runt
 - Verification: persisted approved projection match; runtime API checks; synthetic loopback DNS; negative query-log/ECS/upstream/filter-processor fixtures; runtime-normalization regression; deterministic sanitized diff; secret separation; staged-candidate/root-only rollback protection; separate independent target verification job.
 - Apply controlled-field change count: `0`; sanitized changed paths: `none`.
 - Security/privacy: no secret, raw query content or client identifier is written to Git/evidence; runtime filter IDs are preserved; non-controlled AdGuard configuration semantics are preserved during candidate generation.
+- **Non-inference:** `TSK-0455` remains DEFERRED / WAITING under DEC-0059 / CR-0012 with unchanged `ACC-0455 / VER-0455 / EVD-0455`; `TSK-0456`, `TSK-0457` and `TSK-0492` remain dependency-blocked. No new environment deployment, participant processing, telemetry, profile/certificate distribution, service revocation/removal, public/market activation, payment or launch authority is inferred.
+
+## TSK-0449 current accepted stable state — 2026-09-04
+
+`TSK-0449 — Implement environment DNS, DoH endpoint, and certificate automation`: **PASS** under current `ACC-0449 / VER-0449 / EVD-0449`.
+
+- Action authority: **A3 / AUTO_ALLOWED**; direct hard dependency `TSK-0451` and lifecycle gate `LG-07` are current durable PASS.
+- Exact target: repository-scoped self-hosted runner on `adguardvm`, Ubuntu 24.04 LTS, Azure West Europe; independent public verification ran on a separate GitHub-hosted Ubuntu 24.04 runner.
+- Versioned verifier: `infrastructure/adguard-server/tsk-0449-dns-tls-verifier.sh`, blob `456b7835a8631ebb57859e00c8604590e110ba1c`, SHA-256 `d7867094fc0213107e634b8ed9e6a31cddb0cd43db9e651bc8b2aa6cd8f8a779`; source commit `064ee110cd6d90136ea37df574baaef848b82d8a`.
+- Durable evidence: `TSK_0449_DNS_DOH_TLS_AUTOMATION_EVIDENCE_2026-09-04.md`, blob `3e6263c282a0f24d1594a7a7d091edc4b8103247`; GitHub Actions run/attempt `33850683968 / 1`.
+- Verification: direct target DNS identity/region; local encrypted-DNS TLS checks plus independent external public DoH TLS/hostname validation; DoH request/response checks; negative admin/route/hostname/plaintext-DNS checks; Certbot timer; fresh renewal dry-run; production full-chain unchanged; deploy-hook ownership/executability; expiry monitor; emergency replacement/rollback procedure; private-key permission and secret-boundary checks.
+- Production mutation: **none**. DNS records, Azure resources, Nginx/firewall configuration, certificate lineage, public activation and participant-facing state were not changed; persistent staging was not triggered.
+- Security/privacy: no IP address, private key, ACME/registrar/API credential, raw DNS response/query history, or participant/client identifier is written to Git/evidence.
 - **Non-inference:** `TSK-0455` remains DEFERRED / WAITING under DEC-0059 / CR-0012 with unchanged `ACC-0455 / VER-0455 / EVD-0455`; `TSK-0456`, `TSK-0457` and `TSK-0492` remain dependency-blocked. No new environment deployment, participant processing, telemetry, profile/certificate distribution, service revocation/removal, public/market activation, payment or launch authority is inferred.
