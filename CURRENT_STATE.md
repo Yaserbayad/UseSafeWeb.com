@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-04T09:33:25Z
+**Updated:** 2026-09-04T09:47:33Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -3214,7 +3214,7 @@ Recompute the residual L6 frontier from current WBS/graph/runtime/gates. Direct 
 
 ### Queue status after TSK-0491 acceptance
 
-Recompute the residual executable frontier from current WBS/graph/runtime/gates and current owner decisions. `TSK-0453` remains WAITING on GitHub platform review-enforcement proof and `TSK-0417` remains non-PASS at its real-target material-action boundary; neither prevents independent eligible `AUTO_ALLOWED` work elsewhere.
+Historical snapshot at TSK-0491 acceptance: `TSK-0453` was `WAITING` on GitHub platform review-enforcement proof and `TSK-0417` was non-PASS at its real-target material-action boundary; the former TSK-0453 blocker was subsequently superseded by owner-approved `DEC-0060 / CR-0013`, while the TSK-0417 boundary remained unchanged.
 
 ## TSK-0395 current accepted stable state — 2026-09-03
 
