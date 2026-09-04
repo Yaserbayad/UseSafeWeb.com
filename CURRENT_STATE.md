@@ -3246,3 +3246,14 @@ Recompute the residual executable frontier from current canonical WBS/graph/runt
 - `EVD-0374` is satisfied by the exact version/source lineage plus the durable GitHub Actions run/job output and canonical merge/read-back evidence; no deviation remained that invalidates `ACC-0374`.
 - Runtime state: `PASS`.
 - **Non-inference:** this PASS does not authorize or prove deployment, live-device/profile/certificate action, service removal/revocation, participant processing, telemetry activation, production/public activation, geographic/market activation, launch, or PASS for any successor, gate, or unrelated task. All other canonical runtime state and material-action fences remain unchanged by this synchronization.
+
+## Owner sequencing override — 2026-09-04 — CR-0012 single-working-server interim
+
+`TSK-0455 — Implement the complete production-grade Ubuntu 24.04 LTS deployment/recovery Bash script`: **WAITING / DEFERRED BY OWNER SEQUENCING**, not PASS.
+
+- Canonical planning authority `DEC-0059 / CR-0012` permits current development/integration to proceed using the one working server already available; a second/fresh Ubuntu target is not required for the current queue.
+- `TSK-0455` clean fresh-host target verification is deferred until the integrated environment is fully working. The owner intends re-evaluation after lunch on 2026-09-04 at earliest; the controlling deterministic trigger is the fully working integrated environment plus fresh Ubuntu 24.04 LTS target and required DNS/TLS/monitoring access.
+- `ACC-0455 / VER-0455 / EVD-0455` are unchanged and unsatisfied; no PASS is inferred or fabricated.
+- Hard-dependent `TSK-0456`, `TSK-0457`, and `TSK-0492` remain dependency-blocked until `TSK-0455` actually passes. The project may move past this branch only by selecting independent eligible work.
+- Interim use of one working server is a sequencing decision, not a permanent single-server production-architecture decision and not evidence of clean recovery capability.
+- **Material-action fences remain unchanged:** no deployment/public activation, participant processing, telemetry activation, service removal/revocation, geographic/market activation, payment, launch, or unrelated task/gate PASS is authorized by this change.
