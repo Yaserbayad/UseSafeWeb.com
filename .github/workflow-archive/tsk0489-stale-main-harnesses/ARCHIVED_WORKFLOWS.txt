@@ -1,0 +1,14 @@
+TSK-0489 / AG-009 post-merge stale-main-harness cleanup
+Canonical source commit inspected: aae5c44fb0dd5d414f9667cf96a83410bf3708b4
+Reason: each archived workflow was an old task-scoped acceptance harness that still triggered on every main push and was bound to obsolete WBS blob eb35f3b10356396c5117e3f47d0b0378953e2157. The sampled failure exited on that stale guard before substantive tests. Removing these files from .github/workflows prevents false-red main checks while preserving their exact source blobs and historical run evidence.
+
+.github/workflows/accept-tsk0360-profile-delivery-20260903.yml | run 33891743723 | stale WBS guard | blob 5adadaa3bb788aa9eb80d1f2f71ff8b9906a3b06
+.github/workflows/accept-tsk0376-accountless-state-machine-20260903.yml | run 33891743789 | stale WBS guard | blob 0a036df93c214c63a52705e5031bc05d7bd08c45
+.github/workflows/accept-tsk0375-intake-routing-20260903.yml | run 33891743844 | stale WBS guard | blob fbdc3b04ff9f9363713625913a365d85b54ec329
+.github/workflows/accept-tsk0499-product-events-metrics-20260903.yml | run 33891743801 | stale WBS guard | blob 5d692462244cf95a430b2fdc09a1fcfbea1cf282
+.github/workflows/accept-tsk0369-minimal-support-capture-20260903.yml | run 33891743707 | stale WBS guard | blob a7e4eecb1c96cc97cf2656a0c1b61890d8bc46a4
+.github/workflows/accept-tsk0380-deterministic-dev-commands-20260903.yml | run 33891743717 | stale WBS guard | blob 6e8152a62f7709ef049198c3f9d0a687ee4bbfa6
+.github/workflows/accept-tsk0491-dependency-sbom-20260903.yml | run 33891743787 | stale WBS guard | blob c7aa69093f6f18ba14fb464963ddff33a174a502
+.github/workflows/accept-tsk0243-dns-verification-20260903.yml | run 33891743704 | stale WBS guard | blob a7751db3058565414f573cf7bb73cb0e2d508a18
+
+This archive changes no task acceptance semantics, product behavior, deployment authority, participant state, DNS/AdGuard state, service state, telemetry, payment, activation, or launch authority.
