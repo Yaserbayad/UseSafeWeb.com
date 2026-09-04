@@ -276,7 +276,9 @@ test('route handlers expose POST-only node interfaces with bounded input, no-sto
 
   assert.match(probeRoute, /request\.headers\.get\(['"]host['"]\)/);
   assert.match(probeRoute, /request\.headers\.get\(['"]origin['"]\)/);
-  assert.match(probeRoute, /USESAFEWEB_PUBLIC_ORIGIN/);
+  assert.match(probeRoute, /readServerRuntimeConfig/);
+  assert.match(probeRoute, /config\.publicOrigin/);
+  assert.match(probeRoute, /config\.signingSecret/);
   assert.match(probeRoute, /Access-Control-Allow-Origin/);
   assert.match(probeRoute, /Vary['"]?\s*[:,]\s*['"]Origin['"]/);
   assert.doesNotMatch(probeRoute, /JSON\.parse/);

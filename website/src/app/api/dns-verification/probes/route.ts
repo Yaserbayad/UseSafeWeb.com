@@ -3,25 +3,9 @@ import {
   DNS_VERIFICATION_MAX_HTTP_BODY_BYTES,
   createDnsVerificationObservationFromProbeRequest,
 } from '@/lib/dns-verification-proof';
+import { readServerRuntimeConfig } from '@/lib/runtime-config';
 
 export const runtime = 'nodejs';
-
-function signingSecret(): string | null {
-  const value = process.env.USESAFEWEB_DNS_VERIFICATION_SIGNING_SECRET;
-  return typeof value === 'string' && Buffer.byteLength(value, 'utf8') >= 32 ? value : null;
-}
-
-function configuredPublicOrigin(): string | null {
-  const value = process.env.USESAFEWEB_PUBLIC_ORIGIN;
-  if (typeof value !== 'string') return null;
-  try {
-    const url = new URL(value);
-    if (url.protocol !== 'https:' || url.origin !== value) return null;
-    return value;
-  } catch {
-    return null;
-  }
-}
 
 function corsHeaders(origin: string): Record<string, string> {
   return {
@@ -40,13 +24,16 @@ function error(status: number, code: string, message: string, origin: string): R
 }
 
 export async function POST(request: Request): Promise<Response> {
-  const publicOrigin = configuredPublicOrigin();
-  if (!publicOrigin) {
+  let config;
+  try {
+    config = readServerRuntimeConfig();
+  } catch {
     return Response.json(
       { error: { code: 'VERIFIER_UNAVAILABLE', message: 'DNS verification is not configured.' } },
       { status: 503, headers: { 'Cache-Control': 'no-store' } },
     );
   }
+  const publicOrigin = config.publicOrigin;
 
   const origin = request.headers.get('origin');
   if (origin !== publicOrigin) return error(403, 'ORIGIN_NOT_ALLOWED', 'Probe origin is not allowed.', publicOrigin);
@@ -64,13 +51,15 @@ export async function POST(request: Request): Promise<Response> {
     return error(400, 'INVALID_REQUEST', 'Probe request must be valid UTF-8 text.', publicOrigin);
   }
 
-  const secret = signingSecret();
-  if (!secret) return error(503, 'VERIFIER_UNAVAILABLE', 'DNS verification is not configured.', publicOrigin);
-
   const host = request.headers.get('host');
   if (!host) return error(403, 'PROBE_NOT_AUTHORIZED', 'Probe request is not authorized.', publicOrigin);
 
-  const observationToken = createDnsVerificationObservationFromProbeRequest(requestToken, host, secret, Date.now());
+  const observationToken = createDnsVerificationObservationFromProbeRequest(
+    requestToken,
+    host,
+    config.signingSecret,
+    Date.now(),
+  );
   if (!observationToken) return error(403, 'PROBE_NOT_AUTHORIZED', 'Probe request is not authorized.', publicOrigin);
 
   return response(200, { observationToken }, publicOrigin);

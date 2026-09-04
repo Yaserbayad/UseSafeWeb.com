@@ -152,7 +152,8 @@ test('result route verifies both signed request and observation server-side and 
   assert.match(source, /verifyDnsProbeRequest/);
   assert.match(source, /verifyDnsVerificationObservation/);
   assert.match(source, /toApprovedDnsVerificationEvent/);
-  assert.match(source, /USESAFEWEB_DNS_VERIFICATION_SIGNING_SECRET/);
+  assert.match(source, /readServerRuntimeConfig/);
+  assert.match(source, /config\.signingSecret/);
   assert.match(source, /Cache-Control['"]?\s*[:,]\s*['"]no-store['"]/);
   assert.match(source, /requestToken/);
   assert.match(source, /observationToken/);

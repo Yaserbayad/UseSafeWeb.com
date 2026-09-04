@@ -6,6 +6,7 @@ import {
   verifyDnsProbeRequest,
   verifyDnsVerificationObservation,
 } from '@/lib/dns-verification-proof';
+import { readServerRuntimeConfig } from '@/lib/runtime-config';
 
 export const runtime = 'nodejs';
 
@@ -17,11 +18,6 @@ function response(status: number, body: unknown): Response {
 
 function error(status: number, code: string, message: string): Response {
   return response(status, { error: { code, message } });
-}
-
-function signingSecret(): string | null {
-  const value = process.env.USESAFEWEB_DNS_VERIFICATION_SIGNING_SECRET;
-  return typeof value === 'string' && Buffer.byteLength(value, 'utf8') >= 32 ? value : null;
 }
 
 function validToken(value: unknown): value is string {
@@ -58,17 +54,21 @@ export async function POST(request: Request): Promise<Response> {
   const body = parseBody(parsed);
   if (!body) return error(400, 'INVALID_REQUEST', 'Request body does not match the DNS verification result contract.');
 
-  const secret = signingSecret();
-  if (!secret) return error(503, 'VERIFIER_UNAVAILABLE', 'DNS verification is not configured.');
+  let config;
+  try {
+    config = readServerRuntimeConfig();
+  } catch {
+    return error(503, 'VERIFIER_UNAVAILABLE', 'DNS verification is not configured.');
+  }
 
   const nowMs = Date.now();
-  const issued = verifyDnsProbeRequest(body.requestToken, secret, nowMs);
+  const issued = verifyDnsProbeRequest(body.requestToken, config.signingSecret, nowMs);
   if (!issued)
     return error(403, 'PROOF_NOT_AUTHORIZED', 'DNS verification request is not valid for the current check.');
 
   const verified = verifyDnsVerificationObservation(
     body.observationToken,
-    secret,
+    config.signingSecret,
     nowMs,
     issued.scope,
     issued.challenge,

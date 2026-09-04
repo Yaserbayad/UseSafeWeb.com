@@ -1,5 +1,6 @@
 import { readBoundedUtf8Body } from '@/lib/bounded-request-body';
 import { DNS_VERIFICATION_MAX_HTTP_BODY_BYTES, createDnsProbeRequest } from '@/lib/dns-verification-proof';
+import { readServerRuntimeConfig } from '@/lib/runtime-config';
 
 export const runtime = 'nodejs';
 
@@ -11,11 +12,6 @@ function response(status: number, body: unknown): Response {
 
 function error(status: number, code: string, message: string): Response {
   return response(status, { error: { code, message } });
-}
-
-function signingSecret(): string | null {
-  const value = process.env.USESAFEWEB_DNS_VERIFICATION_SIGNING_SECRET;
-  return typeof value === 'string' && Buffer.byteLength(value, 'utf8') >= 32 ? value : null;
 }
 
 async function boundedJson(request: Request): Promise<unknown> {
@@ -48,11 +44,9 @@ export async function POST(request: Request): Promise<Response> {
   if (!scope)
     return error(400, 'INVALID_REQUEST', 'Request body does not match the DNS verification request contract.');
 
-  const secret = signingSecret();
-  if (!secret) return error(503, 'VERIFIER_UNAVAILABLE', 'DNS verification is not configured.');
-
   try {
-    const issued = createDnsProbeRequest(scope, secret, Date.now());
+    const config = readServerRuntimeConfig();
+    const issued = createDnsProbeRequest(scope, config.signingSecret, Date.now());
     return response(201, issued);
   } catch {
     return error(503, 'VERIFIER_UNAVAILABLE', 'DNS verification is not available.');
