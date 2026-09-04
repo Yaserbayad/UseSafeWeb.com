@@ -45,7 +45,7 @@ jobs:
           grep -Fq '## TSK-0451 current accepted stable state — 2026-09-04' CURRENT_STATE.md
           grep -Fq ': **PASS** under current `ACC-0451 / VER-0451 / EVD-0451`.' CURRENT_STATE.md
           grep -Fq 'LG-07' CURRENT_STATE.md
-          grep -Fq 'LG07_PASS_MARKER: PASS' CURRENT_STATE.md
+          grep -Fq '`LG-07 — Architecture, Security, Privacy and Delivery Readiness`: **PASS** under the current gate contract and `AUTO_ALLOWED` authority.' CURRENT_STATE.md
           grep -Fq 'CR-0012' Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md
           grep -Fq '`TSK-0455` remains DEFERRED / WAITING' CURRENT_STATE.md
           echo 'TARGET_RUNNER=adguardvm'
@@ -225,7 +225,7 @@ jobs:
           ! grep -Fq "${heading}" "${state}"
           grep -Fq '## TSK-0451 current accepted stable state — 2026-09-04' "${state}"
           grep -Fq ': **PASS** under current `ACC-0451 / VER-0451 / EVD-0451`.' "${state}"
-          grep -Fq 'LG07_PASS_MARKER: PASS' "${state}"
+          grep -Fq '`LG-07 — Architecture, Security, Privacy and Delivery Readiness`: **PASS** under the current gate contract and `AUTO_ALLOWED` authority.' "${state}"
           grep -Fq '`TSK-0455` remains DEFERRED / WAITING' "${state}"
           now="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
           sed -i -E "0,/^\*\*Updated:\*\*/s|^\*\*Updated:\*\*.*$|**Updated:** ${now}|" "${state}"
