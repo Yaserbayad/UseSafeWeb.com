@@ -63,11 +63,16 @@ certificate client's deployment hook to call
 working configuration in place.
 
 The default HTTP listener drops requests and the default TLS listener rejects
-the handshake. Only an exact lowercase 32-hex challenge hostname gets the
-certificate and only `POST /api/dns-verification/probes` reaches the app.
-Unrelated paths, methods, arbitrary Host values and direct-IP TLS do not sign.
-Access logging is off, bodies are limited to 4 KiB, timeouts are short, and the
-source-IP rate bucket returns 429 without persisting client history.
+the handshake. Both named TLS virtual hosts require the TLS SNI name to equal the
+normalized HTTP authority (`$host`); any mismatch returns HTTP 421 before proxying.
+This prevents the public application SNI/certificate from being paired with a
+challenge Host, and likewise prevents a challenge TLS connection from being
+reused with the public application Host. A valid verifier request therefore uses
+the same exact lowercase 32-hex challenge hostname for both TLS SNI and HTTP
+authority. Only `POST /api/dns-verification/probes` reaches the verifier path.
+Unrelated paths, methods, arbitrary Host/SNI combinations and direct-IP TLS do not
+sign. Access logging is off, bodies are limited to 4 KiB, timeouts are short,
+and the source-IP rate bucket returns 429 without persisting client history.
 
 ## Private DNS rewrite
 
