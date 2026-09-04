@@ -12,7 +12,7 @@ permissions:
 
 concurrency:
   group: usesafeweb-adguard-server
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   ephemeral-target-v2:
@@ -320,8 +320,14 @@ jobs:
 
           printf 'inner_stage=rate-limit\n' >"${ROOT}/failure-stage.txt"
           mkdir -p "${ROOT}/rate"
-          for i in $(seq 1 30); do (curl -sS --max-time 5 --cacert "${ROOT}/ca.crt" -o /dev/null -w '%{http_code}\n' -H 'Origin: https://eph-app.usesafeweb.test' -H 'Content-Type: text/plain' --data-binary "${request_token}" "https://${host}/api/dns-verification/probes" >"${ROOT}/rate/${i}.status" || true) & done
-          wait
+          rate_pids=()
+          for i in $(seq 1 30); do
+            (curl -sS --max-time 5 --cacert "${ROOT}/ca.crt" -o /dev/null -w '%{http_code}\n' -H 'Origin: https://eph-app.usesafeweb.test' -H 'Content-Type: text/plain' --data-binary "${request_token}" "https://${host}/api/dns-verification/probes" >"${ROOT}/rate/${i}.status" || true) &
+            rate_pids+=("$!")
+          done
+          for rate_pid in "${rate_pids[@]}"; do
+            wait "${rate_pid}"
+          done
           cat "${ROOT}"/rate/*.status | grep -qx 429
           echo 'TSK0243_EPH_RATE_LIMIT=PASS'
           printf 'inner_stage=query-history\n' >"${ROOT}/failure-stage.txt"
