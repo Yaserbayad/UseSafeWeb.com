@@ -8,7 +8,7 @@ on:
       - .github/workflows/diag-checkpoint-migration-20260905.yml
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   diagnose:
@@ -17,49 +17,74 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          persist-credentials: true
-      - name: Promote exact validated checkpoint blob to main
+          persist-credentials: false
+      - name: Reread validate published checkpoint and recompute frontier
         shell: bash
         run: |
           set -Eeuo pipefail
-          SOURCE='20e2763c0be2124378e3158ac559aed826bc6765'
+          LIVE='08b8de8e6b3e13ea7ce545e4a43e665141b812d6'
           CANDIDATE='c5e9520a3780265a434c57457db86adb2d833571'
-          LEGACY_BLOB='d45c7b1f98ceba6265944aabd970c250dc7be2d2'
-          CANDIDATE_BLOB='74f677cfd1a903463ab2c374ed7e043f67d900f2'
+          BLOB='74f677cfd1a903463ab2c374ed7e043f67d900f2'
           git fetch --no-tags origin main governance/checkpoint-migration-candidate-v2-20260905
-          test "$(git rev-parse origin/main)" = "$SOURCE"
-          test "$(git rev-parse origin/governance/checkpoint-migration-candidate-v2-20260905)" = "$CANDIDATE"
-          test "$(git rev-parse "$SOURCE":CURRENT_STATE.md)" = "$LEGACY_BLOB"
-          test "$(git rev-parse "$CANDIDATE":CURRENT_STATE.md)" = "$CANDIDATE_BLOB"
-          test "$(git diff --name-only "$SOURCE" "$CANDIDATE")" = 'CURRENT_STATE.md'
-          git checkout -B main origin/main
-          git checkout "$CANDIDATE" -- CURRENT_STATE.md
-          test "$(git diff HEAD --name-only)" = 'CURRENT_STATE.md'
-          test "$(git hash-object CURRENT_STATE.md)" = "$CANDIDATE_BLOB"
+          test "$(git rev-parse origin/main)" = "$LIVE"
+          test "$(git rev-parse "$LIVE":CURRENT_STATE.md)" = "$BLOB"
+          test "$(git rev-parse "$CANDIDATE":CURRENT_STATE.md)" = "$BLOB"
+          test "$(git diff --name-only "$LIVE" "$CANDIDATE")" = ''
+          git show "$LIVE":CURRENT_STATE.md > /tmp/live-checkpoint.json
           python - <<'PY'
-          import json
+          import json, re
+          from collections import Counter
           from pathlib import Path
-          p=Path('CURRENT_STATE.md')
-          cp=json.loads(p.read_text(encoding='utf-8'))
+          text=Path('/tmp/live-checkpoint.json').read_text(encoding='utf-8')
+          cp=json.loads(text)
+          assert text == json.dumps(cp, ensure_ascii=False, indent=2) + '\n'
           assert cp['checkpoint_schema']=='serial-light-checkpoint-v1'
           assert cp['project_id']=='UseSafeWeb.com'
           assert cp['governance_mode']=='SERIAL_LIGHT'
           assert cp['checkpoint_revision']==1
           assert cp['baseline']['version']==1
           assert cp['runtime']['project_status']=='ACTIVE'
-          assert len(cp['baseline']['work_items'])==641
-          assert len(cp['runtime']['items'])==641
+          work={x['id']:x for x in cp['baseline']['work_items']}
+          rt={x['id']:x for x in cp['runtime']['items']}
+          assert len(work)==len(rt)==641 and set(work)==set(rt)
+          counts=Counter(x['status'] for x in cp['runtime']['items'])
+          assert counts==Counter({'WAITING':419,'PASS':222}), counts
+          na=[]
+          for tid,wi in work.items():
+              ac=(wi.get('acceptance_criteria') or [{}])[0].get('condition','')
+              if 'NOT_APPLICABLE' in ac and 'scope' in ac.lower():
+                  na.append(tid)
+                  assert rt[tid]['status']=='PASS'
+                  refs=rt[tid].get('acceptance_references') or []
+                  assert len(refs)==1 and refs[0]['evidence_type'] in {'GITHUB_COMMIT','GITHUB_BLOB'}
+          assert len(na)==39, len(na)
+          for tid in {'TSK-0631','TSK-0633','TSK-0634','TSK-0635','TSK-0637','TSK-0640','TSK-0630','TSK-0421','TSK-0415','TSK-0416','TSK-0370','TSK-0499','TSK-0242','TSK-0243','TSK-0360','TSK-0369','TSK-0455'}:
+              assert rt[tid]['status']=='WAITING', tid
+          policies='\n'.join(x['text'] for x in cp['baseline']['policy_rules'])
+          for marker in ['CR-0012','CR-0014','CR-0015','No deployment','live-device/profile/certificate','participant','telemetry','payment','launch','public activation','material action']:
+              assert marker.lower() in policies.lower(), marker
+          t243=' '.join(str(v) for v in rt['TSK-0243']['wait'].values())
+          assert '33900198638' in t243 and '101194904055' in t243 and 'attempt 4' in t243.lower()
+          todo=[tid for tid,r in rt.items() if r['status']=='TODO']
+          eligible=[]
+          for tid in todo:
+              wi=work[tid]
+              if all(rt[d]['status']=='PASS' for d in wi.get('depends_on',[])):
+                  eligible.append(tid)
+          assert not todo and not eligible
+          print('REREAD_CONFIRM=PASS')
+          print('LIVE_MAIN=08b8de8e6b3e13ea7ce545e4a43e665141b812d6')
+          print('CHECKPOINT_BLOB=74f677cfd1a903463ab2c374ed7e043f67d900f2')
+          print('CHECKPOINT_REVISION=1')
+          print('BASELINE_VERSION=1')
+          print('PROJECT_STATUS=ACTIVE')
+          print('WORK_ITEMS=641')
+          print('RUNTIME_PASS=222')
+          print('RUNTIME_WAITING=419')
+          print('RUNTIME_TODO=0')
+          print('NOT_APPLICABLE_SCOPE_EXCLUSIONS=39')
+          print('ELIGIBLE_TODO=0')
+          print('TSK0243_WAIT_RESOLUTION_CHECK=PRESERVED')
+          print('CR0012_CR0014_CR0015=Preserved')
+          print('MATERIAL_ACTION_FENCES=Preserved')
           PY
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- CURRENT_STATE.md
-          git commit -m 'governance: publish validated SERIAL LIGHT checkpoint migration'
-          NEW_COMMIT="$(git rev-parse HEAD)"
-          test "$(git diff-tree --no-commit-id --name-only -r "$NEW_COMMIT")" = 'CURRENT_STATE.md'
-          test "$(git rev-parse "$NEW_COMMIT":CURRENT_STATE.md)" = "$CANDIDATE_BLOB"
-          git fetch --no-tags origin main
-          test "$(git rev-parse origin/main)" = "$SOURCE"
-          git push origin HEAD:main
-          echo "PROMOTION=PASS"
-          echo "NEW_MAIN=$NEW_COMMIT"
-          echo "CHECKPOINT_BLOB=$CANDIDATE_BLOB"
