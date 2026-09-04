@@ -1,0 +1,46 @@
+name: Apply owner CR-0014 runtime reconciliation
+
+on:
+  push:
+    branches:
+      - owner-cr0014-runtime-diagnostic-20260904
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Guard base and synchronize checkpoint
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          EXPECTED_BASE='2ac022bd71326fda69d1db0ff61b953ad31eaed9'
+          CANDIDATE_BRANCH='owner-cr0014-runtime-candidate-20260904'
+          test "$(git rev-parse HEAD)" = "$EXPECTED_BASE"
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$EXPECTED_BASE"
+          test -z "$(git ls-remote origin refs/heads/$CANDIDATE_BRANCH)"
+          git fetch --no-tags origin "$GITHUB_SHA"
+          git show "$GITHUB_SHA:.github/scripts/owner_cr0014_runtime_sync.py" > /tmp/owner_cr0014_runtime_sync.py
+          python3 /tmp/owner_cr0014_runtime_sync.py
+          git diff --check
+          test "$(git diff --name-only)" = 'CURRENT_STATE.md'
+          grep -Fq '## Release-1 limited-test scope deferral — 2026-09-04 — OWNER DECISION ACTIVE' CURRENT_STATE.md
+          grep -Fq 'No other task is deferred by this decision.' CURRENT_STATE.md
+          grep -Fq 'TSK-0641` remains dependency-blocked' CURRENT_STATE.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'Reconcile CR-0014 Release-1 deferrals in runtime state'
+          new_commit="$(git rev-parse HEAD)"
+          test "$(git rev-parse HEAD^)" = "$EXPECTED_BASE"
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$EXPECTED_BASE"
+          test -z "$(git ls-remote origin refs/heads/$CANDIDATE_BRANCH)"
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          echo "CR0014_RUNTIME_CANDIDATE_COMMIT=$new_commit"
+          echo "CR0014_CURRENT_STATE_BLOB=$(git rev-parse HEAD:CURRENT_STATE.md)"
