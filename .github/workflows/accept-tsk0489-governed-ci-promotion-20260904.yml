@@ -45,6 +45,19 @@ jobs:
           set -Eeuo pipefail
           test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
           echo 'TSK0489_CHECKOUT_SOURCE_SHA_BINDING=PASS'
+      - name: Prove mismatched source SHA is rejected fail-closed
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mismatch='0000000000000000000000000000000000000000'
+          set +e
+          TSK0489_SOURCE_SHA="$mismatch" bash .github/scripts/tsk0489-governed-ci.sh > /tmp/tsk0489-sha-mismatch.txt 2>&1
+          rc=$?
+          set -e
+          test "$rc" -eq 87
+          grep -Fq 'TSK0489_SOURCE_SHA_BINDING=FAIL' /tmp/tsk0489-sha-mismatch.txt
+          grep -Fq 'TSK0489_PROMOTION_ELIGIBLE=NO' /tmp/tsk0489-sha-mismatch.txt
+          echo 'TSK0489_SHA_MISMATCH_REJECTION=PASS'
       - uses: actions/setup-node@v6
         with:
           node-version: '22.23.2'
