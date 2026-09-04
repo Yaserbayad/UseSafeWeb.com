@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-04T06:57:39Z
+**Updated:** 2026-09-04T07:22:51Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -3269,3 +3269,16 @@ Recompute the residual executable frontier from current canonical WBS/graph/runt
 - Verification: `sshd -t`; effective `sshd -T` for root/password authentication; `ufw status verbose` plus SSH rule; `fail2ban-client -t` and `fail2ban-client status sshd`; enabled/active Fail2ban; enabled unattended-upgrades/APT timers; exact `20auto-upgrades` daily settings. A separate verification job independently re-ran VER-0451 after mutation on the same approved production target.
 - Security/privacy: no SSH/UFW rewrite occurred in TSK-0451; Fail2ban configuration is validated before activation and restored on activation failure; evidence omits authentication logs, banned IPs, credentials, keys, tokens, secrets, and unnecessary personal data.
 - **Non-inference:** `TSK-0455` remains DEFERRED / WAITING under DEC-0059 / CR-0012 with unchanged ACC/VER/EVD; its dependents remain blocked. No application/DNS/TLS deployment, profile/certificate distribution, service revocation, participant processing, telemetry, public/market activation, launch, or downstream gate PASS is inferred.
+
+## TSK-0422 current accepted stable state — 2026-09-04
+
+`TSK-0422 — Implement versioned AdGuard and DNS service configuration pipeline`: **PASS** under current `ACC-0422 / VER-0422 / EVD-0422`.
+
+- Action authority: **A3 / AUTO_ALLOWED**; direct hard dependency `TSK-0451` is current durable PASS.
+- Exact target: repository-scoped self-hosted runner on `adguardvm`, Ubuntu 24.04 LTS, using the existing approved local AdGuard control/credential boundary.
+- Versioned source: `infrastructure/adguard-server/tsk-0422-adguard-config-pipeline.sh`, blob `a947aea558804da9a06650a6ae2324a9ca81a1d8`, SHA-256 `1867421b38c3e8af59745524706396bb05735b64017be254d08615e980e66d61`; canonical approved settings `infrastructure/adguard-server/approved-adguard-config-v1.json`, blob `e9975c4e75c2a68131f049da942468d8d1952d8d`, SHA-256 `394fb78a4c61677ff4b1612452bbabd14423d1bf86e44eeda5f3e358731d5988`; source commit `2ba9bb46a5ecba83c71418231dae2fa248d958b2`.
+- Durable evidence: `TSK_0422_ADGUARD_CONFIGURATION_PIPELINE_EVIDENCE_2026-09-04.md`, blob `3f694883391b6c291cb4249872fba29090e54e6d`; GitHub Actions run/attempt `33848412976 / 1`.
+- Verification: persisted approved projection match; runtime API checks; synthetic loopback DNS; negative query-log/ECS/upstream/filter-processor fixtures; runtime-normalization regression; deterministic sanitized diff; secret separation; staged-candidate/root-only rollback protection; separate independent target verification job.
+- Apply controlled-field change count: `0`; sanitized changed paths: `none`.
+- Security/privacy: no secret, raw query content or client identifier is written to Git/evidence; runtime filter IDs are preserved; non-controlled AdGuard configuration semantics are preserved during candidate generation.
+- **Non-inference:** `TSK-0455` remains DEFERRED / WAITING under DEC-0059 / CR-0012 with unchanged `ACC-0455 / VER-0455 / EVD-0455`; `TSK-0456`, `TSK-0457` and `TSK-0492` remain dependency-blocked. No new environment deployment, participant processing, telemetry, profile/certificate distribution, service revocation/removal, public/market activation, payment or launch authority is inferred.
