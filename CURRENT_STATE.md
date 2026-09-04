@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-04T21:23:03Z
+**Updated:** 2026-09-04T21:27:34Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -3479,3 +3479,18 @@ Do not select TSK-0360 again until the deterministic WAITING condition is observ
 ### Queue effect
 
 Do not select TSK-0369 again until the deterministic WAITING condition is observed as satisfied. Its successors remain dependency-blocked while TSK-0369 is non-PASS. Recompute the independent governed frontier immediately after canonical publication/read-back.
+
+## Waiting-state monitoring refresh — 2026-09-04T21:27:34Z
+
+Fresh authorized waiting-state monitoring found no resolvable governed frontier and creates no PASS or material-action authority.
+
+- Canonical `main` was revalidated immediately before monitoring at `c359decdaaba97e95f725fd3eabfecd9a549b6f5`; no planning, authority, deferral, gate, dependency or runtime-state mutation had occurred since the prior checkpoint.
+- `TSK-0243` deterministic external recheck was executed by rerunning the existing bounded read-only GitHub-hosted public preflight: workflow run `33900198638`, attempt 2, job `101179597409`, terminal **SUCCESS**. Authority binding passed and the preflight performed no repository/runtime/participant/payment/launch mutation.
+- Fresh public observations: `usesafeweb.com` resolves to `20.71.90.212`; `dns.usesafeweb.com` resolves to `52.157.109.120`; TLS verification passes for `usesafeweb.com:443`, `dns.usesafeweb.com:443`, and `dns.usesafeweb.com:853`; `/dns-query` remains HTTP 400 for a read-only GET. `verify.usesafeweb.com` and the deterministic 32-hex challenge host remain unresolved; `https://usesafeweb.com/` and read-only GET `/api/dns-verification/requests` remain HTTP 502; the challenge-host probe remains HTTP 000. Preflight result remains `NOT_DEPLOYED_OR_NOT_EXTERNALLY_ROUTABLE`.
+- Therefore `TSK-0243` remains **WAITING**. Its existing deterministic condition is unchanged: separately authorized target deployment/configuration must provide the verifier wildcard route, approved TLS/proxy probe path, and healthy application request/result endpoints before functional target proof may proceed.
+- `TSK-0360` remains **WAITING** because no authorized supported iPhone/device target plus required profile-delivery access is present in current durable authority; no live-device/profile/certificate action was attempted.
+- `TSK-0369` remains **WAITING** because current durable authority still does not explicitly permit its required target deployment/enablement and no qualifying target-runtime access is established; no runtime enablement was attempted.
+- `TSK-0455` remains **WAITING / DEFERRED BY OWNER SEQUENCING** under `CR-0012 / DEC-0059`; the controlling fully-working-integrated-environment plus fresh Ubuntu 24.04 LTS target and DNS/TLS/monitoring-access condition is not durably evidenced as satisfied.
+- `CR-0014 / DEC-0061` and `CR-0015 / DEC-0062` deferrals remain unchanged; their dependency-blocked successors remain blocked by ordinary dependency rules. `TSK-0399` remains blocked while `TSK-0360` is non-PASS.
+- Fresh frontier result: no genuinely eligible `TODO` work exists. The WBS row for `TSK-0146` remains a stale planning snapshot, while current authoritative runtime state preserves `TSK-0146` as PASS; it is not selectable.
+- Monitoring continuation: reuse the existing bounded read-only TSK-0243 public preflight only when checking whether its routing prerequisites have changed; do not replay source tests or cross any deployment, participant, telemetry, profile/certificate, payment, service-removal/revocation, production/public activation, market activation or launch fence without new durable authority.
