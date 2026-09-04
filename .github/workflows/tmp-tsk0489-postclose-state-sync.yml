@@ -53,7 +53,8 @@ jobs:
           git config user.name 'UseSafeWeb governed automation'
           git config user.email 'actions@users.noreply.github.com'
           git commit -m 'docs: finalize TSK-0489 post-close checkpoint hygiene'
-          mapfile -t final_changed < <(git diff --name-only origin/main...HEAD)
+          mapfile -t final_changed < <(git diff --no-renames --name-only origin/main...HEAD)
+          printf 'TSK0489_POSTCLOSE_CHANGED=%s\n' "${final_changed[@]}"
           test "${#final_changed[@]}" -eq 6
           expected=(
             '.github/workflow-archive/tsk0489-postclose/inspect-post-lg06-l5-frontier-20260901.yml'
