@@ -1,0 +1,192 @@
+name: Diagnose governed frontier after TSK-0243 WAITING
+
+on:
+  push:
+    branches:
+      - diag/frontier-after-tsk0243-waiting-20260904
+    paths:
+      - .github/workflows/diag-frontier-after-tsk0243-waiting-20260904.yml
+
+permissions:
+  contents: read
+
+jobs:
+  derive-frontier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact diagnostic head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Derive exact current dependency-ready frontier
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE='8032580e19299c8f960d3704a8cb78bbf87c7071'
+          test "${GITHUB_REF_NAME}" = 'diag/frontier-after-tsk0243-waiting-20260904'
+          test "$(git rev-parse HEAD^)" = "${BASE}"
+          test "$(git hash-object CURRENT_STATE.md)" = '3a5501010117ec38f6839541707988927d1942bb'
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = '142a0d45b381136567d78545f063333f1e74901f'
+          test "$(git hash-object Plans/Master/Layers/LAYER_5_AI_EXECUTION_EVIDENCE_STATE_CONTROL.md)" = 'a4d2daf2ff880f0c3976ce52414890355a56d974'
+          test "$(git hash-object Plans/Master/Registers/GATES.md)" = '87cf9060954a82e1d5a092200d3c922f1986a5da'
+          test -z "$(git diff --name-only "${BASE}" HEAD -- . ':!.github/workflows/diag-frontier-after-tsk0243-waiting-20260904.yml')"
+          echo 'FRONTIER_AUTHORITY_BINDING=PASS'
+
+          python3 - <<'PY'
+          import csv
+          import re
+          from pathlib import Path
+
+          state_text = Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          rows = list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8', newline='')))
+          by_id = {r['Task_ID']: r for r in rows if (r.get('Task_ID') or '').startswith('TSK-')}
+          allowed = {'PASS', 'TODO', 'WAITING', 'BLOCKED'}
+          runtime = {}
+
+          lines = state_text.splitlines()
+          section_re = re.compile(r'^##\s+(TSK-\d{4})(?:\s*/[^ ]+)?\s+current accepted stable state\b')
+          explicit_re = re.compile(r'`(TSK-\d{4})(?:\s+—[^`]*)?`[^\n]*?\*\*(PASS|TODO|WAITING|BLOCKED)\*\*')
+
+          # Later current-state sections supersede earlier historical/current sections.
+          for i, line in enumerate(lines):
+              sm = section_re.search(line)
+              if not sm:
+                  continue
+              tid = sm.group(1)
+              found = None
+              for later in lines[i + 1:i + 18]:
+                  if later.startswith('## '):
+                      break
+                  for em in explicit_re.finditer(later):
+                      if em.group(1) == tid:
+                          found = em.group(2)
+                          break
+                  if found:
+                      break
+              if found:
+                  runtime[tid] = found
+
+          # Direct exact task-status lines are also valid overlays; document order wins.
+          for line in lines:
+              for em in explicit_re.finditer(line):
+                  runtime[em.group(1)] = em.group(2)
+
+          def effective(tid):
+              row = by_id.get(tid)
+              if not row:
+                  return 'MISSING'
+              raw = (row.get('Execution_State') or '').strip().upper()
+              base = raw if raw in allowed else 'UNKNOWN'
+              return runtime.get(tid, base)
+
+          assert effective('TSK-0629') == 'PASS', effective('TSK-0629')
+          assert effective('TSK-0243') == 'WAITING', effective('TSK-0243')
+
+          lg07_pass = bool(re.search(r'`LG-07\s+—[^`]+`:\s*\*\*PASS\*\*', state_text))
+          lg08_pass = bool(re.search(r'`LG-08\s+—[^`]+`:\s*\*\*PASS\*\*', state_text))
+          assert lg07_pass, 'LG-07 current PASS not found'
+          active_max_stage = 7 if lg08_pass else 6
+
+          prio = {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3}
+          ready = []
+          blocked = []
+          waiting = []
+
+          for order, row in enumerate(rows):
+              tid = row.get('Task_ID', '')
+              if not tid.startswith('TSK-'):
+                  continue
+              status = effective(tid)
+              if status == 'WAITING':
+                  waiting.append((order, tid, row))
+                  continue
+              if status != 'TODO':
+                  continue
+              if (row.get('Action_Authority') or '').strip() != 'AUTO_ALLOWED':
+                  continue
+              plan_status = (row.get('Plan_Status') or '').strip().upper()
+              if plan_status in {'DEFERRED', 'NOT_APPLICABLE'}:
+                  continue
+              m = re.fullmatch(r'L(\d+)', (row.get('Lifecycle_Stage') or '').strip())
+              if not m or int(m.group(1)) > active_max_stage:
+                  continue
+              deps = re.findall(r'TSK-\d{4}', row.get('Dependencies') or '')
+              dep_states = [(d, effective(d)) for d in deps]
+              unresolved = [(d, s) for d, s in dep_states if s != 'PASS']
+              item = {
+                  'order': order,
+                  'id': tid,
+                  'priority': (row.get('Priority') or '').strip().upper(),
+                  'critical': (row.get('Critical_Path') or '').strip().upper(),
+                  'stage': (row.get('Lifecycle_Stage') or '').strip(),
+                  'title': row.get('Title') or '',
+                  'deps': dep_states,
+                  'unresolved': unresolved,
+                  'trigger': row.get('Trigger') or '',
+                  'pre': row.get('Preconditions') or '',
+                  'risk': row.get('Risk_Reference') or '',
+                  'iface': row.get('Interface_Reference') or '',
+                  'req': row.get('Requirement_Reference') or '',
+                  'acceptance': row.get('Acceptance_ID') or '',
+                  'verification': row.get('Verification_ID') or '',
+                  'evidence': row.get('Evidence_ID') or '',
+              }
+              if unresolved:
+                  blocked.append(item)
+              else:
+                  ready.append(item)
+
+          key = lambda c: (prio.get(c['priority'], 99), 0 if c['critical'] == 'YES' else 1, c['order'], c['id'])
+          ready.sort(key=key)
+          blocked.sort(key=key)
+
+          print(f'FRONTIER_TASK_COUNT={len(rows)}')
+          print(f'FRONTIER_RUNTIME_OVERLAYS={len(runtime)}')
+          print('FRONTIER_LG07=PASS')
+          print(f'FRONTIER_LG08={"PASS" if lg08_pass else "NON_PASS"}')
+          print(f'FRONTIER_ACTIVE_MAX_STAGE=L{active_max_stage}')
+          print('FRONTIER_TSK0629=PASS')
+          print('FRONTIER_TSK0243=WAITING')
+          print(f'FRONTIER_DEPENDENCY_READY={len(ready)}')
+          print(f'FRONTIER_BLOCKED_TODO_AUTO={len(blocked)}')
+
+          print('=== DEPENDENCY_READY_CANDIDATES ===')
+          for c in ready[:50]:
+              deptext = ';'.join(f'{d}:{s}' for d, s in c['deps']) or '-'
+              print(
+                  'CANDIDATE'
+                  f'|{c["id"]}|priority={c["priority"]}|critical={c["critical"]}|stage={c["stage"]}'
+                  f'|order={c["order"]}|deps={deptext}'
+                  f'|accept={c["acceptance"]}|verify={c["verification"]}|evidence={c["evidence"]}'
+                  f'|risk={c["risk"]}|iface={c["iface"]}|req={c["req"]}'
+                  f'|title={c["title"]}|trigger={c["trigger"]}|pre={c["pre"]}'
+              )
+
+          print('=== TOP_BLOCKED_BY_DEPENDENCY ===')
+          for c in blocked[:30]:
+              unresolved = ';'.join(f'{d}:{s}' for d, s in c['unresolved'])
+              print(
+                  'BLOCKED_CANDIDATE'
+                  f'|{c["id"]}|priority={c["priority"]}|critical={c["critical"]}|stage={c["stage"]}'
+                  f'|order={c["order"]}|unresolved={unresolved}|title={c["title"]}'
+              )
+
+          if ready:
+              print(f'FRONTIER_FIRST_DEPENDENCY_READY={ready[0]["id"]}')
+          else:
+              print('FRONTIER_NO_DEPENDENCY_READY=YES')
+
+          # Surface only the known current WAITING conditions relevant to this frontier.
+          for tid in ('TSK-0243', 'TSK-0376', 'TSK-0455'):
+              if effective(tid) == 'WAITING':
+                  row = by_id[tid]
+                  print(f'WAITING_TASK|{tid}|title={row.get("Title") or ""}|trigger={row.get("Trigger") or ""}|pre={row.get("Preconditions") or ""}')
+
+          print('FRONTIER_DIAGNOSTIC=PASS')
+          PY
+
+          test -z "$(git status --porcelain)"
+          echo 'FRONTIER_READ_ONLY=PASS'
