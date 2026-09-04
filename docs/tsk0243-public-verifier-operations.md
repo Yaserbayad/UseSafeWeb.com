@@ -33,13 +33,18 @@ curl --fail --silent http://127.0.0.1:3100/api/health/ready
 
 The deployer runs `npm ci`, the full website validation/build, installs the
 standalone output atomically, starts/restarts the hardened service, and restores
-the previous release if readiness fails. Rollback restores both the prior
-`current` symlink and its exact `USESAFEWEB_RELEASE_SHA` binding before restarting
-the service; a failed first deployment removes the failed `current` link instead
-of leaving an apparently active release. The environment file stays `0600
-root:root` and its other values are never printed. `Restart=on-failure` provides
-bounded recovery; systemd and Nginx errors remain visible without request bodies
-or tokens.
+the previous release if readiness fails. Each installed release contains a
+root-owned, read-only `.release-sha`; `ExecStartPre` requires it to match the
+externally injected `USESAFEWEB_RELEASE_SHA`, so the running artifact cannot
+claim a different source commit. A conflicting pre-existing release path fails
+closed unless it is the already-current healthy release with the same marker.
+Rollback restores both the prior `current` symlink and its exact
+`USESAFEWEB_RELEASE_SHA` binding before restarting the service; a failed first
+deployment stops the failed service, removes the failed `current` link, and
+removes the newly installed release. The environment file stays `0600 root:root`
+and its other values are never printed. `Restart=on-failure` provides bounded
+recovery; systemd and Nginx errors remain visible without request bodies or
+tokens.
 
 ## TLS and reverse proxy
 
