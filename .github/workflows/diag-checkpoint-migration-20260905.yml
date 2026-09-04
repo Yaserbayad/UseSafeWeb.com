@@ -19,4 +19,16 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
       - name: Generate and validate checkpoint migration candidate v2
-        run: python .github/scripts/generate_checkpoint_migration_v2.py
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('.github/scripts/generate_checkpoint_migration_v2.py')
+          s=p.read_text(encoding='utf-8')
+          old='"            explicit[tid] = status\\n": "            explicit[tid] = status\\n            explicit_sections[tid] = section\\n",'
+          new='"        explicit[tid] = status\\n": "        explicit[tid] = status\\n        explicit_sections[tid] = section\\n",'
+          if old not in s: raise SystemExit('transformer indentation patch target missing')
+          p.write_text(s.replace(old,new),encoding='utf-8')
+          PY
+          python .github/scripts/generate_checkpoint_migration_v2.py
