@@ -1,0 +1,446 @@
+name: TEMP CR-0013 autonomous review policy apply
+
+on:
+  push:
+    branches:
+      - governance/cr0013-autonomous-review-20260904
+
+permissions:
+  contents: write
+
+jobs:
+  apply-cr0013:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: governance/cr0013-autonomous-review-20260904
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.23.2'
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Apply exact owner-authorized CR-0013 source delta
+        shell: bash
+        env:
+          BASE_SHA: d941ccf5ede60878d355c3b6395c9c689f75cf44
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import csv, io, re
+
+          OLD_ACC = "Checks run locally/CI; critical paths require review; generated/configuration changes are included; exceptions are documented and time-bounded."
+          NEW_ACC = "Checks run locally/CI; critical-path changes are subject to deterministic automated quality/change-policy verification without mandatory human or Code Owner approval; generated/configuration changes are included; exceptions are documented and time-bounded."
+
+          def read(path):
+              return Path(path).read_text(encoding='utf-8')
+
+          def write(path, text):
+              Path(path).write_text(text, encoding='utf-8')
+
+          def replace_once(path, old, new):
+              text = read(path)
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected exactly one replacement target, found {count}')
+              write(path, text.replace(old, new, 1))
+
+          # WBS: change only TSK-0453 Acceptance_Criteria.
+          wbs_path = Path('Plans/Master/WBS/master-wbs.csv')
+          lines = wbs_path.read_text(encoding='utf-8-sig').splitlines()
+          header = next(csv.reader([lines[0]]))
+          acc_i = header.index('Acceptance_Criteria')
+          task_i = header.index('Task_ID')
+          changed = False
+          for i in range(1, len(lines)):
+              if not lines[i].startswith('TSK-0453,'):
+                  continue
+              row = next(csv.reader([lines[i]]))
+              if row[task_i] != 'TSK-0453' or row[acc_i] != OLD_ACC:
+                  raise SystemExit('TSK-0453 WBS source does not match expected pre-change authority')
+              before = row.copy()
+              row[acc_i] = NEW_ACC
+              for j, (a, b) in enumerate(zip(before, row)):
+                  if j != acc_i and a != b:
+                      raise SystemExit(f'Unexpected TSK-0453 field mutation at column {header[j]}')
+              out = io.StringIO(newline='')
+              csv.writer(out, lineterminator='').writerow(row)
+              lines[i] = out.getvalue()
+              changed = True
+              break
+          if not changed:
+              raise SystemExit('TSK-0453 row not found')
+          wbs_path.write_text('\n'.join(lines) + '\n', encoding='utf-8')
+
+          # Synchronized acceptance register only; runtime state remains owned by CURRENT_STATE.md.
+          replace_once('Plans/Master/Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md', OLD_ACC, NEW_ACC)
+
+          # Owner decision DEC-0060.
+          decisions = Path('Plans/Master/Registers/DECISIONS_TRIGGERS.md')
+          dlines = decisions.read_text(encoding='utf-8').splitlines()
+          if any(line.startswith('| DEC-0060 |') for line in dlines):
+              raise SystemExit('DEC-0060 already exists')
+          idx = next(i for i, line in enumerate(dlines) if line.startswith('| DEC-0059 |'))
+          drow = "| DEC-0060 | New | Autonomous critical-path review policy | ACTIVE OWNER DECISION — ordinary governed `AUTO_ALLOWED` changes, including critical-path changes, do not require mandatory human/Code Owner approval or branch protection as a merge condition. `TSK-0453` instead requires deterministic automated local/CI quality and change-policy verification, generated/configuration coverage, and explicit time-bounded exceptions. CODEOWNERS may remain advisory routing metadata but must not create a human approval gate. Separate genuine human-only, strategic, safety, security, legal, identity, contract, material-spend or irreversible-action boundaries remain unchanged. | Explicit Project Owner instruction 2026-09-04. | Revised `ACC-0453` in WBS and synchronized acceptance register; updated review policy/template/contract; deterministic master-plan validation; formatting/lint/type/contracts/build/audits; exact GitHub publication/read-back. | Project Owner | TSK-0453; TSK-0489; CR-0013; `.github` review/CI policy | Explicit Project Owner instruction 2026-09-04; DEC-0054/DEC-0055 autonomy principles retained |"
+          dlines.insert(idx + 1, drow)
+          decisions.write_text('\n'.join(dlines) + '\n', encoding='utf-8')
+
+          # Change record CR-0013, immediately after CR-0012 in the active post-freeze record table.
+          changes = Path('Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md')
+          clines = changes.read_text(encoding='utf-8').splitlines()
+          if any(line.startswith('| CR-0013 |') for line in clines):
+              raise SystemExit('CR-0013 already exists')
+          idx = next(i for i, line in enumerate(clines) if line.startswith('| CR-0012 |'))
+          crow = "| CR-0013 | Project Owner | 2026-09-04 | Remove mandatory human/Code Owner merge approval from `TSK-0453` and replace that single acceptance clause with deterministic automated critical-path quality/change-policy verification. | TSK-0453 WBS Acceptance_Criteria; synchronized acceptance register; DEC-0060; `.github/CHANGE_REVIEW_POLICY.md`; `.github/CODEOWNERS` advisory description; pull-request template; TSK-0453 contract/workflow; manifest latest-change metadata; generated reconstruction/checksums; runtime reconciliation. No task ID, dependency edge, plan status, action authority, requirement, interface, risk, gate, milestone, TSK-0455 contract or material-action fence changes. | Explicit owner decision that mandatory owner approval is not wanted because it unnecessarily reduces intended AI autonomy. Existing TSK-0453 source/CI evidence remains valid except for the superseded human-review-enforcement clause. | Project Owner DEC-0060; actual safety/security/platform/technical reality remains higher authority. | Revise only ACC-0453 review semantics; make CODEOWNERS non-blocking/advisory; keep automated formatting/lint/type/change-policy controls; rebuild/checksum/validate; run full TSK-0453 verification; if all revised criteria pass, reconcile TSK-0453 to PASS and recompute successors. | Explicit owner reversal may restore mandatory human review; restore the prior ACC/policy from Git history and re-evaluate TSK-0453. No prior evidence is discarded except the superseded enforcement wait condition. | Validator PASS with 641 tasks and 858 dependency edges; parsed WBS comparison proves only TSK-0453 Acceptance_Criteria changed; TSK-0455/0456/0457/0492 rows remain byte-semantically unchanged; TSK-0453 formatting/lint/type/contracts/build/audits and negative formatter propagation pass; exact GitHub commit/blob read-back required. | ACTIVE — creates no deployment, telemetry activation, participant-facing mutation, production credential/service revocation, payment, activation, launch or other material-action authority. |"
+          clines.insert(idx + 1, crow)
+          changes.write_text('\n'.join(clines) + '\n', encoding='utf-8')
+
+          # Manifest latest-change metadata: CR-0013 supersedes only the TSK-0453 review-enforcement clause.
+          manifest = Path('Plans/Master/MANIFEST.yaml')
+          m = manifest.read_text(encoding='utf-8')
+          old_status = ' / OWNER_SINGLE_WORKING_SERVER_RECOVERY_DEFERRAL_CR_0012'
+          if m.count(old_status) != 1:
+              raise SystemExit('Manifest CR-0012 status marker mismatch')
+          m = m.replace(old_status, old_status + ' / OWNER_AUTONOMOUS_REVIEW_POLICY_CR_0013', 1)
+          block = re.compile(r"post_freeze_change_control:\n.*?\ngenerated_assembly_contract:\n", re.S)
+          new_block = """post_freeze_change_control:
+  latest_change: CR-0013
+  previous_change: CR-0012
+  date: '2026-09-04'
+  status: owner-approved removal of mandatory human/Code Owner merge approval from TSK-0453 in favor of deterministic automated critical-path quality/change-policy verification
+  authority: explicit current Project Owner instruction 2026-09-04; DEC-0060/CR-0013; actual law/safety/security/platform/technical reality remains higher authority
+  affected_scope:
+  - TSK-0453 Acceptance_Criteria and synchronized acceptance register
+  - DEC-0060 and CR-0013 change-control metadata
+  - repository review/CI policy, pull-request review wording, focused TSK-0453 contract/workflow, generated reconstruction and checksums
+  - CURRENT_STATE reconciliation after complete verification; no dependency edge, action authority, gate, requirement, interface, risk, TSK-0455 contract or material-action fence change
+  semantic_delta: critical-path human/Code Owner approval is advisory/not mandatory for ordinary governed AUTO_ALLOWED work; deterministic automated local/CI quality and change-policy verification remains mandatory; genuine separate human-authority boundaries remain unchanged
+  change_record: Registers/EXCEPTIONS_CHANGE_CONTROLS.md#post-freeze-material-change-records
+
+generated_assembly_contract:
+"""
+          m, n = block.subn(new_block, m, count=1)
+          if n != 1:
+              raise SystemExit('Manifest post_freeze_change_control block not found exactly once')
+          manifest.write_text(m, encoding='utf-8')
+
+          # Repository policy: remove mandatory owner approval while retaining deterministic controls.
+          policy = Path('.github/CHANGE_REVIEW_POLICY.md')
+          p = policy.read_text(encoding='utf-8')
+          old_review = "Changes to critical paths declared in `.github/CODEOWNERS` require owner review as repository policy. **GitHub only makes that requirement merge-blocking when the `main` branch is protected by a branch protection rule or ruleset requiring Code Owner review.** CODEOWNERS alone is review-routing metadata, not proof of platform enforcement."
+          new_review = "Changes to critical paths declared in `.github/CODEOWNERS` retain advisory owner-routing metadata for visibility, but owner/Code Owner approval is **not a mandatory merge condition**. Under DEC-0060/CR-0013, ordinary governed `AUTO_ALLOWED` changes are accepted through deterministic automated local/CI quality and change-policy verification instead of a human approval gate."
+          if p.count(old_review) != 1:
+              raise SystemExit('Review-policy critical-path paragraph mismatch')
+          p = p.replace(old_review, new_review, 1)
+          old_boundary = "## Current platform enforcement boundary\n\nSource policy and CODEOWNERS can be versioned here. Merge-blocking review enforcement is a GitHub repository setting. Until branch protection/rulesets are verified to require the intended review on `main`, TSK-0453 cannot claim that critical-path review is technically enforced."
+          new_boundary = "## Autonomous review boundary\n\nBranch protection or required Code Owner approval is not required by ACC-0453 under DEC-0060/CR-0013. CODEOWNERS remains advisory routing metadata only. Formatting, linting, type checking, focused change-policy contracts, applicable tests/build/audits, generated/configuration impact coverage, and bounded exception documentation remain mandatory. A separate current human-authority, safety, security, legal, identity, contract, material-spend, strategic or irreversible-action boundary still overrides this policy where applicable."
+          if p.count(old_boundary) != 1:
+              raise SystemExit('Review-policy platform-boundary section mismatch')
+          p = p.replace(old_boundary, new_boundary, 1)
+          policy.write_text(p, encoding='utf-8')
+
+          replace_once('.github/CODEOWNERS',
+                       '# Critical/governance paths. GitHub only enforces these approvals when branch protection/rulesets require Code Owner review.',
+                       '# Critical/governance path ownership/routing metadata. Under DEC-0060/CR-0013 this is advisory and does not require human/Code Owner approval to merge.')
+
+          # PR template keeps impact/evidence discipline but no mandatory Code Owner checkbox.
+          template = Path('.github/pull_request_template.md')
+          t = template.read_text(encoding='utf-8')
+          old = "## Review\n\n- [ ] CODEOWNERS critical-path review applies\n- [ ] No critical-path review applies"
+          new = "## Review / automated governance\n\n- [ ] Applicable automated critical-path quality/change-policy verification passed\n- [ ] Optional CODEOWNERS routing/review considered where useful; human approval is not a default merge gate"
+          if t.count(old) != 1:
+              raise SystemExit('PR template review section mismatch')
+          template.write_text(t.replace(old, new, 1), encoding='utf-8')
+
+          # Focused contract: advisory ownership remains visible; automated policy is the acceptance gate.
+          contract = Path('website/tests/contract/tsk0453.test.mjs')
+          c = contract.read_text(encoding='utf-8')
+          c = c.replace("test('TSK-0453 defines review ownership for critical and governance paths', () => {", "test('TSK-0453 records advisory ownership routing for critical and governance paths', () => {", 1)
+          old_assert = "  assert.match(policy, /owner/i);\n  assert.match(policy, /expir/i);\n  assert.match(policy, /branch protection|ruleset/i);"
+          new_assert = "  assert.match(policy, /owner/i);\n  assert.match(policy, /expir/i);\n  assert.match(policy, /deterministic automated/i);\n  assert.match(policy, /not a mandatory merge condition/i);\n  assert.match(policy, /AUTO_ALLOWED/);\n  assert.doesNotMatch(policy, /TSK-0453 cannot claim/i);"
+          if c.count(old_assert) != 1:
+              raise SystemExit('TSK-0453 contract policy assertion block mismatch')
+          c = c.replace(old_assert, new_assert, 1)
+          contract.write_text(c, encoding='utf-8')
+
+          # Permanent TSK-0453 workflow: replace stale whole-WBS hash pin with exact row-contract validation.
+          wf = Path('.github/workflows/accept-tsk0453-quality-review-rules-20260903.yml')
+          w = wf.read_text(encoding='utf-8')
+          old_guard = "          test \"$(git hash-object Plans/Master/WBS/master-wbs.csv)\" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'"
+          new_guard = "          python3 -c 'import csv; f=open(\"Plans/Master/WBS/master-wbs.csv\", newline=\"\", encoding=\"utf-8-sig\"); r=next(x for x in csv.DictReader(f) if x[\"Task_ID\"]==\"TSK-0453\"); assert r[\"Dependencies\"]==\"TSK-0380\"; assert r[\"Acceptance_Criteria\"]==\"" + NEW_ACC.replace('\\','\\\\').replace('"','\\"') + "\"'"
+          if w.count(old_guard) != 1:
+              raise SystemExit('Permanent TSK-0453 workflow stale WBS guard mismatch')
+          wf.write_text(w.replace(old_guard, new_guard, 1), encoding='utf-8')
+          PY
+
+          python3 Plans/Master/Tools/rebuild_master_plan.py
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          checksum = Path('Plans/SHA256SUMS.txt')
+          paths = []
+          for line in checksum.read_text(encoding='utf-8').splitlines():
+              if not line.strip():
+                  continue
+              _, rel = line.split('  ', 1)
+              paths.append(rel)
+          out = []
+          for rel in paths:
+              p = Path('Plans') / rel
+              if not p.is_file():
+                  raise SystemExit(f'missing checksummed file: {p}')
+              out.append(f"{hashlib.sha256(p.read_bytes()).hexdigest()}  {rel}")
+          checksum.write_text('\n'.join(out) + '\n', encoding='utf-8')
+          PY
+
+          # Temporary executor must never reach canonical history.
+          rm -f .github/workflows/tmp-cr0013-autonomous-review-apply.yml
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+
+          python3 - <<'PY'
+          import csv, subprocess
+          from io import StringIO
+
+          base = 'd941ccf5ede60878d355c3b6395c9c689f75cf44'
+          old = subprocess.check_output(['git','show',f'{base}:Plans/Master/WBS/master-wbs.csv'], text=True)
+          new = open('Plans/Master/WBS/master-wbs.csv', encoding='utf-8-sig').read()
+          old_rows = {r['Task_ID']: r for r in csv.DictReader(StringIO(old))}
+          new_rows = {r['Task_ID']: r for r in csv.DictReader(StringIO(new))}
+          assert old_rows.keys() == new_rows.keys() and len(new_rows) == 641
+          diffs = []
+          for tid in old_rows:
+              for k in old_rows[tid]:
+                  if old_rows[tid][k] != new_rows[tid][k]:
+                      diffs.append((tid,k,old_rows[tid][k],new_rows[tid][k]))
+          assert len(diffs) == 1, diffs[:20]
+          assert diffs[0][0:2] == ('TSK-0453','Acceptance_Criteria'), diffs
+          for tid in ('TSK-0455','TSK-0456','TSK-0457','TSK-0492'):
+              assert old_rows[tid] == new_rows[tid], tid
+          deps = sum(len([x for x in r['Dependencies'].split('; ') if x.strip()]) for r in new_rows.values())
+          assert deps == 858, deps
+          print('CR0013_WBS_SEMANTIC_DIFF=PASS tasks=641 dependency_edges=858 changed=TSK-0453.Acceptance_Criteria')
+          PY
+
+          EXPECTED=$(cat <<'EOF'
+          .github/CHANGE_REVIEW_POLICY.md
+          .github/CODEOWNERS
+          .github/pull_request_template.md
+          .github/workflows/accept-tsk0453-quality-review-rules-20260903.yml
+          Plans/Master/Generated/MASTER_PLAN_FULL.md
+          Plans/Master/MANIFEST.yaml
+          Plans/Master/Registers/DECISIONS_TRIGGERS.md
+          Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md
+          Plans/Master/Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md
+          Plans/Master/WBS/master-wbs.csv
+          Plans/SHA256SUMS.txt
+          website/tests/contract/tsk0453.test.mjs
+          EOF
+          )
+          ACTUAL=$(git diff --cached --name-only | sort)
+          test "$ACTUAL" = "$(printf '%s\n' "$EXPECTED" | sed 's/^          //' | sort)"
+
+          git commit -m 'governance: apply CR-0013 autonomous review policy'
+          echo "CR0013_SOURCE_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "CR0013_SOURCE_TREE=$(git rev-parse HEAD^{tree})" >> "$GITHUB_ENV"
+
+      - name: Verify CR-0013 master-plan invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tests/repository-structure/verify_structure.py
+          python3 Plans/Master/Tools/validate_master_plan.py | tee /tmp/cr0013-master-validator.log
+          grep -q 'VALIDATION PASS' /tmp/cr0013-master-validator.log
+          git diff --check
+          test -z "$(git status --porcelain)"
+
+      - name: Verify revised TSK-0453 acceptance completely
+        shell: bash
+        working-directory: website
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts --no-fund --no-audit
+          test "$(node -p "require('./node_modules/prettier/package.json').version")" = '3.9.6'
+          node --test tests/contract/tsk0453.test.mjs
+          npm run format:check
+          npm run lint
+          npm run typecheck
+          npm run test:contract
+          NEXT_TELEMETRY_DISABLED=1 npm run build
+          npm audit --audit-level=high
+          npm audit --omit=dev --audit-level=high
+
+          PROBE='src/tsk0453-cr0013-format-negative.ts'
+          printf 'export const cr0013Negative={value:1}\n' > "$PROBE"
+          set +e
+          ./node_modules/.bin/prettier --check "$PROBE" >/tmp/cr0013-format-negative.log 2>&1
+          NEGATIVE_EXIT=$?
+          set -e
+          rm -f "$PROBE"
+          test "$NEGATIVE_EXIT" -ne 0
+          npm run format:check
+          cd ..
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'TSK0453_CR0013_REVISED_ACCEPTANCE=PASS'
+
+      - name: Create durable evidence and reconcile CURRENT_STATE
+        shell: bash
+        env:
+          OWNER_DECISION_TIME: '2026-09-04T09:15:08Z'
+        run: |
+          set -euo pipefail
+          NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          WBS_BLOB=$(git hash-object Plans/Master/WBS/master-wbs.csv)
+          MANIFEST_BLOB=$(git hash-object Plans/Master/MANIFEST.yaml)
+          DECISIONS_BLOB=$(git hash-object Plans/Master/Registers/DECISIONS_TRIGGERS.md)
+          CHANGES_BLOB=$(git hash-object Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md)
+          ACCEPTANCE_BLOB=$(git hash-object Plans/Master/Registers/VERIFICATION_EVIDENCE_ACCEPTANCE.md)
+          POLICY_BLOB=$(git hash-object .github/CHANGE_REVIEW_POLICY.md)
+          CODEOWNERS_BLOB=$(git hash-object .github/CODEOWNERS)
+          CONTRACT_BLOB=$(git hash-object website/tests/contract/tsk0453.test.mjs)
+          WORKFLOW_BLOB=$(git hash-object .github/workflows/accept-tsk0453-quality-review-rules-20260903.yml)
+          CHECKSUM_BLOB=$(git hash-object Plans/SHA256SUMS.txt)
+          GENERATED_BLOB=$(git hash-object Plans/Master/Generated/MASTER_PLAN_FULL.md)
+          PRIOR_EVIDENCE_BLOB=$(git hash-object TSK_0453_QUALITY_AND_REVIEW_RULES_SOURCE_CHECKPOINT_2026-09-03.md)
+
+          cat > TSK_0453_CR0013_AUTONOMOUS_REVIEW_ACCEPTANCE_EVIDENCE_2026-09-04.md <<EOF
+          # TSK-0453 / CR-0013 — Autonomous Review Acceptance Evidence
+
+          Date: ${NOW}
+          Owner decision: ${OWNER_DECISION_TIME}
+          Decision/change: DEC-0060 / CR-0013
+          Task: TSK-0453 — Configure formatting, linting, type checking, commit/change, and code-review rules
+          Stable disposition after canonical publication/read-back: PASS
+
+          ## Owner-authorized semantic change
+
+          The Project Owner explicitly rejected mandatory owner/Code Owner merge approval and chose the controlled alternative: revise ACC-0453 so critical-path changes use deterministic automated quality/change-policy verification without mandatory human or Code Owner approval. This is an acceptance-baseline change, not a fabricated enforcement result.
+
+          Revised ACC-0453:
+
+          > Checks run locally/CI; critical-path changes are subject to deterministic automated quality/change-policy verification without mandatory human or Code Owner approval; generated/configuration changes are included; exceptions are documented and time-bounded.
+
+          CODEOWNERS remains advisory routing metadata only. Separate genuine human-only, strategic, safety, security, legal, identity, contract, material-spend and irreversible-action boundaries are unchanged.
+
+          ## Preserved prior evidence
+
+          The 2026-09-03 source checkpoint remains valid for formatter/lint/type/check/change-policy implementation and regression evidence: TSK_0453_QUALITY_AND_REVIEW_RULES_SOURCE_CHECKPOINT_2026-09-03.md, blob ${PRIOR_EVIDENCE_BLOB}. Its former WAIT condition is superseded only by DEC-0060/CR-0013.
+
+          ## Exact source and verification
+
+          - CR-0013 source commit: ${CR0013_SOURCE_COMMIT}
+          - CR-0013 source tree: ${CR0013_SOURCE_TREE}
+          - GitHub Actions run/attempt: ${GITHUB_RUN_ID} / ${GITHUB_RUN_ATTEMPT}
+          - Base canonical main before change: d941ccf5ede60878d355c3b6395c9c689f75cf44
+          - WBS blob: ${WBS_BLOB}
+          - Manifest blob: ${MANIFEST_BLOB}
+          - Decision register blob: ${DECISIONS_BLOB}
+          - Change-control register blob: ${CHANGES_BLOB}
+          - Acceptance register blob: ${ACCEPTANCE_BLOB}
+          - Review policy blob: ${POLICY_BLOB}
+          - CODEOWNERS blob: ${CODEOWNERS_BLOB}
+          - Focused contract blob: ${CONTRACT_BLOB}
+          - Permanent TSK-0453 workflow blob: ${WORKFLOW_BLOB}
+          - Generated master-plan blob: ${GENERATED_BLOB}
+          - Plans checksum blob: ${CHECKSUM_BLOB}
+
+          Verification completed successfully on the exact source commit before this evidence/state-only commit:
+
+          - repository structure verification PASS;
+          - deterministic Master Plan validator PASS with 641 tasks and 858 dependency edges;
+          - parsed WBS semantic diff proves the only task-field change is TSK-0453 Acceptance_Criteria;
+          - TSK-0455, TSK-0456, TSK-0457 and TSK-0492 WBS rows are unchanged;
+          - pinned Prettier 3.9.6 verified;
+          - focused TSK-0453 contract PASS;
+          - format check PASS;
+          - lint PASS;
+          - typecheck PASS;
+          - full contract suite PASS;
+          - production build PASS;
+          - npm audit and production-only npm audit PASS at high threshold;
+          - deliberate unformatted-source negative probe returned nonzero and was removed; post-probe format check PASS;
+          - clean worktree and git diff check PASS.
+
+          ## Acceptance disposition
+
+          Under revised ACC-0453, every applicable clause is proven. Mandatory GitHub branch protection/Code Owner approval is intentionally not part of the current acceptance contract. TSK-0453 may therefore be reconciled to PASS after exact canonical publication/read-back.
+
+          ## Preserved fences
+
+          This change performs no deployment, telemetry activation, participant-facing mutation, production credential or service revocation, payment, activation, launch, service-removal/revocation, live-device/profile/certificate action, or other fenced material action. TSK-0455 remains DEFERRED/WAITING under DEC-0059/CR-0012 with ACC-0455/VER-0455/EVD-0455 unchanged; TSK-0456, TSK-0457 and TSK-0492 remain dependency-blocked.
+          EOF
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import os, re
+
+          p = Path('CURRENT_STATE.md')
+          s = p.read_text(encoding='utf-8')
+          now = os.environ.get('NOW_FOR_STATE')
+          source = os.environ['CR0013_SOURCE_COMMIT']
+          tree = os.environ['CR0013_SOURCE_TREE']
+          run_id = os.environ['GITHUB_RUN_ID']
+          attempt = os.environ['GITHUB_RUN_ATTEMPT']
+
+          s = re.sub(r'\*\*Updated:\*\* [^\n]+', '**Updated:** ' + os.popen("date -u +%Y-%m-%dT%H:%M:%SZ").read().strip(), s, count=1)
+
+          anchor = '- Latest post-freeze planning change: `CR-0011` / `DEC-0058`'
+          repl = '- Latest post-freeze planning change: `CR-0013` / `DEC-0060`, explicitly authorized by the Project Owner on 2026-09-04: mandatory human/Code Owner merge approval is removed from TSK-0453 and replaced by deterministic automated critical-path quality/change-policy verification; all genuine separate human/material-action boundaries remain unchanged.\n- `CR-0012` / `DEC-0059` remains active and unchanged: TSK-0455 stays DEFERRED / WAITING until the integrated environment is fully working and no earlier than the owner re-evaluation window; TSK-0456, TSK-0457 and TSK-0492 remain dependency-blocked.\n- Prior post-freeze planning change: `CR-0011` / `DEC-0058`'
+          if s.count(anchor) != 1:
+              raise SystemExit('CURRENT_STATE latest-change anchor mismatch')
+          s = s.replace(anchor, repl, 1)
+
+          s = s.replace('`TSK-0453` remains WAITING on its existing enforcement-proof boundary', '`TSK-0453` is PASS under DEC-0060/CR-0013 after revised acceptance and complete automated verification', 1)
+
+          pattern = re.compile(r'## TSK-0453 current accepted stable state — 2026-09-03 — SOURCE/POLICY VERIFIED; REVIEW ENFORCEMENT WAITING\n.*?(?=## TSK-0491 current accepted stable state)', re.S)
+          new_section = f'''## TSK-0453 current accepted stable state — 2026-09-04 — PASS UNDER DEC-0060 / CR-0013
+
+`TSK-0453 — Configure formatting, linting, type checking, commit/change, and code-review rules`: **PASS** under the owner-revised `ACC-0453 / VER-0453 / EVD-0453`.
+
+- Owner authority: explicit Project Owner decision 2026-09-04 that mandatory human/Code Owner merge approval and branch protection are not required for ordinary governed `AUTO_ALLOWED` critical-path changes.
+- Revised ACC-0453: checks run locally/CI; critical-path changes use deterministic automated quality/change-policy verification without mandatory human or Code Owner approval; generated/configuration changes are included; exceptions are documented and time-bounded.
+- CR-0013 source commit/tree: `{source}` / `{tree}`.
+- Verification run/attempt: `{run_id} / {attempt}` — repository structure, deterministic Master Plan validation, focused TSK-0453 contract, formatting, lint, typecheck, full contracts, production build, high-threshold dependency audits, negative formatter propagation/cleanup and clean-worktree checks all passed.
+- Durable evidence: `TSK_0453_CR0013_AUTONOMOUS_REVIEW_ACCEPTANCE_EVIDENCE_2026-09-04.md`; the 2026-09-03 source checkpoint remains valid for unchanged source-control evidence, while its former review-enforcement WAIT condition is superseded only by DEC-0060/CR-0013.
+- WBS invariants: 641 tasks and 858 dependency edges; the only task-field mutation is TSK-0453 `Acceptance_Criteria`. TSK-0455/0456/0457/0492 rows and every material-action fence are unchanged.
+- CODEOWNERS remains advisory routing metadata; it is not a human approval gate. Separate genuine human-only/approval-required or higher-authority safety/security/legal/platform/strategic/irreversible boundaries remain controlling.
+- **Non-inference / fences:** no deployment, telemetry activation, participant-facing mutation, production credential/service revocation, payment, activation, launch, live-device/profile/certificate action or service removal/revocation occurred or is authorized by this PASS.
+
+### Queue effect after TSK-0453 PASS
+
+`TSK-0489` may consume TSK-0453 only after a fresh eligibility check confirms its other predecessors (`TSK-0491`, `TSK-0422`), gates, inputs, authority and preserved material-action fences. TSK-0453 PASS does not itself authorize deployment-fenced TSK-0452 or any other consequential action.
+
+'''
+          s, n = pattern.subn(new_section, s, count=1)
+          if n != 1:
+              raise SystemExit('CURRENT_STATE TSK-0453 section mismatch')
+
+          s = s.replace('TSK-0453 remains WAITING; TSK-0455 remains DEFERRED / WAITING under DEC-0059 / CR-0012', 'TSK-0453 is PASS under DEC-0060 / CR-0013; TSK-0455 remains DEFERRED / WAITING under DEC-0059 / CR-0012')
+          s = s.replace('Existing TSK-0374, TSK-0417, TSK-0453, and TSK-0499 material-action/evidence fences remain unchanged.', 'Existing TSK-0374, TSK-0417, and TSK-0499 material-action/evidence fences remain unchanged; the former TSK-0453 review-enforcement wait is superseded by DEC-0060/CR-0013.')
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+          git add CURRENT_STATE.md TSK_0453_CR0013_AUTONOMOUS_REVIEW_ACCEPTANCE_EVIDENCE_2026-09-04.md
+          git diff --cached --check
+          git commit -m 'state: accept TSK-0453 under CR-0013'
+          echo "CR0013_STATE_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "CR0013_STATE_TREE=$(git rev-parse HEAD^{tree})" >> "$GITHUB_ENV"
+
+          git push origin HEAD:governance/cr0013-autonomous-review-20260904
+          test -z "$(git status --porcelain)"
+          echo "CR0013_SOURCE_COMMIT=${CR0013_SOURCE_COMMIT}"
+          echo "CR0013_SOURCE_TREE=${CR0013_SOURCE_TREE}"
+          echo "CR0013_STATE_HEAD=$(git rev-parse HEAD)"
+          echo "CR0013_STATE_TREE=$(git rev-parse HEAD^{tree})"
+          echo "CR0013_RUN_ID=${GITHUB_RUN_ID}"
