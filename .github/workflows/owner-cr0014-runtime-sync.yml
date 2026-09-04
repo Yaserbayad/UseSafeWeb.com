@@ -53,3 +53,5 @@ jobs:
           git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
           echo "CR0014_RUNTIME_CANDIDATE_COMMIT=$new_commit"
           echo "CR0014_CURRENT_STATE_BLOB=$(git rev-parse HEAD:CURRENT_STATE.md)"
+
+# diagnostic-only retrigger; never merged
