@@ -302,7 +302,7 @@ jobs:
           observation_token="$(python3 -c 'import json,sys;print(json.load(sys.stdin)["observationToken"])' <<<"${probe}")"
           result_body="$(python3 -c 'import json,sys;print(json.dumps({"requestToken":sys.argv[1],"observationToken":sys.argv[2]},separators=(",",":")))' "${request_token}" "${observation_token}")"
           verified="$(curl -fsS --max-time 5 --cacert "${ROOT}/ca.crt" -H 'Content-Type: application/json' --data-binary "${result_body}" https://eph-app.usesafeweb.test/api/dns-verification/results)"
-          python3 -c 'import json,sys;v=json.load(sys.stdin);assert v["dnsPath"]=="verified-fresh",v;assert v["reasonCode"]=="TECH_VERIFIED",v;assert v["verifierVersion"]=="private-rewrite-v1",v;assert isinstance(v.get("observedAt"),int),v' <<<"${verified}"
+          python3 -c 'import json,sys;v=json.load(sys.stdin);assert set(v)=={"dnsPath","reasonCode","verifierVersion"},v;assert v["dnsPath"]=="verified-fresh",v;assert v["reasonCode"]=="TECH_VERIFIED",v;assert v["verifierVersion"]=="private-rewrite-v1",v' <<<"${verified}"
           echo 'TSK0243_EPH_REQUEST_PROBE_RESULT=PASS'
 
           printf 'inner_stage=tamper-negative\n' >"${ROOT}/failure-stage.txt"
