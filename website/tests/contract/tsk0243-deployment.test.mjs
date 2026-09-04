@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 import { stripTypeScriptTypes } from 'node:module';
 
 const website = resolve(import.meta.dirname, '../..');
@@ -69,6 +71,42 @@ test('readiness route is no-store and derives readiness from server-only validat
   assert.doesNotMatch(source, /signingSecret|DNS_VERIFICATION_SIGNING_SECRET/);
 });
 
+test('runtime validator binds the environment release SHA to an installed artifact marker', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'usesafeweb-release-marker-'));
+  try {
+    const validator = join(directory, 'validate-runtime.mjs');
+    const marker = join(directory, '.release-sha');
+    copyFileSync(validatorPath, validator);
+    const releaseSha = 'a'.repeat(40);
+    const env = {
+      ...process.env,
+      NODE_ENV: 'production',
+      HOSTNAME: '127.0.0.1',
+      PORT: '3100',
+      NEXT_TELEMETRY_DISABLED: '1',
+      USESAFEWEB_PUBLIC_ORIGIN: 'https://usesafeweb.example',
+      USESAFEWEB_DNS_VERIFICATION_SIGNING_SECRET: 's'.repeat(32),
+      USESAFEWEB_RELEASE_SHA: releaseSha,
+    };
+
+    const missing = spawnSync(process.execPath, [validator], { env, encoding: 'utf8' });
+    assert.notEqual(missing.status, 0, 'missing release marker must fail closed');
+    assert.match(`${missing.stdout}${missing.stderr}`, /release_marker/);
+
+    writeFileSync(marker, `${'b'.repeat(40)}\n`, 'utf8');
+    const mismatched = spawnSync(process.execPath, [validator], { env, encoding: 'utf8' });
+    assert.notEqual(mismatched.status, 0, 'mismatched release marker must fail closed');
+    assert.match(`${mismatched.stdout}${mismatched.stderr}`, /release_marker/);
+
+    writeFileSync(marker, `${releaseSha}\n`, 'utf8');
+    const valid = spawnSync(process.execPath, [validator], { env, encoding: 'utf8' });
+    assert.equal(valid.status, 0, valid.stderr);
+    assert.match(valid.stdout, /USESAFEWEB_RUNTIME_VALIDATION=PASS/);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
 test('Next.js production output and direct-host service are deterministic and fail visibly', () => {
   const nextConfig = readFileSync(resolve(website, 'next.config.ts'), 'utf8');
   assert.match(nextConfig, /output:\s*['"]standalone['"]/);
@@ -97,6 +135,8 @@ test('Next.js production output and direct-host service are deterministic and fa
 
   const validator = readFileSync(validatorPath, 'utf8');
   assert.match(validator, /22\.23\.2/);
+  assert.match(validator, /\.release-sha/);
+  assert.match(validator, /release_marker/);
   assert.doesNotMatch(validator, /console\.(?:log|error).*SIGNING_SECRET/i);
 
   const deploy = readFileSync(deployPath, 'utf8');
@@ -105,6 +145,8 @@ test('Next.js production output and direct-host service are deterministic and fa
   assert.match(deploy, /npm run validate/);
   assert.match(deploy, /environment_release_binding/);
   assert.match(deploy, /\.next\/standalone/);
+  assert.match(deploy, /\.release-sha/);
+  assert.match(deploy, /release_path_exists/);
   assert.match(deploy, /SERVICE=["']usesafeweb-web\.service["']/);
   assert.match(deploy, /systemctl restart ["']\$\{SERVICE\}["']/);
   assert.match(deploy, /api\/health\/ready/);
