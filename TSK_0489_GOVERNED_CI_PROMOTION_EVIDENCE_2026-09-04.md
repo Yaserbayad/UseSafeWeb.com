@@ -1,15 +1,15 @@
 # EVD-0489 — Governed CI and conditional promotion evidence
 
-**Task:** TSK-0489 — Implement continuous integration quality and security gates  
-**Acceptance:** ACC-0489  
-**Verification:** VER-0489  
-**Evidence:** EVD-0489  
-**Disposition:** **PASS — restored after AG-009 remediation**  
+**Task:** TSK-0489 — Implement continuous integration quality and security gates
+**Acceptance:** ACC-0489
+**Verification:** VER-0489
+**Evidence:** EVD-0489
+**Disposition:** **PASS — restored after AG-009 remediation**
 **Current canonical repair merge:** `26a8f786b5e74e665b5c19a9b156b68b5ced10be` (PR #103)
 
 ## Supersession notice
 
-The earlier PASS narrative in this evidence file is superseded. PR #99 remains valid historical provenance for a deliberate failing case, the original implementation, and later main validation, but its claimed **exact PR source-head** proof was incorrect: the pull-request workflow tested GitHub's synthetic merge commit rather than the real source-branch SHA and emitted that synthetic merge as the promotion head. AG-009 also exposed repository-write paths that could mutate `main` outside the intended evidence-gated promotion boundary. Those defects invalidated the earlier PASS conclusion until repaired and re-proven.
+The earlier PASS narrative in this evidence file is superseded. PR #99 remains valid historical provenance for a deliberate failing case, the original implementation, and later main validation, but its claimed **exact PR source-head** proof was incorrect: the pull-request workflow tested GitHub's synthetic merge commit rather than the real source-branch SHA and emitted that synthetic SHA as the promotion head. AG-009 also exposed repository-write paths that could mutate `main` outside the intended evidence-gated promotion boundary. Those defects invalidated the earlier PASS conclusion until repaired and re-proven.
 
 No scope, requirement, dependency, acceptance, verification, planning-baseline, deployment, activation, participant, payment, telemetry, credential, service-revocation, or launch authority was changed by this remediation.
 
@@ -112,6 +112,21 @@ Exactly three applicable workflows ran on canonical `main@26a8f786b5e74e665b5c19
 - TSK-0453 quality/review acceptance: run `33894750950` — success.
 - TSK-0491 dependency/SBOM acceptance: run `33894751052` — success.
 
+### 6. Final durable checkpoint reconciliation — PR #105
+
+- Final source head: `04eb21a42554da266cfc7f7c376bd7518dfd918a`.
+- Exact-head governed PR run: `33897001306` — success.
+- Promotion eligibility explicitly bound to `04eb21a42554da266cfc7f7c376bd7518dfd918a`, with `TSK0489_PROMOTION_ELIGIBLE=YES` and `TSK0489_DEPLOYMENT_AUTHORITY=NONE`.
+- Retained artifact: `9946155707`; digest `sha256:4c54f273b017c4b2d45f79bfb4b25702455e652af908e804babae9894b0ff546`.
+- PR #105 changed only `CURRENT_STATE.md` and this evidence file, preserved TSK-0243 as TODO, and merged as canonical commit `9bbc3984167d2c33c2eb6649acfb841a2fcc2f78`.
+- On exact canonical `main@9bbc3984167d2c33c2eb6649acfb841a2fcc2f78`, the current mandatory acceptance gates succeeded: TSK-0489 run `33897190748`, TSK-0491 run `33897190758`, and TSK-0453 run `33897190833`.
+- Two additional dated read-only diagnostics produced unrelated red noise on that checkpoint merge:
+  - `Inspect post-LG-06 L5 frontier 2026-09-01`, run `33897190792`: the substantive frontier inspection succeeded; only `git diff --check` failed because this evidence file used five Markdown two-space hard breaks. Those trailing spaces are removed by the post-close hygiene reconciliation.
+  - `Verify current TSK-0052 LG-06 evidence review 2026-09-01`, run `33897190818`: it failed before substantive current verification because its Sept-1 script hard-pins obsolete WBS blob `eb35f3b10356396c5117e3f47d0b0378953e2157` while the canonical WBS blob is `142a0d45b381136567d78545f063333f1e74901f`. The dated verifier is therefore stale, not current TSK-0489 evidence.
+- Both diagnostic workflow definitions are preserved under `.github/workflow-archive/tsk0489-postclose/` and retired from the active `.github/workflows` surface by the post-close hygiene reconciliation. Their historical scripts/provenance remain available.
+
+These two legacy reds do not reopen TSK-0489: exact canonical TSK-0489/TSK-0491/TSK-0453 gates on the same commit are green, and neither red identifies a functional, security/privacy, promotion-binding, dependency, or material-action failure in TSK-0489. The hygiene reconciliation removes the obsolete executable noise and the formatting defect rather than masking either result.
+
 ## VER-0489 coverage
 
 - **Functional:** canonical validation, contract suite, lint/typecheck/build, dependency/SBOM gates and exact-head promotion all pass on PR and `main`.
@@ -122,7 +137,7 @@ Exactly three applicable workflows ran on canonical `main@26a8f786b5e74e665b5c19
 
 ## ACC-0489 disposition
 
-**ACC-0489 is satisfied and TSK-0489 PASS is restored.** Approved governed checks execute on pull/change requests and `main`; failures and source-SHA mismatches fail closed before promotion; executable evidence is retained; no test bypass was used; final promotion is exact-source-head bound; active workflow and transitively reachable executable inspection finds no repository write surface; post-merge canonical `main` reran the applicable checks successfully.
+**ACC-0489 is satisfied and TSK-0489 PASS is restored.** Approved governed checks execute on pull/change requests and `main`; failures and source-SHA mismatches fail closed before promotion; executable evidence is retained; no test bypass was used; final promotion is exact-source-head bound; active workflow and transitively reachable executable inspection finds no repository write surface; post-merge canonical `main` reran the current mandatory checks successfully.
 
 The former PR #99 exact-source-head claim is historical/superseded and must not be used as current PASS proof.
 
