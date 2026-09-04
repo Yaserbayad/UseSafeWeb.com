@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - owner-cr0014-runtime-diagnostic-20260904
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
 
 permissions:
   contents: write
