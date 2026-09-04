@@ -18,7 +18,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Analyze preserved PASS evidence bindings
+      - name: Classify frozen WBS-only PASS evidence semantics
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -29,13 +29,12 @@ jobs:
           from pathlib import Path
 
           rows = list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='')))
-          legacy = Path('CURRENT_STATE.md').read_text(encoding='utf-8')
           by_id = {r['Task_ID'].strip(): r for r in rows}
+          legacy = Path('CURRENT_STATE.md').read_text(encoding='utf-8')
 
           heading_re = re.compile(r'^##\s+(TSK-\d{4})\b([^\n]*)$', re.M)
           matches = list(heading_re.finditer(legacy))
           explicit = {}
-          sections = {}
           for i, m in enumerate(matches):
               tid = m.group(1)
               end = matches[i + 1].start() if i + 1 < len(matches) else len(legacy)
@@ -43,16 +42,13 @@ jobs:
               head = m.group(0)
               status = None
               if re.search(r'(?i)\bcurrent accepted stable state\b|\bTARGET ACCEPTANCE PASS\b|\bTARGET ACCEPTANCE COMPLETE\b|\bPASS UNDER\b', head):
-                  if re.search(r'(?i)(?:\*\*|`)?PASS(?:\*\*|`)?\b|Runtime state:\s*`?PASS`?', section):
-                      status = 'PASS'
+                  if re.search(r'(?i)(?:\*\*|`)?PASS(?:\*\*|`)?\b|Runtime state:\s*`?PASS`?', section): status = 'PASS'
               if re.search(r'(?i)\bWAITING\b|\bDEFERRED\b', head): status = 'WAITING'
               if re.search(r'(?i)\bremains\s+`?TODO`?\b|:\s*\*\*TODO\*\*|Runtime state:\s*`?TODO`?', section): status = 'TODO'
               if re.search(r'(?i)\bRuntime state:\s*`?PASS`?\b', section): status = 'PASS'
               if re.search(r'(?i)^`?TSK-\d{4}[^\n]*:\s*\*\*PASS\*\*', section, re.M): status = 'PASS'
               if re.search(r'(?i)^`?TSK-\d{4}[^\n]*:\s*\*\*WAITING(?:\s*/[^*]+)?\*\*', section, re.M): status = 'WAITING'
-              if status:
-                  explicit[tid] = status
-                  sections[tid] = section
+              if status: explicit[tid] = status
 
           states = {r['Task_ID'].strip(): (r.get('Execution_State') or '').strip().upper() for r in rows}
           states.update(explicit)
@@ -60,59 +56,45 @@ jobs:
           for tid in fixed_wait: states[tid] = 'WAITING'
           states['TSK-0146'] = 'PASS'
 
-          pass_ids = [tid for tid, st in states.items() if st == 'PASS']
-          print(f'PASS_TOTAL={len(pass_ids)}')
-          print(f'PASS_EXPLICIT={sum(1 for tid in pass_ids if explicit.get(tid)=="PASS")}')
-          print(f'PASS_WBS_ONLY={sum(1 for tid in pass_ids if explicit.get(tid)!="PASS")}')
+          wbs_only = [tid for tid, st in states.items() if st == 'PASS' and explicit.get(tid) != 'PASS']
+          print(f'WBS_ONLY_PASS={len(wbs_only)}')
+          print('PLAN_STATUS=' + repr(dict(sorted(Counter((by_id[t].get('Plan_Status') or '').strip() for t in wbs_only).items()))))
+          print('ACTION_AUTHORITY=' + repr(dict(sorted(Counter((by_id[t].get('Action_Authority') or '').strip() for t in wbs_only).items()))))
+          print('LIFECYCLE=' + repr(dict(sorted(Counter((by_id[t].get('Lifecycle') or '').strip() for t in wbs_only).items()))))
+          print('LEVEL=' + repr(dict(sorted(Counter((by_id[t].get('Level') or '').strip() for t in wbs_only).items()))))
 
-          def classify_text(text):
-              t = text or ''
-              cats = []
-              if re.search(r'(?i)\b(?:run|workflow|job|actions?)\b[^\n]{0,120}\b\d{6,12}\b|\b\d{6,12}\s*/\s*\d{6,12}\b', t): cats.append('TEST_RESULT_HINT')
-              if re.search(r'(?i)\bblob\b[^\n]{0,120}\b[0-9a-f]{40}\b|\b[0-9a-f]{40}\b[^\n]{0,120}\bblob\b', t): cats.append('BLOB_HINT')
-              if re.search(r'(?i)\b(?:commit|head|source)\b[^\n]{0,120}\b[0-9a-f]{40}\b|\b[0-9a-f]{40}\b[^\n]{0,120}\b(?:commit|head|source)\b', t): cats.append('COMMIT_HINT')
-              if re.search(r'(?i)\bowner\s+(?:approval|authority|decision)|human\s+approval|explicit\s+Project\s+Owner', t): cats.append('HUMAN_HINT')
-              if re.search(r'(?i)https?://', t): cats.append('URL_HINT')
-              if not cats: cats.append('NONE')
-              return cats
+          exclusion_tokens = re.compile(r'(?i)NOT_APPLICABLE|EXCLUSION|excluded|outside.*scope|not applicable|pre-L8|human validation')
+          human_tokens = re.compile(r'(?i)owner instruction|owner override|owner approval|HUMAN_ONLY|HUMAN_APPROVAL_REQUIRED|DEC-0052|CR-0005')
+          test_tokens = re.compile(r'(?i)test|verify|validation|calculate|measure|run |execute|delete|recruit|follow-up|monitor')
+          doc_tokens = re.compile(r'(?i)define|freeze|select|record|document|create|draft|specify|authorise|decide|review|audit|reconcile|complete phase|publish|exclude|keep|defer')
 
-          wbs_counts = Counter()
-          legacy_counts = Counter()
-          no_evidence = []
-          for tid in pass_ids:
-              row = by_id[tid]
-              ev = (row.get('Evidence_Reference') or '').strip()
-              if explicit.get(tid) == 'PASS':
-                  text = sections.get(tid, '')
-                  cats = classify_text(text)
-                  for c in cats: legacy_counts[c] += 1
-                  if cats == ['NONE']:
-                      no_evidence.append(('LEGACY', tid, row.get('Title',''), ev, text[:500].replace('\n',' ')))
-              else:
-                  cats = classify_text(ev)
-                  for c in cats: wbs_counts[c] += 1
-                  if cats == ['NONE']:
-                      no_evidence.append(('WBS', tid, row.get('Title',''), ev, ''))
-
-          print('WBS_PASS_EVIDENCE_HINTS=' + repr(dict(sorted(wbs_counts.items()))))
-          print('LEGACY_PASS_EVIDENCE_HINTS=' + repr(dict(sorted(legacy_counts.items()))))
-          print(f'PASS_WITH_NO_EVIDENCE_HINT={len(no_evidence)}')
-          for rec in no_evidence[:200]:
-              print('NOHINT|' + '|'.join(str(x).replace('|','/') for x in rec))
-
-          print('--- WBS_ONLY_PASS_REFS ---')
-          for tid in pass_ids:
-              if explicit.get(tid) != 'PASS':
-                  row = by_id[tid]
-                  print('WBSREF|' + tid + '|' + (row.get('Acceptance_ID') or '') + '|' + (row.get('Title') or '').replace('|','/') + '|' + (row.get('Evidence_Reference') or '').replace('|','/'))
-
-          print('--- EXPLICIT_PASS_PROOF_LINES ---')
-          for tid in pass_ids:
-              if explicit.get(tid) == 'PASS':
-                  section = sections.get(tid,'')
-                  lines = []
-                  for line in section.splitlines():
-                      if re.search(r'(?i)\b(?:evidence|verification|run|job|blob|commit|source|approval|authority)\b', line):
-                          lines.append(line.strip())
-                  print('LEGREF|' + tid + '|' + (by_id[tid].get('Acceptance_ID') or '') + '|' + (by_id[tid].get('Title') or '').replace('|','/') + '|' + ' || '.join(lines[:12]).replace('|','/'))
+          buckets = Counter()
+          for tid in wbs_only:
+              r = by_id[tid]
+              acc = (r.get('Acceptance_Criteria') or '').strip()
+              ev = (r.get('Evidence_Reference') or '').strip()
+              ver = (r.get('Verification_Procedure') or '').strip()
+              title = (r.get('Title') or '').strip()
+              ps = (r.get('Plan_Status') or '').strip()
+              aa = (r.get('Action_Authority') or '').strip()
+              joined = ' '.join([title, acc, ev, ver, ps, aa])
+              if exclusion_tokens.search(joined): bucket = 'EXCLUSION_OR_NA'
+              elif human_tokens.search(joined): bucket = 'HUMAN_DECISION'
+              elif test_tokens.search(title + ' ' + acc): bucket = 'EXECUTION_LIKE'
+              elif doc_tokens.search(title): bucket = 'DOCUMENTARY'
+              else: bucket = 'OTHER'
+              buckets[bucket] += 1
+              print('ROW|' + '|'.join([
+                  tid,
+                  bucket,
+                  ps.replace('|','/'),
+                  aa.replace('|','/'),
+                  (r.get('Level') or '').replace('|','/'),
+                  (r.get('Lifecycle') or '').replace('|','/'),
+                  title.replace('|','/'),
+                  acc.replace('|','/').replace('\n',' '),
+                  ver.replace('|','/').replace('\n',' '),
+                  ev.replace('|','/').replace('\n',' '),
+              ]))
+          print('BUCKETS=' + repr(dict(sorted(buckets.items()))))
           PY
