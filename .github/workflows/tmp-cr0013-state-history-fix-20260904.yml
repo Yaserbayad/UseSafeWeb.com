@@ -1,0 +1,61 @@
+name: Temporary CR-0013 state history fix
+
+on:
+  push:
+    branches:
+      - tmp/cr0013-state-history-fix-20260904
+
+permissions:
+  contents: write
+
+jobs:
+  patch-state-history:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out exact target branch
+        uses: actions/checkout@v4
+        with:
+          ref: governance/cr0013-clean-20260904
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Guard target head and patch only CURRENT_STATE.md
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected_head='9444e7aa95a7075dc2413dec6ac34007feed2178'
+          actual_head="$(git rev-parse HEAD)"
+          test "$actual_head" = "$expected_head"
+
+          python - <<'PY'
+          from datetime import datetime, timezone
+          from pathlib import Path
+          import re
+
+          path = Path('CURRENT_STATE.md')
+          text = path.read_text(encoding='utf-8')
+          old = "Recompute the residual executable frontier from current WBS/graph/runtime/gates and current owner decisions. `TSK-0453` remains WAITING on GitHub platform review-enforcement proof and `TSK-0417` remains non-PASS at its real-target material-action boundary; neither prevents independent eligible `AUTO_ALLOWED` work elsewhere."
+          new = "Historical snapshot at TSK-0491 acceptance: `TSK-0453` was `WAITING` on GitHub platform review-enforcement proof and `TSK-0417` was non-PASS at its real-target material-action boundary; the former TSK-0453 blocker was subsequently superseded by owner-approved `DEC-0060 / CR-0013`, while the TSK-0417 boundary remained unchanged."
+          if text.count(old) != 1:
+              raise SystemExit(f'expected historical sentence exactly once, found {text.count(old)}')
+          if new in text:
+              raise SystemExit('replacement sentence already present; refusing ambiguous replay')
+          text = text.replace(old, new, 1)
+          stamp = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00', 'Z')
+          text, count = re.subn(r'^\*\*Updated:\*\* .+$', f'**Updated:** {stamp}', text, count=1, flags=re.MULTILINE)
+          if count != 1:
+              raise SystemExit('CURRENT_STATE Updated field not found exactly once')
+          path.write_text(text, encoding='utf-8')
+          PY
+
+          git diff --check
+          changed="$(git diff --name-only)"
+          test "$changed" = 'CURRENT_STATE.md'
+          grep -F 'Historical snapshot at TSK-0491 acceptance:' CURRENT_STATE.md
+          grep -F 'TSK-0453` is PASS under DEC-0060/CR-0013' CURRENT_STATE.md
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: clarify superseded TSK-0453 wait history'
+          git push origin HEAD:refs/heads/governance/cr0013-clean-20260904
