@@ -12,12 +12,12 @@ permissions:
 
 jobs:
   stage-checkpoint:
-    if: github.event.head_commit.message == 'chore: stage TSK-0243 checkpoint synchronizer'
+    if: github.event.head_commit.message == 'retry TSK-0243 checkpoint synchronizer'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
       BRANCH: evidence/tsk0243-isolated-target-partial-20260904
-      EXPECTED_PARENT: 342bfa108adec3e70cd883d43a2bcdc46e50353f
+      EXPECTED_PARENT: 3eafa24e051c9aa7049d009e91491ffbe9697168
       EXPECTED_STATE_BLOB: 7fe19e2f3df94974764bc27ae903c781cb8f9734
       EXPECTED_WBS_BLOB: 142a0d45b381136567d78545f063333f1e74901f
       EXPECTED_EVIDENCE_BLOB: 4884685af21f73629b3b98979075649b5b105e67
