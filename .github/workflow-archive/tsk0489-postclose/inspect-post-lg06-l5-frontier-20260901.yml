@@ -1,0 +1,31 @@
+name: Inspect post-LG-06 L5 frontier 2026-09-01
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/inspect-post-lg06-l5-frontier-20260901.yml'
+      - '.github/scripts/inspect_post_lg06_l5_frontier_20260901.py'
+      - 'CURRENT_STATE.md'
+      - 'Plans/Master/WBS/master-wbs.csv'
+      - 'Plans/Master/Registers/GATES.md'
+      - 'Plans/Master/Registers/DECISIONS_TRIGGERS.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Inspect exact L5 frontier
+        run: python3 .github/scripts/inspect_post_lg06_l5_frontier_20260901.py
+      - name: Confirm read-only clean checkout
+        run: |
+          git diff --check HEAD^ HEAD
+          test -z "$(git status --porcelain)"
