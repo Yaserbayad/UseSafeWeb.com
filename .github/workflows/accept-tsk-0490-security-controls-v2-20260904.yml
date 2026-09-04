@@ -1,0 +1,268 @@
+name: Accept TSK-0490 security controls v2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/accept-tsk-0490-security-controls-v2-20260904.yml'
+      - 'infrastructure/adguard-server/tsk-0490-security-controls-verifier.sh'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  source-synthetic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify authority and synthetic controls
+        shell: bash
+        env:
+          TSK0490_EXTERNAL_SECRET: ${{ github.token }}
+        run: |
+          set -Eeuo pipefail
+          [[ "${GITHUB_EVENT_NAME}" == push && "${GITHUB_REF}" == refs/heads/main ]]
+          [[ "$(git rev-parse HEAD)" == "${GITHUB_SHA}" ]]
+          python3 - <<'PY'
+          import csv
+          with open('Plans/Master/WBS/master-wbs.csv', newline='', encoding='utf-8') as f:
+              rows=[r for r in csv.DictReader(f) if r['Task_ID']=='TSK-0490']
+          assert len(rows)==1
+          r=rows[0]
+          assert r['Lifecycle_Stage']=='L6'
+          assert r['Dependencies'].strip()=='TSK-0450'
+          assert (r['Acceptance_ID'],r['Verification_ID'],r['Evidence_ID'])==('ACC-0490','VER-0490','EVD-0490')
+          assert (r['AI_Capability_A0_A4'],r['Action_Authority'])==('A3','AUTO_ALLOWED')
+          expected=('Secret scan proves no production secret/token/private key is committed, even encrypted; external secret injection is verified; '
+                    'normal identities/services are least privilege; any root-capable bootstrap/deploy path is narrowly scoped/audited; '
+                    'rotation/revocation and break-glass recovery are tested.')
+          assert r['Acceptance_Criteria']==expected
+          graph=open('Plans/Master/RELATIONSHIP_INDEX.yaml',encoding='utf-8').read()
+          start=graph.index('  TSK-0490:\n')
+          end=graph.index('\n  TSK-0491:',start)
+          block=graph[start:end]
+          for target,kind in [('TSK-0450','depends_on'),('ACC-0490','acceptance'),('VER-0490','verified_by'),('EVD-0490','evidence_required'),('RSK-0007','affected_by_risk'),('INT-0015','uses_interface'),('REQ-0055','governed_by'),('REQ-0056','governed_by'),('CON-0009','governed_by'),('CON-0028','governed_by')]:
+              assert f'- target: {target}\n      type: {kind}' in block
+          PY
+          grep -Fq '## TSK-0450 current accepted stable state' CURRENT_STATE.md
+          grep -Fq '`TSK-0450 - Implement CI/ephemeral test environments and the isolated pilot environment`: **PASS**' CURRENT_STATE.md
+          grep -Fq '`TSK-0455` remains DEFERRED / WAITING' CURRENT_STATE.md
+          grep -Fq 'TSK-0456`, `TSK-0457` and `TSK-0492` remain dependency-blocked' CURRENT_STATE.md
+          grep -Fq 'DEC-0059' Plans/Master/Registers/DECISIONS_TRIGGERS.md
+          grep -Fq 'CR-0012' Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md
+          script='infrastructure/adguard-server/tsk-0490-security-controls-verifier.sh'
+          bash -n "${script}"
+          bash "${script}" --synthetic | tee /tmp/tsk-0490-source-v2.txt
+          for marker in FULL_HISTORY_SECRET_SCAN=PASS SECRET_SCAN_PRIVATE_KEY=PASS SECRET_SCAN_PROVIDER_TOKENS=PASS SECRET_SCAN_ENCRYPTED_SECRET_CONTAINERS=PASS EXTERNAL_SECRET_INJECTION=PASS SECRET_ROTATION_TEST=PASS SECRET_REVOCATION_TEST=PASS BREAK_GLASS_RECOVERY_TEST=PASS TEMP_SECRET_PERMISSIONS=PASS TEMP_SECRET_CLEANUP=PASS SYNTHETIC_ROLLBACK=PASS ACC_0490_SYNTHETIC=PASS; do
+            grep -Fq "${marker}" /tmp/tsk-0490-source-v2.txt
+          done
+          [[ -z "$(git status --porcelain=v1)" ]]
+          printf 'SOURCE_COMMIT=%s\n' "${GITHUB_SHA}" >> /tmp/tsk-0490-source-v2.txt
+          printf 'SOURCE_SCRIPT_BLOB=%s\n' "$(git hash-object "${script}")" >> /tmp/tsk-0490-source-v2.txt
+          printf 'SOURCE_SCRIPT_SHA256=%s\n' "$(sha256sum "${script}" | awk '{print $1}')" >> /tmp/tsk-0490-source-v2.txt
+          echo 'SOURCE_V2=PASS' >> /tmp/tsk-0490-source-v2.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tsk-0490-source-v2
+          path: /tmp/tsk-0490-source-v2.txt
+          retention-days: 7
+
+  target-readonly:
+    needs: source-synthetic
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify existing target privilege envelope read-only
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "${GITHUB_EVENT_NAME}" == push && "${GITHUB_REF}" == refs/heads/main ]]
+          [[ "$(git rev-parse HEAD)" == "${GITHUB_SHA}" ]]
+          [[ "$(hostname -s)" == adguardvm && "$(id -un)" == azureusr ]]
+          script='infrastructure/adguard-server/tsk-0490-security-controls-verifier.sh'
+          bash -n "${script}"
+          bash "${script}" --target-readonly | tee /tmp/tsk-0490-target-v2.txt
+          for marker in NORMAL_EXECUTOR_LEAST_PRIVILEGE=PASS RUNNER_SERVICE_LEAST_PRIVILEGE=PASS ROOT_CAPABLE_PATH=PASS SSH_ROOT_LOGIN=DISABLED SSH_PASSWORD_AUTH=DISABLED TARGET_CONFIGURATION_UNCHANGED=PASS PRODUCTION_SECRET_ROTATION=NOT_PERFORMED PRODUCTION_SERVICE_REVOCATION=NOT_PERFORMED DEPLOYMENT_ACTION=NONE TELEMETRY_ACTIVATION=NONE PARTICIPANT_ACTION=NONE TARGET_SECURITY_PRIVACY=PASS ACC_0490_TARGET_READONLY=PASS; do
+            grep -Fq "${marker}" /tmp/tsk-0490-target-v2.txt
+          done
+          [[ -z "$(git status --porcelain=v1)" ]]
+          printf 'SOURCE_COMMIT=%s\n' "${GITHUB_SHA}" >> /tmp/tsk-0490-target-v2.txt
+          echo 'TARGET_V2=PASS' >> /tmp/tsk-0490-target-v2.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tsk-0490-target-v2
+          path: /tmp/tsk-0490-target-v2.txt
+          retention-days: 7
+
+  verify-persist:
+    needs: target-readonly
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: tsk-0490-*-v2
+          path: ${{ runner.temp }}/evidence
+          merge-multiple: true
+      - name: Independently verify and persist ACC-0490
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+          TSK0490_EXTERNAL_SECRET: ${{ github.token }}
+        run: |
+          set -Eeuo pipefail
+          git fetch origin main
+          [[ "$(git rev-parse HEAD)" == "${SOURCE_COMMIT}" ]]
+          [[ "$(git rev-parse origin/main)" == "${SOURCE_COMMIT}" ]]
+          s="${RUNNER_TEMP}/evidence/tsk-0490-source-v2.txt"
+          t="${RUNNER_TEMP}/evidence/tsk-0490-target-v2.txt"
+          grep -Fq 'SOURCE_V2=PASS' "${s}"
+          grep -Fq 'TARGET_V2=PASS' "${t}"
+          grep -Fq 'FULL_HISTORY_SECRET_SCAN=PASS' "${s}"
+          grep -Fq 'TARGET_CONFIGURATION_UNCHANGED=PASS' "${t}"
+          grep -Fq 'PRODUCTION_SECRET_ROTATION=NOT_PERFORMED' "${t}"
+          grep -Fq 'PRODUCTION_SERVICE_REVOCATION=NOT_PERFORMED' "${t}"
+          grep -Fq 'DEPLOYMENT_ACTION=NONE' "${t}"
+          grep -Fq 'TELEMETRY_ACTIVATION=NONE' "${t}"
+          grep -Fq 'PARTICIPANT_ACTION=NONE' "${t}"
+
+          script='infrastructure/adguard-server/tsk-0490-security-controls-verifier.sh'
+          bash "${script}" --synthetic | tee /tmp/tsk-0490-independent-v2.txt
+          for marker in FULL_HISTORY_SECRET_SCAN=PASS EXTERNAL_SECRET_INJECTION=PASS SECRET_ROTATION_TEST=PASS SECRET_REVOCATION_TEST=PASS BREAK_GLASS_RECOVERY_TEST=PASS TEMP_SECRET_CLEANUP=PASS ACC_0490_SYNTHETIC=PASS; do
+            grep -Fq "${marker}" /tmp/tsk-0490-independent-v2.txt
+          done
+
+          python3 - "${s}" "${t}" /tmp/tsk-0490-independent-v2.txt <<'PY'
+          import re,sys
+          provider=[
+              re.compile(("gh"+r"[pousr]_[A-Za-z0-9_]{20,}").encode()),
+              re.compile(("AK"+r"IA[0-9A-Z]{16}").encode()),
+              re.compile(("AI"+r"za[0-9A-Za-z_-]{35}").encode()),
+              re.compile(("sk_"+r"(?:live|test)_[0-9A-Za-z]{16,}").encode()),
+          ]
+          labels=(b'PRIVATE KEY',b'ENCRYPTED PRIVATE KEY',b'RSA PRIVATE KEY',b'EC PRIVATE KEY',b'OPENSSH PRIVATE KEY')
+          b64=re.compile(rb'^[A-Za-z0-9+/=\r\n]+$')
+          def pem(data):
+              for label in labels:
+                  begin=b'-----BEGIN '+label+b'-----'; end=b'-----END '+label+b'-----'
+                  i=data.find(begin)
+                  while i!=-1:
+                      j=data.find(end,i+len(begin))
+                      if j!=-1:
+                          body=data[i+len(begin):j].strip(); compact=b''.join(body.split())
+                          if len(compact)>=80 and b64.fullmatch(body): return True
+                      i=data.find(begin,i+len(begin))
+              return False
+          for path in sys.argv[1:]:
+              data=open(path,'rb').read()
+              assert not pem(data), f'private key material in sanitized transcript {path}'
+              assert not any(p.search(data) for p in provider), f'provider credential in sanitized transcript {path}'
+          print('SANITIZED_TRANSCRIPTS=PASS')
+          PY
+
+          grep -Fq '`TSK-0455` remains DEFERRED / WAITING' CURRENT_STATE.md
+          grep -Fq 'TSK-0456`, `TSK-0457` and `TSK-0492` remain dependency-blocked' CURRENT_STATE.md
+
+          workflow='.github/workflows/accept-tsk-0490-security-controls-v2-20260904.yml'
+          evd='TSK_0490_SECRETS_IDENTITY_PRIVILEGED_ACCESS_EVIDENCE_2026-09-04.md'
+          state='CURRENT_STATE.md'
+          script_blob="$(git hash-object "${script}")"
+          script_sha="$(sha256sum "${script}" | awk '{print $1}')"
+          workflow_blob="$(git hash-object "${workflow}")"
+          wbs_blob="$(git hash-object Plans/Master/WBS/master-wbs.csv)"
+          graph_blob="$(git hash-object Plans/Master/RELATIONSHIP_INDEX.yaml)"
+          s_sha="$(sha256sum "${s}" | awk '{print $1}')"
+          t_sha="$(sha256sum "${t}" | awk '{print $1}')"
+          i_sha="$(sha256sum /tmp/tsk-0490-independent-v2.txt | awk '{print $1}')"
+
+          cat > "${evd}" <<EVIDENCE
+          # TSK-0490 secrets, identity and privileged-access evidence
+
+          **Date:** 2026-09-04
+          **Task:** TSK-0490 - Implement secrets, identity, and privileged-access controls
+          **Acceptance / verification / evidence:** ACC-0490 / VER-0490 / EVD-0490
+          **Source commit:** \`${SOURCE_COMMIT}\`
+          **Verifier blob / SHA-256:** \`${script_blob}\` / \`${script_sha}\`
+          **Workflow blob:** \`${workflow_blob}\`
+          **WBS / relationship-index blobs:** \`${wbs_blob}\` / \`${graph_blob}\`
+          **GitHub Actions run / attempt:** \`${GITHUB_RUN_ID} / ${GITHUB_RUN_ATTEMPT}\`
+
+          ## Result
+          **PASS.** ACC-0490 is satisfied by current durable evidence.
+
+          - Full Git history was scanned across unique eligible blobs for complete PEM private-key material, high-confidence provider-token signatures, and forbidden encrypted/private-key container formats; no credential material was found. A prior lone-header hit was independently traced to a negative test assertion in historical TSK-0355 verifier source, not a PEM key, and the scanner was corrected to require a complete plausible PEM block.
+          - External secret injection was verified with the job-scoped GitHub token under the workflow permission envelope; the value was never printed or persisted.
+          - Isolated synthetic controls proved credential rotation, revocation, bounded break-glass recovery/resealing, restrictive transient permissions, cleanup, and rollback without using or changing a production credential.
+          - Existing \`adguardvm\` was checked read-only: normal executor and runner service are non-root \`azureusr\`; the root-capable sudo bridge was exercised only for bounded read-only checks auditable through this run; SSH root login and password authentication are disabled; SSH/sudo configuration hashes were unchanged by verification.
+          - Sanitized source, target, and independent transcripts were independently checked for complete PEM key material and provider credentials.
+          - No deployment, telemetry activation, participant-facing mutation, production credential rotation/revocation, service revocation/removal, payment, public/market activation, or launch occurred.
+
+          ## Evidence integrity
+          - Source/synthetic transcript SHA-256: \`${s_sha}\`
+          - Target read-only transcript SHA-256: \`${t_sha}\`
+          - Independent transcript SHA-256: \`${i_sha}\`
+
+          ## Non-inference
+          This PASS proves only TSK-0490. TSK-0453 remains WAITING. TSK-0455 remains DEFERRED / WAITING under DEC-0059 / CR-0012 with ACC-0455 / VER-0455 / EVD-0455 unchanged. TSK-0456, TSK-0457 and TSK-0492 remain dependency-blocked. No deployment, activation, launch, service-revocation, telemetry, payment, participant, successor, or gate PASS is inferred.
+          EVIDENCE
+
+          ! grep -Fq '## TSK-0490 current accepted stable state' "${state}"
+          now="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          sed -i -E "0,/^\*\*Updated:\*\*/s|^\*\*Updated:\*\*.*$|**Updated:** ${now}|" "${state}"
+          evidence_blob="$(git hash-object "${evd}")"
+          cat >> "${state}" <<STATE
+
+          ## TSK-0490 current accepted stable state - 2026-09-04
+
+          \`TSK-0490 - Implement secrets, identity, and privileged-access controls\`: **PASS** under current \`ACC-0490 / VER-0490 / EVD-0490\`.
+          - Eligibility: TSK-0450 is current durable PASS; WBS authority is A3 / AUTO_ALLOWED.
+          - Verification: full-history credential/private-key scan; external secret injection; isolated rotation/revocation/break-glass/cleanup/rollback; read-only \`adguardvm\` least-privilege/root-capable-path verification; independent synthetic rerun and sanitized-transcript credential scan.
+          - Verifier: \`${script}\`, blob \`${script_blob}\`, SHA-256 \`${script_sha}\`; v2 workflow blob \`${workflow_blob}\`; source commit \`${SOURCE_COMMIT}\`.
+          - Durable evidence: \`${evd}\`, blob \`${evidence_blob}\`; run/attempt \`${GITHUB_RUN_ID} / ${GITHUB_RUN_ATTEMPT}\`.
+          - Material actions: **none**. No production credential rotation/revocation, deployment, telemetry activation, participant processing, service revocation/removal, payment, public/market activation or launch occurred.
+          - Non-inference: TSK-0453 remains WAITING; TSK-0455 remains DEFERRED / WAITING under DEC-0059 / CR-0012 with unchanged ACC-0455 / VER-0455 / EVD-0455; TSK-0456, TSK-0457 and TSK-0492 remain dependency-blocked; no successor or gate PASS is inferred.
+          STATE
+
+          git diff --check
+          git add "${state}" "${evd}"
+          mapfile -t changed < <(git diff --cached --name-only | sort)
+          [[ "${#changed[@]}" -eq 2 ]]
+          [[ "${changed[0]}" == CURRENT_STATE.md && "${changed[1]}" == "${evd}" ]]
+          [[ -z "$(git diff --cached --name-only -- Plans/Master)" ]]
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'state: accept TSK-0490 security controls'
+          persisted="$(git rev-parse HEAD)"
+          git push origin HEAD:main
+          git fetch origin main
+          [[ "$(git rev-parse origin/main)" == "${persisted}" ]]
+          [[ "$(git rev-parse "${persisted}:${evd}")" == "${evidence_blob}" ]]
+          git show "${persisted}:${state}" | grep -Fq '## TSK-0490 current accepted stable state'
+          git show "${persisted}:${state}" | grep -Fq '`TSK-0455` remains DEFERRED / WAITING'
+          printf 'PERSISTED_COMMIT=%s\n' "${persisted}"
+          printf 'EVIDENCE_BLOB=%s\n' "${evidence_blob}"
+          printf 'STATE_BLOB=%s\n' "$(git rev-parse "${persisted}:${state}")"
+          echo 'ACC_0490=PASS'
+          echo 'VER_0490=PASS'
+          echo 'PERSIST_READBACK=PASS'
