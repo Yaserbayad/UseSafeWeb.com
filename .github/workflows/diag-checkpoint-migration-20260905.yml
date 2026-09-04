@@ -18,60 +18,34 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Trace completed-candidate PASS evidence through history
+      - name: Print bounded proof trace for completed candidates
         shell: bash
         run: |
           set -Eeuo pipefail
           python - <<'PY'
-          import csv
-          import re
-          import subprocess
+          import csv, subprocess
           from pathlib import Path
-
-          rows = list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='')))
-          by_id = {r['Task_ID'].strip(): r for r in rows}
-          candidates = [r for r in rows if (r.get('Execution_State') or '').strip().upper() == 'PASS' and (r.get('Plan_Status') or '').strip() == 'COMPLETED_CANDIDATE']
-          print(f'COMPLETED_CANDIDATE_COUNT={len(candidates)}')
-          for r in candidates:
-              tid = r['Task_ID'].strip()
-              print('CANDIDATE|' + '|'.join([
-                  tid,
-                  (r.get('Title') or '').replace('|','/'),
-                  (r.get('Acceptance_ID') or '').replace('|','/'),
-                  (r.get('Acceptance_Criteria') or '').replace('|','/').replace('\n',' '),
-                  (r.get('Verification_ID') or '').replace('|','/'),
-                  (r.get('Verification_Procedure') or '').replace('|','/').replace('\n',' '),
-                  (r.get('Evidence_ID') or '').replace('|','/'),
-                  (r.get('Evidence_Reference') or '').replace('|','/').replace('\n',' '),
-                  (r.get('Action_Authority') or '').replace('|','/'),
-              ]))
-
-              terms = [tid, (r.get('Acceptance_ID') or '').strip(), (r.get('Verification_ID') or '').strip(), (r.get('Evidence_ID') or '').strip()]
-              seen = set()
-              for term in [t for t in terms if t]:
-                  proc = subprocess.run(['git','log','--all','--format=%H%x09%ad%x09%s','--date=iso-strict','-S',term,'--'], text=True, capture_output=True, check=False)
-                  lines = [line for line in proc.stdout.splitlines() if line.strip()][:12]
-                  for line in lines:
-                      key = (term, line)
-                      if key not in seen:
-                          seen.add(key)
-                          print(f'HISTORY|{tid}|TERM={term}|{line.replace("|","/")}')
-
-              # Locate paths in full history whose names contain the task id (dash/underscore variants).
-              variants = {tid.lower(), tid.lower().replace('-','_'), tid.lower().replace('-','')}
-              proc = subprocess.run(['git','log','--all','--name-only','--format='], text=True, capture_output=True, check=False)
-              paths = []
-              for path in proc.stdout.splitlines():
-                  low = path.lower()
-                  if any(v in low for v in variants) and path not in paths:
-                      paths.append(path)
-              for path in paths[:40]:
-                  print(f'PATH|{tid}|{path.replace("|","/")}')
-
-              # Search tracked current files for the identifiers too.
-              grep_terms = [t for t in terms if t]
-              for term in grep_terms:
-                  proc = subprocess.run(['git','grep','-n','-I','--full-name','-F',term,'HEAD','--'], text=True, capture_output=True, check=False)
-                  for line in proc.stdout.splitlines()[:30]:
-                      print(f'GREP|{tid}|TERM={term}|{line.replace("|","/")}')
+          rows=list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='')))
+          rows=[r for r in rows if (r.get('Execution_State') or '').strip().upper()=='PASS' and (r.get('Plan_Status') or '').strip()=='COMPLETED_CANDIDATE']
+          print('COUNT='+str(len(rows)))
+          for r in rows:
+              tid=r['Task_ID'].strip(); ev=(r.get('Evidence_ID') or '').strip(); acc=(r.get('Acceptance_ID') or '').strip(); ver=(r.get('Verification_ID') or '').strip()
+              print('TASK|%s|%s|%s|%s|%s|%s|%s' % (tid,acc,ver,ev,(r.get('Action_Authority') or '').strip(),(r.get('Title') or '').replace('|','/'),(r.get('Evidence_Reference') or '').replace('|','/')))
+              term=ev or tid
+              p=subprocess.run(['git','log','--all','-n','4','--format=%H%x09%ad%x09%s','--date=short','-S',term,'--'],text=True,capture_output=True)
+              for ln in p.stdout.splitlines():
+                  sha=ln.split('\t',1)[0]
+                  print('HIT|%s|TERM=%s|%s' % (tid,term,ln.replace('|','/')))
+                  s=subprocess.run(['git','show','--format=','--name-only','--diff-filter=AM',sha],text=True,capture_output=True)
+                  paths=[x for x in s.stdout.splitlines() if x][:12]
+                  if paths: print('FILES|%s|%s|%s' % (tid,sha,','.join(paths).replace('|','/')))
+              # filename search over all history, bounded and unique
+              variants=(tid.lower(),tid.lower().replace('-','_'),tid.lower().replace('-',''))
+              p=subprocess.run(['git','log','--all','--name-only','--format='],text=True,capture_output=True)
+              found=[]
+              for path in p.stdout.splitlines():
+                  low=path.lower()
+                  if path and any(v in low for v in variants) and path not in found: found.append(path)
+                  if len(found)>=8: break
+              for path in found: print('PATH|%s|%s' % (tid,path.replace('|','/')))
           PY
