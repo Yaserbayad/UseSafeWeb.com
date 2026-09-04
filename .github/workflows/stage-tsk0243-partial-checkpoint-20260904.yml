@@ -27,13 +27,13 @@ jobs:
           branch='evidence/tsk0243-isolated-target-partial-20260904'
           workflow='.github/workflows/stage-tsk0243-partial-checkpoint-20260904.yml'
           evidence='TSK_0243_ISOLATED_TARGET_PARTIAL_EVIDENCE_2026-09-04.md'
-          test "$(git log -1 --pretty=%s)" = 'apply final TSK-0243 checkpoint synchronizer'
+          test "$(git log -1 --pretty=%s)" = 'apply exact-status TSK-0243 checkpoint synchronizer'
           test "${GITHUB_REF_NAME}" = "${branch}"
-          test "$(git rev-parse HEAD^)" = '2b0865d5703fa524532fbe3e23d2e7fb8215eeb2'
+          test "$(git rev-parse HEAD^)" = '914328e30c2831a796721e3306d01d2be75b02e4'
           test "$(git hash-object CURRENT_STATE.md)" = '7fe19e2f3df94974764bc27ae903c781cb8f9734'
           test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = '142a0d45b381136567d78545f063333f1e74901f'
           test "$(git hash-object "${evidence}")" = '4884685af21f73629b3b98979075649b5b105e67'
-          grep -Fq '`TSK-0243` remains `TODO`' CURRENT_STATE.md
+          grep -Fq '`TSK-0243 — Implement privacy-safe DNS protection verification`: **TODO**' CURRENT_STATE.md
           grep -Fq 'No deployment, live-device/profile/certificate action' CURRENT_STATE.md
           grep -Fq 'Evidence status: partial only; `TSK-0243 = TODO`.' "${evidence}"
           echo 'TSK0243_STAGE_INPUT_BINDING=PASS'
