@@ -1,0 +1,74 @@
+name: Guarded TSK-0374 runtime synchronization
+
+on:
+  push:
+    branches:
+      - accept/tsk-0374-target-20260903
+    paths:
+      - .github/workflows/runtime-sync-tsk0374-20260903.yml
+
+permissions:
+  contents: write
+
+jobs:
+  sync-runtime:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out canonical main with authenticated push capability
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Guard, append, commit, and publish runtime state
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          EXPECTED_PARENT='9dc99e54b40f2ef550eb71573490290183253579'
+          EXPECTED_BLOB='88771888ddf42ee8792dceb91e15efe3e12ddfff'
+          MARKER='## TSK-0374 current accepted stable state — 2026-09-03 — TARGET ACCEPTANCE COMPLETE'
+
+          git fetch --no-tags origin main
+          test "$(git rev-parse origin/main)" = "$EXPECTED_PARENT"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_PARENT"
+          test "$(git hash-object CURRENT_STATE.md)" = "$EXPECTED_BLOB"
+          if grep -Fq "$MARKER" CURRENT_STATE.md; then
+            echo 'Refusing duplicate TSK-0374 runtime synchronization.' >&2
+            exit 1
+          fi
+
+          cat >> CURRENT_STATE.md <<'EOF'
+
+## TSK-0374 current accepted stable state — 2026-09-03 — TARGET ACCEPTANCE COMPLETE
+
+`TSK-0374`: **PASS** under current `ACC-0374 / VER-0374 / EVD-0374`. This supersedes the prior source-implementation-partial runtime record; that earlier section remains historical traceability only.
+
+- Final acceptance PR `#98` merged exact head `249888c688bab19345564025955b1541dd4f3ba1` into canonical `main` as merge commit `9dc99e54b40f2ef550eb71573490290183253579`.
+- Exact-head target acceptance run/job `33817195473 / 100854838145`, attempt 2: **SUCCESS**. The run bound the current WBS blob `eb35f3b10356396c5117e3f47d0b0378953e2157`, passed deterministic repository/Master-Plan validation and all **7/7** focused TSK-0374 contract tests, then exercised the built Next.js production runtime with real Chromium.
+- Target evidence passed the canonical ready release, visible stale-release fail-closed behavior, missing-release fail-closed behavior, provenance-integrity failure, privacy/no-off-origin-content transport and cookie checks, and an actual ephemeral candidate-to-canonical rollback drill. The workflow restored the exact original content-release file, left the checked-out product source clean, and reported `TSK0374_TARGET_FUNCTIONAL=PASS`, `TSK0374_TARGET_NEGATIVE=PASS`, `TSK0374_TARGET_CONFIGURATION=PASS`, `TSK0374_TARGET_SECURITY_PRIVACY=PASS`, `TSK0374_TARGET_ROLLBACK=PASS`, and `TSK0374_TARGET_ACCEPTANCE=PASS`.
+- Both final npm audits reported **0 vulnerabilities**. Supporting reruns `33817195403 / 100854480121` (TSK-0360 delivery) and `33817195438 / 100854823950` (TSK-0453 source/policy controls) also completed **SUCCESS** on the same final-acceptance head; these are regression corroboration only and do not alter those tasks' independently governed runtime states.
+- PR `#98` added only the bounded target probe/acceptance machinery required to close this evidence gap; it did not deploy or activate the product. `TSK-0374 PASS` therefore records evidence-complete versioned-content-delivery acceptance, not deployment/publication/market activation.
+- **Non-inference / preserved fences:** no deployment, live-device/profile/certificate action, service removal/revocation, participant processing, telemetry activation, production/public activation, optional-account activation, payment, market activation, launch, `TSK-0417 PASS`, `TSK-0453 PASS`, `TSK-0499 PASS`, downstream task PASS, or lifecycle-gate PASS is created or inferred. PR `#86` remains draft/unmerged unless later independently verified otherwise.
+
+### Queue effect after TSK-0374 target acceptance
+
+Recompute the complete current executable frontier from canonical WBS/graph/runtime/gates, risks, interfaces, executor availability and Action Authority. Consume `TSK-0374 PASS` only where it is a current hard predecessor; do not bypass any unresolved target-evidence or material-action fence.
+EOF
+
+          git diff --check
+          test "$(git diff --name-only)" = 'CURRENT_STATE.md'
+          NEW_BLOB="$(git hash-object CURRENT_STATE.md)"
+          test "$NEW_BLOB" != "$EXPECTED_BLOB"
+
+          git add CURRENT_STATE.md
+          git -c user.name='UseSafeWeb Governor' -c user.email='actions@users.noreply.github.com' commit -m 'state: record TSK-0374 target acceptance'
+          test "$(git rev-parse HEAD^)" = "$EXPECTED_PARENT"
+          test "$(git diff-tree --no-commit-id --name-only -r HEAD)" = 'CURRENT_STATE.md'
+
+          NEW_COMMIT="$(git rev-parse HEAD)"
+          git push origin HEAD:main --force-with-lease=refs/heads/main:$EXPECTED_PARENT
+
+          echo "RUNTIME_SYNC_COMMIT=$NEW_COMMIT"
+          echo "RUNTIME_SYNC_BLOB=$NEW_BLOB"
