@@ -1,0 +1,81 @@
+name: Reconcile TSK-0489 PASS evidence
+
+on:
+  push:
+    branches:
+      - evidence/tsk-0489-pass-20260904
+    paths:
+      - '.github/scripts/reconcile_tsk0489_pass_20260904.py'
+      - '.github/workflows/reconcile-tsk0489-pass-20260904.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: evidence/tsk-0489-pass-20260904
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Reconcile exact verified TSK-0489 state
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          EXPECTED_MAIN='655b9bcdf1c10eef0edbdce626742e2bbbd09e1e'
+          EXPECTED_WBS_BLOB='f3399492a6da5e168cc2bca92762c17c91358b9f'
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$EXPECTED_MAIN"
+          test "$(git merge-base HEAD origin/main)" = "$EXPECTED_MAIN"
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "$EXPECTED_WBS_BLOB"
+
+          python3 .github/scripts/reconcile_tsk0489_pass_20260904.py
+
+          python3 - <<'PY'
+          import csv
+          from pathlib import Path
+          rows = [r for r in csv.DictReader(open('Plans/Master/WBS/master-wbs.csv', encoding='utf-8-sig', newline='')) if r['Task_ID'] == 'TSK-0489']
+          assert len(rows) == 1
+          assert rows[0]['Execution_State'] == 'PASS'
+          ev = Path('TSK_0489_GOVERNED_CI_PROMOTION_EVIDENCE_2026-09-04.md').read_text(encoding='utf-8')
+          for marker in ('EVD-0489', '33874954545', '9937487977', 'TSK0489_MATERIAL_ACTION_FENCES=PASS'):
+              assert marker in ev, marker
+          runtime = Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+          assert '## TSK-0489 current accepted stable state — 2026-09-04' in runtime
+          assert '`TSK-0489 — Add CI pipeline and automated checks`: **PASS**' in runtime
+          PY
+
+          python3 tests/repository-structure/verify_structure.py
+          python3 Plans/Master/Tools/validate_master_plan.py
+          git diff --check
+
+          git rm .github/scripts/reconcile_tsk0489_pass_20260904.py .github/workflows/reconcile-tsk0489-pass-20260904.yml
+
+          python3 - <<'PY'
+          import subprocess
+          expected = {
+              'CURRENT_STATE.md',
+              'Plans/Master/WBS/master-wbs.csv',
+              'TSK_0489_GOVERNED_CI_PROMOTION_EVIDENCE_2026-09-04.md',
+          }
+          changed = set(subprocess.check_output(['git','diff','--name-only','origin/main'], text=True).splitlines())
+          assert changed == expected, (changed, expected)
+          numstat = subprocess.check_output(['git','diff','--numstat','origin/main','--','Plans/Master/WBS/master-wbs.csv'], text=True).strip().split()
+          assert len(numstat) >= 2 and numstat[0] == '1' and numstat[1] == '1', numstat
+          PY
+
+          git diff --check origin/main
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md Plans/Master/WBS/master-wbs.csv TSK_0489_GOVERNED_CI_PROMOTION_EVIDENCE_2026-09-04.md
+          git commit -m 'state: accept TSK-0489 governed CI evidence'
+          git push origin HEAD:evidence/tsk-0489-pass-20260904
+
+          echo "TSK0489_SYNC_COMMIT=$(git rev-parse HEAD)"
+          echo "TSK0489_SYNC_WBS_BLOB=$(git rev-parse HEAD:Plans/Master/WBS/master-wbs.csv)"
+          echo "TSK0489_SYNC_RUNTIME_BLOB=$(git rev-parse HEAD:CURRENT_STATE.md)"
+          echo "TSK0489_SYNC_EVIDENCE_BLOB=$(git rev-parse HEAD:TSK_0489_GOVERNED_CI_PROMOTION_EVIDENCE_2026-09-04.md)"
+          echo 'TSK0489_SYNC_BRANCH=PASS'
