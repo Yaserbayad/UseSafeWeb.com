@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-04T21:20:36Z
+**Updated:** 2026-09-04T21:23:03Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -3465,3 +3465,17 @@ Publication also repaired stale whole-WBS snapshot pins in the existing `TSK-062
 ### Queue effect
 
 Do not select TSK-0360 again until the deterministic WAITING condition is observed as satisfied. `TSK-0399` remains dependency-blocked while TSK-0360 is non-PASS. Recompute the independent governed frontier immediately after canonical publication/read-back.
+
+## TSK-0369 current accepted stable state — 2026-09-04 — TARGET DEPLOYMENT/EVIDENCE WAITING
+
+`TSK-0369 — Implement minimal support, feedback, false-positive, and abandonment capture`: **WAITING** under current `ACC-0369 / VER-0369 / EVD-0369`; the task is not PASS.
+
+- Current eligibility was revalidated after TSK-0360 moved to WAITING: L6 / MEDIUM / A3 / `AUTO_ALLOWED`; sole hard predecessor `TSK-0376` is durable PASS.
+- Existing source implementation and source/CI evidence are preserved and were not replayed: PR #80 merged the default-off, privacy-minimal support-capture implementation; its focused/full contract, lint, typecheck, build and dependency-audit evidence is already accepted.
+- Remaining `VER-0369` acceptance is target-environment evidence and cannot be truthfully manufactured by repository-only execution. It requires an authorized target deployment/enablement and access to observe target functional, negative, configuration, security/privacy and rollback behavior, including runtime expiry/deletion, restart/process topology, concurrency/capacity/abuse controls, and absence of forbidden persistence/logging.
+- **Deterministic WAITING condition:** resume TSK-0369 only after current durable authority explicitly permits the required target deployment/enablement and the exact target runtime/environment access needed for the remaining checks is available. Recheck the current source/version and material-action fences immediately before any such target mutation.
+- No deployment or runtime enablement, participant processing, analytics/telemetry activation, service mutation, payment, production/public or market activation, or launch action was performed or authorized by this synchronization.
+
+### Queue effect
+
+Do not select TSK-0369 again until the deterministic WAITING condition is observed as satisfied. Its successors remain dependency-blocked while TSK-0369 is non-PASS. Recompute the independent governed frontier immediately after canonical publication/read-back.
