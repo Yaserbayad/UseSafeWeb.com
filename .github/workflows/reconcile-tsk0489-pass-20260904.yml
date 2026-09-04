@@ -71,6 +71,7 @@ jobs:
           git diff --check
 
           git rm .github/scripts/reconcile_tsk0489_pass_20260904.py .github/workflows/reconcile-tsk0489-pass-20260904.yml
+          git add -N TSK_0489_GOVERNED_CI_PROMOTION_EVIDENCE_2026-09-04.md
 
           python3 - <<'PY'
           import subprocess
