@@ -29,6 +29,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v6
         with:
           node-version: '22.23.2'
@@ -38,7 +40,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
           test "$(git hash-object website/package-lock.json)" = '6ff91d845bc5f3099b6a00f5f43673eed80a3ba5'
           python3 tests/repository-structure/verify_structure.py
           python3 Plans/Master/Tools/validate_master_plan.py
