@@ -42,8 +42,12 @@ tokens.
 Obtain the wildcard certificate later under separate authority using a DNS-01
 client/provider integration whose credential stays external. Create
 `/etc/usesafeweb/verifier-tls.env` from `tls.env.example`, with `0600 root:root`,
-then run `install-verifier-config.sh`. The installer verifies the exact wildcard
-SAN, key permissions and key/certificate match, renders the Nginx config, runs
+then run `install-verifier-config.sh`. Supply the public application certificate,
+key, exact public hostname, and system CA trust bundle in the same external file.
+The installer verifies current validity, trusted chain, exact SANs, key
+permissions and key/certificate matches, disables only the recognized stock
+Ubuntu default-site symlink, renders both public-origin and challenge virtual
+hosts, runs
 `nginx -t`, reloads, and restores the prior config on failure. Configure the
 certificate client's deployment hook to call
 `renew-verifier-certificate-hook.sh`; failed renewal validation leaves the last
@@ -96,6 +100,12 @@ file and restart the application. There is deliberately no overlap: material
 signed by the old key immediately fails verification. Roll back by restoring the
 previous reviewed release and, only if explicitly authorized, its corresponding
 external key.
+
+Successful request/observation pairs are represented only by an in-memory
+SHA-256 digest until their short expiry so a pair is accepted once. This bounded
+replay cache is lost on restart and never writes proof material to disk; direct
+host deployment intentionally runs a single application process so the guard is
+not split across replicas.
 
 To remove the verifier, first remove the private rewrite with
 `manage-rewrite.py --remove`, then remove/disable the challenge Nginx config and

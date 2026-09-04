@@ -7,6 +7,7 @@ import {
   verifyDnsVerificationObservation,
 } from '@/lib/dns-verification-proof';
 import { readServerRuntimeConfig } from '@/lib/runtime-config';
+import { consumeDnsVerificationPair } from '@/lib/dns-verification-replay-guard';
 
 export const runtime = 'nodejs';
 
@@ -75,6 +76,8 @@ export async function POST(request: Request): Promise<Response> {
   );
   if (!verified)
     return error(403, 'PROOF_NOT_AUTHORIZED', 'DNS verification proof is not valid for the current check.');
+  if (!consumeDnsVerificationPair(body.requestToken, body.observationToken, issued.expiresAt, nowMs))
+    return error(409, 'PROOF_ALREADY_CONSUMED', 'DNS verification proof was already consumed.');
 
   return response(200, toApprovedDnsVerificationEvent(verified));
 }

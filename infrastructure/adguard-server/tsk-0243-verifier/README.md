@@ -20,6 +20,13 @@ rolled back to the exact prior rule list without printing it.
 An existing managed rule pointing to a different address must be removed
 explicitly before applying the replacement, so an address conflict cannot be
 silently overwritten.
+Apply also installs `/etc/usesafeweb/verifier-rewrite.env` as the canonical
+TSK-0422 pipeline overlay input; removal deletes it. Later baseline
+reconciliation therefore preserves the exact managed rewrite rather than
+treating it as drift.
+Set `USESAFEWEB_TSK0243_REQUIRED=1` for the post-activation TSK-0422 invocation;
+that makes a missing overlay input fail closed instead of reverting to the
+pre-verifier empty-rule baseline.
 
 Removal is explicit and leaves unrelated rules intact:
 

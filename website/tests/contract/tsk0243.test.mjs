@@ -8,6 +8,8 @@ const root = resolve(import.meta.dirname, '../..');
 const modulePath = resolve(root, 'src/lib/dns-verification-proof.ts');
 const requestRoutePath = resolve(root, 'src/app/api/dns-verification/requests/route.ts');
 const probeRoutePath = resolve(root, 'src/app/api/dns-verification/probes/route.ts');
+const resultRoutePath = resolve(root, 'src/app/api/dns-verification/results/route.ts');
+const replayGuardPath = resolve(root, 'src/lib/dns-verification-replay-guard.ts');
 
 async function loadApi() {
   assert.equal(existsSync(modulePath), true, 'missing TSK-0243 trusted DNS verification proof module');
@@ -218,6 +220,18 @@ test('signing-key rotation immediately invalidates all material signed by the pr
     api.verifyDnsVerificationObservation(observationToken, rotatedSecret, now + 1_001, scope, issued.challenge),
     null,
   );
+});
+
+test('a valid request/observation pair is consumed once with a bounded ephemeral digest guard', async () => {
+  const source = readFileSync(replayGuardPath, 'utf8');
+  const js = stripTypeScriptTypes(source, { mode: 'strip' });
+  const guard = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
+  assert.equal(guard.consumeDnsVerificationPair('request', 'observation', now + 60_000, now), true);
+  assert.equal(guard.consumeDnsVerificationPair('request', 'observation', now + 60_000, now + 1), false);
+  assert.equal(guard.consumeDnsVerificationPair('request-2', 'observation', now, now), false);
+  const resultRoute = readFileSync(resultRoutePath, 'utf8');
+  assert.match(resultRoute, /consumeDnsVerificationPair/);
+  assert.match(resultRoute, /PROOF_ALREADY_CONSUMED/);
 });
 
 test('positive observation is derived only from valid request token plus exact current probe host', async () => {

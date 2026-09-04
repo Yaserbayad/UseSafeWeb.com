@@ -17,7 +17,7 @@ class VerifierPackageContract(unittest.TestCase):
         config = self.read("infrastructure/web-server/nginx/usesafeweb-verifier.conf.template")
         self.assertIn("listen 443 ssl default_server", config)
         self.assertIn("ssl_reject_handshake on", config)
-        self.assertRegex(config, r"server_name ~\^\[0-9a-f\]\{32\}\\\.verify\\\.usesafeweb\\\.com\$;")
+        self.assertRegex(config, r'server_name "~\^\[0-9a-f\]\{32\}\\\.verify\\\.usesafeweb\\\.com\$";')
         self.assertIn("location = /api/dns-verification/probes", config)
         self.assertIn("limit_except POST", config)
         self.assertIn("client_max_body_size 4k", config)
@@ -28,6 +28,17 @@ class VerifierPackageContract(unittest.TestCase):
         self.assertIn("proxy_set_header Host $host", config)
         self.assertIn("location /", config)
         self.assertNotIn("server_name *.verify.usesafeweb.com", config)
+        self.assertIn("server_name __PUBLIC_APPLICATION_HOST__;", config)
+        self.assertIn('ssl_certificate "__PUBLIC_TLS_CERTIFICATE__";', config)
+        self.assertIn("location = /api/health/ready", config)
+        workflow = self.read(".github/workflows/accept-tsk0489-governed-ci-promotion-20260904.yml")
+        gate = self.read(".github/scripts/tsk0489-governed-ci.sh")
+        self.assertIn("nginx-core", workflow)
+        self.assertIn("tests/tsk0243/nginx_syntax_test.sh", gate)
+        installer = self.read("infrastructure/web-server/install-verifier-config.sh")
+        self.assertIn("/etc/nginx/sites-enabled/default", installer)
+        self.assertIn("unexpected default site owner", installer)
+        self.assertIn("DEFAULT_SITE_DISABLED", installer)
 
     def test_adguard_rule_is_narrow_and_private_to_the_resolver(self) -> None:
         template = self.read("infrastructure/adguard-server/tsk-0243-verifier/rule.template")
@@ -44,6 +55,10 @@ class VerifierPackageContract(unittest.TestCase):
             "anything.verify.usesafeweb.com",
         ):
             self.assertIsNone(host_pattern.fullmatch(host), host)
+        pipeline = self.read("infrastructure/adguard-server/tsk-0422-adguard-config-pipeline.sh")
+        self.assertIn("/etc/usesafeweb/verifier-rewrite.env", pipeline)
+        self.assertIn("TSK0243_VERIFIER_RULE", pipeline)
+        self.assertIn("expected_user_rules", pipeline)
 
     def test_renderers_fail_closed_and_never_contain_credentials(self) -> None:
         nginx = self.read("infrastructure/web-server/render-verifier-config.py")
@@ -56,12 +71,25 @@ class VerifierPackageContract(unittest.TestCase):
         self.assertIn("--remove", adguard)
         self.assertIn("querylog", adguard)
         self.assertIn("statistics", adguard)
+        self.assertIn("st_uid != 0", adguard)
+        self.assertIn('!= "adguardvm"', adguard)
+
+    def test_external_preflight_checks_all_resolution_and_authority_boundaries(self) -> None:
+        preflight = self.read("infrastructure/web-server/verify-public-verifier.py")
+        self.assertIn("dns_query(host, args.public_dns, 1)", preflight)
+        self.assertIn("dns_query(host, args.public_dns, 28)", preflight)
+        self.assertIn("UNEXPECTED_DNS_ANSWER", preflight)
+        self.assertIn("except ssl.SSLError", preflight)
+        self.assertIn('AUTHORITY = "TSK-0243-TARGET-PROOF"', preflight)
+        self.assertIn('print("REPLAY=PASS")', preflight)
 
     def test_ephemeral_harness_is_synthetic_and_has_both_dns_paths(self) -> None:
         harness = self.read("tests/tsk0243/ephemeral_trust_boundary.py")
         self.assertIn("ordinary_dns_resolution", harness)
         self.assertIn("private_dns_rewrite", harness)
         self.assertIn("TRUST_BOUNDARY=PASS", harness)
+        self.assertIn("EPHEMERAL_SHIPPED_CONFIG_RENDER=PASS", harness)
+        self.assertIn("rule.template", harness)
         self.assertIn("ephemeral-only-", harness)
         self.assertNotIn("dns.usesafeweb.com/dns-query", harness)
 
@@ -75,13 +103,17 @@ class VerifierPackageContract(unittest.TestCase):
                 [
                     "openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "1",
                     "-subj", "/CN=*.verify.usesafeweb.com", "-addext",
-                    "subjectAltName=DNS:*.verify.usesafeweb.com", "-keyout", str(key), "-out", str(cert),
+                    "subjectAltName=DNS:*.verify.usesafeweb.com,DNS:usesafeweb.test", "-keyout", str(key), "-out", str(cert),
                 ],
                 check=True, capture_output=True,
             )
             key.chmod(0o600)
             result = subprocess.run(
-                ["python", str(renderer), "--certificate", str(cert), "--private-key", str(key), "--output", str(output)],
+                [
+                    "python", str(renderer), "--certificate", str(cert), "--private-key", str(key),
+                    "--public-host", "usesafeweb.test", "--public-certificate", str(cert),
+                    "--public-private-key", str(key), "--trust-bundle", str(cert), "--output", str(output),
+                ],
                 check=True, capture_output=True, text=True,
             )
             self.assertIn("TLS_WILDCARD_VALIDATION=PASS", result.stdout)
@@ -99,11 +131,15 @@ class VerifierPackageContract(unittest.TestCase):
                 check=True, capture_output=True,
             )
             rejected = subprocess.run(
-                ["python", str(renderer), "--certificate", str(wrong_cert), "--private-key", str(key), "--output", str(output)],
+                [
+                    "python", str(renderer), "--certificate", str(wrong_cert), "--private-key", str(key),
+                    "--public-host", "usesafeweb.test", "--public-certificate", str(cert),
+                    "--public-private-key", str(key), "--trust-bundle", str(wrong_cert), "--output", str(output),
+                ],
                 capture_output=True, text=True,
             )
             self.assertNotEqual(rejected.returncode, 0)
-            self.assertIn("exact wildcard SAN missing", rejected.stderr + rejected.stdout)
+            self.assertIn("required SAN missing", rejected.stderr + rejected.stdout)
 
 
 if __name__ == "__main__":

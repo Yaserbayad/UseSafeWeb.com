@@ -12,6 +12,8 @@ APPROVED="${SCRIPT_DIR}/approved-adguard-config-v1.json"
 CONFIG="/opt/AdGuardHome/AdGuardHome.yaml"
 SECRET="/var/lib/usesafeweb/adguard/admin.env"
 BASE="http://127.0.0.1:3000/control"
+TSK0243_REWRITE_ENV="${USESAFEWEB_TSK0243_REWRITE_ENV:-/etc/usesafeweb/verifier-rewrite.env}"
+TSK0243_VERIFIER_RULE=""
 TMP="$(mktemp -d /tmp/usesafeweb-tsk0422.XXXXXX)"
 BACKUP=""
 REPLACED=0
@@ -128,6 +130,23 @@ fi
 
 [[ "${EUID}" == "0" ]] || fail "run as root"
 [[ "$(hostname -s)" == "adguardvm" ]] || fail "wrong target host"
+if [[ "${USESAFEWEB_TSK0243_REQUIRED:-0}" == "1" && ! -f "${TSK0243_REWRITE_ENV}" ]]; then
+  fail "required TSK-0243 rewrite input is missing"
+fi
+if [[ -e "${TSK0243_REWRITE_ENV}" ]]; then
+  [[ -f "${TSK0243_REWRITE_ENV}" ]] || fail "TSK-0243 rewrite input is not a regular file"
+  [[ "$(stat -c '%a %U:%G' "${TSK0243_REWRITE_ENV}")" == "600 root:root" ]] || fail "TSK-0243 rewrite input permissions invalid"
+  verifier_ipv4="$(awk -F= '$1=="TSK0243_VERIFIER_IPV4" {sub(/^[^=]*=/,""); print; exit}' "${TSK0243_REWRITE_ENV}")"
+  TSK0243_VERIFIER_RULE="$(python3 - "${verifier_ipv4}" <<'PY'
+import ipaddress,sys
+address=ipaddress.ip_address(sys.argv[1])
+assert address.version == 4
+assert not any((address.is_unspecified,address.is_loopback,address.is_link_local,address.is_multicast))
+print(r'/^[0-9a-f]{32}\.verify\.usesafeweb\.com$/$dnsrewrite=NOERROR;A;'+str(address))
+PY
+)" || fail "TSK-0243 verifier address invalid"
+  export TSK0243_VERIFIER_RULE
+fi
 [[ -f "${CONFIG}" ]] || fail "AdGuardHome.yaml missing"
 [[ -f "${SECRET}" ]] || fail "admin credential file missing"
 [[ "$(stat -c '%a %U:%G' "${SECRET}")" == "600 root:root" ]] || fail "admin credential file permissions invalid"
@@ -147,9 +166,11 @@ wait_api(){
 
 projection_and_candidate(){
   python3 - "${APPROVED}" "${CONFIG}" "${TMP}/candidate.yaml" "${TMP}/before.json" "${TMP}/desired.json" "${TMP}/changes.txt" <<'PY'
-import copy, hashlib, json, sys, yaml
+import copy, hashlib, json, os, sys, yaml
 approved_path, live_path, candidate_path, before_path, desired_path, changes_path=sys.argv[1:]
 a=json.load(open(approved_path,encoding='utf-8'))['settings']
+expected_user_rules=[os.environ['TSK0243_VERIFIER_RULE']] if os.environ.get('TSK0243_VERIFIER_RULE') else []
+a=copy.deepcopy(a); a['user_rules']=expected_user_rules
 with open(live_path,encoding='utf-8') as f: live=yaml.safe_load(f) or {}
 DIRECT={
  'dhcp': ('enabled',),
@@ -232,8 +253,10 @@ PY
 
 verify_persisted(){
   python3 - "${APPROVED}" "${CONFIG}" <<'PY'
-import json, sys, yaml
+import json, os, sys, yaml
 a=json.load(open(sys.argv[1],encoding='utf-8'))['settings']
+expected_user_rules=[os.environ['TSK0243_VERIFIER_RULE']] if os.environ.get('TSK0243_VERIFIER_RULE') else []
+a=dict(a); a['user_rules']=expected_user_rules
 with open(sys.argv[2],encoding='utf-8') as f: live=yaml.safe_load(f) or {}
 checks=[]
 def eq(path,x,y):
@@ -271,7 +294,7 @@ runtime_verify(){
   curl_auth "${BASE}/stats/config" -o "${TMP}/stats.json"
   curl_auth "${BASE}/filtering/status" -o "${TMP}/filtering.json"
   python3 - "${TMP}/status.json" "${TMP}/dns.json" "${TMP}/querylog.json" "${TMP}/stats.json" "${TMP}/filtering.json" <<'PY'
-import json,sys
+import json,os,sys
 status,dns,q,st,fl=[json.load(open(p,encoding='utf-8')) for p in sys.argv[1:]]
 assert status.get('protection_enabled') is True
 assert dns.get('upstream_dns') == ['https://dns10.quad9.net/dns-query'], dns.get('upstream_dns')
@@ -280,6 +303,8 @@ assert q.get('enabled') is False
 assert st.get('enabled') is False
 active=[x.get('url') for x in fl.get('filters',[]) if x.get('enabled')]
 assert active == ['https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt'], active
+expected_user_rules=[os.environ['TSK0243_VERIFIER_RULE']] if os.environ.get('TSK0243_VERIFIER_RULE') else []
+assert (fl.get('user_rules') or []) == expected_user_rules
 print('RUNTIME_APPROVED_CONFIG=PASS')
 PY
 

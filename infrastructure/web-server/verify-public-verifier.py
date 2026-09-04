@@ -29,10 +29,10 @@ class BoundaryFailure(Exception):
         self.code, self.boundary = code, boundary
 
 
-def dns_query(host: str, resolver: str, doh: bool = False) -> list[str]:
+def dns_query(host: str, resolver: str, qtype: int, doh: bool = False) -> list[str]:
     identifier = secrets.randbelow(65536)
     labels = b"".join(bytes([len(label)]) + label.encode("ascii") for label in host.split(".")) + b"\0"
-    wire = struct.pack("!HHHHHH", identifier, 0x0100, 1, 0, 0, 0) + labels + struct.pack("!HH", 1, 1)
+    wire = struct.pack("!HHHHHH", identifier, 0x0100, 1, 0, 0, 0) + labels + struct.pack("!HH", qtype, 1)
     if doh:
         url = urllib.parse.urlparse(resolver)
         if url.scheme != "https" or not url.hostname:
@@ -82,6 +82,8 @@ def dns_query(host: str, resolver: str, doh: bool = False) -> list[str]:
         offset += length
         if record_type == 1 and record_class == 1 and length == 4:
             addresses.append(socket.inet_ntoa(value))
+        elif record_type == 28 and record_class == 1 and length == 16:
+            addresses.append(socket.inet_ntop(socket.AF_INET6, value))
         else:
             unexpected_answers += 1
     if unexpected_answers:
@@ -124,6 +126,29 @@ def main() -> None:
     parser.add_argument("--wait-for-expiry", action="store_true")
     parser.add_argument("--rate-test-count", type=int, default=0, choices=range(0, 21), metavar="0..20")
     args = parser.parse_args()
+    application = urllib.parse.urlparse(args.application_origin)
+    if (
+        application.scheme != "https"
+        or not application.hostname
+        or application.username
+        or application.password
+        or application.path not in ("", "/")
+        or application.query
+        or application.fragment
+    ):
+        raise SystemExit("APPLICATION_ORIGIN=FAIL exact HTTPS origin required")
+    args.application_origin = f"https://{application.netloc}"
+    doh = urllib.parse.urlparse(args.usesafeweb_doh)
+    if (
+        doh.scheme != "https"
+        or not doh.hostname
+        or doh.username
+        or doh.password
+        or doh.path != "/dns-query"
+        or doh.query
+        or doh.fragment
+    ):
+        raise SystemExit("USESAFEWEB_DOH=FAIL exact HTTPS /dns-query URL required")
     challenge = secrets.token_hex(16)
     host = f"{challenge}.verify.usesafeweb.com"
     current_boundary = "ARGUMENTS"
@@ -135,17 +160,18 @@ def main() -> None:
         print("APPLICATION_HEALTH=PASS")
 
         current_boundary = "PUBLIC_DNS_NEGATIVE"
-        if dns_query(host, args.public_dns):
-            raise BoundaryFailure(66, "PUBLIC_DNS_NEGATIVE", "ordinary public DNS returned an A record")
+        if dns_query(host, args.public_dns, 1) or dns_query(host, args.public_dns, 28):
+            raise BoundaryFailure(66, "PUBLIC_DNS_NEGATIVE", "ordinary public DNS returned an answer")
         print("PUBLIC_DNS_NEGATIVE=PASS")
         current_boundary = "USESAFEWEB_DNS_POSITIVE"
-        private_addresses = dns_query(host, args.usesafeweb_doh, doh=True)
+        private_addresses = dns_query(host, args.usesafeweb_doh, 1, doh=True)
+        private_ipv6 = dns_query(host, args.usesafeweb_doh, 28, doh=True)
         if args.expect_removed:
-            if private_addresses:
+            if private_addresses or private_ipv6:
                 raise BoundaryFailure(67, "VERIFIER_REMOVAL", "private rewrite still returns an A record")
             print("VERIFIER_REMOVAL=PASS")
             return
-        if len(private_addresses) != 1:
+        if len(private_addresses) != 1 or private_ipv6:
             raise BoundaryFailure(67, "USESAFEWEB_DNS_POSITIVE", "expected exactly one verifier A record")
         address = private_addresses[0]
         print("USESAFEWEB_DNS_POSITIVE=PASS")
@@ -160,7 +186,7 @@ def main() -> None:
         try:
             https_request("127.0.0.1", address, "GET", "/")
             raise BoundaryFailure(68, "DIRECT_IP_TLS", "direct-IP TLS unexpectedly authenticated")
-        except ssl.SSLCertVerificationError:
+        except ssl.SSLError:
             print("DIRECT_IP_TLS=PASS")
 
         if args.functional_authority is None:
@@ -178,11 +204,12 @@ def main() -> None:
             if status != 201 or not host.endswith(".verify.usesafeweb.com"):
                 raise BoundaryFailure(69, "REQUEST_API", f"HTTP {status}")
             current_boundary = "PUBLIC_DNS_NEGATIVE"
-            if dns_query(host, args.public_dns):
+            if dns_query(host, args.public_dns, 1) or dns_query(host, args.public_dns, 28):
                 raise BoundaryFailure(66, "PUBLIC_DNS_NEGATIVE", "issued host resolved publicly")
             current_boundary = "USESAFEWEB_DNS_POSITIVE"
-            private_addresses = dns_query(host, args.usesafeweb_doh, doh=True)
-            if len(private_addresses) != 1:
+            private_addresses = dns_query(host, args.usesafeweb_doh, 1, doh=True)
+            private_ipv6 = dns_query(host, args.usesafeweb_doh, 28, doh=True)
+            if len(private_addresses) != 1 or private_ipv6:
                 raise BoundaryFailure(67, "USESAFEWEB_DNS_POSITIVE", "issued host did not privately resolve")
             address = private_addresses[0]
         current_boundary = "PROBE_API"
@@ -205,13 +232,13 @@ def main() -> None:
 
         current_boundary = "HOST_ABUSE"
         wrong_host = "f" * 32 + ".verify.usesafeweb.com"
-        current_boundary = "ORIGIN_ABUSE"
         status, _ = https_request(
             wrong_host, address, "POST", PROBE_PATH, request_token.encode(),
             {"Origin": args.application_origin, "Content-Type": "text/plain"},
         )
         if status not in (403, 421):
             raise BoundaryFailure(72, "HOST_ABUSE", f"HTTP {status}")
+        current_boundary = "ORIGIN_ABUSE"
         status, _ = https_request(
             host, address, "POST", PROBE_PATH, request_token.encode(),
             {"Origin": "https://invalid.example", "Content-Type": "text/plain"},
@@ -234,7 +261,16 @@ def main() -> None:
         else:
             print("RATE_CONTROL=NOT_RUN_USE_--rate-test-count")
 
-        current_boundary = "REPLAY_SCOPE"
+        current_boundary = "REPLAY"
+        status, _ = app_request(
+            args.application_origin, "POST", "/api/dns-verification/results",
+            {"requestToken": request_token, "observationToken": observation_token},
+        )
+        if status != 409:
+            raise BoundaryFailure(74, "REPLAY", f"HTTP {status}")
+        print("REPLAY=PASS")
+
+        current_boundary = "WRONG_CHALLENGE"
         second_status, second = app_request(
             args.application_origin, "POST", "/api/dns-verification/requests", {"scope": scope}
         )
@@ -243,8 +279,8 @@ def main() -> None:
             {"requestToken": second.get("requestToken"), "observationToken": observation_token},
         )
         if second_status != 201 or status != 403:
-            raise BoundaryFailure(74, "REPLAY_SCOPE", f"HTTP {status}")
-        print("REPLAY_SCOPE=PASS")
+            raise BoundaryFailure(74, "WRONG_CHALLENGE", f"HTTP {status}")
+        print("WRONG_CHALLENGE=PASS")
         if args.wait_for_expiry:
             current_boundary = "EXPIRY"
             delay = max(0, issued["expiresAt"] - int(time.time() * 1000) + 1000) / 1000

@@ -11,6 +11,7 @@ import re
 import socket
 import ssl
 import subprocess
+import sys
 import tempfile
 import threading
 import time
@@ -20,7 +21,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 APP = ROOT / "website" / ".next" / "standalone" / "website" / "server.js"
 ORIGIN = "https://usesafeweb.test"
-HOST_PATTERN = re.compile(r"^[0-9a-f]{32}\.verify\.usesafeweb\.com$")
+RULE_TEMPLATE = ROOT / "infrastructure" / "adguard-server" / "tsk-0243-verifier" / "rule.template"
+NGINX_RENDERER = ROOT / "infrastructure" / "web-server" / "render-verifier-config.py"
+rule_source = RULE_TEMPLATE.read_text(encoding="utf-8").strip()
+HOST_PATTERN = re.compile(rule_source.split("/$dnsrewrite=", 1)[0].removeprefix("/"))
 PROBE_PATH = "/api/dns-verification/probes"
 
 
@@ -164,10 +168,25 @@ def main() -> None:
                 [
                     "openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "1",
                     "-subj", "/CN=*.verify.usesafeweb.com", "-addext",
-                    "subjectAltName=DNS:*.verify.usesafeweb.com", "-keyout", str(key), "-out", str(cert),
+                    "subjectAltName=DNS:*.verify.usesafeweb.com,DNS:usesafeweb.test", "-keyout", str(key), "-out", str(cert),
                 ],
                 check=True, capture_output=True, timeout=20,
             )
+            rendered_nginx = temp / "usesafeweb-verifier.conf"
+            subprocess.run(
+                [
+                    os.environ.get("PYTHON_BINARY", sys.executable), str(NGINX_RENDERER),
+                    "--certificate", str(cert), "--private-key", str(key),
+                    "--public-host", "usesafeweb.test", "--public-certificate", str(cert),
+                    "--public-private-key", str(key), "--trust-bundle", str(cert),
+                    "--output", str(rendered_nginx),
+                ],
+                check=True, capture_output=True, timeout=20,
+            )
+            rendered = rendered_nginx.read_text(encoding="utf-8")
+            assert 'server_name "~^[0-9a-f]{32}\\.verify\\.usesafeweb\\.com$";' in rendered
+            assert "server_name usesafeweb.test;" in rendered
+            assert "__TLS_" not in rendered and "__PUBLIC_" not in rendered
             RestrictedProbe.app_port = app_port
             server = http.server.ThreadingHTTPServer(("127.0.0.1", tls_port), RestrictedProbe)
             context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
@@ -197,6 +216,13 @@ def main() -> None:
             assert status == 200 and result == {
                 "dnsPath": "verified-fresh", "reasonCode": "TECH_VERIFIED", "verifierVersion": "private-rewrite-v1"
             }
+            status, _ = app_request(
+                app_port,
+                "/api/dns-verification/results",
+                json.dumps({"requestToken": request_token, "observationToken": observation_token}).encode(),
+                "application/json",
+            )
+            assert status == 409
 
             try:
                 tls_request(tls_port, "127.0.0.1", PROBE_PATH, request_token, cert)
@@ -231,6 +257,7 @@ def main() -> None:
             )
             assert status == 403
         print("EPHEMERAL_PUBLIC_DNS_NEGATIVE=PASS")
+        print("EPHEMERAL_SHIPPED_CONFIG_RENDER=PASS")
         print("EPHEMERAL_PRIVATE_REWRITE_POSITIVE=PASS")
         print("EPHEMERAL_TLS_HOST_BOUNDARY=PASS")
         print("EPHEMERAL_REQUEST_PROBE_RESULT=PASS")

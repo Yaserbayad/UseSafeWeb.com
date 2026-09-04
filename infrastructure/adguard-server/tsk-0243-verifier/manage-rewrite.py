@@ -7,7 +7,10 @@ import argparse
 import base64
 import ipaddress
 import json
+import os
+import socket
 import subprocess
+import tempfile
 import urllib.request
 from pathlib import Path
 
@@ -24,7 +27,11 @@ def fail(message: str) -> None:
 
 
 def read_credentials(path: Path) -> tuple[str, str]:
-    if not path.is_file() or path.stat().st_mode & 0o077:
+    if (
+        not path.is_file()
+        or path.stat().st_mode & 0o077
+        or (os.name != "nt" and (path.stat().st_uid != 0 or path.stat().st_gid != 0))
+    ):
         fail("credential file missing or permissions exceed 0600")
     values = {}
     for line in path.read_text(encoding="utf-8").splitlines():
@@ -110,7 +117,13 @@ def main() -> None:
     parser.add_argument("--binary", default="/opt/AdGuardHome/AdGuardHome")
     parser.add_argument("--config", type=Path, default=Path("/opt/AdGuardHome/AdGuardHome.yaml"))
     parser.add_argument("--base", default="http://127.0.0.1:3000/control")
+    parser.add_argument("--rewrite-env", type=Path, default=Path("/etc/usesafeweb/verifier-rewrite.env"))
     args = parser.parse_args()
+    if os.name != "nt":
+        if os.geteuid() != 0:
+            fail("root is required")
+        if socket.gethostname().split(".", 1)[0] != "adguardvm":
+            fail("wrong target host")
     version = subprocess.run(
         [args.binary, "--version"], check=True, capture_output=True, text=True, timeout=10
     ).stdout
@@ -128,9 +141,14 @@ def main() -> None:
     mode = "--apply" if args.apply else "--remove" if args.remove else "--verify"
     if mode == "--apply" and managed and managed != [desired]:
         fail("existing managed rewrite points elsewhere; remove it explicitly first")
+    if mode == "--remove" and managed and managed != [desired]:
+        fail("managed rewrite address mismatch; refuse ambiguous removal")
     if mode == "--verify":
         if managed != [desired]:
             fail("required rewrite is missing or points elsewhere")
+        expected_env = f"TSK0243_VERIFIER_IPV4={args.verifier_ipv4}\n"
+        if not args.rewrite_env.is_file() or args.rewrite_env.read_text(encoding="utf-8") != expected_env:
+            fail("canonical pipeline rewrite input is missing or mismatched")
     else:
         candidate = [rule for rule in original if not rule.startswith(RULE_PREFIX)]
         if mode == "--apply":
@@ -141,6 +159,17 @@ def main() -> None:
             if after != candidate:
                 raise RuntimeError("post-change verification mismatch")
             validate_privacy(api)
+            if mode == "--apply":
+                args.rewrite_env.parent.mkdir(parents=True, exist_ok=True)
+                with tempfile.NamedTemporaryFile(
+                    mode="w", encoding="utf-8", dir=args.rewrite_env.parent, delete=False
+                ) as handle:
+                    handle.write(f"TSK0243_VERIFIER_IPV4={args.verifier_ipv4}\n")
+                    temporary_env = Path(handle.name)
+                os.chmod(temporary_env, 0o600)
+                temporary_env.replace(args.rewrite_env)
+            elif args.rewrite_env.exists():
+                args.rewrite_env.unlink()
         except Exception:
             try:
                 api.request("/filtering/set_rules", {"rules": original})

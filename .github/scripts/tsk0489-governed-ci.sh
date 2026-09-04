@@ -66,6 +66,7 @@ python3 Plans/Master/Tools/validate_master_plan.py
 echo 'TSK0489_GOVERNANCE_VALIDATION=PASS'
 
 python3 -m unittest tests.tsk0243.test_verifier_package
+bash tests/tsk0243/nginx_syntax_test.sh
 echo 'TSK0243_INFRASTRUCTURE_CONTRACT=PASS'
 
 cd website
