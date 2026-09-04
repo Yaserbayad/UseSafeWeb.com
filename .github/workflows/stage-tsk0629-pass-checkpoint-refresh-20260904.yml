@@ -1,0 +1,108 @@
+name: Stage refreshed TSK-0629 PASS checkpoint evidence
+
+on:
+  push:
+    branches:
+      - evidence/tsk0629-target-acceptance-refresh-20260904-v2
+    paths:
+      - .github/workflows/stage-tsk0629-pass-checkpoint-refresh-20260904.yml
+
+permissions:
+  contents: write
+
+jobs:
+  stage-checkpoint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact staging branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Guard patch self-remove and push source branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch='evidence/tsk0629-target-acceptance-refresh-20260904-v2'
+          workflow='.github/workflows/stage-tsk0629-pass-checkpoint-refresh-20260904.yml'
+          evidence='TSK_0629_TARGET_ACCEPTANCE_2026-09-04.md'
+          test "$(git log -1 --pretty=%s)" = 'stage refreshed TSK-0629 PASS checkpoint synchronization'
+          test "${GITHUB_REF_NAME}" = "${branch}"
+          test "$(git rev-parse HEAD^)" = '3a60d78acf3bdf4133675d172447837872112ea8'
+          test "$(git hash-object CURRENT_STATE.md)" = '779022bf7be7f87254ed0f42ae1876131b1ee9f1'
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = '142a0d45b381136567d78545f063333f1e74901f'
+          test "$(git hash-object "${evidence}")" = 'a48213b6ee94ebfcd7dcb4443f515d95c5023c3b'
+          grep -Fq '`TSK-0629 — Implement privacy-safe automated checks that confirm what can be technically verified and clearly label everything else`: **TODO**' CURRENT_STATE.md
+          grep -Fq '**Disposition:** **PASS**' "${evidence}"
+          grep -Fq 'TSK-0243 remains TODO' "${evidence}"
+          echo 'TSK0629_REFRESH_STAGE_INPUT_BINDING=PASS'
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import datetime
+          import re
+
+          path = Path('CURRENT_STATE.md')
+          before = path.read_text(encoding='utf-8')
+          marker = '## TSK-0629 current accepted stable state — 2026-09-04 — TARGET ACCEPTANCE PASS'
+          if marker in before:
+              raise SystemExit('checkpoint marker already present')
+          if before.count('**Updated:**') != 1:
+              raise SystemExit('unexpected Updated field cardinality')
+          stamp = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace('+00:00', 'Z')
+          updated, n = re.subn(r'^\*\*Updated:\*\* .+$', f'**Updated:** {stamp}', before, count=1, flags=re.MULTILINE)
+          if n != 1:
+              raise SystemExit('Updated field replacement failed')
+          lines = [
+              '',
+              '',
+              '## TSK-0629 current accepted stable state — 2026-09-04 — TARGET ACCEPTANCE PASS',
+              '',
+              '`TSK-0629 — Implement privacy-safe automated checks that confirm what can be technically verified and clearly label everything else`: **PASS** under current `ACC-0629 / VER-0629 / EVD-0629`.',
+              '',
+              'Accepted evidence:',
+              '',
+              '- `TSK_0629_TARGET_ACCEPTANCE_2026-09-04.md`.',
+              '- Exact-current source requalification head `761779ef0b8f89669d22416390f286061d8d3ab7`; run/job `33896808860 / 101101264905`: **PASS** — source binding, 7/7 focused contracts, lint, type-check, production build, zero-vulnerability audits, real-browser fail-closed/recovery acceptance, clean read-only disposition.',
+              '- Trusted isolated E1 target proof head `5a60d95197948d5d46f96224765345e10c73dcde`; run/job `33888891780 / 101075410406`: **PASS** — actual DNS rewrite, TLS-authenticated probe, signed fresh result, browser `working / protected/verified`, Protection Map, negative/tamper/rate/privacy/teardown guards.',
+              '- Current product connects verify and Protection Map to `runDnsVerification(...)`; the signed result route projects only approved fields after validating the issued request and DNS observation.',
+              '- Relevant current website source remained byte-identical across the exact-current requalification and subsequent canonical evidence/checkpoint/workflow-hygiene changes through `main@3378dc1b28e97253e2bdd02bad083ddef7c3ccd3`.',
+              '',
+              'Acceptance result:',
+              '',
+              '- Working, failed, uncertain and removed states are deterministically distinguished; only fresh trusted DNS-path evidence can produce technical success.',
+              '- Parent confirmation remains separate and cannot manufacture technical verification.',
+              '- Non-positive recoverable states provide the controlled troubleshooting route.',
+              '- Privacy/security evidence includes exact-field allowlists, signed proof validation, fail-closed malformed/untrusted inputs, absent DNS-verification query-history storage, clean audits and unchanged live AdGuard state.',
+              '- Functional, negative, configuration, security/privacy and rollback/recovery dimensions required by `VER-0629` are durably evidenced.',
+              '',
+              'Preserved boundaries:',
+              '',
+              '- `TSK-0243` remains `TODO`: its stricter contract still requires the remaining production/public externally routed DNS/TLS/proxy trust-boundary evidence. TSK-0629 PASS does not imply TSK-0243 PASS.',
+              '- No WBS, dependency, gate, requirement, interface or action-authority semantics changed by this evidence publication.',
+              '- No deployment, production/public DNS/proxy/certificate/profile/service mutation, participant processing, payment, telemetry activation, market activation or launch occurred or is authorized.',
+              '',
+              'Queue consequence:',
+              '',
+              '- Recompute the complete current governed frontier from canonical WBS/graph/runtime/gates/risks/interfaces and Action Authority after canonical promotion/read-back; do not preselect a successor from this synchronization.',
+          ]
+          path.write_text(updated.rstrip() + '\n'.join(lines) + '\n', encoding='utf-8')
+          PY
+          echo 'TSK0629_REFRESH_CHECKPOINT_PATCH=PASS'
+
+          rm "${workflow}"
+          git diff --check
+          changed="$(git status --short | awk '{print $2}' | sort)"
+          expected="$(printf '%s\n%s\n' "${workflow}" 'CURRENT_STATE.md' | sort)"
+          test "${changed}" = "${expected}"
+          echo 'TSK0629_REFRESH_CHANGESET_GUARD=PASS'
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md "${workflow}"
+          staged="$(git diff --cached --name-only | sort)"
+          test "${staged}" = "${expected}"
+          git commit -m 'checkpoint: record refreshed TSK-0629 target acceptance PASS'
+          git push origin "HEAD:refs/heads/${branch}"
+          echo 'TSK0629_REFRESH_BRANCH_ONLY_SYNC_PUSH=PASS'
