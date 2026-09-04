@@ -8,7 +8,7 @@ on:
       - .github/workflows/diag-checkpoint-migration-20260905.yml
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   diagnose:
@@ -17,101 +17,24 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          persist-credentials: false
-      - name: Analyze canonical WBS and legacy runtime checkpoint
+          persist-credentials: true
+      - name: Execute validated checkpoint candidate generator
         shell: bash
         run: |
           set -Eeuo pipefail
           python - <<'PY'
-          import csv
-          import re
-          from collections import Counter
           from pathlib import Path
-
-          wbs_path = Path('Plans/Master/WBS/master-wbs.csv')
-          state_path = Path('CURRENT_STATE.md')
-          rows = list(csv.DictReader(wbs_path.open(encoding='utf-8-sig', newline='')))
-          state = state_path.read_text(encoding='utf-8')
-
-          print(f'WBS_TASKS={len(rows)}')
-          print('WBS_EXECUTION_STATES=' + repr(dict(sorted(Counter((r.get('Execution_State') or '').strip() for r in rows).items()))))
-          print('WBS_PLAN_STATUSES=' + repr(dict(sorted(Counter((r.get('Plan_Status') or '').strip() for r in rows).items()))))
-
-          heading_re = re.compile(r'^##\s+(TSK-\d{4})\b([^\n]*)$', re.M)
-          matches = list(heading_re.finditer(state))
-          explicit = {}
-          ambiguous = []
-          for i, m in enumerate(matches):
-              tid = m.group(1)
-              end = matches[i + 1].start() if i + 1 < len(matches) else len(state)
-              section = state[m.start():end]
-              head = m.group(0)
-              candidates = []
-              if re.search(r'(?i)(?:\*\*|`)?PASS(?:\*\*|`)?\b|Runtime state:\s*`?PASS`?', section):
-                  candidates.append('PASS')
-              if re.search(r'(?i)\bWAITING\b|\bDEFERRED\b', head + '\n' + section[:2200]):
-                  candidates.append('WAITING')
-              if re.search(r'(?i)\bBLOCKED\b', head + '\n' + section[:2200]):
-                  candidates.append('BLOCKED')
-              if re.search(r'(?i)\bremains\s+`?TODO`?\b|:\s*\*\*TODO\*\*|Runtime state:\s*`?TODO`?', section):
-                  candidates.append('TODO')
-
-              status = None
-              if re.search(r'(?i)\bcurrent accepted stable state\b|\bTARGET ACCEPTANCE PASS\b|\bTARGET ACCEPTANCE COMPLETE\b|\bPASS UNDER\b', head):
-                  if re.search(r'(?i)(?:\*\*|`)?PASS(?:\*\*|`)?\b|Runtime state:\s*`?PASS`?', section):
-                      status = 'PASS'
-              if re.search(r'(?i)\bWAITING\b|\bDEFERRED\b', head):
-                  status = 'WAITING'
-              if re.search(r'(?i)\bremains\s+`?TODO`?\b|:\s*\*\*TODO\*\*|Runtime state:\s*`?TODO`?', section):
-                  status = 'TODO'
-              if re.search(r'(?i)\bRuntime state:\s*`?PASS`?\b', section):
-                  status = 'PASS'
-              if re.search(r'(?i)^`?TSK-\d{4}[^\n]*:\s*\*\*PASS\*\*', section, re.M):
-                  status = 'PASS'
-              if re.search(r'(?i)^`?TSK-\d{4}[^\n]*:\s*\*\*WAITING(?:\s*/[^*]+)?\*\*', section, re.M):
-                  status = 'WAITING'
-              if status:
-                  explicit[tid] = status
-              if len(set(candidates)) > 1 and not status:
-                  ambiguous.append((tid, candidates, head))
-
-          print(f'LEGACY_TSK_HEADINGS={len(matches)}')
-          print(f'EXPLICIT_RUNTIME_TASKS={len(explicit)}')
-          print('EXPLICIT_RUNTIME_COUNTS=' + repr(dict(sorted(Counter(explicit.values()).items()))))
-          print(f'AMBIGUOUS_UNRESOLVED={len(ambiguous)}')
-          for item in ambiguous[:50]:
-              print('AMBIG|' + '|'.join([item[0], ','.join(item[1]), item[2]]))
-
-          wbs_ids = {r['Task_ID'].strip() for r in rows}
-          unknown = sorted(set(explicit) - wbs_ids)
-          print(f'EXPLICIT_UNKNOWN_IDS={len(unknown)}')
-          if unknown:
-              print('UNKNOWN=' + ','.join(unknown))
-
-          plan_pass_like = []
-          for r in rows:
-              tid = r['Task_ID'].strip()
-              es = (r.get('Execution_State') or '').strip().upper()
-              ps = (r.get('Plan_Status') or '').strip().upper()
-              if es in {'PASS','DONE','COMPLETED'} or ps in {'PASS','DONE','COMPLETED'}:
-                  if tid not in explicit:
-                      plan_pass_like.append(tid)
-          print(f'PLAN_PASS_LIKE_WITHOUT_EXPLICIT_RUNTIME={len(plan_pass_like)}')
-          if plan_pass_like:
-              print('PLAN_PASS_LIKE_IDS=' + ','.join(plan_pass_like[:200]))
-
-          missing_ac = [r['Task_ID'].strip() for r in rows if not (r.get('Acceptance_ID') or '').strip() or not (r.get('Acceptance_Criteria') or '').strip()]
-          missing_title = [r['Task_ID'].strip() for r in rows if not (r.get('Title') or '').strip()]
-          dup_ids = [tid for tid, n in Counter(r['Task_ID'].strip() for r in rows).items() if n > 1]
-          print(f'MISSING_ACCEPTANCE={len(missing_ac)}')
-          print(f'MISSING_TITLE={len(missing_title)}')
-          print(f'DUP_TASK_IDS={len(dup_ids)}')
-          if missing_ac: print('MISSING_ACCEPTANCE_IDS=' + ','.join(missing_ac[:200]))
-          if missing_title: print('MISSING_TITLE_IDS=' + ','.join(missing_title[:200]))
-          if dup_ids: print('DUP_IDS=' + ','.join(dup_ids[:200]))
-
-          required_waiting = {'TSK-0243','TSK-0360','TSK-0369','TSK-0455','TSK-0631','TSK-0633','TSK-0634','TSK-0635','TSK-0637','TSK-0640','TSK-0630','TSK-0421','TSK-0415','TSK-0416','TSK-0370','TSK-0499','TSK-0242'}
-          missing_wait = sorted(t for t in required_waiting if explicit.get(t) != 'WAITING')
-          print(f'KNOWN_WAITING_NOT_PARSED={len(missing_wait)}')
-          if missing_wait: print('KNOWN_WAITING_NOT_PARSED_IDS=' + ','.join(missing_wait))
+          source = Path('.github/workflows/generate-checkpoint-migration-candidate-20260905.yml').read_text(encoding='utf-8')
+          marker = '        run: |\n'
+          if marker not in source:
+              raise SystemExit('generator run block not found')
+          block = source.split(marker, 1)[1]
+          lines = block.splitlines()
+          out = []
+          for line in lines:
+              if line and not line.startswith('          '):
+                  raise SystemExit(f'unexpected generator indentation: {line!r}')
+              out.append(line[10:] if line else '')
+          Path('/tmp/generate-checkpoint-candidate.sh').write_text('\n'.join(out) + '\n', encoding='utf-8')
           PY
+          bash /tmp/generate-checkpoint-candidate.sh
