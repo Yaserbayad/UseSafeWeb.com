@@ -27,12 +27,30 @@ jobs:
           set -Eeuo pipefail
           EXPECTED_MAIN='655b9bcdf1c10eef0edbdce626742e2bbbd09e1e'
           EXPECTED_WBS_BLOB='f3399492a6da5e168cc2bca92762c17c91358b9f'
+          EXPECTED_WBS_SHA256='a21babb7c3c73f2e26e30940142d630c31802829ab98b1fee6544844ad2fb33b'
           git fetch origin main
           test "$(git rev-parse origin/main)" = "$EXPECTED_MAIN"
           test "$(git merge-base HEAD origin/main)" = "$EXPECTED_MAIN"
           test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "$EXPECTED_WBS_BLOB"
+          test "$(sha256sum Plans/Master/WBS/master-wbs.csv | awk '{print $1}')" = "$EXPECTED_WBS_SHA256"
 
           python3 .github/scripts/reconcile_tsk0489_pass_20260904.py
+
+          NEW_WBS_SHA256="$(sha256sum Plans/Master/WBS/master-wbs.csv | awk '{print $1}')"
+          python3 - "$EXPECTED_WBS_SHA256" "$NEW_WBS_SHA256" <<'PY'
+          import sys
+          from pathlib import Path
+          old, new = sys.argv[1], sys.argv[2]
+          p = Path('Plans/SHA256SUMS.txt')
+          text = p.read_text(encoding='utf-8')
+          old_line = f'{old}  Master/WBS/master-wbs.csv'
+          new_line = f'{new}  Master/WBS/master-wbs.csv'
+          assert text.count(old_line) == 1, text.count(old_line)
+          assert new != old
+          text = text.replace(old_line, new_line, 1)
+          assert text.count(new_line) == 1
+          p.write_text(text, encoding='utf-8')
+          PY
 
           python3 - <<'PY'
           import csv
@@ -59,23 +77,28 @@ jobs:
           expected = {
               'CURRENT_STATE.md',
               'Plans/Master/WBS/master-wbs.csv',
+              'Plans/SHA256SUMS.txt',
               'TSK_0489_GOVERNED_CI_PROMOTION_EVIDENCE_2026-09-04.md',
           }
           changed = set(subprocess.check_output(['git','diff','--name-only','origin/main'], text=True).splitlines())
           assert changed == expected, (changed, expected)
           numstat = subprocess.check_output(['git','diff','--numstat','origin/main','--','Plans/Master/WBS/master-wbs.csv'], text=True).strip().split()
           assert len(numstat) >= 2 and numstat[0] == '1' and numstat[1] == '1', numstat
+          checksum_numstat = subprocess.check_output(['git','diff','--numstat','origin/main','--','Plans/SHA256SUMS.txt'], text=True).strip().split()
+          assert len(checksum_numstat) >= 2 and checksum_numstat[0] == '1' and checksum_numstat[1] == '1', checksum_numstat
           PY
 
           git diff --check origin/main
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add CURRENT_STATE.md Plans/Master/WBS/master-wbs.csv TSK_0489_GOVERNED_CI_PROMOTION_EVIDENCE_2026-09-04.md
+          git add CURRENT_STATE.md Plans/Master/WBS/master-wbs.csv Plans/SHA256SUMS.txt TSK_0489_GOVERNED_CI_PROMOTION_EVIDENCE_2026-09-04.md
           git commit -m 'state: accept TSK-0489 governed CI evidence'
           git push origin HEAD:evidence/tsk-0489-pass-20260904
 
           echo "TSK0489_SYNC_COMMIT=$(git rev-parse HEAD)"
           echo "TSK0489_SYNC_WBS_BLOB=$(git rev-parse HEAD:Plans/Master/WBS/master-wbs.csv)"
+          echo "TSK0489_SYNC_WBS_SHA256=$(sha256sum Plans/Master/WBS/master-wbs.csv | awk '{print $1}')"
+          echo "TSK0489_SYNC_CHECKSUMS_BLOB=$(git rev-parse HEAD:Plans/SHA256SUMS.txt)"
           echo "TSK0489_SYNC_RUNTIME_BLOB=$(git rev-parse HEAD:CURRENT_STATE.md)"
           echo "TSK0489_SYNC_EVIDENCE_BLOB=$(git rev-parse HEAD:TSK_0489_GOVERNED_CI_PROMOTION_EVIDENCE_2026-09-04.md)"
           echo 'TSK0489_SYNC_BRANCH=PASS'
