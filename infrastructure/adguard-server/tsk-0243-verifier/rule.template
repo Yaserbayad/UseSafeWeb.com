@@ -1,0 +1,1 @@
+/^[0-9a-f]{32}\.verify\.usesafeweb\.com$/$dnsrewrite=NOERROR;A;__VERIFIER_IPV4__

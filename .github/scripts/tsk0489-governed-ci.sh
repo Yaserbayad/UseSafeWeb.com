@@ -65,6 +65,10 @@ python3 Plans/Master/Tools/validate_master_plan.py
 
 echo 'TSK0489_GOVERNANCE_VALIDATION=PASS'
 
+python3 -m unittest tests.tsk0243.test_verifier_package
+bash tests/tsk0243/nginx_syntax_test.sh
+echo 'TSK0243_INFRASTRUCTURE_CONTRACT=PASS'
+
 cd website
 test "$(node --version)" = 'v22.23.2'
 test "$(npm --version)" = '10.9.8'
@@ -82,6 +86,9 @@ NODE
 npm audit --audit-level=high
 npm audit --omit=dev --audit-level=high
 cd "$ROOT"
+
+python3 tests/tsk0243/ephemeral_trust_boundary.py
+echo 'TSK0243_EPHEMERAL_TRUST_BOUNDARY=PASS'
 
 echo 'TSK0489_LOCAL_CI_PARITY_ENTRYPOINT=npm run validate'
 echo 'TSK0489_DEPENDENCY_SBOM_AUDIT=PASS'

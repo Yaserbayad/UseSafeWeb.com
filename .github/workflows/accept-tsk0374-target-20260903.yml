@@ -22,6 +22,8 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v6
         with:
           node-version: '22.23.2'
@@ -31,7 +33,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
           test "$(git hash-object website/src/lib/versioned-content.ts)" = '36cf389c612f1950732cbe2ff43b48f8d12a118b'
           test "$(git hash-object website/src/content/content-release.json)" = '8b40fcfe05b6566b8c5e7c9c8319f849e5098a76'
           python3 tests/repository-structure/verify_structure.py

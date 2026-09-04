@@ -63,6 +63,12 @@ jobs:
           node-version: '22.23.2'
           cache: npm
           cache-dependency-path: website/package-lock.json
+      - name: Install repository-only proxy syntax checker
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends nginx-core
       - name: Execute the canonical local-equivalent governed gate
         id: gate
         continue-on-error: true

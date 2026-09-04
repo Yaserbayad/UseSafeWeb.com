@@ -8,6 +8,8 @@ const root = resolve(import.meta.dirname, '../..');
 const modulePath = resolve(root, 'src/lib/dns-verification-proof.ts');
 const requestRoutePath = resolve(root, 'src/app/api/dns-verification/requests/route.ts');
 const probeRoutePath = resolve(root, 'src/app/api/dns-verification/probes/route.ts');
+const resultRoutePath = resolve(root, 'src/app/api/dns-verification/results/route.ts');
+const replayGuardPath = resolve(root, 'src/lib/dns-verification-replay-guard.ts');
 
 async function loadApi() {
   assert.equal(existsSync(modulePath), true, 'missing TSK-0243 trusted DNS verification proof module');
@@ -202,6 +204,36 @@ test('server-issued probe requests generate their own challenge and are scope-bo
   );
 });
 
+test('signing-key rotation immediately invalidates all material signed by the previous key', async () => {
+  const api = await loadApi();
+  const oldSecret = 'o'.repeat(64);
+  const rotatedSecret = 'n'.repeat(64);
+  const issued = api.createDnsProbeRequest(scope, oldSecret, now);
+  const observationToken = api.createDnsVerificationObservationFromProbeRequest(
+    issued.requestToken,
+    issued.probeHost,
+    oldSecret,
+    now + 1_000,
+  );
+  assert.equal(api.verifyDnsProbeRequest(issued.requestToken, rotatedSecret, now + 1_001), null);
+  assert.equal(
+    api.verifyDnsVerificationObservation(observationToken, rotatedSecret, now + 1_001, scope, issued.challenge),
+    null,
+  );
+});
+
+test('a valid request/observation pair is consumed once with a bounded ephemeral digest guard', async () => {
+  const source = readFileSync(replayGuardPath, 'utf8');
+  const js = stripTypeScriptTypes(source, { mode: 'strip' });
+  const guard = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
+  assert.equal(guard.consumeDnsVerificationPair('request', 'observation', now + 60_000, now), true);
+  assert.equal(guard.consumeDnsVerificationPair('request', 'observation', now + 60_000, now + 1), false);
+  assert.equal(guard.consumeDnsVerificationPair('request-2', 'observation', now, now), false);
+  const resultRoute = readFileSync(resultRoutePath, 'utf8');
+  assert.match(resultRoute, /consumeDnsVerificationPair/);
+  assert.match(resultRoute, /PROOF_ALREADY_CONSUMED/);
+});
+
 test('positive observation is derived only from valid request token plus exact current probe host', async () => {
   const api = await loadApi();
   const issued = api.createDnsProbeRequest(scope, secret, now);
@@ -276,7 +308,9 @@ test('route handlers expose POST-only node interfaces with bounded input, no-sto
 
   assert.match(probeRoute, /request\.headers\.get\(['"]host['"]\)/);
   assert.match(probeRoute, /request\.headers\.get\(['"]origin['"]\)/);
-  assert.match(probeRoute, /USESAFEWEB_PUBLIC_ORIGIN/);
+  assert.match(probeRoute, /readServerRuntimeConfig/);
+  assert.match(probeRoute, /config\.publicOrigin/);
+  assert.match(probeRoute, /config\.signingSecret/);
   assert.match(probeRoute, /Access-Control-Allow-Origin/);
   assert.match(probeRoute, /Vary['"]?\s*[:,]\s*['"]Origin['"]/);
   assert.doesNotMatch(probeRoute, /JSON\.parse/);

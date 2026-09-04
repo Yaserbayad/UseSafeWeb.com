@@ -1,0 +1,35 @@
+[Unit]
+Description=UseSafeWeb Next.js application
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=usesafeweb-web
+Group=usesafeweb-web
+WorkingDirectory=/opt/usesafeweb-web/current
+EnvironmentFile=/etc/usesafeweb/website.env
+ExecStartPre=/usr/bin/node /opt/usesafeweb-web/current/validate-runtime.mjs
+ExecStart=/usr/bin/node /opt/usesafeweb-web/current/server.js
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=30s
+TimeoutStopSec=20s
+KillSignal=SIGTERM
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectHome=true
+ProtectSystem=strict
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=false
+StateDirectory=usesafeweb-web
+ReadWritePaths=/var/lib/usesafeweb-web
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
