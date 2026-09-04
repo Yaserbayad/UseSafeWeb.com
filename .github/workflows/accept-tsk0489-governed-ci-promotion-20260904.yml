@@ -43,6 +43,7 @@ jobs:
           python3 - "$workflow" <<'PY'
           import sys
           from pathlib import Path
+
           text = Path(sys.argv[1]).read_text(encoding='utf-8')
           lines = [line.strip() for line in text.splitlines()]
           assert lines.count('contents: read') == 3, lines.count('contents: read')
@@ -55,8 +56,18 @@ jobs:
           uses = [line.removeprefix('- uses: ').strip() for line in lines if line.startswith('- uses: ')]
           allowed = {'actions/checkout@v6', 'actions/setup-node@v6', 'actions/upload-artifact@v4'}
           assert uses and set(uses) <= allowed, uses
+
+          decisions = Path('Plans/Master/Registers/DECISIONS_TRIGGERS.md').read_text(encoding='utf-8')
+          changes = Path('Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md').read_text(encoding='utf-8')
+          runtime = Path('CURRENT_STATE.md').read_text(encoding='utf-8')
+
+          assert 'DEC-0060' in decisions
+          assert 'Separate genuine human-only, strategic, safety, security, legal, identity, contract, material-spend or irreversible-action boundaries remain unchanged.' in decisions
+          assert 'CR-0013' in changes
+          assert 'creates no deployment, telemetry activation, participant-facing mutation, production credential/service revocation, payment, activation, launch or other material-action authority.' in changes
+          for marker in ('No deployment', 'service removal/revocation', 'participant processing', 'telemetry activation', 'launch authority'):
+              assert marker in runtime, marker
           PY
-          grep -Fq 'no deployment, telemetry activation, participant processing, service revocation/removal, payment, activation, launch or other material external action' CURRENT_STATE.md
           {
             echo 'TSK0489_DEPLOYMENT_ACTION=NONE'
             echo 'TSK0489_ACTIVATION_ACTION=NONE'
