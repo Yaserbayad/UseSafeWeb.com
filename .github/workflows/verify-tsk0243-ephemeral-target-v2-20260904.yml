@@ -90,6 +90,7 @@ jobs:
           chmod 700 "${ROOT}"
           SECRET="$(openssl rand -hex 32)"
           [[ "${#SECRET}" -eq 64 ]]
+          printf 'outer_stage=certificates\n' >"${ROOT}/failure-stage.txt"
 
           openssl genrsa -out "${ROOT}/ca.key" 2048 >/dev/null 2>&1
           openssl req -x509 -new -nodes -key "${ROOT}/ca.key" -sha256 -days 1 -subj '/CN=UseSafeWeb TSK-0243 Ephemeral Test CA' -out "${ROOT}/ca.crt" >/dev/null 2>&1
@@ -112,6 +113,7 @@ jobs:
           chmod 600 "${ROOT}"/*.key
           PIN="$(openssl x509 -in "${ROOT}/server.crt" -pubkey -noout | openssl pkey -pubin -outform der 2>/dev/null | openssl dgst -sha256 -binary | openssl base64 -A)"
           [[ -n "${PIN}" ]]
+          printf 'outer_stage=config-generation\n' >"${ROOT}/failure-stage.txt"
 
           cat >"${ROOT}/AdGuardHome.yaml" <<'EOF'
           schema_version: 34
@@ -248,15 +250,18 @@ jobs:
           #!/usr/bin/env bash
           set -Eeuo pipefail
           : "${ROOT:?}" "${SECRET:?}" "${PIN:?}" "${NODE_DIR:?}" "${NPM:?}" "${WORKSPACE:?}"
+          printf 'inner_stage=namespace-network\n' >"${ROOT}/failure-stage.txt"
           ip link set lo up
           mount --make-rprivate /
           mount --bind "${ROOT}/resolv.conf" /etc/resolv.conf
           pids=()
           cleanup(){ set +e; for p in "${pids[@]}"; do kill -TERM -- "-${p}" >/dev/null 2>&1 || true; done; sleep 1; for p in "${pids[@]}"; do kill -KILL -- "-${p}" >/dev/null 2>&1 || true; done; }
           trap cleanup EXIT
+          printf 'inner_stage=service-start\n' >"${ROOT}/failure-stage.txt"
           setsid /opt/AdGuardHome/AdGuardHome -c "${ROOT}/AdGuardHome.yaml" -w "${ROOT}/adguard" --no-check-update >"${ROOT}/adguard.log" 2>&1 & pids+=("$!")
           setsid runuser -u azureusr -- env PATH="${NODE_DIR}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" USESAFEWEB_DNS_VERIFICATION_SIGNING_SECRET="${SECRET}" USESAFEWEB_PUBLIC_ORIGIN='https://eph-app.usesafeweb.test' NEXT_TELEMETRY_DISABLED=1 bash -lc "cd '${WORKSPACE}/website' && exec '${NPM}' start -- --hostname 127.0.0.1 --port 3100" >"${ROOT}/next.log" 2>&1 & pids+=("$!")
           setsid nginx -p "${ROOT}/nginx/" -c "${ROOT}/nginx.conf" -g 'daemon off;' >"${ROOT}/nginx-stdout.log" 2>&1 & pids+=("$!")
+          printf 'inner_stage=readiness\n' >"${ROOT}/failure-stage.txt"
           ready=0
           for _ in $(seq 1 30); do
             if dig +time=1 +tries=1 +short @127.0.0.53 eph-app.usesafeweb.test A 2>/dev/null | grep -qx 127.0.0.3 && curl -fsS --max-time 2 http://127.0.0.1:3100/en-GB >/dev/null 2>&1 && curl -fsS --max-time 2 --cacert "${ROOT}/ca.crt" https://eph-app.usesafeweb.test/en-GB >/dev/null 2>&1; then ready=1; break; fi
@@ -267,6 +272,7 @@ jobs:
           fi
           echo 'TSK0243_EPH_READY=PASS'
 
+          printf 'inner_stage=request-issue\n' >"${ROOT}/failure-stage.txt"
           scope="$(openssl rand -hex 16)"
           req="$(curl -fsS --max-time 5 --cacert "${ROOT}/ca.crt" -H 'Content-Type: application/json' --data "{\"scope\":\"${scope}\"}" https://eph-app.usesafeweb.test/api/dns-verification/requests)"
           challenge="$(python3 -c 'import json,sys;print(json.load(sys.stdin)["challenge"])' <<<"${req}")"
@@ -274,12 +280,15 @@ jobs:
           request_token="$(python3 -c 'import json,sys;print(json.load(sys.stdin)["requestToken"])' <<<"${req}")"
           [[ "${host}" == "${challenge}.verify.usesafeweb.com" && "${challenge}" =~ ^[0-9a-f]{32}$ ]]
           printf '%s\n' "${challenge}" >"${ROOT}/challenge.txt"
+          printf 'inner_stage=dns-rewrite\n' >"${ROOT}/failure-stage.txt"
           [[ "$(dig +time=1 +tries=1 +short "${host}" A | tr -d '\r')" == 127.0.0.2 ]]
           echo 'TSK0243_EPH_ACTUAL_SYSTEM_DNS_REWRITE=PASS'
 
+          printf 'inner_stage=tls-auth\n' >"${ROOT}/failure-stage.txt"
           openssl s_client -connect 127.0.0.2:443 -servername "${host}" -CAfile "${ROOT}/ca.crt" -verify_return_error </dev/null 2>"${ROOT}/tls.err" | openssl x509 -noout -checkhost "${host}" >/dev/null
           echo 'TSK0243_EPH_TLS_HOST_AUTHENTICATION=PASS'
 
+          printf 'inner_stage=negative-routing\n' >"${ROOT}/failure-stage.txt"
           wo="$(curl -sS --max-time 5 --cacert "${ROOT}/ca.crt" -o /dev/null -w '%{http_code}' -H 'Origin: https://evil.example' -H 'Content-Type: text/plain' --data-binary "${request_token}" "https://${host}/api/dns-verification/probes")"
           [[ "${wo}" == 403 ]]
           wrong_challenge="$(openssl rand -hex 16)"; [[ "${wrong_challenge}" != "${challenge}" ]]
@@ -288,6 +297,7 @@ jobs:
           wp="$(curl -sS --max-time 5 --cacert "${ROOT}/ca.crt" -o /dev/null -w '%{http_code}' "https://${host}/")"; [[ "${wp}" == 404 ]]
           echo 'TSK0243_EPH_WRONG_ORIGIN_HOST_PATH_FAIL_CLOSED=PASS'
 
+          printf 'inner_stage=positive-probe-result\n' >"${ROOT}/failure-stage.txt"
           probe="$(curl -fsS --max-time 5 --cacert "${ROOT}/ca.crt" -H 'Origin: https://eph-app.usesafeweb.test' -H 'Content-Type: text/plain' --data-binary "${request_token}" "https://${host}/api/dns-verification/probes")"
           observation_token="$(python3 -c 'import json,sys;print(json.load(sys.stdin)["observationToken"])' <<<"${probe}")"
           result_body="$(python3 -c 'import json,sys;print(json.dumps({"requestToken":sys.argv[1],"observationToken":sys.argv[2]},separators=(",",":")))' "${request_token}" "${observation_token}")"
@@ -295,6 +305,7 @@ jobs:
           python3 -c 'import json,sys;v=json.load(sys.stdin);assert v["dnsPath"]=="verified-fresh",v;assert v["reasonCode"]=="TECH_VERIFIED",v;assert v["verifierVersion"]=="private-rewrite-v1",v;assert isinstance(v.get("observedAt"),int),v' <<<"${verified}"
           echo 'TSK0243_EPH_REQUEST_PROBE_RESULT=PASS'
 
+          printf 'inner_stage=tamper-negative\n' >"${ROOT}/failure-stage.txt"
           IFS='.' read -r obs_payload obs_signature obs_extra <<<"${observation_token}"
           [[ -n "${obs_payload}" && -n "${obs_signature}" && -z "${obs_extra}" ]]
           first="${obs_payload:0:1}"; if [[ "${first}" == A ]]; then replacement=B; else replacement=A; fi
@@ -304,24 +315,30 @@ jobs:
           ts="$(curl -sS --max-time 5 --cacert "${ROOT}/ca.crt" -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' --data-binary "${tampered_body}" https://eph-app.usesafeweb.test/api/dns-verification/results)"; [[ "${ts}" == 403 ]]
           echo 'TSK0243_EPH_TAMPER_FAIL_CLOSED=PASS'
 
+          printf 'inner_stage=browser-e2e\n' >"${ROOT}/failure-stage.txt"
           runuser -u azureusr -- env PATH="${NODE_DIR}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" EPH_SPKI_PIN="${PIN}" bash -lc "cd '${WORKSPACE}/website' && exec node .tsk0243-eph-browser.mjs"
 
+          printf 'inner_stage=rate-limit\n' >"${ROOT}/failure-stage.txt"
           mkdir -p "${ROOT}/rate"
           for i in $(seq 1 30); do (curl -sS --max-time 5 --cacert "${ROOT}/ca.crt" -o /dev/null -w '%{http_code}\n' -H 'Origin: https://eph-app.usesafeweb.test' -H 'Content-Type: text/plain' --data-binary "${request_token}" "https://${host}/api/dns-verification/probes" >"${ROOT}/rate/${i}.status" || true) & done
           wait
           cat "${ROOT}"/rate/*.status | grep -qx 429
           echo 'TSK0243_EPH_RATE_LIMIT=PASS'
+          printf 'inner_stage=query-history\n' >"${ROOT}/failure-stage.txt"
           [[ ! -e "${ROOT}/adguard/data/querylog.json" && ! -e "${ROOT}/adguard/data/querylog.json.1" ]]
           find "${ROOT}/adguard" -maxdepth 3 -type f -print | sed "s#${ROOT}#<EPH>#g" | sort >"${ROOT}/adguard-files.txt"
           ! grep -Ei querylog "${ROOT}/adguard-files.txt"
           echo 'TSK0243_EPH_QUERY_HISTORY_STORAGE_ABSENT=PASS'
+          printf 'inner_stage=complete\n' >"${ROOT}/failure-stage.txt"
           echo 'TSK0243_EPH_INNER_ACCEPTANCE=PASS'
           EOF
           chmod 700 "${ROOT}/inside.sh"
           NODE_DIR="$(dirname "$(command -v node)")"; NPM="$(command -v npm)"
+          printf 'outer_stage=namespace-entry\n' >"${ROOT}/failure-stage.txt"
           sudo env ROOT="${ROOT}" SECRET="${SECRET}" PIN="${PIN}" NODE_DIR="${NODE_DIR}" NPM="${NPM}" WORKSPACE="${GITHUB_WORKSPACE}" unshare --mount --net --pid --fork --mount-proc "${ROOT}/inside.sh"
           unset SECRET
 
+          printf 'outer_stage=public-false-positive\n' >"${ROOT}/failure-stage.txt"
           challenge="$(cat "${ROOT}/challenge.txt")"; host="${challenge}.verify.usesafeweb.com"
           [[ -z "$(dig +time=2 +tries=1 +short @127.0.0.1 "${host}" A 2>/dev/null || true)" ]]
           observed=0; answers=0
@@ -330,11 +347,21 @@ jobs:
             if grep -Eq 'status: (NOERROR|NXDOMAIN|SERVFAIL|REFUSED)' <<<"${full}"; then observed=$((observed+1)); [[ -z "${out}" ]] || answers=$((answers+1)); fi
           done
           [[ "${observed}" -ge 1 && "${answers}" -eq 0 ]]
+          printf 'outer_stage=complete\n' >"${ROOT}/failure-stage.txt"
           echo 'TSK0243_PUBLIC_FALSE_POSITIVE_GUARD=PASS'
           echo 'TSK0243_EPH_TARGET_PROOF=PASS'
           echo 'TSK0243_DISPOSITION=PARTIAL_TARGET_EVIDENCE_ONLY'
           echo 'TSK0243_PRODUCTION_MUTATION=NONE'
           echo 'TSK0243_PARTICIPANT_PAYMENT_LAUNCH_ACTION=NONE'
+
+      - name: Upload bounded failure-stage diagnostic
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tsk0243-failure-stage-${{ github.run_id }}
+          path: ${{ runner.temp }}/tsk0243-eph-v2-${{ github.run_id }}-${{ github.run_attempt }}/failure-stage.txt
+          if-no-files-found: error
+          retention-days: 1
 
       - name: Always verify live target unchanged and teardown
         if: always()
