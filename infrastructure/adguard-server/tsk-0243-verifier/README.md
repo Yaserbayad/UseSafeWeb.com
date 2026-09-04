@@ -17,6 +17,9 @@ The tool requires the exact AdGuard version, loopback control API, query/file
 logging disabled, statistics disabled, ECS disabled, anonymization enabled, and
 filtering enabled. It preserves all unrelated user rules. A failed update is
 rolled back to the exact prior rule list without printing it.
+An existing managed rule pointing to a different address must be removed
+explicitly before applying the replacement, so an address conflict cannot be
+silently overwritten.
 
 Removal is explicit and leaves unrelated rules intact:
 

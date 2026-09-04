@@ -126,6 +126,8 @@ def main() -> None:
     if len(managed) > 1:
         fail("conflicting managed rewrite rules")
     mode = "--apply" if args.apply else "--remove" if args.remove else "--verify"
+    if mode == "--apply" and managed and managed != [desired]:
+        fail("existing managed rewrite points elsewhere; remove it explicitly first")
     if mode == "--verify":
         if managed != [desired]:
             fail("required rewrite is missing or points elsewhere")
@@ -140,7 +142,10 @@ def main() -> None:
                 raise RuntimeError("post-change verification mismatch")
             validate_privacy(api)
         except Exception:
-            api.request("/filtering/set_rules", {"rules": original})
+            try:
+                api.request("/filtering/set_rules", {"rules": original})
+            except Exception:
+                fail("change and rollback both failed; operator intervention required")
             fail("change failed; original rules restored")
     print(f"ADGUARD_VERSION={PINNED_VERSION}")
     print("ADGUARD_PRIVACY_INVARIANTS=PASS")

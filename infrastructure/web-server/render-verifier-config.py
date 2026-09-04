@@ -28,6 +28,7 @@ def validate_tls(certificate: Path, private_key: Path) -> None:
         raise SystemExit("TLS_INPUT=FAIL missing certificate or private key")
     if os.name != "nt" and private_key.stat().st_mode & 0o077:
         raise SystemExit("TLS_INPUT=FAIL private key must not be group/world accessible")
+    openssl("x509", "-checkend", "0", "-in", str(certificate), "-noout")
     san = openssl("x509", "-in", str(certificate), "-noout", "-ext", "subjectAltName")
     names = re.findall(r"DNS:([^,\s]+)", san)
     if WILDCARD not in names:

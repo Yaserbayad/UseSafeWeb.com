@@ -54,6 +54,8 @@ def dns_query(host: str, resolver: str, doh: bool = False) -> list[str]:
     if len(data) < 12 or struct.unpack("!H", data[:2])[0] != identifier:
         raise BoundaryFailure(66, "DNS_RESPONSE", "invalid DNS response")
     _, flags, qd, answers, _, _ = struct.unpack("!HHHHHH", data[:12])
+    if flags & 0x0200:
+        raise BoundaryFailure(66, "DNS_RESPONSE", "truncated UDP response")
     if flags & 0xF not in (0, 3):
         raise BoundaryFailure(66, "DNS_RESPONSE", f"DNS rcode={flags & 0xF}")
 
@@ -71,7 +73,7 @@ def dns_query(host: str, resolver: str, doh: bool = False) -> list[str]:
     offset = 12
     for _ in range(qd):
         offset = skip_name(offset) + 4
-    addresses = []
+    addresses, unexpected_answers = [], 0
     for _ in range(answers):
         offset = skip_name(offset)
         record_type, record_class, _, length = struct.unpack("!HHIH", data[offset : offset + 10])
@@ -80,6 +82,10 @@ def dns_query(host: str, resolver: str, doh: bool = False) -> list[str]:
         offset += length
         if record_type == 1 and record_class == 1 and length == 4:
             addresses.append(socket.inet_ntoa(value))
+        else:
+            unexpected_answers += 1
+    if unexpected_answers:
+        addresses.append("UNEXPECTED_DNS_ANSWER")
     return addresses
 
 
