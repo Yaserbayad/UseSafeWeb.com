@@ -58,9 +58,12 @@ for line in raw.splitlines():
 bad_paths = sorted({p for ps in paths.values() for p in ps if p.lower().endswith(forbidden_suffixes)})
 if bad_paths:
     print(f"SECRET_SCAN_FORBIDDEN_CONTAINER_COUNT={len(bad_paths)}")
+    for path in bad_paths:
+        print(f"SECRET_SCAN_FORBIDDEN_CONTAINER_PATH={path}")
     sys.exit(11)
 
-# Scan each unique blob once and never emit matched content.
+# Scan each unique blob once. A failure may disclose only the repository path and
+# object id needed to investigate the finding; matched bytes are never emitted.
 seen = set()
 scanned_blobs = 0
 scanned_bytes = 0
@@ -83,6 +86,18 @@ for oid in objects:
     for name, pattern in patterns:
         if pattern.search(data):
             print(f"SECRET_SCAN_MATCH_CLASS={name}")
+            print(f"SECRET_SCAN_MATCH_OBJECT={oid}")
+            matched_paths = sorted(paths.get(oid, {"<unknown>"}))
+            for path in matched_paths:
+                print(f"SECRET_SCAN_MATCH_PATH={path}")
+            commits = subprocess.check_output(
+                ["git", "log", "--all", "--format=%H", "--find-object", oid],
+                text=True,
+                errors="replace",
+            ).splitlines()
+            for commit in commits[:20]:
+                if commit:
+                    print(f"SECRET_SCAN_MATCH_COMMIT={commit}")
             sys.exit(12)
 
 print(f"SECRET_SCAN_BLOBS={scanned_blobs}")
