@@ -1,0 +1,119 @@
+name: TSK-0243 public trust-boundary preflight
+
+on:
+  push:
+    branches:
+      - verify/tsk0243-public-preflight-20260904
+    paths:
+      - .github/workflows/verify-tsk0243-public-preflight-20260904.yml
+
+permissions:
+  contents: read
+
+jobs:
+  public-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact diagnostic head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Observe public DNS TLS and HTTP trust boundary read-only
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE='ef1efc463bd45e6773776ff3475f321888106d48'
+          test "${GITHUB_REF_NAME}" = 'verify/tsk0243-public-preflight-20260904'
+          test "$(git rev-parse HEAD^)" = "${BASE}"
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = '142a0d45b381136567d78545f063333f1e74901f'
+          test "$(git hash-object CURRENT_STATE.md)" = '9e9617db4f27cc9479751210b650f9e9e3ee224c'
+          command -v dig >/dev/null
+          command -v curl >/dev/null
+          command -v openssl >/dev/null
+          echo 'TSK0243_PUBLIC_PREFLIGHT_AUTHORITY_BINDING=PASS'
+
+          challenge='0123456789abcdef0123456789abcdef'
+          verify_host="${challenge}.verify.usesafeweb.com"
+
+          observe_dns() {
+            local host="$1"
+            echo "--- DNS ${host} ---"
+            local a aaaa cname
+            a="$(dig +time=3 +tries=1 +short A "${host}" | tr '\n' ',' | sed 's/,$//')"
+            aaaa="$(dig +time=3 +tries=1 +short AAAA "${host}" | tr '\n' ',' | sed 's/,$//')"
+            cname="$(dig +time=3 +tries=1 +short CNAME "${host}" | tr '\n' ',' | sed 's/,$//')"
+            printf 'DNS_OBSERVATION|host=%s|A=%s|AAAA=%s|CNAME=%s\n' "${host}" "${a:--}" "${aaaa:--}" "${cname:--}"
+            if [[ -n "${a}${aaaa}${cname}" ]]; then
+              printf 'DNS_RESOLVES|host=%s|result=YES\n' "${host}"
+            else
+              printf 'DNS_RESOLVES|host=%s|result=NO\n' "${host}"
+            fi
+          }
+
+          observe_dns 'usesafeweb.com'
+          observe_dns 'www.usesafeweb.com'
+          observe_dns 'dns.usesafeweb.com'
+          observe_dns 'verify.usesafeweb.com'
+          observe_dns "${verify_host}"
+          echo "DNS_NS|usesafeweb.com=$(dig +time=3 +tries=1 +short NS usesafeweb.com | tr '\n' ',' | sed 's/,$//' || true)"
+
+          http_code() {
+            local url="$1"
+            local code
+            code="$(curl -sS -L --max-time 8 -o /dev/null -w '%{http_code}' "${url}" 2>/dev/null || true)"
+            [[ -n "${code}" ]] || code='000'
+            printf 'HTTP_OBSERVATION|url=%s|status=%s\n' "${url}" "${code}"
+          }
+
+          http_code 'https://usesafeweb.com/'
+          http_code 'https://usesafeweb.com/api/dns-verification/requests'
+          http_code 'https://dns.usesafeweb.com/dns-query'
+          http_code "https://${verify_host}/api/dns-verification/probes"
+
+          tls_probe() {
+            local host="$1" port="$2"
+            local out rc subject issuer dates verify
+            set +e
+            out="$(timeout 8 openssl s_client -connect "${host}:${port}" -servername "${host}" -verify_return_error -brief </dev/null 2>&1)"
+            rc=$?
+            set -e
+            if [[ ${rc} -eq 0 ]]; then
+              echo "TLS_OBSERVATION|host=${host}|port=${port}|handshake=PASS"
+              printf '%s\n' "${out}" | grep -E '^(Protocol version|Ciphersuite|Peer certificate|Verification:)' || true
+            else
+              echo "TLS_OBSERVATION|host=${host}|port=${port}|handshake=FAIL|rc=${rc}"
+              printf '%s\n' "${out}" | tail -n 8
+            fi
+          }
+
+          if getent ahosts usesafeweb.com >/dev/null 2>&1; then tls_probe 'usesafeweb.com' 443; fi
+          if getent ahosts dns.usesafeweb.com >/dev/null 2>&1; then
+            tls_probe 'dns.usesafeweb.com' 443
+            tls_probe 'dns.usesafeweb.com' 853
+          fi
+          if getent ahosts "${verify_host}" >/dev/null 2>&1; then tls_probe "${verify_host}" 443; fi
+
+          dns_host="$(dig +time=3 +tries=1 +short A dns.usesafeweb.com; dig +time=3 +tries=1 +short AAAA dns.usesafeweb.com)"
+          verify_target="$(dig +time=3 +tries=1 +short A "${verify_host}"; dig +time=3 +tries=1 +short AAAA "${verify_host}")"
+          if [[ -z "${dns_host}" ]]; then
+            echo 'TSK0243_PUBLIC_DNS_SERVICE_HOST=ABSENT'
+          else
+            echo 'TSK0243_PUBLIC_DNS_SERVICE_HOST=PRESENT'
+          fi
+          if [[ -z "${verify_target}" ]]; then
+            echo 'TSK0243_PUBLIC_VERIFICATION_WILDCARD=ABSENT'
+          else
+            echo 'TSK0243_PUBLIC_VERIFICATION_WILDCARD=PRESENT'
+          fi
+          if [[ -n "${dns_host}" && -n "${verify_target}" ]]; then
+            echo 'TSK0243_PUBLIC_TRUST_BOUNDARY_PREFLIGHT=ROUTING_PRESENT_REQUIRES_FUNCTIONAL_PROOF'
+          else
+            echo 'TSK0243_PUBLIC_TRUST_BOUNDARY_PREFLIGHT=NOT_DEPLOYED_OR_NOT_EXTERNALLY_ROUTABLE'
+          fi
+          echo 'TSK0243_PUBLIC_PREFLIGHT_MUTATION=NONE'
+          echo 'TSK0243_PARTICIPANT_PAYMENT_LAUNCH_ACTION=NONE'
+          test -z "$(git status --porcelain)"
+          echo 'TSK0243_PUBLIC_PREFLIGHT=PASS'
