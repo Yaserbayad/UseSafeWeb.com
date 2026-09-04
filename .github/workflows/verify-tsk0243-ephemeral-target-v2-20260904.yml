@@ -322,7 +322,7 @@ jobs:
           mkdir -p "${ROOT}/rate"
           rate_pids=()
           for i in $(seq 1 30); do
-            (curl -sS --max-time 5 --cacert "${ROOT}/ca.crt" -o /dev/null -w '%{http_code}\n' -H 'Origin: https://eph-app.usesafeweb.test' -H 'Content-Type: text/plain' --data-binary "${request_token}" "https://${host}/api/dns-verification/probes" >"${ROOT}/rate/${i}.status" || true) &
+            (curl -sS --max-time 5 --resolve "${host}:443:127.0.0.2" --cacert "${ROOT}/ca.crt" -o /dev/null -w '%{http_code}\n' -H 'Origin: https://eph-app.usesafeweb.test' -H 'Content-Type: text/plain' --data-binary "${request_token}" "https://${host}/api/dns-verification/probes" >"${ROOT}/rate/${i}.status" || true) &
             rate_pids+=("$!")
           done
           for rate_pid in "${rate_pids[@]}"; do
