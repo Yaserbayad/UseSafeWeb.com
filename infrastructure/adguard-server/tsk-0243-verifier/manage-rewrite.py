@@ -69,26 +69,39 @@ def validate_privacy(api: ControlAPI, config_path: Path | None = None) -> None:
     statistics = api.request("/stats/config")
     if querylog.get("enabled") is not False:
         fail("querylog privacy invariant is not disabled")
-    if statistics.get("enabled") is not False:
-        fail("statistics privacy invariant is not disabled")
-    if config_path is not None:
-        if not config_path.is_file():
-            fail("AdGuard configuration missing")
-        config = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
-        query_config = config.get("querylog") or {}
-        statistics_config = config.get("statistics") or {}
-        dns = config.get("dns") or {}
-        filtering = config.get("filtering") or {}
-        if query_config.get("enabled") is not False or query_config.get("file_enabled") is not False:
-            fail("persistent querylog privacy invariant is not disabled")
-        if statistics_config.get("enabled") is not False:
-            fail("identifiable statistics privacy invariant is not disabled")
-        if dns.get("anonymize_client_ip") is not True:
-            fail("client anonymization privacy invariant is not enabled")
-        if (dns.get("edns_client_subnet") or {}).get("enabled") is not False:
-            fail("ECS privacy invariant is not disabled")
-        if filtering.get("protection_enabled") is not True or filtering.get("filtering_enabled") is not True:
-            fail("filtering protection invariant is not enabled")
+    runtime_statistics_enabled = statistics.get("enabled")
+    if not isinstance(runtime_statistics_enabled, bool):
+        fail("statistics runtime state is unavailable")
+    if config_path is None:
+        if runtime_statistics_enabled:
+            fail("enabled statistics retention cannot be verified without persisted configuration")
+        return
+    if not config_path.is_file():
+        fail("AdGuard configuration missing")
+    config = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+    query_config = config.get("querylog") or {}
+    statistics_config = config.get("statistics") or {}
+    dns = config.get("dns") or {}
+    filtering = config.get("filtering") or {}
+    if query_config.get("enabled") is not False or query_config.get("file_enabled") is not False:
+        fail("persistent querylog privacy invariant is not disabled")
+    persisted_statistics_enabled = statistics_config.get("enabled")
+    if not isinstance(persisted_statistics_enabled, bool):
+        fail("persisted statistics state is unavailable")
+    if runtime_statistics_enabled is not persisted_statistics_enabled:
+        fail("statistics runtime and persisted state disagree")
+    if persisted_statistics_enabled:
+        if statistics_config.get("interval") != "1d":
+            fail("enabled aggregate statistics retention must be exactly 1d")
+        runtime_interval = statistics.get("interval")
+        if runtime_interval not in (None, 1):
+            fail("enabled aggregate statistics runtime retention must be exactly 1 day")
+    if dns.get("anonymize_client_ip") is not True:
+        fail("client anonymization privacy invariant is not enabled")
+    if (dns.get("edns_client_subnet") or {}).get("enabled") is not False:
+        fail("ECS privacy invariant is not disabled")
+    if filtering.get("protection_enabled") is not True or filtering.get("filtering_enabled") is not True:
+        fail("filtering protection invariant is not enabled")
 
 
 def render_rule(value: str) -> str:
@@ -158,7 +171,7 @@ def main() -> None:
             after = list((api.request("/filtering/status").get("user_rules") or []))
             if after != candidate:
                 raise RuntimeError("post-change verification mismatch")
-            validate_privacy(api)
+            validate_privacy(api, args.config)
             if mode == "--apply":
                 args.rewrite_env.parent.mkdir(parents=True, exist_ok=True)
                 with tempfile.NamedTemporaryFile(
