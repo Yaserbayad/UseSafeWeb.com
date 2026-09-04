@@ -118,6 +118,14 @@ class VerifierPackageContract(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 module.validate_privacy(FakeApi(True, 7), config)
 
+    def test_artifact_release_marker_and_existing_release_guard_are_mandatory(self) -> None:
+        deploy = self.read("infrastructure/web-server/deploy-release.sh")
+        validator = self.read("infrastructure/web-server/validate-runtime.mjs")
+        self.assertIn('.release-sha', deploy)
+        self.assertIn('release_path_exists', deploy)
+        self.assertIn('.release-sha', validator)
+        self.assertIn('release_marker', validator)
+
     def test_deployment_rollback_restores_release_identity_and_cleans_first_failure(self) -> None:
         deploy = self.read("infrastructure/web-server/deploy-release.sh")
         self.assertIn('previous_release_sha=', deploy)
