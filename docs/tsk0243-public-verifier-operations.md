@@ -33,9 +33,13 @@ curl --fail --silent http://127.0.0.1:3100/api/health/ready
 
 The deployer runs `npm ci`, the full website validation/build, installs the
 standalone output atomically, starts/restarts the hardened service, and restores
-the previous release if readiness fails. `Restart=on-failure` provides bounded
-recovery; systemd and Nginx errors remain visible without request bodies or
-tokens.
+the previous release if readiness fails. Rollback restores both the prior
+`current` symlink and its exact `USESAFEWEB_RELEASE_SHA` binding before restarting
+the service; a failed first deployment removes the failed `current` link instead
+of leaving an apparently active release. The environment file stays `0600
+root:root` and its other values are never printed. `Restart=on-failure` provides
+bounded recovery; systemd and Nginx errors remain visible without request bodies
+or tokens.
 
 ## TLS and reverse proxy
 
@@ -71,8 +75,12 @@ the script. Its versioned AdGuard syntax is:
 
 Do not publish an equivalent authoritative record or wildcard. Ordinary public
 DNS must remain negative. The manager validates the exact pinned AdGuard version
-and inherited filtering, ECS-off, anonymization, querylog/filelog-off, and
-statistics-off controls before changing the local user-rule list.
+and inherited filtering, ECS-off, anonymization, and querylog/filelog-off
+controls before changing the local user-rule list. Statistics may be disabled or
+may use only the currently authorized minimum anonymized aggregate mode with
+exactly one-day retention. Enabled longer retention or disagreement between the
+runtime and persisted statistics state fails closed; identifiable per-client
+statistics/history remain excluded.
 
 ## Target acceptance (separate authority)
 
@@ -89,9 +97,11 @@ Only after separate target authority, add
 `--functional-authority TSK-0243-TARGET-PROOF`. Add `--wait-for-expiry` for the
 bounded expiry test and `--rate-test-count 20` for the controlled rate test.
 Tokens are redacted and each failed boundary has a stable nonzero exit code.
-Inspect the target after the run to confirm no query/file log, statistics,
-request body, proof token, challenge, domain history or client history was
-stored. That target inspection is not simulated into repository PASS.
+Inspect the target after the run to confirm no query/file log, request body,
+proof token, challenge, domain history, or identifiable client statistics/history
+was stored. If aggregate statistics are enabled, verify they remain anonymized
+and at exactly one-day retention. That target inspection is not simulated into
+repository PASS.
 
 ## Rotation, rollback, and removal
 
