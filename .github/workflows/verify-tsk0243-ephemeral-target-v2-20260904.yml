@@ -1,0 +1,362 @@
+name: TSK-0243 isolated ephemeral target proof v2
+
+on:
+  push:
+    branches:
+      - verify/tsk-0243-ephemeral-target-20260904
+    paths:
+      - '.github/workflows/verify-tsk0243-ephemeral-target-v2-20260904.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  ephemeral-target-v2:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact proof head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify base target and capture live rollback guard
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE='041caa3858b61fb4119a66e9f139ccb3ebd318a0'
+          EXPECTED=$'.github/workflows/verify-tsk0243-ephemeral-target-20260904.yml\n.github/workflows/verify-tsk0243-ephemeral-target-v2-20260904.yml'
+          [[ "${GITHUB_REF}" == 'refs/heads/verify/tsk-0243-ephemeral-target-20260904' ]]
+          [[ "$(git merge-base HEAD "${BASE}")" == "${BASE}" ]]
+          [[ "$(git diff --name-only "${BASE}" HEAD)" == "${EXPECTED}" ]]
+          [[ "$(hostname -s)" == 'adguardvm' ]]
+          [[ "$(id -un)" == 'azureusr' ]]
+          sudo -n true
+          . /etc/os-release
+          [[ "${ID}" == ubuntu && "${VERSION_ID}" == 24.04 ]]
+          sudo systemctl is-active --quiet AdGuardHome.service
+          sudo /opt/AdGuardHome/AdGuardHome --version | grep -F 'v0.107.79'
+          for tool in unshare ip nginx openssl dig curl python3; do command -v "${tool}" >/dev/null; done
+          SNAP="${RUNNER_TEMP}/tsk0243-live-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.snapshot"
+          sha="$(sudo sha256sum /opt/AdGuardHome/AdGuardHome.yaml | awk '{print $1}')"
+          pid="$(sudo systemctl show -p MainPID --value AdGuardHome.service)"
+          state="$(sudo systemctl is-active AdGuardHome.service)"
+          privacy="$(sudo python3 - <<'PY'
+          import hashlib,json,yaml
+          with open('/opt/AdGuardHome/AdGuardHome.yaml',encoding='utf-8') as f:d=yaml.safe_load(f) or {}
+          q=d.get('querylog') or {}; s=d.get('statistics') or {}; r=d.get('user_rules') or []
+          v={'qe':q.get('enabled'),'qf':q.get('file_enabled'),'se':s.get('enabled'),'rc':len(r) if isinstance(r,list) else -1,'rh':hashlib.sha256(json.dumps(r,sort_keys=True,separators=(',',':')).encode()).hexdigest()}
+          print(hashlib.sha256(json.dumps(v,sort_keys=True,separators=(',',':')).encode()).hexdigest())
+          PY
+          )"
+          [[ "${pid}" =~ ^[1-9][0-9]*$ && "${state}" == active ]]
+          printf '%s|%s|%s|%s\n' "${sha}" "${pid}" "${state}" "${privacy}" >"${SNAP}"
+          chmod 600 "${SNAP}"
+          echo 'TSK0243_V2_TARGET_AND_ROLLBACK_GUARD=PASS'
+
+      - name: Set up job scoped Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22.23.2'
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Build application and browser runtime
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          cd website
+          npm ci --no-fund --no-audit
+          NEXT_TELEMETRY_DISABLED=1 npm run build
+          npm install --no-save --no-package-lock --ignore-scripts playwright@1.62.1
+          npx --yes playwright@1.62.1 install chromium
+          test -z "$(git status --porcelain)"
+          echo 'TSK0243_V2_APP_BROWSER_BUILD=PASS'
+
+      - name: Execute disposable EPH DNS app TLS browser proof
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          ROOT="${RUNNER_TEMP}/tsk0243-eph-v2-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          sudo rm -rf "${ROOT}"
+          mkdir -p "${ROOT}/adguard" "${ROOT}/nginx"
+          chmod 700 "${ROOT}"
+          SECRET="$(openssl rand -hex 32)"
+          [[ "${#SECRET}" -eq 64 ]]
+
+          openssl genrsa -out "${ROOT}/ca.key" 2048 >/dev/null 2>&1
+          openssl req -x509 -new -nodes -key "${ROOT}/ca.key" -sha256 -days 1 -subj '/CN=UseSafeWeb TSK-0243 Ephemeral Test CA' -out "${ROOT}/ca.crt" >/dev/null 2>&1
+          cat >"${ROOT}/server.cnf" <<'EOF'
+          [req]
+          distinguished_name=dn
+          prompt=no
+          req_extensions=req_ext
+          [dn]
+          CN=*.verify.usesafeweb.com
+          [req_ext]
+          subjectAltName=@alt_names
+          [alt_names]
+          DNS.1=*.verify.usesafeweb.com
+          DNS.2=eph-app.usesafeweb.test
+          EOF
+          openssl genrsa -out "${ROOT}/server.key" 2048 >/dev/null 2>&1
+          openssl req -new -key "${ROOT}/server.key" -out "${ROOT}/server.csr" -config "${ROOT}/server.cnf" >/dev/null 2>&1
+          openssl x509 -req -in "${ROOT}/server.csr" -CA "${ROOT}/ca.crt" -CAkey "${ROOT}/ca.key" -CAcreateserial -out "${ROOT}/server.crt" -days 1 -sha256 -extfile "${ROOT}/server.cnf" -extensions req_ext >/dev/null 2>&1
+          chmod 600 "${ROOT}"/*.key
+          PIN="$(openssl x509 -in "${ROOT}/server.crt" -pubkey -noout | openssl pkey -pubin -outform der 2>/dev/null | openssl dgst -sha256 -binary | openssl base64 -A)"
+          [[ -n "${PIN}" ]]
+
+          cat >"${ROOT}/AdGuardHome.yaml" <<'EOF'
+          schema_version: 34
+          http:
+            address: 127.0.0.54:3000
+          dns:
+            bind_hosts: [127.0.0.53]
+            port: 53
+            upstream_dns: [9.9.9.9]
+            upstream_dns_file: ""
+            bootstrap_dns: [9.9.9.9]
+            fallback_dns: []
+            private_upstream: []
+            upstream_mode: load_balance
+            ratelimit: 20
+            ratelimit_subnet_len_ipv4: 24
+            ratelimit_subnet_len_ipv6: 56
+            ratelimit_whitelist: []
+            refuse_any: true
+            edns_client_subnet:
+              enabled: false
+              use_custom: false
+              custom_ip: ""
+            anonymize_client_ip: true
+            cache_size: 4194304
+            cache_ttl_min: 0
+            cache_ttl_max: 0
+            cache_optimistic: false
+          filtering:
+            protection_enabled: true
+            filtering_enabled: true
+            blocking_mode: default
+            safebrowsing_enabled: false
+            parental_enabled: false
+            safesearch_enabled: false
+          filters: []
+          whitelist_filters: []
+          user_rules:
+            - '||verify.usesafeweb.com^$dnsrewrite=NOERROR;A;127.0.0.2'
+            - '||eph-app.usesafeweb.test^$dnsrewrite=NOERROR;A;127.0.0.3'
+          querylog:
+            enabled: false
+            file_enabled: false
+            interval: 1d
+          statistics:
+            enabled: false
+            interval: 1d
+          tls:
+            enabled: false
+            force_https: false
+            port_dns_over_quic: 8853
+            port_dns_over_tls: 8853
+            port_https: 8443
+            server_name: ""
+          dhcp:
+            enabled: false
+          EOF
+
+          cat >"${ROOT}/nginx.conf" <<EOF
+          pid ${ROOT}/nginx.pid;
+          error_log ${ROOT}/nginx-error.log notice;
+          events { worker_connections 128; }
+          http {
+            access_log off;
+            limit_req_zone \$binary_remote_addr zone=tsk0243_probe:1m rate=20r/s;
+            server {
+              listen 127.0.0.2:443 ssl;
+              server_name ~^[0-9a-f]{32}\\.verify\\.usesafeweb\\.com\$;
+              ssl_certificate ${ROOT}/server.crt;
+              ssl_certificate_key ${ROOT}/server.key;
+              ssl_protocols TLSv1.2 TLSv1.3;
+              location = /api/dns-verification/probes {
+                limit_req zone=tsk0243_probe burst=5 nodelay;
+                limit_req_status 429;
+                proxy_pass http://127.0.0.1:3100;
+                proxy_set_header Host \$host;
+                proxy_set_header Origin \$http_origin;
+                proxy_set_header X-Forwarded-Proto https;
+              }
+              location / { return 404; }
+            }
+            server {
+              listen 127.0.0.3:443 ssl;
+              server_name eph-app.usesafeweb.test;
+              ssl_certificate ${ROOT}/server.crt;
+              ssl_certificate_key ${ROOT}/server.key;
+              ssl_protocols TLSv1.2 TLSv1.3;
+              location / {
+                proxy_pass http://127.0.0.1:3100;
+                proxy_set_header Host \$host;
+                proxy_set_header X-Forwarded-Proto https;
+              }
+            }
+          }
+          EOF
+          cat >"${ROOT}/resolv.conf" <<'EOF'
+          nameserver 127.0.0.53
+          options timeout:1 attempts:1
+          EOF
+
+          cat >website/.tsk0243-eph-browser.mjs <<'EOF'
+          import assert from 'node:assert/strict';
+          import { chromium } from 'playwright';
+          const base='https://eph-app.usesafeweb.test';
+          const pin=process.env.EPH_SPKI_PIN;
+          assert.ok(pin);
+          const browser=await chromium.launch({headless:true,args:[`--ignore-certificate-errors-spki-list=${pin}`]});
+          const context=await browser.newContext({viewport:{width:390,height:844}});
+          const page=await context.newPage();
+          try {
+            await page.goto(`${base}/en-GB/start`,{waitUntil:'domcontentloaded'});
+            const now=Date.now();
+            await page.evaluate(({state})=>sessionStorage.setItem('usesafeweb:core:v1',JSON.stringify(state)),{state:{schemaVersion:1,scope:'ab'.repeat(16),createdAt:now-1000,hardExpiresAt:now+120000,locale:'en-GB',phase:'verify',loginRequired:false,retryCount:0,deviceFamily:'android'}});
+            const r=await page.goto(`${base}/en-GB/verify?platform=android`,{waitUntil:'domcontentloaded'});
+            assert.equal(r?.status(),200);
+            await page.locator('[data-verification-outcome]').waitFor({state:'visible'});
+            await page.waitForFunction(()=>document.querySelector('[data-verification-outcome]')?.getAttribute('data-verification-outcome')==='working',null,{timeout:10000});
+            const panel=page.locator('[data-verification-outcome]');
+            assert.equal(await panel.getAttribute('data-protection-state'),'protected/verified');
+            assert.equal(await panel.getAttribute('data-parent-confirmation'),'confirmed');
+            assert.equal(await page.evaluate(()=>sessionStorage.getItem('usesafeweb:dns-verification:v1')),null);
+            const vals=await page.evaluate(()=>Object.values(sessionStorage));
+            for(const v of vals){assert.equal(v.includes('observationToken'),false);assert.equal(v.includes('challenge'),false);assert.equal(v.includes('verify.usesafeweb.com'),false);}
+            await page.locator('[data-core-view-protection]').click();
+            await page.waitForURL(`${base}/en-GB/protection?platform=android`);
+            await page.locator('[data-dns-verification-state]').waitFor({state:'visible'});
+            await page.waitForFunction(()=>document.querySelector('[data-dns-verification-state]')?.getAttribute('data-dns-verification-state')==='working',null,{timeout:10000});
+            assert.equal(await page.locator('[data-dns-verification-state]').getAttribute('data-protection-state'),'protected/verified');
+            console.log('TSK0243_EPH_BROWSER_REAL_DNS_TLS_PROTECTION_MAP=PASS');
+          } finally { await context.close(); await browser.close(); }
+          EOF
+
+          cat >"${ROOT}/inside.sh" <<'EOF'
+          #!/usr/bin/env bash
+          set -Eeuo pipefail
+          : "${ROOT:?}" "${SECRET:?}" "${PIN:?}" "${NODE_DIR:?}" "${NPM:?}" "${WORKSPACE:?}"
+          ip link set lo up
+          mount --make-rprivate /
+          mount --bind "${ROOT}/resolv.conf" /etc/resolv.conf
+          pids=()
+          cleanup(){ set +e; for p in "${pids[@]}"; do kill -TERM -- "-${p}" >/dev/null 2>&1 || true; done; sleep 1; for p in "${pids[@]}"; do kill -KILL -- "-${p}" >/dev/null 2>&1 || true; done; }
+          trap cleanup EXIT
+          setsid /opt/AdGuardHome/AdGuardHome -c "${ROOT}/AdGuardHome.yaml" -w "${ROOT}/adguard" --no-check-update >"${ROOT}/adguard.log" 2>&1 & pids+=("$!")
+          setsid runuser -u azureusr -- env PATH="${NODE_DIR}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" USESAFEWEB_DNS_VERIFICATION_SIGNING_SECRET="${SECRET}" USESAFEWEB_PUBLIC_ORIGIN='https://eph-app.usesafeweb.test' NEXT_TELEMETRY_DISABLED=1 bash -lc "cd '${WORKSPACE}/website' && exec '${NPM}' start -- --hostname 127.0.0.1 --port 3100" >"${ROOT}/next.log" 2>&1 & pids+=("$!")
+          setsid nginx -p "${ROOT}/nginx/" -c "${ROOT}/nginx.conf" -g 'daemon off;' >"${ROOT}/nginx-stdout.log" 2>&1 & pids+=("$!")
+          ready=0
+          for _ in $(seq 1 30); do
+            if dig +time=1 +tries=1 +short @127.0.0.53 eph-app.usesafeweb.test A 2>/dev/null | grep -qx 127.0.0.3 && curl -fsS --max-time 2 http://127.0.0.1:3100/en-GB >/dev/null 2>&1 && curl -fsS --max-time 2 --cacert "${ROOT}/ca.crt" https://eph-app.usesafeweb.test/en-GB >/dev/null 2>&1; then ready=1; break; fi
+            sleep 1
+          done
+          if [[ "${ready}" -ne 1 ]]; then
+            echo 'TSK0243_EPH_READY=FAIL'; tail -n 100 "${ROOT}/adguard.log" || true; tail -n 100 "${ROOT}/next.log" || true; tail -n 100 "${ROOT}/nginx-stdout.log" || true; test ! -f "${ROOT}/nginx-error.log" || tail -n 100 "${ROOT}/nginx-error.log"; exit 1
+          fi
+          echo 'TSK0243_EPH_READY=PASS'
+
+          scope="$(openssl rand -hex 16)"
+          req="$(curl -fsS --max-time 5 --cacert "${ROOT}/ca.crt" -H 'Content-Type: application/json' --data "{\"scope\":\"${scope}\"}" https://eph-app.usesafeweb.test/api/dns-verification/requests)"
+          challenge="$(python3 -c 'import json,sys;print(json.load(sys.stdin)["challenge"])' <<<"${req}")"
+          host="$(python3 -c 'import json,sys;print(json.load(sys.stdin)["probeHost"])' <<<"${req}")"
+          request_token="$(python3 -c 'import json,sys;print(json.load(sys.stdin)["requestToken"])' <<<"${req}")"
+          [[ "${host}" == "${challenge}.verify.usesafeweb.com" && "${challenge}" =~ ^[0-9a-f]{32}$ ]]
+          printf '%s\n' "${challenge}" >"${ROOT}/challenge.txt"
+          [[ "$(dig +time=1 +tries=1 +short "${host}" A | tr -d '\r')" == 127.0.0.2 ]]
+          echo 'TSK0243_EPH_ACTUAL_SYSTEM_DNS_REWRITE=PASS'
+
+          openssl s_client -connect 127.0.0.2:443 -servername "${host}" -CAfile "${ROOT}/ca.crt" -verify_return_error </dev/null 2>"${ROOT}/tls.err" | openssl x509 -noout -checkhost "${host}" >/dev/null
+          echo 'TSK0243_EPH_TLS_HOST_AUTHENTICATION=PASS'
+
+          wo="$(curl -sS --max-time 5 --cacert "${ROOT}/ca.crt" -o /dev/null -w '%{http_code}' -H 'Origin: https://evil.example' -H 'Content-Type: text/plain' --data-binary "${request_token}" "https://${host}/api/dns-verification/probes")"
+          [[ "${wo}" == 403 ]]
+          wrong_challenge="$(openssl rand -hex 16)"; [[ "${wrong_challenge}" != "${challenge}" ]]
+          wh="$(curl -sS --max-time 5 --cacert "${ROOT}/ca.crt" -o /dev/null -w '%{http_code}' -H 'Origin: https://eph-app.usesafeweb.test' -H 'Content-Type: text/plain' --data-binary "${request_token}" "https://${wrong_challenge}.verify.usesafeweb.com/api/dns-verification/probes")"
+          [[ "${wh}" == 403 ]]
+          wp="$(curl -sS --max-time 5 --cacert "${ROOT}/ca.crt" -o /dev/null -w '%{http_code}' "https://${host}/")"; [[ "${wp}" == 404 ]]
+          echo 'TSK0243_EPH_WRONG_ORIGIN_HOST_PATH_FAIL_CLOSED=PASS'
+
+          probe="$(curl -fsS --max-time 5 --cacert "${ROOT}/ca.crt" -H 'Origin: https://eph-app.usesafeweb.test' -H 'Content-Type: text/plain' --data-binary "${request_token}" "https://${host}/api/dns-verification/probes")"
+          observation_token="$(python3 -c 'import json,sys;print(json.load(sys.stdin)["observationToken"])' <<<"${probe}")"
+          result_body="$(python3 -c 'import json,sys;print(json.dumps({"requestToken":sys.argv[1],"observationToken":sys.argv[2]},separators=(",",":")))' "${request_token}" "${observation_token}")"
+          verified="$(curl -fsS --max-time 5 --cacert "${ROOT}/ca.crt" -H 'Content-Type: application/json' --data-binary "${result_body}" https://eph-app.usesafeweb.test/api/dns-verification/results)"
+          python3 -c 'import json,sys;v=json.load(sys.stdin);assert v["dnsPath"]=="verified-fresh",v;assert v["reasonCode"]=="TECH_VERIFIED",v;assert v["verifierVersion"]=="private-rewrite-v1",v;assert isinstance(v.get("observedAt"),int),v' <<<"${verified}"
+          echo 'TSK0243_EPH_REQUEST_PROBE_RESULT=PASS'
+
+          last="${observation_token: -1}"; if [[ "${last}" == A ]]; then replacement=B; else replacement=A; fi
+          tampered="${observation_token::-1}${replacement}"
+          tampered_body="$(python3 -c 'import json,sys;print(json.dumps({"requestToken":sys.argv[1],"observationToken":sys.argv[2]},separators=(",",":")))' "${request_token}" "${tampered}")"
+          ts="$(curl -sS --max-time 5 --cacert "${ROOT}/ca.crt" -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' --data-binary "${tampered_body}" https://eph-app.usesafeweb.test/api/dns-verification/results)"; [[ "${ts}" == 403 ]]
+          echo 'TSK0243_EPH_TAMPER_FAIL_CLOSED=PASS'
+
+          runuser -u azureusr -- env PATH="${NODE_DIR}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" EPH_SPKI_PIN="${PIN}" bash -lc "cd '${WORKSPACE}/website' && exec node .tsk0243-eph-browser.mjs"
+
+          mkdir -p "${ROOT}/rate"
+          for i in $(seq 1 30); do (curl -sS --max-time 5 --cacert "${ROOT}/ca.crt" -o /dev/null -w '%{http_code}\n' -H 'Origin: https://eph-app.usesafeweb.test' -H 'Content-Type: text/plain' --data-binary "${request_token}" "https://${host}/api/dns-verification/probes" >"${ROOT}/rate/${i}.status" || true) & done
+          wait
+          cat "${ROOT}"/rate/*.status | grep -qx 429
+          echo 'TSK0243_EPH_RATE_LIMIT=PASS'
+          [[ ! -e "${ROOT}/adguard/data/querylog.json" && ! -e "${ROOT}/adguard/data/querylog.json.1" ]]
+          find "${ROOT}/adguard" -maxdepth 3 -type f -print | sed "s#${ROOT}#<EPH>#g" | sort >"${ROOT}/adguard-files.txt"
+          ! grep -Ei querylog "${ROOT}/adguard-files.txt"
+          echo 'TSK0243_EPH_QUERY_HISTORY_STORAGE_ABSENT=PASS'
+          echo 'TSK0243_EPH_INNER_ACCEPTANCE=PASS'
+          EOF
+          chmod 700 "${ROOT}/inside.sh"
+          NODE_DIR="$(dirname "$(command -v node)")"; NPM="$(command -v npm)"
+          sudo env ROOT="${ROOT}" SECRET="${SECRET}" PIN="${PIN}" NODE_DIR="${NODE_DIR}" NPM="${NPM}" WORKSPACE="${GITHUB_WORKSPACE}" unshare --mount --net --pid --fork --mount-proc "${ROOT}/inside.sh"
+          unset SECRET
+
+          challenge="$(cat "${ROOT}/challenge.txt")"; host="${challenge}.verify.usesafeweb.com"
+          [[ -z "$(dig +time=2 +tries=1 +short @127.0.0.1 "${host}" A 2>/dev/null || true)" ]]
+          observed=0; answers=0
+          for resolver in 9.9.9.9 1.1.1.1; do
+            full="$(dig +time=2 +tries=1 +noall +comments @"${resolver}" "${host}" A 2>/dev/null || true)"; out="$(dig +time=2 +tries=1 +short @"${resolver}" "${host}" A 2>/dev/null || true)"
+            if grep -Eq 'status: (NOERROR|NXDOMAIN|SERVFAIL|REFUSED)' <<<"${full}"; then observed=$((observed+1)); [[ -z "${out}" ]] || answers=$((answers+1)); fi
+          done
+          [[ "${observed}" -ge 1 && "${answers}" -eq 0 ]]
+          echo 'TSK0243_PUBLIC_FALSE_POSITIVE_GUARD=PASS'
+          echo 'TSK0243_EPH_TARGET_PROOF=PASS'
+          echo 'TSK0243_DISPOSITION=PARTIAL_TARGET_EVIDENCE_ONLY'
+          echo 'TSK0243_PRODUCTION_MUTATION=NONE'
+          echo 'TSK0243_PARTICIPANT_PAYMENT_LAUNCH_ACTION=NONE'
+
+      - name: Always verify live target unchanged and teardown
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          SNAP="${RUNNER_TEMP}/tsk0243-live-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.snapshot"
+          test -f "${SNAP}"
+          IFS='|' read -r before_sha before_pid before_state before_privacy <"${SNAP}"
+          after_sha="$(sudo sha256sum /opt/AdGuardHome/AdGuardHome.yaml | awk '{print $1}')"
+          after_pid="$(sudo systemctl show -p MainPID --value AdGuardHome.service)"
+          after_state="$(sudo systemctl is-active AdGuardHome.service)"
+          after_privacy="$(sudo python3 - <<'PY'
+          import hashlib,json,yaml
+          with open('/opt/AdGuardHome/AdGuardHome.yaml',encoding='utf-8') as f:d=yaml.safe_load(f) or {}
+          q=d.get('querylog') or {}; s=d.get('statistics') or {}; r=d.get('user_rules') or []
+          v={'qe':q.get('enabled'),'qf':q.get('file_enabled'),'se':s.get('enabled'),'rc':len(r) if isinstance(r,list) else -1,'rh':hashlib.sha256(json.dumps(r,sort_keys=True,separators=(',',':')).encode()).hexdigest()}
+          print(hashlib.sha256(json.dumps(v,sort_keys=True,separators=(',',':')).encode()).hexdigest())
+          PY
+          )"
+          [[ "${after_sha}" == "${before_sha}" && "${after_pid}" == "${before_pid}" && "${after_state}" == "${before_state}" && "${after_privacy}" == "${before_privacy}" ]]
+          sudo rm -rf "${RUNNER_TEMP}/tsk0243-eph-v2-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          rm -f "${SNAP}" website/.tsk0243-eph-browser.mjs
+          git diff --check
+          test -z "$(git status --porcelain)"
+          echo 'TSK0243_LIVE_ADGUARD_UNCHANGED=PASS'
+          echo 'TSK0243_EPHEMERAL_TEARDOWN=PASS'
+          echo 'TSK0243_DEPLOYMENT_DNS_PROXY_CERT_MUTATION=NONE'
