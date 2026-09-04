@@ -73,9 +73,9 @@ def valid(d):
     active=[x.get('url') for x in s.get('filters',[]) if x.get('enabled')]
     return (
       dns.get('upstream_dns') == ['https://dns10.quad9.net/dns-query'] and
-      dns.get('fallback_dns') == [] and dns.get('private_upstream') == [] and dns.get('upstream_dns_file') == '' and
-      (dns.get('edns_client_subnet') or {}).get('enabled') is False and
-      (dns.get('edns_client_subnet') or {}).get('use_custom') is False and
+      (dns.get('fallback_dns') or []) == [] and (dns.get('private_upstream') or []) == [] and not dns.get('upstream_dns_file') and
+      bool((dns.get('edns_client_subnet') or {}).get('enabled')) is False and
+      bool((dns.get('edns_client_subnet') or {}).get('use_custom')) is False and
       dns.get('anonymize_client_ip') is True and
       q.get('enabled') is False and q.get('file_enabled') is False and
       st.get('enabled') is False and
@@ -83,6 +83,19 @@ def valid(d):
       active == ['https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt'] and
       d['settings'].get('user_rules') == [] and d['settings'].get('whitelist_filters') == []
     )
+
+def semantic(s):
+    dns=s.get('dns') or {}; ecs=dns.get('edns_client_subnet') or {}; fl=s.get('filtering') or {}; http=s.get('http') or {}; doh=http.get('doh') or {}
+    return {
+      'upstream_dns': list(dns.get('upstream_dns') or []),
+      'fallback_dns': list(dns.get('fallback_dns') or []),
+      'private_upstream': list(dns.get('private_upstream') or []),
+      'upstream_dns_file': dns.get('upstream_dns_file') or '',
+      'ecs_enabled': bool(ecs.get('enabled')),
+      'ecs_use_custom': bool(ecs.get('use_custom')),
+      'safesearch_enabled': bool(fl.get('safesearch_enabled')),
+      'doh_insecure_enabled': bool(doh.get('insecure_enabled')),
+    }
 
 assert valid(base)
 mut=[]
@@ -94,6 +107,15 @@ for name,case in mut:
     if valid(case): raise SystemExit(f'negative fixture accepted: {name}')
     print(f'NEGATIVE_{name.upper()}=REJECTED')
 print('NEGATIVE_SELF_TEST=PASS')
+
+runtime=copy.deepcopy(base['settings'])
+runtime['dns']['edns_client_subnet']['custom_ip']=''
+runtime['dns']['edns_client_subnet'].pop('custom_ip_configured',None)
+runtime['dns'].pop('private_upstream',None)
+runtime['filtering'].pop('safesearch_enabled',None)
+runtime['http']['doh']['routes']=['/dns-query']
+assert semantic(runtime) == semantic(base['settings'])
+print('NORMALIZATION_SELF_TEST=PASS')
 PY
 }
 
@@ -129,58 +151,68 @@ import copy, hashlib, json, sys, yaml
 approved_path, live_path, candidate_path, before_path, desired_path, changes_path=sys.argv[1:]
 a=json.load(open(approved_path,encoding='utf-8'))['settings']
 with open(live_path,encoding='utf-8') as f: live=yaml.safe_load(f) or {}
-
-CONTROLLED={
+DIRECT={
  'dhcp': ('enabled',),
- 'dns': ('anonymize_client_ip','bind_hosts','bootstrap_dns','cache_optimistic','cache_size','cache_ttl_max','cache_ttl_min','edns_client_subnet','fallback_dns','port','private_upstream','ratelimit','ratelimit_subnet_len_ipv4','ratelimit_subnet_len_ipv6','ratelimit_whitelist','refuse_any','upstream_dns','upstream_dns_file','upstream_mode'),
- 'filtering': ('blocking_mode','filtering_enabled','parental_enabled','protection_enabled','safebrowsing_enabled','safesearch_enabled'),
- 'http': ('address','doh'),
+ 'dns': ('anonymize_client_ip','bind_hosts','bootstrap_dns','cache_optimistic','cache_size','cache_ttl_max','cache_ttl_min','fallback_dns','port','ratelimit','ratelimit_subnet_len_ipv4','ratelimit_subnet_len_ipv6','ratelimit_whitelist','refuse_any','upstream_dns','upstream_dns_file','upstream_mode'),
+ 'filtering': ('blocking_mode','filtering_enabled','parental_enabled','protection_enabled','safebrowsing_enabled'),
+ 'http': ('address',),
  'querylog': ('enabled','file_enabled','interval'),
  'statistics': ('enabled','interval'),
  'tls': ('enabled','force_https','port_dns_over_quic','port_dns_over_tls','port_https','server_name'),
 }
 TOP=('user_rules','whitelist_filters')
-
 def projection(obj):
     out={}
-    for section,keys in CONTROLLED.items():
+    for section,keys in DIRECT.items():
         src=obj.get(section) or {}; out[section]={k:copy.deepcopy(src.get(k)) for k in keys}
+    dns=obj.get('dns') or {}; ecs=dns.get('edns_client_subnet') or {}
+    out['dns']['private_upstream']=list(dns.get('private_upstream') or [])
+    out['dns']['edns_client_subnet']={'enabled':bool(ecs.get('enabled')),'use_custom':bool(ecs.get('use_custom'))}
+    fl=obj.get('filtering') or {}; out['filtering']['safesearch_enabled']=bool(fl.get('safesearch_enabled'))
+    http=obj.get('http') or {}; doh=http.get('doh') or {}; out['http']['doh']={'insecure_enabled':bool(doh.get('insecure_enabled'))}
     for k in TOP: out[k]=copy.deepcopy(obj.get(k))
     out['filters']=[{k:x.get(k) for k in ('enabled','name','url')} for x in (obj.get('filters') or [])]
     return out
-
 def patch(base):
     out=copy.deepcopy(base)
-    for section,keys in CONTROLLED.items():
+    for section,keys in DIRECT.items():
         if not isinstance(out.get(section),dict): out[section]={}
         for k in keys: out[section][k]=copy.deepcopy(a[section][k])
+    if not isinstance(out['dns'].get('edns_client_subnet'),dict): out['dns']['edns_client_subnet']={}
+    out['dns']['edns_client_subnet']['enabled']=bool((a['dns'].get('edns_client_subnet') or {}).get('enabled'))
+    out['dns']['edns_client_subnet']['use_custom']=bool((a['dns'].get('edns_client_subnet') or {}).get('use_custom'))
+    out['dns']['private_upstream']=copy.deepcopy(a['dns'].get('private_upstream') or [])
+    out['filtering']['safesearch_enabled']=bool(a['filtering'].get('safesearch_enabled'))
+    if not isinstance(out['http'].get('doh'),dict): out['http']['doh']={}
+    out['http']['doh']['insecure_enabled']=bool((a['http'].get('doh') or {}).get('insecure_enabled'))
     for k in TOP: out[k]=copy.deepcopy(a[k])
     desired_filters=[{k:x.get(k) for k in ('enabled','name','url')} for x in (a.get('filters') or [])]
     by_url={x.get('url'):copy.deepcopy(x) for x in (base.get('filters') or [])}
     rebuilt=[]
     for want in desired_filters:
         cur=by_url.get(want.get('url'))
-        if cur is None:
-            raise SystemExit('cannot safely synthesize missing filter runtime identity: '+str(want.get('url')))
-        cur['enabled']=want.get('enabled'); cur['name']=want.get('name'); cur['url']=want.get('url')
-        rebuilt.append(cur)
+        if cur is None: raise SystemExit('cannot safely synthesize missing filter runtime identity: '+str(want.get('url')))
+        cur['enabled']=want.get('enabled'); cur['name']=want.get('name'); cur['url']=want.get('url'); rebuilt.append(cur)
     out['filters']=rebuilt
     return out
-
 def strip_controlled(obj):
     out=copy.deepcopy(obj)
-    for section,keys in CONTROLLED.items():
+    for section,keys in DIRECT.items():
         if isinstance(out.get(section),dict):
             for k in keys: out[section].pop(k,None)
+    dns=out.get('dns') or {}; dns.pop('private_upstream',None)
+    ecs=dns.get('edns_client_subnet')
+    if isinstance(ecs,dict): ecs.pop('enabled',None); ecs.pop('use_custom',None)
+    fl=out.get('filtering') or {}; fl.pop('safesearch_enabled',None)
+    http=out.get('http') or {}; doh=http.get('doh')
+    if isinstance(doh,dict): doh.pop('insecure_enabled',None)
     for k in TOP: out.pop(k,None)
     out.pop('filters',None)
     return out
-
 before=projection(live); desired=projection(a); candidate=patch(live)
 assert projection(candidate)==desired
 assert strip_controlled(candidate)==strip_controlled(live)
 changes=[]
-
 def walk(prefix,x,y):
     if isinstance(x,dict) and isinstance(y,dict):
         for k in sorted(set(x)|set(y)): walk(prefix+[str(k)],x.get(k),y.get(k))
@@ -207,17 +239,23 @@ checks=[]
 def eq(path,x,y):
     if x!=y: raise SystemExit(f'drift:{path}')
     checks.append(path)
-controlled={
+direct={
  'dhcp': ('enabled',),
- 'dns': ('anonymize_client_ip','bind_hosts','bootstrap_dns','cache_optimistic','cache_size','cache_ttl_max','cache_ttl_min','edns_client_subnet','fallback_dns','port','private_upstream','ratelimit','ratelimit_subnet_len_ipv4','ratelimit_subnet_len_ipv6','ratelimit_whitelist','refuse_any','upstream_dns','upstream_dns_file','upstream_mode'),
- 'filtering': ('blocking_mode','filtering_enabled','parental_enabled','protection_enabled','safebrowsing_enabled','safesearch_enabled'),
- 'http': ('address','doh'),
+ 'dns': ('anonymize_client_ip','bind_hosts','bootstrap_dns','cache_optimistic','cache_size','cache_ttl_max','cache_ttl_min','fallback_dns','port','ratelimit','ratelimit_subnet_len_ipv4','ratelimit_subnet_len_ipv6','ratelimit_whitelist','refuse_any','upstream_dns','upstream_dns_file','upstream_mode'),
+ 'filtering': ('blocking_mode','filtering_enabled','parental_enabled','protection_enabled','safebrowsing_enabled'),
+ 'http': ('address',),
  'querylog': ('enabled','file_enabled','interval'),
  'statistics': ('enabled','interval'),
  'tls': ('enabled','force_https','port_dns_over_quic','port_dns_over_tls','port_https','server_name'),
 }
-for section,keys in controlled.items():
+for section,keys in direct.items():
     for k in keys: eq(f'{section}.{k}',(live.get(section) or {}).get(k),a[section][k])
+dns=live.get('dns') or {}; adns=a.get('dns') or {}; ecs=dns.get('edns_client_subnet') or {}; aecs=adns.get('edns_client_subnet') or {}
+eq('dns.private_upstream',list(dns.get('private_upstream') or []),list(adns.get('private_upstream') or []))
+eq('dns.edns_client_subnet.enabled',bool(ecs.get('enabled')),bool(aecs.get('enabled')))
+eq('dns.edns_client_subnet.use_custom',bool(ecs.get('use_custom')),bool(aecs.get('use_custom')))
+eq('filtering.safesearch_enabled',bool((live.get('filtering') or {}).get('safesearch_enabled')),bool((a.get('filtering') or {}).get('safesearch_enabled')))
+eq('http.doh.insecure_enabled',bool(((live.get('http') or {}).get('doh') or {}).get('insecure_enabled')),bool(((a.get('http') or {}).get('doh') or {}).get('insecure_enabled')))
 norm=lambda xs:[{k:x.get(k) for k in ('enabled','name','url')} for x in (xs or [])]
 eq('filters',norm(live.get('filters')),norm(a.get('filters')))
 for k in ('user_rules','whitelist_filters'): eq(k,live.get(k),a[k])
