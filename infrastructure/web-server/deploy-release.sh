@@ -15,6 +15,8 @@ fail(){ printf 'USESAFEWEB_DEPLOY=FAIL reason=%s\n' "$1" >&2; exit 1; }
 [[ "$(npm --version)" == '10.9.8' ]] || fail npm_version
 [[ -f "${ENV_FILE}" ]] || fail environment_file
 [[ "$(stat -c '%a %U:%G' "${ENV_FILE}")" == '600 root:root' ]] || fail environment_permissions
+env_release="$(awk -F= '$1=="USESAFEWEB_RELEASE_SHA" {sub(/^[^=]*=/,""); print; exit}' "${ENV_FILE}")"
+[[ "${env_release}" == "${RELEASE_SHA}" ]] || fail environment_release_binding
 
 release="${INSTALL_ROOT}/releases/${RELEASE_SHA}"
 current="${INSTALL_ROOT}/current"

@@ -29,6 +29,7 @@ export function readServerRuntimeConfig(env: RuntimeEnvironment = process.env): 
   const signingSecret = env.USESAFEWEB_DNS_VERIFICATION_SIGNING_SECRET;
   const releaseSha = env.USESAFEWEB_RELEASE_SHA;
   if (
+    env.NODE_ENV !== 'production' ||
     typeof signingSecret !== 'string' ||
     Buffer.byteLength(signingSecret, 'utf8') < 32 ||
     typeof releaseSha !== 'string' ||

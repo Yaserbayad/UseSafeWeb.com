@@ -202,6 +202,24 @@ test('server-issued probe requests generate their own challenge and are scope-bo
   );
 });
 
+test('signing-key rotation immediately invalidates all material signed by the previous key', async () => {
+  const api = await loadApi();
+  const oldSecret = 'o'.repeat(64);
+  const rotatedSecret = 'n'.repeat(64);
+  const issued = api.createDnsProbeRequest(scope, oldSecret, now);
+  const observationToken = api.createDnsVerificationObservationFromProbeRequest(
+    issued.requestToken,
+    issued.probeHost,
+    oldSecret,
+    now + 1_000,
+  );
+  assert.equal(api.verifyDnsProbeRequest(issued.requestToken, rotatedSecret, now + 1_001), null);
+  assert.equal(
+    api.verifyDnsVerificationObservation(observationToken, rotatedSecret, now + 1_001, scope, issued.challenge),
+    null,
+  );
+});
+
 test('positive observation is derived only from valid request token plus exact current probe host', async () => {
   const api = await loadApi();
   const issued = api.createDnsProbeRequest(scope, secret, now);

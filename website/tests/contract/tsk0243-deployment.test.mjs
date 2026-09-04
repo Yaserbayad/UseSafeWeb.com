@@ -42,6 +42,7 @@ test('server runtime configuration fails closed and never returns the signing se
   assert.equal(JSON.stringify(api.publicRuntimeStatus(good)).includes('s'.repeat(32)), false);
 
   for (const invalid of [
+    { ...good, NODE_ENV: 'development' },
     { ...good, USESAFEWEB_DNS_VERIFICATION_SIGNING_SECRET: undefined },
     { ...good, USESAFEWEB_DNS_VERIFICATION_SIGNING_SECRET: 'short' },
     { ...good, USESAFEWEB_PUBLIC_ORIGIN: 'http://usesafeweb.example' },
@@ -102,6 +103,7 @@ test('Next.js production output and direct-host service are deterministic and fa
   assert.match(deploy, /10\.9\.8/);
   assert.match(deploy, /npm ci --ignore-scripts --no-fund --no-audit/);
   assert.match(deploy, /npm run validate/);
+  assert.match(deploy, /environment_release_binding/);
   assert.match(deploy, /\.next\/standalone/);
   assert.match(deploy, /SERVICE=["']usesafeweb-web\.service["']/);
   assert.match(deploy, /systemctl restart ["']\$\{SERVICE\}["']/);
