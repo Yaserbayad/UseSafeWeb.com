@@ -1,0 +1,172 @@
+name: Diagnose post-TSK0243 governed frontier v2
+
+on:
+  push:
+    branches:
+      - diag/post-tsk0243-frontier-v2-20260904
+    paths:
+      - .github/workflows/diag-post-tsk0243-frontier-v2-20260904.yml
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact diagnostic branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate exact canonical basis and compute frontier
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = '5f08f91aa8e95c0650bff9ddf876de9da9dd573d'
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = '142a0d45b381136567d78545f063333f1e74901f'
+          changed="$(git diff --name-only HEAD^ HEAD)"
+          test "${changed}" = '.github/workflows/diag-post-tsk0243-frontier-v2-20260904.yml'
+          python3 - <<'PY'
+          from __future__ import annotations
+          import csv
+          import re
+          from pathlib import Path
+
+          wbs_path = Path('Plans/Master/WBS/master-wbs.csv')
+          state_path = Path('CURRENT_STATE.md')
+          with wbs_path.open(newline='', encoding='utf-8-sig') as f:
+              rows_list = list(csv.DictReader(f))
+          rows = {r['Task_ID']: r for r in rows_list}
+          order = {r['Task_ID']: i for i, r in enumerate(rows_list)}
+          state = state_path.read_text(encoding='utf-8')
+
+          heading_re = re.compile(r'^##+\s+(TSK-\d{4})\b[^\n]*$', re.M)
+          headings = list(heading_re.finditer(state))
+          sections = {}
+          for i, m in enumerate(headings):
+              end = headings[i + 1].start() if i + 1 < len(headings) else len(state)
+              sections.setdefault(m.group(1), []).append(state[m.start():end])
+
+          def explicit_status(tid: str):
+              pats = [
+                  re.compile(rf'`{re.escape(tid)}(?:[^`\n]*)?`\s*:\s*\*\*(PASS|TODO|WAITING|BLOCKED)\*\*', re.I),
+                  re.compile(r'\bRuntime state:\s*\**`?(PASS|TODO|WAITING|BLOCKED)`?\**', re.I),
+                  re.compile(r'\bremains\s+\**`?(PASS|TODO|WAITING|BLOCKED)`?\**', re.I),
+                  re.compile(r'\bstatus(?:\s+remains)?\s*:\s*\**`?(PASS|TODO|WAITING|BLOCKED)`?\**', re.I),
+              ]
+              for sec in reversed(sections.get(tid, [])):
+                  found = []
+                  for p in pats:
+                      m = p.search(sec)
+                      if m:
+                          found.append((m.start(), m.group(1).upper()))
+                  if found:
+                      found.sort()
+                      return found[0][1], 'CURRENT_STATE_EXPLICIT'
+              r = rows.get(tid, {})
+              v = (r.get('Execution_State') or '').strip().upper()
+              if v in {'PASS','TODO','WAITING','BLOCKED'}:
+                  return v, 'WBS_FALLBACK'
+              return 'UNKNOWN', 'NONE'
+
+          def legal_external(tid: str) -> bool:
+              r = rows.get(tid, {})
+              text = ' | '.join(str(v or '') for v in r.values())
+              return ('OWNER_LEGAL_HOLD_2026-08-27' in text or
+                      'OWNER_EXTERNAL_SATISFIED' in state and tid in state and
+                      any(x in (r.get('Title') or '').lower() for x in ('legal','regulatory','compliance','dpia','lia','ico')))
+
+          def dep_state(tid: str):
+              st, src = explicit_status(tid)
+              r = rows.get(tid, {})
+              if st == 'PASS':
+                  return 'PASS', src
+              if (r.get('Plan_Status') or '').strip().upper() == 'NOT_APPLICABLE' and (r.get('Execution_State') or '').strip().upper() == 'PASS':
+                  return 'PASS', 'WBS_EXCLUSION_PASS'
+              if legal_external(tid):
+                  return 'OWNER_EXTERNAL_SATISFIED', 'CR0009'
+              return st, src
+
+          lg07_pass = bool(re.search(r'`LG-07\s+—[^`]*`:\s*\*\*PASS\*\*', state))
+          lg08_pass = bool(re.search(r'`LG-08\s+—[^`]*`:\s*\*\*PASS\*\*', state))
+          print(f'CANONICAL_BASE=5f08f91aa8e95c0650bff9ddf876de9da9dd573d')
+          print(f'WBS_TASKS={len(rows_list)}')
+          print(f'LG07_PASS={str(lg07_pass).upper()}')
+          print(f'LG08_PASS={str(lg08_pass).upper()}')
+          print('STATUS_CHECK_TSK0243=' + '|'.join(explicit_status('TSK-0243')))
+
+          priority_rank = {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3}
+          candidates = []
+          blocked = []
+          for r in rows_list:
+              tid = r['Task_ID']
+              if (r.get('Lifecycle_Stage') or '').strip() != 'L6':
+                  continue
+              st, stsrc = explicit_status(tid)
+              plan = (r.get('Plan_Status') or '').strip().upper()
+              auth = (r.get('Action_Authority') or '').strip().upper()
+              cap = (r.get('AI_Capability_A0_A4') or '').strip().upper()
+              deps = [x.strip() for x in (r.get('Dependencies') or '').split(';') if x.strip()]
+              dep_info = [(d,) + dep_state(d) for d in deps]
+              dep_bad = [x for x in dep_info if x[1] not in {'PASS','OWNER_EXTERNAL_SATISFIED'}]
+              eligible = (
+                  not lg08_pass and lg07_pass and
+                  st == 'TODO' and
+                  plan not in {'DEFERRED','NOT_APPLICABLE'} and
+                  auth == 'AUTO_ALLOWED' and cap in {'A3','A4'} and
+                  not dep_bad
+              )
+              rec = {
+                  'tid': tid,
+                  'status': st,
+                  'status_source': stsrc,
+                  'priority': (r.get('Priority') or '').strip().upper(),
+                  'critical': (r.get('Critical_Path') or '').strip().upper(),
+                  'order': order[tid],
+                  'title': (r.get('Title') or '').strip(),
+                  'deps': dep_info,
+                  'plan': plan,
+                  'auth': auth,
+                  'cap': cap,
+                  'trigger': (r.get('Trigger') or '').strip(),
+                  'pre': (r.get('Preconditions') or '').strip(),
+                  'acc': (r.get('Acceptance_ID') or '').strip(),
+                  'ver': (r.get('Verification_ID') or '').strip(),
+                  'evd': (r.get('Evidence_ID') or '').strip(),
+                  'acceptance': (r.get('Acceptance_Criteria') or '').strip(),
+                  'risks': (r.get('Risk_Reference') or '').strip(),
+                  'interfaces': (r.get('Interface_Reference') or '').strip(),
+                  'requirements': (r.get('Requirement_Reference') or '').strip(),
+              }
+              if eligible:
+                  candidates.append(rec)
+              elif st not in {'PASS'} and plan not in {'NOT_APPLICABLE'}:
+                  blocked.append((rec, dep_bad))
+
+          candidates.sort(key=lambda x: (priority_rank.get(x['priority'], 99), x['order'], x['tid']))
+          print('ELIGIBLE_L6_BEGIN')
+          for x in candidates:
+              deps = ';'.join(f'{d}:{s}:{src}' for d,s,src in x['deps']) or 'NONE'
+              print('|'.join([x['tid'],x['priority'],x['critical'],str(x['order']),x['status'],x['status_source'],x['cap'],x['auth'],x['title'],deps]))
+          print('ELIGIBLE_L6_END')
+          print(f'ELIGIBLE_L6_COUNT={len(candidates)}')
+          if candidates:
+              x = candidates[0]
+              print('SELECTED_BEGIN')
+              for k in ('tid','title','priority','critical','order','status','status_source','plan','cap','auth','trigger','pre','acc','ver','evd','acceptance','risks','interfaces','requirements'):
+                  print(f'{k.upper()}={x[k]}')
+              print('DEPENDENCIES=' + (';'.join(f'{d}:{s}:{src}' for d,s,src in x['deps']) or 'NONE'))
+              print('SELECTED_END')
+
+          print('NONPASS_L6_BLOCKERS_BEGIN')
+          for x, bad in blocked:
+              if x['status'] == 'TODO' or x['tid'] in {'TSK-0243','TSK-0629'}:
+                  b = ';'.join(f'{d}:{s}:{src}' for d,s,src in bad) or 'NONE'
+                  print('|'.join([x['tid'],x['priority'],x['critical'],x['status'],x['status_source'],x['plan'],x['cap'],x['auth'],x['title'],b]))
+          print('NONPASS_L6_BLOCKERS_END')
+          PY
+          git diff --check HEAD^ HEAD
+          test -z "$(git status --porcelain)"
