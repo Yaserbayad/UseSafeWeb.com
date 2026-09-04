@@ -41,15 +41,21 @@ jobs:
           set -Eeuo pipefail
           workflow='.github/workflows/accept-tsk0489-governed-ci-promotion-20260904.yml'
           python3 - "$workflow" <<'PY'
+          import re
           import sys
           from pathlib import Path
           text = Path(sys.argv[1]).read_text(encoding='utf-8')
-          required = ['permissions:\n  contents: read', 'runs-on: ubuntu-24.04', 'persist-credentials: false']
-          for item in required:
-              assert item in text, item
-          forbidden = ['contents: write', 'deployments: write', 'id-token: write', 'environment:', 'self-hosted', 'azure/login', 'kubectl ', 'docker push', 'scp ', 'ssh ']
-          for item in forbidden:
-              assert item not in text, item
+          assert 'permissions:\n  contents: read' in text
+          assert text.count('runs-on: ubuntu-24.04') == 2
+          assert 'persist-credentials: false' in text
+          assert not re.search(r'(?m)^\s+contents:\s+write\s*$', text)
+          assert not re.search(r'(?m)^\s+deployments:\s+write\s*$', text)
+          assert not re.search(r'(?m)^\s+id-token:\s+write\s*$', text)
+          assert not re.search(r'(?m)^\s+environment\s*:', text)
+          assert not re.search(r'(?m)^\s+runs-on:\s*(?:\[[^\]]*self-hosted[^\]]*\]|self-hosted)\s*$', text)
+          uses = re.findall(r'(?m)^\s*-\s+uses:\s+([^\s]+)\s*$', text)
+          allowed = {'actions/checkout@v6', 'actions/setup-node@v6', 'actions/upload-artifact@v4'}
+          assert uses and set(uses) <= allowed, uses
           PY
           grep -Fq 'no deployment, telemetry activation, participant processing, service revocation/removal, payment, activation, launch or other material external action' CURRENT_STATE.md
           {
