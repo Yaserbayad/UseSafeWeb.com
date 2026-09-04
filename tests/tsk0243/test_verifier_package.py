@@ -1,3 +1,4 @@
+import importlib.util
 import re
 import shutil
 import subprocess
@@ -59,6 +60,70 @@ class VerifierPackageContract(unittest.TestCase):
         self.assertIn("/etc/usesafeweb/verifier-rewrite.env", pipeline)
         self.assertIn("TSK0243_VERIFIER_RULE", pipeline)
         self.assertIn("expected_user_rules", pipeline)
+
+    def test_adguard_privacy_accepts_both_current_authorized_statistics_modes(self) -> None:
+        path = ROOT / "infrastructure/adguard-server/tsk-0243-verifier/manage-rewrite.py"
+        spec = importlib.util.spec_from_file_location("tsk0243_manage_rewrite", path)
+        self.assertIsNotNone(spec)
+        self.assertIsNotNone(spec.loader)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        class FakeApi:
+            def __init__(self, statistics_enabled: bool) -> None:
+                self.statistics_enabled = statistics_enabled
+
+            def request(self, endpoint: str, payload=None):
+                if endpoint == "/querylog/config":
+                    return {"enabled": False}
+                if endpoint == "/stats/config":
+                    return {"enabled": self.statistics_enabled}
+                raise AssertionError(endpoint)
+
+        with tempfile.TemporaryDirectory() as directory:
+            config = Path(directory) / "AdGuardHome.yaml"
+
+            def write_statistics(enabled: bool, interval: str = "1d") -> None:
+                config.write_text(
+                    "querylog:\n"
+                    "  enabled: false\n"
+                    "  file_enabled: false\n"
+                    "statistics:\n"
+                    f"  enabled: {'true' if enabled else 'false'}\n"
+                    f"  interval: {interval}\n"
+                    "dns:\n"
+                    "  anonymize_client_ip: true\n"
+                    "  edns_client_subnet:\n"
+                    "    enabled: false\n"
+                    "filtering:\n"
+                    "  protection_enabled: true\n"
+                    "  filtering_enabled: true\n",
+                    encoding="utf-8",
+                )
+
+            write_statistics(False)
+            module.validate_privacy(FakeApi(False), config)
+
+            write_statistics(True)
+            module.validate_privacy(FakeApi(True), config)
+
+            write_statistics(True, "7d")
+            with self.assertRaises(SystemExit):
+                module.validate_privacy(FakeApi(True), config)
+
+            write_statistics(True)
+            with self.assertRaises(SystemExit):
+                module.validate_privacy(FakeApi(False), config)
+
+    def test_deployment_rollback_restores_release_identity_and_cleans_first_failure(self) -> None:
+        deploy = self.read("infrastructure/web-server/deploy-release.sh")
+        self.assertIn('previous_release_sha=', deploy)
+        self.assertIn('set_release_binding "${previous_release_sha}"', deploy)
+        self.assertIn('rm -f "${current}"', deploy)
+        self.assertRegex(
+            deploy,
+            r'set_release_binding "\$\{previous_release_sha\}"[\s\S]+systemctl restart "\$\{SERVICE\}"',
+        )
 
     def test_renderers_fail_closed_and_never_contain_credentials(self) -> None:
         nginx = self.read("infrastructure/web-server/render-verifier-config.py")
