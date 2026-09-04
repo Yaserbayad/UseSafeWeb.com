@@ -1,0 +1,294 @@
+name: Accept TSK-0451 post-VM server baseline
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infrastructure/adguard-server/tsk-0451-post-vm-security-baseline.sh'
+      - '.github/workflows/accept-tsk-0451-post-vm-server-baseline-20260904.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact main commit
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify production runner identity and source
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "${GITHUB_EVENT_NAME}" == "push" ]]
+          [[ "${GITHUB_REF}" == "refs/heads/main" ]]
+          [[ "${RUNNER_OS}" == "Linux" ]]
+          [[ "${RUNNER_ARCH}" == "X64" ]]
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          [[ "$(id -un)" == "azureusr" ]]
+          [[ "$(git rev-parse HEAD)" == "${GITHUB_SHA}" ]]
+          sudo -n true
+          . /etc/os-release
+          [[ "${ID}" == "ubuntu" ]]
+          [[ "${VERSION_ID}" == "24.04" ]]
+          unit="$(systemctl list-unit-files 'actions.runner.*.service' --no-legend 2>/dev/null | awk 'NR==1 {print $1}' || true)"
+          [[ -n "${unit}" ]]
+          systemctl is-enabled --quiet "${unit}"
+          systemctl is-active --quiet "${unit}"
+          echo 'TARGET_RUNNER=adguardvm'
+          echo 'TARGET_OS=ubuntu-24.04'
+          echo 'RUNNER_SERVICE=PASS'
+
+      - name: Apply bounded TSK-0451 delta
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          script='infrastructure/adguard-server/tsk-0451-post-vm-security-baseline.sh'
+          test -f "${script}"
+          bash -n "${script}"
+          sudo bash "${script}" --apply | tee /tmp/tsk-0451-apply.txt
+          grep -Fq 'PASS ACC_0451=PASS' /tmp/tsk-0451-apply.txt
+          grep -Fq 'PASS VER_0451=PASS' /tmp/tsk-0451-apply.txt
+          grep -Fq 'PASS EVD_0451_SANITIZED_STATUS=PASS' /tmp/tsk-0451-apply.txt
+          printf 'SOURCE_COMMIT=%s\n' "${GITHUB_SHA}" >> /tmp/tsk-0451-apply.txt
+          printf 'SOURCE_SCRIPT_SHA256=%s\n' "$(sha256sum "${script}" | awk '{print $1}')" >> /tmp/tsk-0451-apply.txt
+          echo 'APPLY_JOB=PASS' >> /tmp/tsk-0451-apply.txt
+
+      - name: Upload sanitized apply evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: tsk-0451-apply
+          path: /tmp/tsk-0451-apply.txt
+          if-no-files-found: error
+          retention-days: 7
+
+  independent-verify:
+    needs: apply
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact main commit
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Independently verify VER-0451 on target
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "${GITHUB_EVENT_NAME}" == "push" ]]
+          [[ "${GITHUB_REF}" == "refs/heads/main" ]]
+          [[ "$(hostname -s)" == "adguardvm" ]]
+          [[ "$(id -un)" == "azureusr" ]]
+          [[ "$(git rev-parse HEAD)" == "${GITHUB_SHA}" ]]
+          sudo -n true
+
+          : > /tmp/tsk-0451-verify.txt
+          echo 'TARGET_RUNNER=adguardvm' >> /tmp/tsk-0451-verify.txt
+          echo 'TARGET_OS=ubuntu-24.04' >> /tmp/tsk-0451-verify.txt
+
+          sudo sshd -t
+          echo 'COMMAND=sudo_sshd_-t STATUS=PASS' >> /tmp/tsk-0451-verify.txt
+
+          effective="$(sudo sshd -T 2>/dev/null)"
+          grep -qx 'permitrootlogin no' <<<"${effective}"
+          grep -qx 'passwordauthentication no' <<<"${effective}"
+          echo 'COMMAND=sudo_sshd_-T FIELDS=permitrootlogin,passwordauthentication STATUS=PASS' >> /tmp/tsk-0451-verify.txt
+
+          ufw_verbose="$(sudo ufw status verbose 2>/dev/null)"
+          grep -q '^Status: active$' <<<"${ufw_verbose}"
+          grep -Eq '^Default: deny \(incoming\), allow \(outgoing\)' <<<"${ufw_verbose}"
+          ufw_rules="$(sudo ufw status 2>/dev/null)"
+          grep -Eq '^22/tcp[[:space:]]+ALLOW([[:space:]]|$)' <<<"${ufw_rules}"
+          echo 'COMMAND=sudo_ufw_status_verbose STATUS=PASS default_deny_incoming=1 default_allow_outgoing=1 ssh_22_allowed=1' >> /tmp/tsk-0451-verify.txt
+
+          sudo fail2ban-client -t >/dev/null 2>&1
+          f2b="$(sudo fail2ban-client status sshd 2>/dev/null)"
+          grep -q 'Status for the jail: sshd' <<<"${f2b}"
+          sudo systemctl is-enabled --quiet fail2ban.service
+          sudo systemctl is-active --quiet fail2ban.service
+          echo 'COMMAND=sudo_fail2ban-client_-t STATUS=PASS' >> /tmp/tsk-0451-verify.txt
+          echo 'COMMAND=sudo_fail2ban-client_status_sshd STATUS=PASS' >> /tmp/tsk-0451-verify.txt
+
+          sudo systemctl is-enabled --quiet unattended-upgrades.service
+          sudo systemctl is-enabled --quiet apt-daily.timer
+          sudo systemctl is-enabled --quiet apt-daily-upgrade.timer
+          sudo grep -Fxq 'APT::Periodic::Update-Package-Lists "1";' /etc/apt/apt.conf.d/20auto-upgrades
+          sudo grep -Fxq 'APT::Periodic::Unattended-Upgrade "1";' /etc/apt/apt.conf.d/20auto-upgrades
+          echo 'COMMAND=sudo_systemctl_is-enabled_unattended-upgrades.service STATUS=PASS' >> /tmp/tsk-0451-verify.txt
+          echo 'COMMAND=check_/etc/apt/apt.conf.d/20auto-upgrades STATUS=PASS update_lists_daily=1 unattended_upgrade_daily=1' >> /tmp/tsk-0451-verify.txt
+
+          echo 'PRIVACY=PASS raw_auth_logs=not_emitted banned_ip_list=not_emitted secrets=not_emitted' >> /tmp/tsk-0451-verify.txt
+          printf 'SOURCE_COMMIT=%s\n' "${GITHUB_SHA}" >> /tmp/tsk-0451-verify.txt
+          printf 'SOURCE_SCRIPT_SHA256=%s\n' "$(sha256sum infrastructure/adguard-server/tsk-0451-post-vm-security-baseline.sh | awk '{print $1}')" >> /tmp/tsk-0451-verify.txt
+          echo 'ACC_0451=PASS' >> /tmp/tsk-0451-verify.txt
+          echo 'VER_0451=PASS' >> /tmp/tsk-0451-verify.txt
+          echo 'EVD_0451=PASS' >> /tmp/tsk-0451-verify.txt
+          echo 'INDEPENDENT_VERIFY=PASS' >> /tmp/tsk-0451-verify.txt
+
+      - name: Upload sanitized verification evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: tsk-0451-verify
+          path: /tmp/tsk-0451-verify.txt
+          if-no-files-found: error
+          retention-days: 7
+
+  persist:
+    needs: independent-verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout exact source commit
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: Download sanitized evidence
+        uses: actions/download-artifact@v4
+        with:
+          pattern: tsk-0451-*
+          path: ${{ runner.temp }}/tsk-0451-evidence
+          merge-multiple: true
+
+      - name: Verify evidence, persist EVD-0451 and synchronize runtime
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -Eeuo pipefail
+          git fetch origin main
+          [[ "$(git rev-parse HEAD)" == "${SOURCE_COMMIT}" ]]
+          [[ "$(git rev-parse origin/main)" == "${SOURCE_COMMIT}" ]]
+
+          apply="${RUNNER_TEMP}/tsk-0451-evidence/tsk-0451-apply.txt"
+          verify="${RUNNER_TEMP}/tsk-0451-evidence/tsk-0451-verify.txt"
+          test -f "${apply}"
+          test -f "${verify}"
+          grep -Fq 'APPLY_JOB=PASS' "${apply}"
+          grep -Fq 'ACC_0451=PASS' "${verify}"
+          grep -Fq 'VER_0451=PASS' "${verify}"
+          grep -Fq 'EVD_0451=PASS' "${verify}"
+          grep -Fq 'INDEPENDENT_VERIFY=PASS' "${verify}"
+          grep -Fq 'PRIVACY=PASS raw_auth_logs=not_emitted banned_ip_list=not_emitted secrets=not_emitted' "${verify}"
+
+          evidence_file='TSK_0451_POST_VM_SERVER_BASELINE_EVIDENCE_2026-09-04.md'
+          script='infrastructure/adguard-server/tsk-0451-post-vm-security-baseline.sh'
+          script_blob="$(git hash-object "${script}")"
+          script_sha256="$(sha256sum "${script}" | awk '{print $1}')"
+          apply_sha256="$(sha256sum "${apply}" | awk '{print $1}')"
+          verify_sha256="$(sha256sum "${verify}" | awk '{print $1}')"
+
+          cat > "${evidence_file}" <<EVIDENCE
+          # TSK-0451 post-VM server security baseline evidence
+
+          **Date:** 2026-09-04
+          **Task:** TSK-0451
+          **Acceptance:** ACC-0451
+          **Verification:** VER-0451
+          **Evidence:** EVD-0451
+          **Source commit:** \`${SOURCE_COMMIT}\`
+          **Source script blob:** \`${script_blob}\`
+          **Source script SHA-256:** \`${script_sha256}\`
+          **GitHub Actions run / attempt:** \`${GITHUB_RUN_ID} / ${GITHUB_RUN_ATTEMPT}\`
+          **Target:** repository-scoped self-hosted runner on \`adguardvm\`, Ubuntu 24.04 LTS, running as \`azureusr\` with previously approved non-interactive sudo bridge.
+
+          ## Result
+
+          **PASS.** The target independently proved the complete current TSK-0451 baseline:
+
+          - \`sshd -t\` passed; effective \`sshd -T\` reports \`PermitRootLogin no\` and \`PasswordAuthentication no\`.
+          - \`ufw status verbose\` reports active firewall, default deny incoming / allow outgoing, with SSH on 22/tcp allowed.
+          - Fail2ban configuration validation passed; \`fail2ban.service\` is enabled and active; \`fail2ban-client status sshd\` confirms the \`sshd\` jail is active.
+          - \`unattended-upgrades.service\`, \`apt-daily.timer\`, and \`apt-daily-upgrade.timer\` are enabled.
+          - \`/etc/apt/apt.conf.d/20auto-upgrades\` contains daily \`Update-Package-Lists\` and \`Unattended-Upgrade\` settings.
+          - Evidence is sanitized: no authentication log lines, banned-IP list, credential, private key, token, or secret value is retained here.
+
+          ## Bounded change and rollback safety
+
+          The task-specific apply script first re-verified the already-accepted SSH/UFW state and did **not** rewrite SSH or UFW. It then installed/configured only Fail2ban and the unattended-upgrades enablement required by ACC-0451. A new Fail2ban jail file is syntax-tested before service enablement; if enablement fails, the prior jail file is restored (or the new file removed) before failure is reported.
+
+          ## Sanitized run evidence
+
+          - Apply transcript SHA-256: \`${apply_sha256}\`
+          - Independent verification transcript SHA-256: \`${verify_sha256}\`
+          - Both workflow artifacts were retained for seven days; only privacy-safe PASS/status markers are reproduced in durable project evidence.
+
+          ## Source basis
+
+          - Ubuntu 24.04 OpenSSH: https://manpages.ubuntu.com/manpages/noble/man5/sshd_config.5.html
+          - Ubuntu 24.04 Fail2ban jail configuration: https://manpages.ubuntu.com/manpages/noble/man5/jail.conf.5.html
+          - Ubuntu 24.04 Fail2ban client: https://manpages.ubuntu.com/manpages/noble/man1/fail2ban-client.1.html
+          - Ubuntu Server automatic updates: https://ubuntu.com/server/docs/how-to/software/automatic-updates/
+
+          ## Non-inference
+
+          This PASS proves only TSK-0451. It does not pass TSK-0455 or any dependent task, deploy application/DNS/TLS changes, distribute profiles/certificates, revoke services, process participants, enable telemetry, authorize public/market activation, or satisfy launch gates.
+          EVIDENCE
+          sed -i 's/^          //' "${evidence_file}"
+
+          evidence_blob="$(git hash-object "${evidence_file}")"
+          state='CURRENT_STATE.md'
+          heading='## TSK-0451 current accepted stable state — 2026-09-04'
+          ! grep -Fq "${heading}" "${state}"
+          now="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          sed -i -E "0,/^\*\*Updated:\*\*/s|^\*\*Updated:\*\*.*$|**Updated:** ${now}|" "${state}"
+          cat >> "${state}" <<STATE
+
+          ${heading}
+
+          \`TSK-0451 — Implement only the post-VM server-configuration baseline: SSH hardening, firewall rules, Fail2ban, unattended upgrades, and verifier-ready evidence\`: **PASS** under current \`ACC-0451 / VER-0451 / EVD-0451\`.
+
+          - Action authority: **A4 / AUTO_ALLOWED**; predecessor \`TSK-0375\` remained PASS and current CR-0012 sequencing permits independent work while \`TSK-0455\` remains deferred/non-PASS.
+          - Exact target: repository-scoped self-hosted runner on production \`adguardvm\`, Ubuntu 24.04 LTS, \`azureusr\`, using the existing approved non-interactive sudo execution bridge.
+          - Source: \`${script}\`, blob \`${script_blob}\`, SHA-256 \`${script_sha256}\`, source commit \`${SOURCE_COMMIT}\`.
+          - Durable evidence: \`${evidence_file}\`, blob \`${evidence_blob}\`; GitHub Actions run/attempt \`${GITHUB_RUN_ID} / ${GITHUB_RUN_ATTEMPT}\`.
+          - Verification: \`sshd -t\`; effective \`sshd -T\` for root/password authentication; \`ufw status verbose\` plus SSH rule; \`fail2ban-client -t\` and \`fail2ban-client status sshd\`; enabled/active Fail2ban; enabled unattended-upgrades/APT timers; exact \`20auto-upgrades\` daily settings. A separate verification job independently re-ran VER-0451 after mutation on the same approved production target.
+          - Security/privacy: no SSH/UFW rewrite occurred in TSK-0451; Fail2ban configuration is validated before activation and restored on activation failure; evidence omits authentication logs, banned IPs, credentials, keys, tokens, secrets, and unnecessary personal data.
+          - **Non-inference:** \`TSK-0455\` remains DEFERRED / WAITING under DEC-0059 / CR-0012 with unchanged ACC/VER/EVD; its dependents remain blocked. No application/DNS/TLS deployment, profile/certificate distribution, service revocation, participant processing, telemetry, public/market activation, launch, or downstream gate PASS is inferred.
+          STATE
+          sed -i 's/^          //' "${state}"
+
+          python3 Plans/Master/Tools/validate_master_plan.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "${state}" "${evidence_file}"
+          git diff --cached --check
+          ! git diff --cached | grep -E 'ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,}|-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----'
+          git status --short
+          test "$(git status --porcelain | sed 's/^...//' | sort)" = "$(printf '%s\n%s\n' CURRENT_STATE.md "${evidence_file}" | sort)"
+          git commit -m 'state: accept TSK-0451 post-VM server baseline'
+          state_commit="$(git rev-parse HEAD)"
+          state_blob="$(git rev-parse "${state_commit}:CURRENT_STATE.md")"
+          committed_evidence_blob="$(git rev-parse "${state_commit}:${evidence_file}")"
+          [[ "${committed_evidence_blob}" == "${evidence_blob}" ]]
+
+          git fetch origin main
+          [[ "$(git rev-parse origin/main)" == "${SOURCE_COMMIT}" ]]
+          git push origin HEAD:main
+          git fetch origin main
+          [[ "$(git rev-parse origin/main)" == "${state_commit}" ]]
+          [[ "$(git rev-parse "origin/main:CURRENT_STATE.md")" == "${state_blob}" ]]
+          [[ "$(git rev-parse "origin/main:${evidence_file}")" == "${evidence_blob}" ]]
+          git show 'origin/main:CURRENT_STATE.md' | grep -Fq "${heading}"
+          git show "origin/main:${evidence_file}" | grep -Fq '**PASS.** The target independently proved the complete current TSK-0451 baseline:'
+          echo "TSK0451_STATE_COMMIT=${state_commit}"
+          echo "TSK0451_STATE_BLOB=${state_blob}"
+          echo "TSK0451_EVIDENCE_BLOB=${evidence_blob}"
+          echo 'TSK0451_REMOTE_READBACK=PASS'
