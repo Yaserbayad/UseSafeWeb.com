@@ -1,0 +1,97 @@
+name: Guarded owner environment runtime sync
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/runtime-owner-environment-sync-20260904.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync-runtime-state:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out triggering head
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Verify exact runtime-state input
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          test "$(git rev-parse HEAD:CURRENT_STATE.md)" = "6ea0af29a1e38d43e8b7daf0247713fae83bd74f"
+          test "$(wc -c < CURRENT_STATE.md | tr -d ' ')" = "521426"
+          test "$(grep -Fxc '## Owner-reported web/Firebase readiness synchronization — 2026-09-04' CURRENT_STATE.md || true)" = "0"
+
+      - name: Append owner-reported readiness facts without reconstructing prior state
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import datetime
+          import re
+
+          p = Path('CURRENT_STATE.md')
+          data = p.read_bytes()
+          stamp = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace('+00:00', 'Z').encode()
+          pattern = re.compile(br'^\*\*Updated:\*\* [^\r\n]+', re.M)
+          data, n = pattern.subn(b'**Updated:** ' + stamp, data, count=1)
+          if n != 1:
+              raise SystemExit('Updated timestamp marker not found exactly once')
+
+          heading = '## Owner-reported web/Firebase readiness synchronization — 2026-09-04'
+          if heading.encode() in data:
+              raise SystemExit('Synchronization heading already exists')
+
+          block = r'''
+
+## Owner-reported web/Firebase readiness synchronization — 2026-09-04
+
+- The Project Owner reports that the designated UseSafeWeb web host is provisioned at `20.71.90.212` and is the intended deployment target. A prior project-session read-only probe reported the `hmgweb` self-hosted runner/machine, aaPanel/Nginx/TLS/Node baseline and `/www/wwwroot/usesafeweb` application root; those environment facts are retained as deployment inputs but are **not re-verified by this synchronization** and do not create task/gate PASS.
+- The Project Owner reports that the Firebase project has been created, the Firebase Web app registered, Google Authentication enabled, and `usesafeweb.com` plus `www.usesafeweb.com` added as authorized domains.
+- Firebase billing remains intentionally deferred. No Identity Platform upgrade is inferred.
+- The Project Owner reported manually running `npm install firebase` on the web host before the governed dependency/release step. Cleanup of any resulting untracked `node_modules`, `package.json`, or `package-lock.json` artifacts is **not yet independently verified** and must be rechecked before governed deployment; canonical dependency versions remain owned by the repository lockfile/package contract.
+- Firebase web configuration values/production runtime binding are not claimed configured by this synchronization. No service-account private key, admin credential, production token, AdGuard credential, or other secret is recorded here or authorized for Git.
+- These owner-reported facts are eligible as inputs to the relevant Firebase/authentication, release and deployment-readiness tasks (including `TSK-0377` and `TSK-0469`) only after the task's own current dependencies/gates are satisfied; their acceptance criteria still require independent target/configuration verification before PASS.
+- **Non-inference / fences:** no deployment, production activation, participant/user processing, billing/payment, telemetry activation, broader public launch, task PASS, gate PASS or legal/compliance conclusion is created by this synchronization. The owner instruction to wait for plan/gate deployment eligibility remains controlling.
+'''
+          p.write_bytes(data.rstrip(b'\n') + block.encode('utf-8'))
+          PY
+
+      - name: Verify bounded result
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(grep -Fxc '## Owner-reported web/Firebase readiness synchronization — 2026-09-04' CURRENT_STATE.md)" = "1"
+          grep -Fq '20.71.90.212' CURRENT_STATE.md
+          grep -Fq 'Firebase project has been created' CURRENT_STATE.md
+          grep -Fq 'Firebase billing remains intentionally deferred' CURRENT_STATE.md
+          grep -Fq 'not yet independently verified' CURRENT_STATE.md
+          grep -Fq 'No service-account private key' CURRENT_STATE.md
+          grep -Fq 'wait for plan/gate deployment eligibility remains controlling' CURRENT_STATE.md
+          grep -Fq 'TSK-0455 stays DEFERRED / WAITING' CURRENT_STATE.md
+          grep -Fq 'No deployment, live-device/profile/certificate action' CURRENT_STATE.md
+
+      - name: Commit exact guarded state sync and self-remove
+        shell: bash
+        run: |
+          set -euo pipefail
+          TRIGGER_SHA="${GITHUB_SHA}"
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "${TRIGGER_SHA}"
+          rm .github/workflows/runtime-owner-environment-sync-20260904.yml
+          mapfile -t changed < <(git status --porcelain | sed -E 's/^.. //')
+          printf '%s\n' "${changed[@]}" | sort > /tmp/changed.txt
+          printf '%s\n' '.github/workflows/runtime-owner-environment-sync-20260904.yml' 'CURRENT_STATE.md' | sort > /tmp/expected.txt
+          diff -u /tmp/expected.txt /tmp/changed.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md .github/workflows/runtime-owner-environment-sync-20260904.yml
+          git commit -m 'state: record owner-reported web and Firebase readiness'
+          git push origin HEAD:main --force-with-lease=refs/heads/main:${TRIGGER_SHA}
