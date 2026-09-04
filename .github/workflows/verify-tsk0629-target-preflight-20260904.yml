@@ -1,0 +1,129 @@
+name: TSK-0629 target preflight
+
+on:
+  push:
+    branches:
+      - verify/tsk-0629-target-preflight-20260904
+    paths:
+      - '.github/workflows/verify-tsk0629-target-preflight-20260904.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact preflight head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify canonical base and target identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE='041caa3858b61fb4119a66e9f139ccb3ebd318a0'
+          EXPECTED_REF='refs/heads/verify/tsk-0629-target-preflight-20260904'
+          [[ "${GITHUB_EVENT_NAME}" == 'push' ]]
+          [[ "${GITHUB_REF}" == "${EXPECTED_REF}" ]]
+          [[ "$(git merge-base HEAD "${BASE}")" == "${BASE}" ]]
+          [[ "$(git diff --name-only "${BASE}" HEAD)" == '.github/workflows/verify-tsk0629-target-preflight-20260904.yml' ]]
+          [[ "${RUNNER_OS}" == 'Linux' ]]
+          [[ "${RUNNER_ARCH}" == 'X64' ]]
+          [[ "$(hostname -s)" == 'adguardvm' ]]
+          [[ "$(id -un)" == 'azureusr' ]]
+          sudo -n true
+          . /etc/os-release
+          [[ "${ID}" == 'ubuntu' ]]
+          [[ "${VERSION_ID}" == '24.04' ]]
+          [[ "$(git rev-parse HEAD)" == "${GITHUB_SHA}" ]]
+          echo 'TSK0629_TARGET_IDENTITY=PASS'
+          echo 'TSK0629_CANONICAL_BASE=041caa3858b61fb4119a66e9f139ccb3ebd318a0'
+
+      - name: Read-only AdGuard and verifier path preflight
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          command -v dig >/dev/null
+          command -v curl >/dev/null
+          command -v python3 >/dev/null
+          command -v openssl >/dev/null
+          sudo systemctl is-active --quiet AdGuardHome.service
+          sudo test -f /opt/AdGuardHome/AdGuardHome.yaml
+
+          sudo python3 - <<'PY'
+          import yaml
+          p='/opt/AdGuardHome/AdGuardHome.yaml'
+          with open(p, encoding='utf-8') as f:
+              d=yaml.safe_load(f) or {}
+          q=d.get('querylog') or {}
+          s=d.get('statistics') or {}
+          rules=d.get('user_rules') or []
+          if not isinstance(rules, list):
+              raise SystemExit('invalid user_rules shape')
+          verify_rules=[r for r in rules if isinstance(r,str) and 'verify.usesafeweb.com' in r.lower()]
+          assert q.get('enabled') is False
+          assert q.get('file_enabled') is False
+          assert s.get('enabled') is False
+          print('TSK0629_QUERY_HISTORY_DISABLED=PASS')
+          print('TSK0629_STATS_DISABLED=PASS')
+          print('TSK0629_VERIFY_RULE_PRESENT=' + ('YES' if verify_rules else 'NO'))
+          print('TSK0629_VERIFY_RULE_COUNT=' + str(len(verify_rules)))
+          PY
+
+          challenge="$(openssl rand -hex 16)"
+          host="${challenge}.verify.usesafeweb.com"
+
+          local_status='NO_ANSWER'
+          if answer="$(dig +time=2 +tries=1 +short @127.0.0.1 "${host}" A 2>/dev/null)" && [[ -n "${answer}" ]]; then
+            local_status='ANSWER'
+          fi
+          echo "TSK0629_LOCAL_ADGUARD_RANDOM_PROBE=${local_status}"
+
+          public_observed=0
+          public_answer=0
+          for resolver in 9.9.9.9 1.1.1.1; do
+            out="$(dig +time=2 +tries=1 +short @"${resolver}" "${host}" A 2>/dev/null || true)"
+            full="$(dig +time=2 +tries=1 +noall +comments @"${resolver}" "${host}" A 2>/dev/null || true)"
+            if grep -Eq 'status: (NOERROR|NXDOMAIN|SERVFAIL|REFUSED)' <<<"${full}"; then
+              public_observed=$((public_observed+1))
+              [[ -z "${out}" ]] || public_answer=$((public_answer+1))
+            fi
+          done
+          echo "TSK0629_PUBLIC_RESOLVERS_OBSERVED=${public_observed}"
+          echo "TSK0629_PUBLIC_RANDOM_PROBE_ANSWER_COUNT=${public_answer}"
+
+          scope="$(openssl rand -hex 16)"
+          req_body="$(mktemp)"
+          trap 'rm -f "${req_body}"' EXIT
+          http_code="$(curl --silent --show-error --max-time 8 --output "${req_body}" --write-out '%{http_code}' \
+            --header 'Content-Type: application/json' \
+            --data "{\"scope\":\"${scope}\"}" \
+            'https://usesafeweb.com/api/dns-verification/requests' || true)"
+          case "${http_code}" in
+            201) app_state='ISSUER_AVAILABLE' ;;
+            404) app_state='ISSUER_NOT_DEPLOYED' ;;
+            503) app_state='ISSUER_UNCONFIGURED' ;;
+            000|'') app_state='ISSUER_UNREACHABLE' ;;
+            *) app_state="ISSUER_HTTP_${http_code}" ;;
+          esac
+          echo "TSK0629_PUBLIC_VERIFIER_ISSUER=${app_state}"
+
+          echo 'TSK0629_PREFLIGHT_MUTATION=NONE'
+          echo 'TSK0629_DEPLOYMENT_ACTION=NONE'
+          echo 'TSK0629_DNS_CONFIG_ACTION=NONE'
+          echo 'TSK0629_PROXY_CONFIG_ACTION=NONE'
+          echo 'TSK0629_CERTIFICATE_ACTION=NONE'
+          echo 'TSK0629_PARTICIPANT_ACTION=NONE'
+          echo 'TSK0629_PAYMENT_ACTION=NONE'
+          echo 'TSK0629_LAUNCH_ACTION=NONE'
+          echo 'TSK0629_TARGET_PREFLIGHT=PASS'
