@@ -1,0 +1,53 @@
+name: Inspect TSK-0146 current contract
+
+on:
+  push:
+    branches:
+      - diag/post-cr0015-frontier-20260904-v1
+    paths:
+      - .github/workflows/diag-tsk0146-contract.yml
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: diag/post-cr0015-frontier-20260904-v1
+          fetch-depth: 1
+      - name: Inspect canonical contract and evidence references
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv, json
+          from pathlib import Path
+          with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='') as f:
+              rows=list(csv.DictReader(f))
+          r=next(x for x in rows if x['Task_ID']=='TSK-0146')
+          print('TSK0146_ROW=' + json.dumps(r, sort_keys=True))
+          needles=['ACC-0146','VER-0146','EVD-0146','DEC-0053','CR-0006','TSK-0146']
+          roots=[Path('Plans/Master'),Path('CURRENT_STATE.md'),Path('docs'),Path('contracts'),Path('evidence')]
+          seen=set()
+          for root in roots:
+              paths=[root] if root.is_file() else (list(root.rglob('*')) if root.exists() else [])
+              for p in paths:
+                  if not p.is_file() or p.suffix.lower() not in {'.md','.txt','.csv','.yaml','.yml','.json'}: continue
+                  try: text=p.read_text(encoding='utf-8')
+                  except Exception: continue
+                  for n in needles:
+                      if n in text:
+                          key=(str(p),n)
+                          if key in seen: continue
+                          seen.add(key)
+                          print(f'MATCH={p}::{n}')
+                          lines=text.splitlines()
+                          for i,line in enumerate(lines):
+                              if n in line:
+                                  lo=max(0,i-2); hi=min(len(lines),i+3)
+                                  for j in range(lo,hi): print(f'SNIP[{j+1}]={lines[j]}')
+                                  break
+          PY
