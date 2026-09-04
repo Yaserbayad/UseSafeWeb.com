@@ -22,7 +22,7 @@ test('TSK-0453 pins deterministic formatting and keeps lint/type checks locally 
   assert.match(pkg.scripts?.['test:contract'] ?? '', /tsk0453\.test\.mjs/);
 });
 
-test('TSK-0453 defines review ownership for critical and governance paths', () => {
+test('TSK-0453 records advisory ownership routing for critical and governance paths', () => {
   const owners = readRepo('.github/CODEOWNERS');
   assert.match(owners, /^\/\.github\/\s+@Yaserbayad$/m);
   assert.match(owners, /^\/Plans\/Master\/\s+@Yaserbayad$/m);
@@ -40,7 +40,10 @@ test('TSK-0453 change/review policy includes generated/config impact and bounded
   assert.match(policy, /exception/i);
   assert.match(policy, /owner/i);
   assert.match(policy, /expir/i);
-  assert.match(policy, /branch protection|ruleset/i);
+  assert.match(policy, /deterministic automated/i);
+  assert.match(policy, /not a mandatory merge condition/i);
+  assert.match(policy, /AUTO_ALLOWED/);
+  assert.doesNotMatch(policy, /TSK-0453 cannot claim/i);
   assert.match(template, /generated/i);
   assert.match(template, /configuration/i);
   assert.match(template, /exception/i);

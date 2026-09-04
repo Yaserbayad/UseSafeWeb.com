@@ -20,7 +20,7 @@ The TSK-0453 GitHub Actions workflow runs formatting, linting, type checking, an
 
 Every pull request must identify application/source, generated, configuration, infrastructure, workflow, documentation, and governance impact when applicable. Generated artifacts are changed only when their owning process requires durable publication; otherwise regenerate them during verification and keep them out of Git.
 
-Changes to critical paths declared in `.github/CODEOWNERS` require owner review as repository policy. **GitHub only makes that requirement merge-blocking when the `main` branch is protected by a branch protection rule or ruleset requiring Code Owner review.** CODEOWNERS alone is review-routing metadata, not proof of platform enforcement.
+Changes to critical paths declared in `.github/CODEOWNERS` retain advisory owner-routing metadata for visibility, but owner/Code Owner approval is **not a mandatory merge condition**. Under DEC-0060/CR-0013, ordinary governed `AUTO_ALLOWED` changes are accepted through deterministic automated local/CI quality and change-policy verification instead of a human approval gate.
 
 ## Exceptions
 
@@ -35,6 +35,6 @@ An exception to a required check or review rule must be explicit, narrow, and ti
 
 No permanent or silent bypass is allowed. A failed check is fixed rather than disabled unless a recorded, unexpired exception explicitly authorizes the bounded deviation.
 
-## Current platform enforcement boundary
+## Autonomous review boundary
 
-Source policy and CODEOWNERS can be versioned here. Merge-blocking review enforcement is a GitHub repository setting. Until branch protection/rulesets are verified to require the intended review on `main`, TSK-0453 cannot claim that critical-path review is technically enforced.
+Branch protection or required Code Owner approval is not required by ACC-0453 under DEC-0060/CR-0013. CODEOWNERS remains advisory routing metadata only. Formatting, linting, type checking, focused change-policy contracts, applicable tests/build/audits, generated/configuration impact coverage, and bounded exception documentation remain mandatory. A separate current human-authority, safety, security, legal, identity, contract, material-spend, strategic or irreversible-action boundary still overrides this policy where applicable.

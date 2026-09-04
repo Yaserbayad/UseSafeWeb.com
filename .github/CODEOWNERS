@@ -1,4 +1,4 @@
-# Critical/governance paths. GitHub only enforces these approvals when branch protection/rulesets require Code Owner review.
+# Critical/governance path ownership/routing metadata. Under DEC-0060/CR-0013 this is advisory and does not require human/Code Owner approval to merge.
 /.github/ @Yaserbayad
 /Plans/Master/ @Yaserbayad
 /CURRENT_STATE.md @Yaserbayad

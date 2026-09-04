@@ -26,10 +26,10 @@ Describe any generated or configuration change and its owning source/process:
 
 Evidence / run IDs:
 
-## Review
+## Review / automated governance
 
-- [ ] CODEOWNERS critical-path review applies
-- [ ] No critical-path review applies
+- [ ] Applicable automated critical-path quality/change-policy verification passed
+- [ ] Optional CODEOWNERS routing/review considered where useful; human approval is not a default merge gate
 
 ## Exception, if any
 

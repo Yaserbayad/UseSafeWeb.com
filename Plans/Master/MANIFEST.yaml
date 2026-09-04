@@ -4,7 +4,7 @@ canonical_root: Plans/Master
 source_plan:
   name: UseSafeWeb_Master_Plan_FINAL.md
   sha256: 04fe68fe4e922322cb878c3c35f97e0b5b4862a333df4c313cbfc2b359ebfc1e
-  status: 2.0-owner-frozen / OWNER_FREEZE_2026-08-27 / OWNER_TECHNICAL_COMMERCIAL_AMENDMENT_APPLIED / OWNER_LEGAL_HOLD_ACTIVE_TO_2027-08-27 / OWNER_AZURE_HANDOFF_BOUNDARY_APPLIED_2026-08-27 / POST_FREEZE_CR_0001_DEPENDENCY_REPAIR_2026-08-27 / OWNER_LEGAL_SEQUENCING_OVERRIDE_ACTIVE_TO_2027-08-27 / CR_0003_CR_0004_HISTORICAL_SEQUENCING_SUPERSEDED / OWNER_INTEGRATED_PRODUCT_FIRST_HUMAN_VALIDATION_SEQUENCE_2026-08-29 / PRE_PRODUCT_HUMAN_VALIDATION_EXCLUDED / OWNER_V1_OPTIONAL_ACCOUNT_SCOPE_2026-08-30 / OWNER_AUTONOMY_PRODUCTION_ONLY_CR_0007 / OWNER_PROPORTIONAL_EVIDENCE_AUTHORITY_NORMALIZATION_CR_0008 / OWNER_EXTERNAL_LEGAL_SCOPE_CR_0009 / OWNER_STRUCTURAL_NORMALIZATION_CR_0010 / OWNER_STALE_CANDIDATE_RECONCILIATION_CR_0011 / OWNER_SINGLE_WORKING_SERVER_RECOVERY_DEFERRAL_CR_0012
+  status: 2.0-owner-frozen / OWNER_FREEZE_2026-08-27 / OWNER_TECHNICAL_COMMERCIAL_AMENDMENT_APPLIED / OWNER_LEGAL_HOLD_ACTIVE_TO_2027-08-27 / OWNER_AZURE_HANDOFF_BOUNDARY_APPLIED_2026-08-27 / POST_FREEZE_CR_0001_DEPENDENCY_REPAIR_2026-08-27 / OWNER_LEGAL_SEQUENCING_OVERRIDE_ACTIVE_TO_2027-08-27 / CR_0003_CR_0004_HISTORICAL_SEQUENCING_SUPERSEDED / OWNER_INTEGRATED_PRODUCT_FIRST_HUMAN_VALIDATION_SEQUENCE_2026-08-29 / PRE_PRODUCT_HUMAN_VALIDATION_EXCLUDED / OWNER_V1_OPTIONAL_ACCOUNT_SCOPE_2026-08-30 / OWNER_AUTONOMY_PRODUCTION_ONLY_CR_0007 / OWNER_PROPORTIONAL_EVIDENCE_AUTHORITY_NORMALIZATION_CR_0008 / OWNER_EXTERNAL_LEGAL_SCOPE_CR_0009 / OWNER_STRUCTURAL_NORMALIZATION_CR_0010 / OWNER_STALE_CANDIDATE_RECONCILIATION_CR_0011 / OWNER_SINGLE_WORKING_SERVER_RECOVERY_DEFERRAL_CR_0012 / OWNER_AUTONOMOUS_REVIEW_POLICY_CR_0013
 migration_prompt:
   name: UseSafeWeb_Master_Plan_Modularization_Prompt(1).txt
   sha256: 49031063a84f9b56ed98b5b07782f1d9818b01b84e0761d3c48018fc07ef5e5b
@@ -337,16 +337,17 @@ canonicalization:
   canonical_activation_condition: TSK-0009 publication PASS plus TSK-0011 exact GitHub read-back PASS; volatile execution state is then rebaselined in repository CURRENT_STATE.md under TSK-0010
 
 post_freeze_change_control:
-  latest_change: CR-0011
-  previous_change: CR-0010
-  date: '2026-09-03'
-  status: owner-approved stale-candidate correction-intent reconciliation and governance-invariant hardening; current CR-0010 task/dependency/runtime semantics preserved
-  authority: explicit current Project Owner authorization 2026-09-03 to rebase the intended corrections onto current CR-0010 rather than publish the stale candidate verbatim; DEC-0058/CR-0011; actual law/safety/security/platform/technical reality remains higher authority
+  latest_change: CR-0013
+  previous_change: CR-0012
+  date: '2026-09-04'
+  status: owner-approved removal of mandatory human/Code Owner merge approval from TSK-0453 in favor of deterministic automated critical-path quality/change-policy verification
+  authority: explicit current Project Owner instruction 2026-09-04; DEC-0060/CR-0013; actual law/safety/security/platform/technical reality remains higher authority
   affected_scope:
-  - decision/change-control/root/manifest metadata, Layer-5 hierarchy-status and recurring-dependency clarification, deterministic validator, generated reconstruction and checksums
-  - no WBS task row, dependency edge, relationship index, gate, milestone, requirement, constraint, risk, interface, product scope, action authority, runtime PASS/evidence or material-action fence changes
-  - stale candidate numeric structure, G-00..G-17 sequencing, exact critical-path count and superseded statuses/dates are not adopted
-  semantic_delta: parent hierarchy completion is explicitly derived-only; recurring/event cadence work cannot be an ordinary hard predecessor; current canonical equivalents of other candidate corrections are preserved/no-op and superseded items remain superseded
+  - TSK-0453 Acceptance_Criteria and synchronized acceptance register
+  - DEC-0060 and CR-0013 change-control metadata
+  - repository review/CI policy, pull-request review wording, focused TSK-0453 contract/workflow, generated reconstruction and checksums
+  - CURRENT_STATE reconciliation after complete verification; no dependency edge, action authority, gate, requirement, interface, risk, TSK-0455 contract or material-action fence change
+  semantic_delta: critical-path human/Code Owner approval is advisory/not mandatory for ordinary governed AUTO_ALLOWED work; deterministic automated local/CI quality and change-policy verification remains mandatory; genuine separate human-authority boundaries remain unchanged
   change_record: Registers/EXCEPTIONS_CHANGE_CONTROLS.md#post-freeze-material-change-records
 
 generated_assembly_contract:

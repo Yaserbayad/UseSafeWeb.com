@@ -30,7 +30,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = 'eb35f3b10356396c5117e3f47d0b0378953e2157'
+          python3 -c 'import csv; f=open("Plans/Master/WBS/master-wbs.csv", newline="", encoding="utf-8-sig"); r=next(x for x in csv.DictReader(f) if x["Task_ID"]=="TSK-0453"); assert r["Dependencies"]=="TSK-0380"; assert r["Acceptance_Criteria"]=="Checks run locally/CI; critical-path changes are subject to deterministic automated quality/change-policy verification without mandatory human or Code Owner approval; generated/configuration changes are included; exceptions are documented and time-bounded."'
           python3 tests/repository-structure/verify_structure.py
           python3 Plans/Master/Tools/validate_master_plan.py
 
