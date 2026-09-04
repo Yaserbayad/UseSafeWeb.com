@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-04T12:53:11Z
+**Updated:** 2026-09-04T16:26:38Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -3339,3 +3339,27 @@ This PASS creates no deployment, telemetry activation, participant-facing mutati
 ## Queue status after TSK-0489 reconciliation
 
 `TSK-0489` is runtime/WBS PASS. No successor is preselected by this synchronization. Recompute the next eligible governed action from the post-synchronization canonical WBS, graph, current runtime evidence, gates, constraints, interfaces, and action authority before further execution.
+
+## TSK-0243 current accepted stable state — 2026-09-04 — ISOLATED TARGET EVIDENCE PARTIAL
+
+`TSK-0243` remains `TODO`. A bounded isolated-target proof now provides durable target-like evidence without changing any production/public runtime.
+
+Accepted partial evidence:
+
+- `TSK_0243_ISOLATED_TARGET_PARTIAL_EVIDENCE_2026-09-04.md`.
+- Exact proof source head `5a60d95197948d5d46f96224765345e10c73dcde`.
+- GitHub Actions run/job `33888891780 / 101075410406`: **PASS** on the exact proof head.
+- The isolated proof passed DNS rewrite, TLS host authentication, wrong-origin fail-closed, signed-result/tamper handling, browser Protection Map, rate limiting, query-history-storage absence, public false-positive guard, and rollback/teardown checks.
+- Final safety guard: `TSK0243_LIVE_ADGUARD_UNCHANGED=PASS`; `TSK0243_EPHEMERAL_TEARDOWN=PASS`; production DNS/proxy/certificate mutation `NONE`; participant/payment/launch action `NONE`.
+- Evidence disposition: `PARTIAL_TARGET_EVIDENCE_ONLY`.
+
+Acceptance status:
+
+- No WBS, dependency, gate, `ACC-0243`, `VER-0243`, `EVD-0243`, authorization, or material-action semantics changed.
+- The isolated proof does **not** establish the remaining production/public externally routed DNS/TLS/proxy trust boundary required by the current target-environment verification contract; `TSK-0243` is not PASS.
+- Production/public deployment, DNS/proxy/certificate/profile/service mutation, participant processing, payment, activation, and launch remain not authorized/not completed by this evidence.
+
+Queue consequence:
+
+- This synchronization publishes partial evidence only; it creates no task/gate/milestone status transition.
+- After canonical promotion and read-back, recompute the deterministic eligible frontier from the current durable Master Plan and checkpoint before further governed work.
