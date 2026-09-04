@@ -35,7 +35,7 @@ for target, kind in [
     ('ACC-0489', 'acceptance'),
     ('VER-0489', 'verified_by'),
     ('EVD-0489', 'evidence_required'),
-    ('INT-0015', 'interface'),
+    ('INT-0015', 'uses_interface'),
 ]:
     assert f'- target: {target}\n      type: {kind}' in block
 
