@@ -1,0 +1,63 @@
+name: Fix TSK-0243 Nginx regex once
+
+on:
+  push:
+    branches:
+      - verify/tsk-0243-ephemeral-target-20260904
+    paths:
+      - '.github/workflows/fix-tsk0243-nginx-regex-once-20260904.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix-once:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Prove quoted regex syntax then apply the one-line correction
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE='041caa3858b61fb4119a66e9f139ccb3ebd318a0'
+          TARGET='.github/workflows/verify-tsk0243-ephemeral-target-v2-20260904.yml'
+          SELF='.github/workflows/fix-tsk0243-nginx-regex-once-20260904.yml'
+          [[ "${GITHUB_REF}" == 'refs/heads/verify/tsk-0243-ephemeral-target-20260904' ]]
+          [[ "$(git merge-base HEAD "${BASE}")" == "${BASE}" ]]
+          [[ "$(git diff-tree --no-commit-id --name-only -r HEAD)" == "${SELF}" ]]
+
+          cat >"${RUNNER_TEMP}/nginx-regex-canary.conf" <<'EOF'
+          events { worker_connections 16; }
+          http {
+            server {
+              listen 127.0.0.1:18080;
+              server_name "~^[0-9a-f]{32}\.verify\.usesafeweb\.com$";
+              return 204;
+            }
+          }
+          EOF
+          nginx -t -c "${RUNNER_TEMP}/nginx-regex-canary.conf"
+          echo 'TSK0243_NGINX_QUOTED_REGEX_CANARY=PASS'
+
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('.github/workflows/verify-tsk0243-ephemeral-target-v2-20260904.yml')
+          s=p.read_text(encoding='utf-8')
+          old='server_name ~^[0-9a-f]{32}\\\\.verify\\\\.usesafeweb\\\\.com\\$;'
+          new='server_name "~^[0-9a-f]{32}\\\\.verify\\\\.usesafeweb\\\\.com\\$";'
+          assert s.count(old)==1, f'expected exactly one unquoted regex, found {s.count(old)}'
+          s=s.replace(old,new)
+          p.write_text(s,encoding='utf-8')
+          PY
+          rm "${SELF}"
+          git diff --check
+          [[ "$(git diff --name-only)" == $'.github/workflows/fix-tsk0243-nginx-regex-once-20260904.yml\n.github/workflows/verify-tsk0243-ephemeral-target-v2-20260904.yml' ]]
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'verify: quote TSK-0243 nginx regex'
+          git push origin HEAD:verify/tsk-0243-ephemeral-target-20260904
