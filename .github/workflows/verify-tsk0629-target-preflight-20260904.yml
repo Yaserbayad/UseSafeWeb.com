@@ -127,3 +127,38 @@ jobs:
           echo 'TSK0629_PAYMENT_ACTION=NONE'
           echo 'TSK0629_LAUNCH_ACTION=NONE'
           echo 'TSK0629_TARGET_PREFLIGHT=PASS'
+
+      - name: Discover disposable target harness capability
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE='041caa3858b61fb4119a66e9f139ccb3ebd318a0'
+          echo 'TSK0629_TOOLING_BEGIN'
+          for tool in docker podman unshare nsenter ip node npm npx chromium chromium-browser google-chrome openssl nginx caddy; do
+            if command -v "${tool}" >/dev/null 2>&1; then
+              echo "TOOL_${tool//-/_}=YES"
+            else
+              echo "TOOL_${tool//-/_}=NO"
+            fi
+          done
+          if sudo test -x /opt/AdGuardHome/AdGuardHome; then
+            echo 'TOOL_ADGUARDHOME=YES'
+            sudo /opt/AdGuardHome/AdGuardHome --version 2>/dev/null | head -n 1 | sed -E 's/[[:space:]]+/ /g' | sed 's/^/ADGUARDHOME_VERSION=/'
+            sudo /opt/AdGuardHome/AdGuardHome --help 2>&1 | grep -E -- '(^|[[:space:]])(-c|--config|-w|--work-dir|--no-check-update)([=[:space:]]|$)' | head -n 20 | sed 's/^/ADGUARDHOME_OPTION=/' || true
+          else
+            echo 'TOOL_ADGUARDHOME=NO'
+          fi
+          if command -v docker >/dev/null 2>&1; then
+            if docker info >/dev/null 2>&1; then echo 'DOCKER_USABLE=YES'; else echo 'DOCKER_USABLE=NO'; fi
+          fi
+          echo 'TSK0629_TOOLING_END'
+
+          echo 'TSK0629_REPO_HARNESS_REFERENCES_BEGIN'
+          git grep -n -I -E 'verify\.usesafeweb\.com|private-rewrite-v1|dnsrewrite|dns rewrite|EPH-DNS|isolated DNS|AdGuardHome.*(--config|-c |--work-dir|-w )|network namespace|ip netns|host-resolver-rules' "${BASE}" -- \
+            ':!.github/workflows/verify-tsk0629-target-preflight-20260904.yml' \
+            ':!Plans/Master/Generated/*' \
+            ':!Plans/Master/WBS/*' \
+            ':!Plans/Master/RELATIONSHIP_INDEX.yaml' | head -n 240 || true
+          echo 'TSK0629_REPO_HARNESS_REFERENCES_END'
+
+          echo 'TSK0629_DISCOVERY_MUTATION=NONE'
