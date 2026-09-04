@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-04T17:11:38Z
+**Updated:** 2026-09-04T17:24:25Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -3395,3 +3395,32 @@ Preserved boundaries:
 Queue consequence:
 
 - Recompute the complete current governed frontier from canonical WBS/graph/runtime/gates/risks/interfaces and Action Authority after canonical promotion/read-back; do not preselect a successor from this synchronization.
+
+
+## TSK-0243 current accepted stable state — 2026-09-04 — PUBLIC TARGET PREFLIGHT WAITING
+
+`TSK-0243 — Implement privacy-safe DNS protection verification`: **WAITING** under current `ACC-0243 / VER-0243 / EVD-0243`. The task is not PASS.
+
+New durable evidence:
+
+- `TSK_0243_PUBLIC_TARGET_PREFLIGHT_WAITING_2026-09-04.md`.
+- Exact external preflight head `8f2bae96a137e5b62eb6c2ac6409b607000f89d2`; GitHub Actions run/job `33900198638 / 101112216583`: **PASS** read-only diagnostic.
+- Public DNS service is externally present: `dns.usesafeweb.com` resolved to `52.157.109.120`; TLS verification passed on ports 443 and 853; a read-only GET to `/dns-query` returned HTTP 400.
+- Required public verifier route is absent: neither `verify.usesafeweb.com` nor a 32-hex `*.verify.usesafeweb.com` challenge host resolved externally.
+- Public web origin `https://usesafeweb.com/` and read-only GET to `/api/dns-verification/requests` returned HTTP 502 during the same external preflight.
+- No verification POST, DNS query payload, public DNS/proxy/certificate/AdGuard mutation, participant/payment/activation/launch action, or repository-main mutation occurred in the preflight.
+
+WAITING condition:
+
+- A separately authorized target deployment/configuration must make a 32-hex `*.verify.usesafeweb.com` host externally resolvable, provide the approved TLS/proxy `/api/dns-verification/probes` path, and restore a healthy externally reachable application origin for `/api/dns-verification/requests` and `/api/dns-verification/results`.
+- Deterministic recheck: rerun the bounded read-only public preflight from an external GitHub-hosted runner. Only after those routing prerequisites pass may a separately authorized functional target proof exercise request -> public DNS rewrite -> TLS probe -> signed result -> Protection Map.
+
+Preserved boundaries:
+
+- The earlier isolated-target evidence remains valid partial evidence only; it does not establish the missing public trust boundary.
+- No WBS, dependency, gate, acceptance, verification, interface, requirement, authority, deployment, participant, payment, telemetry, market-activation or launch semantics changed.
+- Persistent identifiable query logging/file logging and identifiable per-client statistics remain prohibited by `CON-0007 / CON-0008`.
+
+Queue consequence:
+
+- Recompute the governed frontier after canonical promotion/read-back. Do not select TSK-0243 again until its deterministic WAITING condition is observed as satisfied.
