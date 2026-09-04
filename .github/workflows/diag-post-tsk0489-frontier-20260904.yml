@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          fetch-depth: 1
+          fetch-depth: 2
           persist-credentials: false
       - name: Derive current candidate frontier without mutation
         shell: bash
@@ -25,7 +25,7 @@ jobs:
           set -Eeuo pipefail
           test "$(git rev-parse HEAD^)" = '041caa3858b61fb4119a66e9f139ccb3ebd318a0'
           python3 - <<'PY'
-          import csv, json, re
+          import csv, json, re, subprocess
           from pathlib import Path
 
           wbs_path = Path('Plans/Master/WBS/master-wbs.csv')
@@ -35,10 +35,9 @@ jobs:
           by = {r['Task_ID']: r for r in rows if r.get('Task_ID','').startswith('TSK-')}
           order = {r['Task_ID']: i for i, r in enumerate(rows) if r.get('Task_ID','').startswith('TSK-')}
           print('FRONTIER_CANONICAL_BASE=041caa3858b61fb4119a66e9f139ccb3ebd318a0')
-          print('FRONTIER_WBS_BLOB=' + __import__('subprocess').check_output(['git','hash-object',str(wbs_path)], text=True).strip())
+          print('FRONTIER_WBS_BLOB=' + subprocess.check_output(['git','hash-object',str(wbs_path)], text=True).strip())
           print('FRONTIER_WBS_HEADERS=' + json.dumps(list(rows[0].keys()), ensure_ascii=False))
 
-          # Parse explicit current/accepted stable-state task sections from runtime only.
           rt = runtime_path.read_text(encoding='utf-8')
           heading_re = re.compile(r'(?m)^(#{2,4})[^\n]*\b(TSK-\d{4})\b[^\n]*(?:current accepted stable state|accepted stable state)[^\n]*$')
           heads = list(heading_re.finditer(rt))
@@ -49,10 +48,7 @@ jobs:
               end = heads[i+1].start() if i+1 < len(heads) else len(rt)
               sec = rt[start:end]
               task = m.group(2)
-              # Last matching state token in the task's own stable-state section wins.
-              hits = []
-              for sm in re.finditer(r'\*\*(PASS|WAITING|BLOCKED|TODO)\*\*', sec):
-                  hits.append(sm.group(1))
+              hits = [sm.group(1) for sm in re.finditer(r'\*\*(PASS|WAITING|BLOCKED|TODO)\*\*', sec)]
               if hits:
                   runtime_state[task] = hits[-1]
                   runtime_excerpt[task] = ' '.join(sec[:900].split())
@@ -79,7 +75,6 @@ jobs:
               r=by.get(tid)
               if not r: return 'MISSING'
               if r.get('Execution_State') == 'PASS': return 'PASS'
-              # Runtime is authoritative for volatile state when an explicit stable-state section exists.
               return runtime_state.get(tid, r.get('Execution_State') or 'TODO')
 
           mismatches=[]
@@ -89,25 +84,21 @@ jobs:
               wd=split_wbs_deps(r.get('Dependencies'))
               if set(gd) != set(wd):
                   mismatches.append({'task':tid,'wbs':wd,'graph':gd})
-              deps = gd
-              dep_states={d:eff_state(d) for d in deps}
-              all_pass=all(s=='PASS' for s in dep_states.values())
-              state=eff_state(tid)
-              planning=r.get('Planning_State','')
-              if state != 'PASS' and all_pass:
+              dep_states={d:eff_state(d) for d in gd}
+              if eff_state(tid) != 'PASS' and all(s=='PASS' for s in dep_states.values()):
                   candidates.append({
                       'order':order[tid],
                       'task':tid,
                       'title':r.get('Title',''),
-                      'planning_state':planning,
+                      'planning_state':r.get('Planning_State',''),
                       'wbs_execution_state':r.get('Execution_State',''),
                       'runtime_state':runtime_state.get(tid),
-                      'effective_state':state,
+                      'effective_state':eff_state(tid),
                       'priority':r.get('Priority',''),
                       'layer':r.get('Layer','') or r.get('Level',''),
                       'ai_capability':r.get('AI_Capability_A0_A4',''),
                       'action_authority':r.get('Action_Authority',''),
-                      'dependencies':deps,
+                      'dependencies':gd,
                       'dependency_states':dep_states,
                       'gate_trigger_precondition':r.get('Gate_Trigger_Precondition','') or r.get('Preconditions','') or r.get('Precondition',''),
                       'acceptance_id':r.get('Acceptance_ID',''),
@@ -120,14 +111,9 @@ jobs:
                       'runtime_excerpt':runtime_excerpt.get(tid,'')[:600],
                   })
 
-          # Planning exclusions are not runtime states. Keep them visible but rank executable PLANNED first.
           p_rank={'CRITICAL':0,'HIGH':1,'MEDIUM':2,'LOW':3}
           state_rank={'TODO':0,'WAITING':1,'BLOCKED':9}
-          candidates.sort(key=lambda c:(
-              0 if c['planning_state'] in ('PLANNED','') else 5,
-              state_rank.get(c['effective_state'],4),
-              p_rank.get(c['priority'],4),
-              c['order']))
+          candidates.sort(key=lambda c:(0 if c['planning_state'] in ('PLANNED','') else 5,state_rank.get(c['effective_state'],4),p_rank.get(c['priority'],4),c['order']))
 
           print('FRONTIER_GRAPH_WBS_DEP_MISMATCH_COUNT=' + str(len(mismatches)))
           for mm in mismatches[:20]: print('FRONTIER_DEP_MISMATCH=' + json.dumps(mm, ensure_ascii=False))
