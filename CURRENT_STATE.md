@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-04T16:29:33Z
+**Updated:** 2026-09-04T16:45:35Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -3326,19 +3326,17 @@ Recompute the residual executable frontier from current canonical WBS/graph/runt
 - These owner-reported facts are eligible as inputs to the relevant Firebase/authentication, release and deployment-readiness tasks (including `TSK-0377` and `TSK-0469`) only after the task's own current dependencies/gates are satisfied; their acceptance criteria still require independent target/configuration verification before PASS.
 - **Non-inference / fences:** no deployment, production activation, participant/user processing, billing/payment, telemetry activation, broader public launch, task PASS, gate PASS or legal/compliance conclusion is created by this synchronization. The owner instruction to wait for plan/gate deployment eligibility remains controlling.
 
-## TSK-0489 current accepted stable state — 2026-09-04
+## TSK-0489 current accepted stable state — 2026-09-04 — AG-009 REMEDIATION COMPLETE
 
-`TSK-0489 — Add CI pipeline and automated checks`: **PASS** under ACC-0489 / VER-0489 / EVD-0489. PR #99 was conditionally merged only after the final exact source head `5ec96d4e15a9c40337fdb3c0cddf30540db20bc2` passed the governed promotion gate and TSK-0453 check. Canonical implementation merge: `655b9bcdf1c10eef0edbdce626742e2bbbd09e1e`.
+`TSK-0489 — Implement continuous integration quality and security gates`: **PASS restored** under current `ACC-0489 / VER-0489 / EVD-0489`, DEC-0060 / CR-0013, and the repaired exact-source promotion contract.
 
-Post-merge `main` run `33874954545` passed `governed-ci` job `101029614234` and `promotion-eligibility` job `101029954615`; TSK-0453 post-merge run `33874954622` passed. The canonical local-equivalent entrypoint is `npm run validate`; the post-merge run passed 111/111 contract tests, lint with zero errors, typecheck, production build, SPDX SBOM validation, zero-vulnerability npm audits, governance validation, full-history secret scan, security/privacy controls, and clean-tree checks. Retained artifact `9937487977` has digest `sha256:b76210e6aa646a2f029e07adafd6493736b0c73fb66edebea9248170d5923554`.
+The former PR #99 exact-source-head interpretation is superseded. Current proof is the repaired PR #101/#102/#103 chain plus successful post-merge canonical TSK-0489 run `33894750987` on exact `main@26a8f786b5e74e665b5c19a9b156b68b5ced10be`. PR #103 included deliberate RED run `33894506486` that blocked the remaining indirect direct-main writer, followed by GREEN run `33894582672`; the final scanner reported 112 active workflows, 0 active write surfaces, and 77 transitively reachable executables. Full corrected proof is `TSK_0489_GOVERNED_CI_PROMOTION_EVIDENCE_2026-09-04.md`.
 
-The post-merge run explicitly proves no deployment, activation, participant action, service mutation, payment, or launch occurred. Eight historical task-acceptance workflows triggered by the `main` push failed on their obsolete hard-coded WBS blob `eb35f3b10356396c5117e3f47d0b0378953e2157` before substantive task tests; they are classified as stale task-scoped evidence workflows, not current mandatory promotion contexts. Full durable evidence is `TSK_0489_GOVERNED_CI_PROMOTION_EVIDENCE_2026-09-04.md`.
+No test bypass was used. No deployment, activation, participant processing, DNS/AdGuard/live-device mutation, service/profile/certificate removal or revocation, production credential mutation, payment, telemetry activation, market activation, or launch occurred or is authorized by this PASS.
 
-This PASS creates no deployment, telemetry activation, participant-facing mutation, production credential/service revocation, payment, activation, launch, or other material-action authority.
+## Queue status after corrected TSK-0489 reconciliation
 
-## Queue status after TSK-0489 reconciliation
-
-`TSK-0489` is runtime/WBS PASS. No successor is preselected by this synchronization. Recompute the next eligible governed action from the post-synchronization canonical WBS, graph, current runtime evidence, gates, constraints, interfaces, and action authority before further execution.
+`TSK-0489` is durable PASS once this exact evidence/checkpoint synchronization passes the repaired exact-head PR gate and is merged/read back on canonical `main`. Preserve the following TSK-0243 partial-evidence state unchanged and recompute the governed frontier only after the synchronization is confirmed.
 
 ## TSK-0243 current accepted stable state — 2026-09-04 — ISOLATED TARGET EVIDENCE PARTIAL
 
