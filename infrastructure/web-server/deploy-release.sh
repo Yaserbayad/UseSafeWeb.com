@@ -4,10 +4,34 @@ set -Eeuo pipefail
 SOURCE_ROOT="${1:-}"
 RELEASE_SHA="${2:-}"
 INSTALL_ROOT="${USESAFEWEB_INSTALL_ROOT:-/opt/usesafeweb-web}"
+INSTALL_ROOT="${INSTALL_ROOT%/}"
 SERVICE="usesafeweb-web.service"
 ENV_FILE="/etc/usesafeweb/website.env"
 
 fail(){ printf 'USESAFEWEB_DEPLOY=FAIL reason=%s\n' "$1" >&2; exit 1; }
+set_release_binding(){
+  local value="$1" temporary
+  [[ "${value}" =~ ^[0-9a-f]{40}$ ]] || return 1
+  temporary="$(mktemp "${ENV_FILE}.XXXXXX")" || return 1
+  if ! awk -v sha="${value}" '
+    BEGIN { found=0 }
+    /^USESAFEWEB_RELEASE_SHA=/ {
+      if (found != 0) exit 42
+      print "USESAFEWEB_RELEASE_SHA=" sha
+      found=1
+      next
+    }
+    { print }
+    END { if (found != 1) exit 43 }
+  ' "${ENV_FILE}" >"${temporary}"; then
+    rm -f -- "${temporary}"
+    return 1
+  fi
+  chown root:root "${temporary}" || { rm -f -- "${temporary}"; return 1; }
+  chmod 0600 "${temporary}" || { rm -f -- "${temporary}"; return 1; }
+  mv -f -- "${temporary}" "${ENV_FILE}"
+}
+
 [[ -d "${SOURCE_ROOT}/website" ]] || fail source_root
 [[ "${RELEASE_SHA}" =~ ^[0-9a-f]{40}$ ]] || fail release_sha
 [[ "$(git -C "${SOURCE_ROOT}" rev-parse HEAD)" == "${RELEASE_SHA}" ]] || fail source_binding
@@ -21,13 +45,37 @@ env_release="$(awk -F= '$1=="USESAFEWEB_RELEASE_SHA" {sub(/^[^=]*=/,""); print; 
 release="${INSTALL_ROOT}/releases/${RELEASE_SHA}"
 current="${INSTALL_ROOT}/current"
 previous=""
-if [[ -L "${current}" ]]; then previous="$(readlink -f "${current}")"; fi
+previous_release_sha=""
+if [[ -e "${current}" && ! -L "${current}" ]]; then
+  fail current_not_managed_symlink
+fi
+if [[ -L "${current}" ]]; then
+  previous="$(readlink -f "${current}")"
+  previous_release_sha="${previous##*/}"
+  [[ "${previous_release_sha}" =~ ^[0-9a-f]{40}$ ]] || fail previous_release_identity
+  [[ "${previous}" == "${INSTALL_ROOT}/releases/${previous_release_sha}" ]] || fail previous_release_path
+  [[ -d "${previous}" ]] || fail previous_release_missing
+fi
 rollback(){
   rc=$?
-  if (( rc != 0 )) && [[ -n "${previous}" && -d "${previous}" ]]; then
-    ln -sfn "${previous}" "${current}"
-    systemctl restart "${SERVICE}" >/dev/null 2>&1 || true
-    printf 'USESAFEWEB_DEPLOY_ROLLBACK=ATTEMPTED\n' >&2
+  trap - EXIT
+  if (( rc != 0 )); then
+    rm -rf -- "${release}.new" >/dev/null 2>&1 || true
+    if [[ -n "${previous}" && -d "${previous}" ]]; then
+      ln -sfn "${previous}" "${current}"
+      if set_release_binding "${previous_release_sha}"; then
+        if systemctl restart "${SERVICE}" >/dev/null 2>&1; then
+          printf 'USESAFEWEB_DEPLOY_ROLLBACK=RESTORED\n' >&2
+        else
+          printf 'USESAFEWEB_DEPLOY_ROLLBACK=SERVICE_RESTART_FAILED\n' >&2
+        fi
+      else
+        printf 'USESAFEWEB_DEPLOY_ROLLBACK=IDENTITY_RESTORE_FAILED\n' >&2
+      fi
+    else
+      rm -f "${current}"
+      printf 'USESAFEWEB_DEPLOY_ROLLBACK=FIRST_DEPLOY_CLEANED\n' >&2
+    fi
   fi
   exit "${rc}"
 }
