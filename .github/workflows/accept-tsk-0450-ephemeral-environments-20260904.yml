@@ -1,0 +1,275 @@
+name: Accept TSK-0450 ephemeral environments
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/accept-tsk-0450-ephemeral-environments-20260904.yml'
+      - 'infrastructure/adguard-server/tsk-0450-ephemeral-environment-verifier.sh'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: usesafeweb-adguard-server
+  cancel-in-progress: false
+
+jobs:
+  ephemeral-ci:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify authority and execute disposable CI
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "${GITHUB_EVENT_NAME}" == push && "${GITHUB_REF}" == refs/heads/main ]]
+          [[ "$(git rev-parse HEAD)" == "${GITHUB_SHA}" ]]
+          python3 - <<'PY'
+          import csv
+          with open('Plans/Master/WBS/master-wbs.csv', newline='', encoding='utf-8') as f:
+              rows=[r for r in csv.DictReader(f) if r['Task_ID']=='TSK-0450']
+          assert len(rows)==1
+          r=rows[0]
+          assert r['Lifecycle_Stage']=='L6'
+          assert [x.strip() for x in r['Dependencies'].split(';')]==['TSK-0451','TSK-0422','TSK-0449']
+          assert (r['Acceptance_ID'],r['Verification_ID'],r['Evidence_ID'])==('ACC-0450','VER-0450','EVD-0450')
+          assert (r['AI_Capability_A0_A4'],r['Action_Authority'])==('A3','AUTO_ALLOWED')
+          expected=('CI/ephemeral preview/test environments use synthetic data, are isolated and disposable, and teardown/rebuild succeeds; '
+                    'the owner-provided pilot VM is verified against region/access/data policy; no persistent staging environment is provisioned unless its explicit evidence trigger opens.')
+          assert r['Acceptance_Criteria']==expected
+          text=open('Plans/Master/RELATIONSHIP_INDEX.yaml',encoding='utf-8').read()
+          block=text[text.index('  TSK-0450:\n'):text.index('\n  TSK-0451:',text.index('  TSK-0450:\n'))]
+          for target,kind in [('TSK-0451','depends_on'),('TSK-0422','depends_on'),('TSK-0449','depends_on'),('ACC-0450','acceptance'),('VER-0450','verified_by'),('EVD-0450','evidence_required'),('RSK-0048','affected_by_risk'),('INT-0014','uses_interface'),('REQ-0049','governed_by'),('REQ-0050','governed_by'),('CON-0004','governed_by'),('CON-0005','governed_by')]:
+              assert f'- target: {target}\n      type: {kind}' in block
+          PY
+          for task in 0451 0422 0449; do
+            grep -Fq "## TSK-${task} current accepted stable state" CURRENT_STATE.md
+            grep -Fq "ACC-${task} / VER-${task} / EVD-${task}" CURRENT_STATE.md
+          done
+          grep -Fq 'LG-07' CURRENT_STATE.md
+          grep -Fq '`TSK-0455` remains DEFERRED / WAITING' CURRENT_STATE.md
+          grep -Fq 'CR-0012' Plans/Master/Registers/EXCEPTIONS_CHANGE_CONTROLS.md
+          grep -Fq 'DEC-0054' Plans/Master/Registers/DECISIONS_TRIGGERS.md
+          grep -Fq 'DEC-0059' Plans/Master/Registers/DECISIONS_TRIGGERS.md
+          grep -Fq 'No task may create/configure Azure control-plane resources unless the owner explicitly reopens this boundary.' Plans/Master/Registers/CONSTRAINTS.md
+          script='infrastructure/adguard-server/tsk-0450-ephemeral-environment-verifier.sh'
+          bash -n "${script}"
+          bash "${script}" --ephemeral | tee /tmp/tsk-0450-ephemeral.txt
+          for marker in EPHEMERAL_NEGATIVE_TESTS=PASS EPHEMERAL_FUNCTIONAL=PASS SYNTHETIC_DATA_ONLY=PASS LOOPBACK_ISOLATION=PASS EPHEMERAL_TEARDOWN=PASS EPHEMERAL_REBUILD=PASS ROLLBACK_TEARDOWN=PASS PERSISTENT_STAGING_PROVISIONED=NO AZURE_CONTROL_PLANE_ACTION=NONE PARTICIPANT_DATA_USED=NO CI_EPHEMERAL_PHASE=PASS; do
+            grep -Fq "${marker}" /tmp/tsk-0450-ephemeral.txt
+          done
+          printf 'SOURCE_COMMIT=%s\n' "${GITHUB_SHA}" >> /tmp/tsk-0450-ephemeral.txt
+          printf 'SOURCE_SCRIPT_SHA256=%s\n' "$(sha256sum "${script}" | awk '{print $1}')" >> /tmp/tsk-0450-ephemeral.txt
+          printf 'WBS_BLOB=%s\n' "$(git hash-object Plans/Master/WBS/master-wbs.csv)" >> /tmp/tsk-0450-ephemeral.txt
+          printf 'GRAPH_BLOB=%s\n' "$(git hash-object Plans/Master/RELATIONSHIP_INDEX.yaml)" >> /tmp/tsk-0450-ephemeral.txt
+          echo 'EPHEMERAL_CI_JOB=PASS' >> /tmp/tsk-0450-ephemeral.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tsk-0450-ephemeral
+          path: /tmp/tsk-0450-ephemeral.txt
+          retention-days: 7
+
+  owner-vm-readonly:
+    needs: ephemeral-ci
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify owner-provided target read-only
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "${GITHUB_EVENT_NAME}" == push && "${GITHUB_REF}" == refs/heads/main ]]
+          [[ "$(hostname -s)" == adguardvm && "$(id -un)" == azureusr ]]
+          [[ "$(git rev-parse HEAD)" == "${GITHUB_SHA}" ]]
+          sudo -n true
+          . /etc/os-release
+          [[ "${ID}" == ubuntu && "${VERSION_ID}" == 24.04 ]]
+          grep -Fq '`TSK-0455` remains DEFERRED / WAITING' CURRENT_STATE.md
+          [[ -z "$(git status --porcelain=v1)" ]]
+          script='infrastructure/adguard-server/tsk-0450-ephemeral-environment-verifier.sh'
+          sudo bash "${script}" --target | tee /tmp/tsk-0450-target.txt
+          [[ -z "$(git status --porcelain=v1)" ]]
+          for marker in OWNER_VM_REGION_POLICY=PASS OWNER_VM_ACCESS_POLICY=PASS OWNER_VM_DATA_POLICY=PASS OWNER_PROVIDED_PILOT_VM_ACCEPTANCE=PASS TARGET_CONFIGURATION_UNCHANGED=PASS TARGET_SECURITY_PRIVACY=PASS PILOT_LIFECYCLE_SEPARATE_ENVIRONMENT=NOT_REQUIRED_UNDER_DEC_0054 STAGING_TRIGGER=NOT_OPENED PERSISTENT_STAGING_PROVISIONED=NO AZURE_CONTROL_PLANE_ACTION=NONE TARGET_MUTATION=NONE TARGET_PHASE=PASS; do
+            grep -Fq "${marker}" /tmp/tsk-0450-target.txt
+          done
+          printf 'SOURCE_COMMIT=%s\n' "${GITHUB_SHA}" >> /tmp/tsk-0450-target.txt
+          printf 'SOURCE_SCRIPT_SHA256=%s\n' "$(sha256sum "${script}" | awk '{print $1}')" >> /tmp/tsk-0450-target.txt
+          echo 'PRIVACY=PASS secrets=not_emitted raw_query_data=not_emitted client_identifiers=not_emitted' >> /tmp/tsk-0450-target.txt
+          echo 'OWNER_VM_READONLY_JOB=PASS' >> /tmp/tsk-0450-target.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tsk-0450-target
+          path: /tmp/tsk-0450-target.txt
+          retention-days: 7
+
+  independent-verify:
+    needs: owner-vm-readonly
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: tsk-0450-*
+          path: ${{ runner.temp }}/prior
+          merge-multiple: true
+      - name: Independently reverify acceptance
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          e="${RUNNER_TEMP}/prior/tsk-0450-ephemeral.txt"
+          t="${RUNNER_TEMP}/prior/tsk-0450-target.txt"
+          grep -Fq 'EPHEMERAL_CI_JOB=PASS' "${e}"
+          grep -Fq 'OWNER_VM_READONLY_JOB=PASS' "${t}"
+          grep -Fq 'TARGET_MUTATION=NONE' "${t}"
+          grep -Fq 'PRIVACY=PASS secrets=not_emitted raw_query_data=not_emitted client_identifiers=not_emitted' "${t}"
+          script='infrastructure/adguard-server/tsk-0450-ephemeral-environment-verifier.sh'
+          bash "${script}" --ephemeral | tee /tmp/tsk-0450-independent.txt
+          grep -Fq 'EPHEMERAL_REBUILD=PASS' /tmp/tsk-0450-independent.txt
+          grep -Fq 'EPHEMERAL_NEGATIVE_TESTS=PASS' /tmp/tsk-0450-independent.txt
+          grep -Fq 'AZURE_CONTROL_PLANE_ACTION=NONE' /tmp/tsk-0450-independent.txt
+          if grep -Eqi 'BEGIN ([A-Z ]+)?PRIVATE KEY|gh[pousr]_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{16}' "${e}" "${t}" /tmp/tsk-0450-independent.txt; then exit 1; fi
+          printf 'SOURCE_COMMIT=%s\n' "${GITHUB_SHA}" >> /tmp/tsk-0450-independent.txt
+          echo 'ACC_0450=PASS' >> /tmp/tsk-0450-independent.txt
+          echo 'VER_0450=PASS' >> /tmp/tsk-0450-independent.txt
+          echo 'EVD_0450_SANITIZED_STATUS=PASS' >> /tmp/tsk-0450-independent.txt
+          echo 'PRIVACY=PASS secrets=not_emitted raw_query_data=not_emitted client_identifiers=not_emitted participant_data=not_used' >> /tmp/tsk-0450-independent.txt
+          echo 'INDEPENDENT_VERIFY=PASS' >> /tmp/tsk-0450-independent.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tsk-0450-independent
+          path: /tmp/tsk-0450-independent.txt
+          retention-days: 7
+
+  persist:
+    needs: independent-verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: tsk-0450-*
+          path: ${{ runner.temp }}/evidence
+          merge-multiple: true
+      - name: Persist verified evidence and runtime
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -Eeuo pipefail
+          git fetch origin main
+          [[ "$(git rev-parse HEAD)" == "${SOURCE_COMMIT}" ]]
+          [[ "$(git rev-parse origin/main)" == "${SOURCE_COMMIT}" ]]
+          e="${RUNNER_TEMP}/evidence/tsk-0450-ephemeral.txt"
+          t="${RUNNER_TEMP}/evidence/tsk-0450-target.txt"
+          i="${RUNNER_TEMP}/evidence/tsk-0450-independent.txt"
+          grep -Fq 'EPHEMERAL_CI_JOB=PASS' "${e}"
+          grep -Fq 'CI_EPHEMERAL_PHASE=PASS' "${e}"
+          grep -Fq 'OWNER_VM_READONLY_JOB=PASS' "${t}"
+          grep -Fq 'OWNER_PROVIDED_PILOT_VM_ACCEPTANCE=PASS' "${t}"
+          grep -Fq 'TARGET_MUTATION=NONE' "${t}"
+          grep -Fq 'STAGING_TRIGGER=NOT_OPENED' "${t}"
+          grep -Fq 'INDEPENDENT_VERIFY=PASS' "${i}"
+          grep -Fq 'ACC_0450=PASS' "${i}"
+          grep -Fq 'VER_0450=PASS' "${i}"
+          grep -Fq 'EVD_0450_SANITIZED_STATUS=PASS' "${i}"
+
+          script='infrastructure/adguard-server/tsk-0450-ephemeral-environment-verifier.sh'
+          workflow='.github/workflows/accept-tsk-0450-ephemeral-environments-20260904.yml'
+          evd='TSK_0450_EPHEMERAL_ENVIRONMENT_EVIDENCE_2026-09-04.md'
+          state='CURRENT_STATE.md'
+          script_blob="$(git hash-object "${script}")"
+          workflow_blob="$(git hash-object "${workflow}")"
+          script_sha="$(sha256sum "${script}" | awk '{print $1}')"
+          wbs_blob="$(git hash-object Plans/Master/WBS/master-wbs.csv)"
+          graph_blob="$(git hash-object Plans/Master/RELATIONSHIP_INDEX.yaml)"
+          e_sha="$(sha256sum "${e}" | awk '{print $1}')"
+          t_sha="$(sha256sum "${t}" | awk '{print $1}')"
+          i_sha="$(sha256sum "${i}" | awk '{print $1}')"
+          cat > "${evd}" <<EVIDENCE
+          # TSK-0450 CI/ephemeral and owner-provided environment evidence
+
+          **Date:** 2026-09-04
+          **Task:** TSK-0450 - Implement CI/ephemeral test environments and the isolated pilot environment
+          **Acceptance / verification / evidence:** ACC-0450 / VER-0450 / EVD-0450
+          **Source commit:** \`${SOURCE_COMMIT}\`
+          **Verifier blob / SHA-256:** \`${script_blob}\` / \`${script_sha}\`
+          **Workflow blob:** \`${workflow_blob}\`
+          **WBS / relationship-index blobs:** \`${wbs_blob}\` / \`${graph_blob}\`
+          **GitHub Actions run / attempt:** \`${GITHUB_RUN_ID} / ${GITHUB_RUN_ATTEMPT}\`
+
+          ## Result
+          **PASS.** ACC-0450 was satisfied without a new Azure resource, persistent staging/pilot environment, service deployment, or participant-facing mutation.
+
+          - Hard predecessors TSK-0451, TSK-0422 and TSK-0449 plus LG-07 were current PASS; WBS authority is A3 / AUTO_ALLOWED.
+          - GitHub-hosted Ubuntu 24.04 CI used deterministic synthetic data only, loopback binding, negative policy fixtures, complete teardown, and deterministic rebuild into a distinct disposable directory; an independent fresh CI job repeated this proof.
+          - The already owner-provided adguardvm target was verified read-only for approved West Europe region, TSK-0451 access/security policy, and TSK-0422 runtime data/privacy policy. AdGuard configuration remained unchanged.
+          - Under DEC-0054, this verifies the owner-provided pilot-VM acceptance clause without introducing a mandatory separate pilot/staging lifecycle. The staging trigger was not open and no persistent staging environment was provisioned.
+          - CR-0012 / DEC-0059 remains unchanged; TSK-0455 clean fresh-host verification is not inferred from this task.
+          - Rollback/recovery: CI process and directory were removed and verified absent. The target phase was read-only, so target rollback was not applicable.
+          - Privacy: no participant data, secret, raw query data or client identifier is retained in evidence.
+
+          ## Evidence integrity
+          - Ephemeral transcript SHA-256: \`${e_sha}\`
+          - Target transcript SHA-256: \`${t_sha}\`
+          - Independent transcript SHA-256: \`${i_sha}\`
+
+          ## Non-inference
+          This PASS proves only TSK-0450. REQ-0049, REQ-0050, CON-0004, CON-0005, INT-0014, RSK-0048, DEC-0054, DEC-0059 and CR-0012 remain controlling. It does not create/configure Azure control-plane resources; deploy a new environment; process participants; enable telemetry; distribute profiles/certificates; revoke/remove service; make payment; authorize public/market activation; pass a launch gate; or alter TSK-0455, TSK-0456, TSK-0457 or TSK-0492.
+          EVIDENCE
+
+          evidence_blob="$(git hash-object "${evd}")"
+          ! grep -Fq '## TSK-0450 current accepted stable state' "${state}"
+          grep -Fq '`TSK-0455` remains DEFERRED / WAITING' "${state}"
+          now="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          sed -i -E "0,/^\*\*Updated:\*\*/s|^\*\*Updated:\*\*.*$|**Updated:** ${now}|" "${state}"
+          cat >> "${state}" <<STATE
+
+          ## TSK-0450 current accepted stable state - 2026-09-04
+
+          \`TSK-0450 - Implement CI/ephemeral test environments and the isolated pilot environment\`: **PASS** under current \`ACC-0450 / VER-0450 / EVD-0450\`.
+          - Eligibility: TSK-0451, TSK-0422, TSK-0449 and LG-07 are current PASS; A3 / AUTO_ALLOWED.
+          - Verification: disposable synthetic loopback-only GitHub-hosted CI with teardown/rebuild and independent rerun; existing owner-provided \`adguardvm\` read-only region/access/data-policy checks under DEC-0054; target configuration unchanged.
+          - Versioned verifier: \`${script}\`, blob \`${script_blob}\`, SHA-256 \`${script_sha}\`; workflow blob \`${workflow_blob}\`; source commit \`${SOURCE_COMMIT}\`.
+          - Durable evidence: \`${evd}\`, blob \`${evidence_blob}\`; run/attempt \`${GITHUB_RUN_ID} / ${GITHUB_RUN_ATTEMPT}\`.
+          - Material actions: **none**. No Azure control-plane resource, new deployment, participant processing, telemetry, profile/certificate distribution, service revocation/removal, payment, public/market activation or launch action occurred.
+          - **Non-inference:** \`TSK-0455\` remains DEFERRED / WAITING under DEC-0059 / CR-0012 with unchanged \`ACC-0455 / VER-0455 / EVD-0455\`; \`TSK-0456\`, \`TSK-0457\` and \`TSK-0492\` remain dependency-blocked.
+          STATE
+
+          grep -Fq '`TSK-0455` remains DEFERRED / WAITING' "${state}"
+          git diff --check
+          git add "${state}" "${evd}"
+          mapfile -t changed < <(git diff --cached --name-only | sort)
+          [[ "${#changed[@]}" -eq 2 && "${changed[0]}" == CURRENT_STATE.md && "${changed[1]}" == "${evd}" ]]
+          [[ -z "$(git diff --cached --name-only -- Plans/Master)" ]]
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'state: accept TSK-0450 ephemeral environments'
+          persisted="$(git rev-parse HEAD)"
+          git push origin HEAD:main
+          git fetch origin main
+          [[ "$(git rev-parse origin/main)" == "${persisted}" ]]
+          [[ "$(git show "${persisted}:${evd}" | git hash-object --stdin)" == "${evidence_blob}" ]]
+          git show "${persisted}:${state}" | grep -Fq '## TSK-0450 current accepted stable state'
+          git show "${persisted}:${state}" | grep -Fq '`TSK-0455` remains DEFERRED / WAITING'
+          printf 'PERSISTED_COMMIT=%s\n' "${persisted}"
+          printf 'EVIDENCE_BLOB=%s\n' "${evidence_blob}"
+          printf 'STATE_BLOB=%s\n' "$(git rev-parse "${persisted}:${state}")"
+          echo 'PERSIST_READBACK=PASS'
