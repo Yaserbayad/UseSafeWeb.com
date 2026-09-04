@@ -3234,3 +3234,15 @@ Recompute the residual executable frontier from current WBS/graph/runtime/gates 
 ### Queue status after TSK-0395 acceptance
 
 Recompute the residual executable frontier from current canonical WBS/graph/runtime/gates and owner decisions. Continue only independently eligible `AUTO_ALLOWED` work; do not cross any preserved deployment, live-device, service-revocation/removal, participant, telemetry, activation, launch, or target-evidence fence.
+
+## TSK-0374 current accepted stable state — 2026-09-04 — TARGET ACCEPTANCE COMPLETE
+
+`TSK-0374 — Implement versioned device/service content delivery`: **PASS** under current `ACC-0374 / VER-0374 / EVD-0374`.
+
+- Current WBS contract: L6 / MEDIUM / A3 / `AUTO_ALLOWED`; hard dependencies `TSK-0375; TSK-0323`; acceptance requires correct content/version selection, visible stale/unsupported states, preserved integrity/version metadata, safe failure for missing content, and rollback capability.
+- Canonical implementation/target-acceptance lineage: exact source head `249888c688bab19345564025955b1541dd4f3ba1`; PR #98 merged as canonical merge commit `9dc99e54b40f2ef550eb71573490290183253579`.
+- Target-environment verification run/job `33817195473 / 100854838145`: terminal **SUCCESS** on exact source head `249888c688bab19345564025955b1541dd4f3ba1`.
+- `VER-0374` evidence passed the required functional, negative, configuration, security/privacy, and rollback checks; the same successful job passed all 7/7 TSK-0374 contract tests and both dependency audits with zero vulnerabilities.
+- `EVD-0374` is satisfied by the exact version/source lineage plus the durable GitHub Actions run/job output and canonical merge/read-back evidence; no deviation remained that invalidates `ACC-0374`.
+- Runtime state: `PASS`.
+- **Non-inference:** this PASS does not authorize or prove deployment, live-device/profile/certificate action, service removal/revocation, participant processing, telemetry activation, production/public activation, geographic/market activation, launch, or PASS for any successor, gate, or unrelated task. All other canonical runtime state and material-action fences remain unchanged by this synchronization.
