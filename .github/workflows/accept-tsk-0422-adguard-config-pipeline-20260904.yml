@@ -63,6 +63,7 @@ jobs:
           grep -Fq 'VER_0422=PASS' /tmp/tsk-0422-apply.txt
           grep -Fq 'EVD_0422_SANITIZED_STATUS=PASS' /tmp/tsk-0422-apply.txt
           grep -Fq 'NEGATIVE_SELF_TEST=PASS' /tmp/tsk-0422-apply.txt
+          grep -Fq 'NORMALIZATION_SELF_TEST=PASS' /tmp/tsk-0422-apply.txt
           grep -Fq 'PERSISTED_CONFIG_MATCH=PASS' /tmp/tsk-0422-apply.txt
           grep -Fq 'RUNTIME_APPROVED_CONFIG=PASS' /tmp/tsk-0422-apply.txt
           grep -Fq 'SYNTHETIC_LOOPBACK_DNS=PASS' /tmp/tsk-0422-apply.txt
@@ -110,6 +111,8 @@ jobs:
           grep -Fq 'NEGATIVE_ECS=REJECTED' /tmp/tsk-0422-verify.txt
           grep -Fq 'NEGATIVE_WRONG_UPSTREAM=REJECTED' /tmp/tsk-0422-verify.txt
           grep -Fq 'NEGATIVE_UNAPPROVED_FILTER_PROCESSOR=REJECTED' /tmp/tsk-0422-verify.txt
+          grep -Fq 'NEGATIVE_SELF_TEST=PASS' /tmp/tsk-0422-verify.txt
+          grep -Fq 'NORMALIZATION_SELF_TEST=PASS' /tmp/tsk-0422-verify.txt
           grep -Fq 'PERSISTED_CONFIG_MATCH=PASS' /tmp/tsk-0422-verify.txt
           grep -Fq 'RUNTIME_APPROVED_CONFIG=PASS' /tmp/tsk-0422-verify.txt
           grep -Fq 'SYNTHETIC_LOOPBACK_DNS=PASS' /tmp/tsk-0422-verify.txt
@@ -242,7 +245,7 @@ jobs:
           - Exact target: repository-scoped self-hosted runner on \`adguardvm\`, Ubuntu 24.04 LTS, using the existing approved local AdGuard control/credential boundary.
           - Versioned source: \`${script}\`, blob \`${script_blob}\`, SHA-256 \`${script_sha256}\`; canonical approved settings \`${approved}\`, blob \`${approved_blob}\`, SHA-256 \`${approved_sha256}\`; source commit \`${SOURCE_COMMIT}\`.
           - Durable evidence: \`${evidence_file}\`, blob \`${evidence_blob}\`; GitHub Actions run/attempt \`${GITHUB_RUN_ID} / ${GITHUB_RUN_ATTEMPT}\`.
-          - Verification: persisted approved projection match; runtime API checks; synthetic loopback DNS; negative query-log/ECS/upstream/filter-processor fixtures; deterministic sanitized diff; secret separation; staged-candidate/root-only rollback protection; separate independent target verification job.
+          - Verification: persisted approved projection match; runtime API checks; synthetic loopback DNS; negative query-log/ECS/upstream/filter-processor fixtures; runtime-normalization regression; deterministic sanitized diff; secret separation; staged-candidate/root-only rollback protection; separate independent target verification job.
           - Apply controlled-field change count: \`${change_count}\`; sanitized changed paths: \`${changed_paths}\`.
           - Security/privacy: no secret, raw query content or client identifier is written to Git/evidence; runtime filter IDs are preserved; non-controlled AdGuard configuration semantics are preserved during candidate generation.
           - **Non-inference:** \`TSK-0455\` remains DEFERRED / WAITING under DEC-0059 / CR-0012 with unchanged \`ACC-0455 / VER-0455 / EVD-0455\`; \`TSK-0456\`, \`TSK-0457\` and \`TSK-0492\` remain dependency-blocked. No new environment deployment, participant processing, telemetry, profile/certificate distribution, service revocation/removal, public/market activation, payment or launch authority is inferred.
