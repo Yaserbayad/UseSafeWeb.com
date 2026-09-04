@@ -1,0 +1,70 @@
+name: TSK-0374 guarded runtime sync once
+
+on:
+  push:
+    branches:
+      - runtime-sync/tsk0374-20260904-001
+
+permissions:
+  contents: write
+
+jobs:
+  sync-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out canonical main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Guard, append, commit, and fast-forward main
+        shell: bash
+        env:
+          EXPECTED_PARENT: 9dc99e54b40f2ef550eb71573490290183253579
+          EXPECTED_BLOB: 88771888ddf42ee8792dceb91e15efe3e12ddfff
+        run: |
+          set -euo pipefail
+
+          actual_parent="$(git rev-parse HEAD)"
+          test "$actual_parent" = "$EXPECTED_PARENT"
+
+          actual_blob="$(git rev-parse HEAD:CURRENT_STATE.md)"
+          test "$actual_blob" = "$EXPECTED_BLOB"
+
+          cat >> CURRENT_STATE.md <<'EOF'
+
+          ## TSK-0374 current accepted stable state — 2026-09-04 — TARGET ACCEPTANCE COMPLETE
+
+          `TSK-0374 — Implement versioned device/service content delivery`: **PASS** under current `ACC-0374 / VER-0374 / EVD-0374`.
+
+          - Current WBS contract: L6 / MEDIUM / A3 / `AUTO_ALLOWED`; hard dependencies `TSK-0375; TSK-0323`; acceptance requires correct content/version selection, visible stale/unsupported states, preserved integrity/version metadata, safe failure for missing content, and rollback capability.
+          - Canonical implementation/target-acceptance lineage: exact source head `249888c688bab19345564025955b1541dd4f3ba1`; PR #98 merged as canonical merge commit `9dc99e54b40f2ef550eb71573490290183253579`.
+          - Target-environment verification run/job `33817195473 / 100854838145`: terminal **SUCCESS** on exact source head `249888c688bab19345564025955b1541dd4f3ba1`.
+          - `VER-0374` evidence passed the required functional, negative, configuration, security/privacy, and rollback checks; the same successful job passed all 7/7 TSK-0374 contract tests and both dependency audits with zero vulnerabilities.
+          - `EVD-0374` is satisfied by the exact version/source lineage plus the durable GitHub Actions run/job output and canonical merge/read-back evidence; no deviation remained that invalidates `ACC-0374`.
+          - Runtime state: `PASS`.
+          - **Non-inference:** this PASS does not authorize or prove deployment, live-device/profile/certificate action, service removal/revocation, participant processing, telemetry activation, production/public activation, geographic/market activation, launch, or PASS for any successor, gate, or unrelated task. All other canonical runtime state and material-action fences remain unchanged by this synchronization.
+          EOF
+
+          changed="$(git diff --name-only)"
+          test "$changed" = "CURRENT_STATE.md"
+          git diff --check
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add CURRENT_STATE.md
+          git commit -m "Sync TSK-0374 PASS runtime evidence"
+
+          new_commit="$(git rev-parse HEAD)"
+          test "$(git rev-parse HEAD^)" = "$EXPECTED_PARENT"
+          test "$(git diff-tree --no-commit-id --name-only -r "$new_commit")" = "CURRENT_STATE.md"
+
+          remote_main="$(git ls-remote origin refs/heads/main | awk '{print $1}')"
+          test "$remote_main" = "$EXPECTED_PARENT"
+
+          git push origin HEAD:refs/heads/main
+
+          echo "TSK0374_RUNTIME_SYNC_COMMIT=$new_commit"
+          echo "TSK0374_RUNTIME_SYNC_BLOB=$(git rev-parse HEAD:CURRENT_STATE.md)"
