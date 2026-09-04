@@ -1,4 +1,4 @@
-name: Diagnose TSK-0629 authority and executor
+name: Diagnose verifier ownership and target sequencing
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  tsk0629-authority:
+  verifier-ownership:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -19,7 +19,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Read exact TSK-0629 authority and executor bindings
+      - name: Resolve verifier deployment and trust-boundary ownership
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -30,28 +30,54 @@ jobs:
           import csv, json, re
           from pathlib import Path
 
-          tid='TSK-0629'
           rows=list(csv.DictReader(Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='')))
-          row=next(r for r in rows if r.get('Task_ID')==tid)
-          print('TSK0629_WBS_ROW='+json.dumps(row, ensure_ascii=False, separators=(',',':')))
+          byid={r.get('Task_ID'):r for r in rows if r.get('Task_ID')}
+          wanted=['TSK-0243','TSK-0629']
+          for tid in wanted:
+              print(tid+'_WBS='+json.dumps(byid[tid], ensure_ascii=False, separators=(',',':')))
 
           graph=Path('Plans/Master/RELATIONSHIP_INDEX.yaml').read_text(encoding='utf-8')
-          m=re.search(r'(?ms)^  TSK-0629:\s*$\n(.*?)(?=^  TSK-\d{4}:\s*$|\Z)', graph)
-          print('TSK0629_GRAPH_BLOCK_BEGIN')
-          print((m.group(1) if m else 'MISSING').rstrip())
-          print('TSK0629_GRAPH_BLOCK_END')
+          blocks={m.group(1):m.group(2) for m in re.finditer(r'(?ms)^  (TSK-\d{4}):\s*$\n(.*?)(?=^  TSK-\d{4}:\s*$|\Z)', graph)}
+          for tid in wanted:
+              print(tid+'_GRAPH_BEGIN')
+              print(blocks.get(tid,'MISSING').rstrip())
+              print(tid+'_GRAPH_END')
 
-          rt=Path('CURRENT_STATE.md').read_text(encoding='utf-8')
-          hits=list(re.finditer(r'(?mis)^#{2,4}[^\n]*TSK-0629[^\n]*\n.*?(?=^#{2,4}\s|\Z)', rt))
-          print('TSK0629_RUNTIME_SECTIONS_BEGIN')
-          for h in hits[-8:]:
-              print(h.group(0).rstrip())
-              print('---SECTION---')
-          print('TSK0629_RUNTIME_SECTIONS_END')
+          print('TSK0243_DIRECT_REFERENCERS_BEGIN')
+          for tid, block in blocks.items():
+              if tid!='TSK-0243' and re.search(r'(?m)^\s*-\s+target:\s*TSK-0243\s*$', block):
+                  rels=[]
+                  lines=block.splitlines()
+                  for i,line in enumerate(lines):
+                      if re.search(r'target:\s*TSK-0243\s*$', line):
+                          for j in range(i-1,-1,-1):
+                              m=re.search(r'type:\s*([^\s#]+)',lines[j])
+                              if m:
+                                  rels.append(m.group(1)); break
+                  r=byid.get(tid,{})
+                  print(json.dumps({'Task_ID':tid,'Task_Title':r.get('Task_Title'),'Plan_Status':r.get('Plan_Status'),'Execution_State':r.get('Execution_State'),'Priority':r.get('Priority'),'AI_Capability':r.get('AI_Capability'),'Action_Authority':r.get('Action_Authority'),'Hard_Dependencies':r.get('Hard_Dependencies'),'relations_to_TSK0243':rels},ensure_ascii=False,separators=(',',':')))
+          print('TSK0243_DIRECT_REFERENCERS_END')
+
+          print('INT0021_USERS_BEGIN')
+          for tid, block in blocks.items():
+              if 'INT-0021' in block:
+                  r=byid.get(tid,{})
+                  print(json.dumps({'Task_ID':tid,'Task_Title':r.get('Task_Title'),'Plan_Status':r.get('Plan_Status'),'Execution_State':r.get('Execution_State'),'Priority':r.get('Priority'),'AI_Capability':r.get('AI_Capability'),'Action_Authority':r.get('Action_Authority'),'Hard_Dependencies':r.get('Hard_Dependencies')},ensure_ascii=False,separators=(',',':')))
+          print('INT0021_USERS_END')
+
+          terms=re.compile(r'(?i)(dns.+verif|verif.+dns|verifier|reverse.?proxy|tls|deploy.+(web|application|dns)|production.+deploy|deploy.+production)')
+          print('VERIFIER_RELATED_WBS_BEGIN')
+          out=[]
+          for idx,r in enumerate(rows):
+              hay=' | '.join(str(r.get(k,'') or '') for k in ['Task_Title','Acceptance_Criteria','Required_Tooling','Required_Inputs','Interfaces','Constraints'])
+              if terms.search(hay):
+                  out.append((idx,r))
+          for _,r in out[:120]:
+              print(json.dumps({'Task_ID':r.get('Task_ID'),'Task_Title':r.get('Task_Title'),'Plan_Status':r.get('Plan_Status'),'Execution_State':r.get('Execution_State'),'Priority':r.get('Priority'),'Lifecycle_Layer':r.get('Lifecycle_Layer'),'AI_Capability':r.get('AI_Capability'),'Action_Authority':r.get('Action_Authority'),'Hard_Dependencies':r.get('Hard_Dependencies'),'Trigger':r.get('Trigger'),'Preconditions':r.get('Preconditions'),'Acceptance_Criteria':r.get('Acceptance_Criteria')},ensure_ascii=False,separators=(',',':')))
+          print('VERIFIER_RELATED_WBS_END')
           PY
-          echo 'TSK0629_SOURCE_REFERENCES_BEGIN'
-          git grep -n -I -E 'TSK-0629|10\.214\.0\.2|E1.?=.?0\.80|5-member aggregate' "$BASE" -- ':!.github/workflows/diag-post-tsk0489-frontier-20260904.yml' || true
-          echo 'TSK0629_SOURCE_REFERENCES_END'
-          echo 'SELF_HOSTED_BINDINGS_BEGIN'
-          git grep -n -I -E 'runs-on:.*self-hosted|self-hosted' "$BASE" -- '.github/workflows/*.yml' '.github/workflows/*.yaml' || true
-          echo 'SELF_HOSTED_BINDINGS_END'
+          echo 'VERIFIER_AUTHORITY_REFERENCES_BEGIN'
+          git grep -n -I -E 'TSK-0243|INT-0021|verify\.usesafeweb\.com|verifier path|verifier service|reverse.proxy' "$BASE" -- \
+            'Plans/Master/*.md' 'Plans/Master/**/*.md' 'TSK_*.md' 'CURRENT_STATE.md' \
+            ':!Plans/Master/Generated/*' | head -n 320 || true
+          echo 'VERIFIER_AUTHORITY_REFERENCES_END'
