@@ -40,10 +40,11 @@ jobs:
               '357c35318f8b2698c2ebe44be3ea67cc60e51213': '357c5e1be3b455e7efddd329d6a2468e3125b502',
               'e919d8654ac37bd1f46febb809936b2e186472e9': 'da35db0fe16009dfb5ce0e24caab05d6d02c84ed',
               '00ead35d2e8a2aa55358c0a14f437f208860cc8c': '5010ac13c7cbb41817d0b3753633c742d777e241',
+              "forbidden = ['\"RUNNING\"', 'active_claim', 'claim_owner', 'lease', 'heartbeat', 'next_work', 'current_phase', 'conversation_id']": "forbidden = ['\"RUNNING\"', '\"active_claim\"', '\"claim_owner\"', '\"lease\"', '\"heartbeat\"', '\"next_work\"', '\"current_phase\"', '\"conversation_id\"']",
           }
           for old, new in replacements.items():
               if old not in script:
-                  raise SystemExit(f'expected source hash not found: {old}')
+                  raise SystemExit(f'expected generator text not found: {old}')
               script = script.replace(old, new)
           Path('/tmp/generate-checkpoint-candidate.sh').write_text(script, encoding='utf-8')
           PY
