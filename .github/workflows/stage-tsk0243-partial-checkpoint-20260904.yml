@@ -27,15 +27,16 @@ jobs:
           branch='evidence/tsk0243-isolated-target-partial-20260904'
           workflow='.github/workflows/stage-tsk0243-partial-checkpoint-20260904.yml'
           evidence='TSK_0243_ISOLATED_TARGET_PARTIAL_EVIDENCE_2026-09-04.md'
-          test "$(git log -1 --pretty=%s)" = 'apply corrected TSK-0243 checkpoint synchronizer'
+          test "$(git log -1 --pretty=%s)" = 'apply final TSK-0243 checkpoint synchronizer'
           test "${GITHUB_REF_NAME}" = "${branch}"
-          test "$(git rev-parse HEAD^)" = 'c8059dd2a9ca1f68b411a21d124c35e91aab598d'
+          test "$(git rev-parse HEAD^)" = '2b0865d5703fa524532fbe3e23d2e7fb8215eeb2'
           test "$(git hash-object CURRENT_STATE.md)" = '7fe19e2f3df94974764bc27ae903c781cb8f9734'
           test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = '142a0d45b381136567d78545f063333f1e74901f'
           test "$(git hash-object "${evidence}")" = '4884685af21f73629b3b98979075649b5b105e67'
-          grep -Fq 'TSK-0243 remains `TODO`' CURRENT_STATE.md
+          grep -Fq '`TSK-0243` remains `TODO`' CURRENT_STATE.md
           grep -Fq 'No deployment, live-device/profile/certificate action' CURRENT_STATE.md
           grep -Fq 'Evidence status: partial only; `TSK-0243 = TODO`.' "${evidence}"
+          echo 'TSK0243_STAGE_INPUT_BINDING=PASS'
 
           python3 - <<'PY'
           from pathlib import Path
@@ -82,12 +83,15 @@ jobs:
           ]
           path.write_text(updated.rstrip() + '\n'.join(lines) + '\n', encoding='utf-8')
           PY
+          echo 'TSK0243_CHECKPOINT_PATCH=PASS'
 
           rm "${workflow}"
           git diff --check
           changed="$(git status --short | awk '{print $2}' | sort)"
           expected="$(printf '%s\n%s\n' "${workflow}" 'CURRENT_STATE.md' | sort)"
           test "${changed}" = "${expected}"
+          echo 'TSK0243_CHANGESET_GUARD=PASS'
+
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add CURRENT_STATE.md "${workflow}"
@@ -95,6 +99,4 @@ jobs:
           test "${staged}" = "${expected}"
           git commit -m 'checkpoint: record TSK-0243 isolated target partial proof'
           git push origin "HEAD:refs/heads/${branch}"
-          echo 'TSK0243_STAGE_INPUT_BINDING=PASS'
-          echo 'TSK0243_CHECKPOINT_PATCH=PASS'
           echo 'TSK0243_BRANCH_ONLY_SYNC_PUSH=PASS'
