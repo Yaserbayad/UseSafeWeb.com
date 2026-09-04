@@ -1,6 +1,6 @@
 # UseSafeWeb.com — Current Authoritative State
 
-**Updated:** 2026-09-04T19:29:43Z
+**Updated:** 2026-09-04T21:07:33Z
 **Branch:** `main`  
 **Mode:** `SERIAL LIGHT`
 
@@ -8,9 +8,11 @@
 
 ## Canonical planning authority
 
-**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0014 PUBLISHED; RUNTIME RECONCILIATION RECORDED.**
+**ACTIVE / OWNER-FROZEN / POST-FREEZE CR-0015 PUBLISHED; RUNTIME RECONCILIATION RECORDED.**
 
-- Latest post-freeze planning change: `CR-0014` / `DEC-0061`, explicitly authorized by the Project Owner on 2026-09-04: exactly `TSK-0631`, `TSK-0633`, `TSK-0634`, `TSK-0635`, `TSK-0637` and `TSK-0640` are deferred until after the controlled Release-1 test with approximately 10-20 people; they remain non-PASS and retain their dependency and ACC/VER/EVD contracts. No other task is deferred by this decision.
+- Latest post-freeze planning change: `CR-0015` / `DEC-0062`, explicitly authorized by the Project Owner on 2026-09-04: exactly `TSK-0630`, `TSK-0421`, `TSK-0415`, `TSK-0416`, `TSK-0370`, `TSK-0499` and `TSK-0242` are deferred until after Version 1 / the controlled Release-1 test with approximately 10-20 people. They remain non-PASS; all dependency edges, ACC/VER/EVD contracts and valid partial evidence are preserved. While the deferral is active, only these seven task obligations are excluded from pre-V1/Release-1 completion and gate evaluation; no task/gate PASS or other requirement/material-action waiver is inferred. Successors remain undeferred and obey ordinary dependency blocking; in particular `TSK-0421` blocks `TSK-0419` -> `TSK-0420` -> `TSK-0414` until reactivation.
+- CR-0015 canonical publication: PR `#114`; exact candidate head `52218a8432d2fafb39ca1a2b5cfdc883991a6378`; squash merge/main commit `05c618f0c2e074f79fe60d8fc37796db960d74ba`. Bounded planning validation run/job `33919215443 / 101173407414`: **PASS** — 641 tasks, 858 dependency edges, 0 recurring hard predecessors, 0 broken links, 0 generated missing task IDs, and `CR0015_BOUNDED_DELTA=PASS`. All four pull-request checks on the exact candidate head passed before merge: localization `33919281148`, governed CI/promotion `33919281149`, automated-check acceptance `33919281316`, and landing acceptance `33919281269`. The governed CI check also proved deployment/material-action fences remained closed.
+- Prior post-freeze planning change: `CR-0014` / `DEC-0061`, explicitly authorized by the Project Owner on 2026-09-04: exactly `TSK-0631`, `TSK-0633`, `TSK-0634`, `TSK-0635`, `TSK-0637` and `TSK-0640` are deferred until after the controlled Release-1 test with approximately 10-20 people; they remain non-PASS and retain their dependency and ACC/VER/EVD contracts. No other task is deferred by this decision.
 - `CR-0013` / `DEC-0060` remains active and unchanged: ordinary governed AUTO_ALLOWED critical-path changes use deterministic automated quality/change-policy verification rather than mandatory human/Code Owner approval; all genuine separate human/material-action boundaries remain unchanged.
 - `CR-0012` / `DEC-0059` remains active and unchanged: TSK-0455 stays DEFERRED / WAITING until the integrated environment is fully working and no earlier than the owner re-evaluation window; TSK-0456, TSK-0457 and TSK-0492 remain dependency-blocked.
 - Prior post-freeze planning change: `CR-0011` / `DEC-0058`, explicitly authorized by the Project Owner on 2026-09-03 as a current-state rebase/reconciliation of stale correction intent onto CR-0010 authority, not verbatim stale-candidate publication.
