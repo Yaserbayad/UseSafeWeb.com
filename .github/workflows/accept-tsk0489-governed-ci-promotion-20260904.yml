@@ -1,0 +1,108 @@
+name: TSK-0489 governed CI and promotion gate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  governed-ci:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.23.2'
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - name: Execute the canonical local-equivalent governed gate
+        id: gate
+        continue-on-error: true
+        shell: bash
+        env:
+          TSK0490_EXTERNAL_SECRET: ${{ github.token }}
+        run: |
+          set -o pipefail
+          bash .github/scripts/tsk0489-governed-ci.sh 2>&1 | tee /tmp/tsk0489-gate.txt
+      - name: Prove deployment and material-action fences remain closed
+        if: steps.gate.outcome == 'success'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          workflow='.github/workflows/accept-tsk0489-governed-ci-promotion-20260904.yml'
+          python3 - "$workflow" <<'PY'
+          import sys
+          from pathlib import Path
+          text = Path(sys.argv[1]).read_text(encoding='utf-8')
+          required = ['permissions:\n  contents: read', 'runs-on: ubuntu-24.04', 'persist-credentials: false']
+          for item in required:
+              assert item in text, item
+          forbidden = ['contents: write', 'deployments: write', 'id-token: write', 'environment:', 'self-hosted', 'azure/login', 'kubectl ', 'docker push', 'scp ', 'ssh ']
+          for item in forbidden:
+              assert item not in text, item
+          PY
+          grep -Fq 'no deployment, telemetry activation, participant processing, service revocation/removal, payment, activation, launch or other material external action' CURRENT_STATE.md
+          {
+            echo 'TSK0489_DEPLOYMENT_ACTION=NONE'
+            echo 'TSK0489_ACTIVATION_ACTION=NONE'
+            echo 'TSK0489_PARTICIPANT_ACTION=NONE'
+            echo 'TSK0489_SERVICE_MUTATION=NONE'
+            echo 'TSK0489_PAYMENT_ACTION=NONE'
+            echo 'TSK0489_LAUNCH_ACTION=NONE'
+            echo 'TSK0489_MATERIAL_ACTION_FENCES=PASS'
+          } | tee -a /tmp/tsk0489-gate.txt
+      - name: Capture immutable run evidence
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          touch /tmp/tsk0489-gate.txt
+          {
+            echo "TSK0489_EVENT=${GITHUB_EVENT_NAME}"
+            echo "TSK0489_HEAD_SHA=${GITHUB_SHA}"
+            echo "TSK0489_RUN_ID=${GITHUB_RUN_ID}"
+            echo "TSK0489_RUN_ATTEMPT=${GITHUB_RUN_ATTEMPT}"
+            echo "TSK0489_GATE_STEP_OUTCOME=${{ steps.gate.outcome }}"
+            echo "TSK0489_GATE_SCRIPT_BLOB=$(git hash-object .github/scripts/tsk0489-governed-ci.sh)"
+            echo "TSK0489_WORKFLOW_BLOB=$(git hash-object .github/workflows/accept-tsk0489-governed-ci-promotion-20260904.yml)"
+          } >> /tmp/tsk0489-gate.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tsk-0489-governed-ci-${{ github.run_id }}-${{ github.run_attempt }}
+          path: /tmp/tsk0489-gate.txt
+          retention-days: 30
+      - name: Enforce fail-closed promotion status
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test '${{ steps.gate.outcome }}' = 'success'
+          grep -Fq 'TSK0489_PROMOTION_ELIGIBLE=YES' /tmp/tsk0489-gate.txt
+          grep -Fq 'TSK0489_MATERIAL_ACTION_FENCES=PASS' /tmp/tsk0489-gate.txt
+          echo 'TSK0489_GOVERNED_CI=PASS'
+
+  promotion-eligibility:
+    needs: governed-ci
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Declare exact-head governed promotion eligibility
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          echo "TSK0489_PROMOTION_HEAD=${GITHUB_SHA}"
+          echo 'TSK0489_PROMOTION_CONDITION=ALL_APPLICABLE_EXACT_HEAD_CHECKS_MUST_PASS'
+          echo 'TSK0489_PROMOTION_ELIGIBLE=YES'
+          echo 'TSK0489_DEPLOYMENT_AUTHORITY=NONE'
