@@ -2,7 +2,7 @@
   "checkpoint_schema": "serial-light-checkpoint-v1",
   "project_id": "UseSafeWeb.com",
   "governance_mode": "SERIAL_LIGHT",
-  "checkpoint_revision": 16,
+  "checkpoint_revision": 17,
   "baseline": {
     "version": 1,
     "objectives": [
@@ -17140,18 +17140,17 @@
         "id": "TSK-0243",
         "status": "WAITING",
         "wait": {
-          "condition": "TSK-0243 repository/source implementation is deploy-ready and the public DNS/verifier wildcard now resolves, but the separately governed live-target deployment/enablement needed to create the public functional-proof boundary has not yet been authorized and established. The current undeployed/incomplete target state therefore remains expected: challenge-host TLS/SNI fails, the challenge probe is unreachable, and the public site plus dns-verification request API return HTTP 502. This is a deployment/access boundary, not a requirement for the service to self-recover before deployment.",
-          "resolution_check": "Do not treat HTTP 502 or challenge TLS/SNI failure as independently self-resolving prerequisites. Resume TSK-0243 functional public-target proof only after current durable authority establishes and separately authorizes the qualifying live-target deployment/enablement and required access, then a fresh bounded read-only preflight confirms the public site/request-result API and challenge-host TLS/SNI/probe path are healthy. Recheck all material-action fences before any functional POST, DNS rewrite, deployment, certificate/proxy mutation, participant processing, production/public activation, payment, market activation, or launch action. This clarification adds no WBS hard dependency and changes no task status.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0243; Plans/Master/Layers/LAYER_4_INTEGRATED_PROGRAM_CRITICAL_PATH.md blob 92568e5f1e7c155a05d4ae2163780dd20b59f509; CURRENT_STATE.md prior blob 251e3e16c7d8b5d49ca041f9e9cfe304be73c0cf; TSK-0243 read-only preflight run 33900198638 attempt 19 job 101304288767; TSK-0452 current WAITING deployment/access boundary."
+          "condition": "The owner-selected target/access prerequisite is now established: GitHub reaches DNS host adguardvm at 52.157.109.120 and web host hmgweb at 20.71.90.212 with Ubuntu 24.04 and non-interactive sudo. TSK-0243 still requires the actual controlled direct-host deployment/enablement and then current public functional verification; the present HTTP 502/challenge TLS state is therefore an undeployed runtime condition, not a missing-target condition.",
+          "resolution_check": "Complete the current AUTO_ALLOWED TSK-0452 direct-host deployment/health/rollback acceptance on the approved hosts. Then rerun the bounded read-only TSK-0243 public preflight. Only when public application/API health and challenge-host TLS/SNI/probe routing are healthy may the gated TSK-0243 functional target proof proceed under its own current authority.",
+          "reference": "Owner target instruction 2026-09-05; DNS binding run 33966585612 job 101307674698; web binding run 33966551601 job 101307582123; WBS TSK-0452 AUTO_ALLOWED; TSK-0489 and TSK-0490 PASS."
         },
         "acceptance_references": [],
         "wait_details": {
-          "condition": "Fresh bounded read-only public preflight attempt 19 remains materially equivalent to attempt 18: verify.usesafeweb.com and the deterministic challenge host resolve to 52.157.109.120; challenge-host TLS/SNI fails with TLS alert unrecognized name (rc=1); challenge probe returns HTTP 000; https://usesafeweb.com/ and /api/dns-verification/requests return HTTP 502. The website source task TSK-0361 is PASS, but live deployment/enablement has not been established under current durable authority.",
-          "resolution_check": "First satisfy the separate current target/deployment/access authority boundary without inferring deployment permission from repository/source authority. After deployment/enablement is durably established, rerun the existing bounded read-only TSK-0243 public preflight. Only if public application/API health and challenge-host TLS/SNI/probe routing are healthy may the gated functional proof be considered for execution under its own current authority.",
+          "condition": "Target identity/access is proven; deployment/enablement and current target functional proof remain outstanding.",
+          "resolution_check": "After TSK-0452 deployment acceptance, rerun the existing TSK-0243 public preflight and proceed only on healthy current target evidence.",
           "references": [
-            "GitHub Actions workflow run 33900198638 attempt 19 / job 101304288767; completed SUCCESS 2026-09-05T12:11Z; DNS/verifier wildcard present; challenge TLS/SNI FAIL rc=1 unrecognized name; challenge HTTP 000; public origin/request API HTTP 502; mutation=NONE.",
-            "TSK-0452 current WAITING record: qualifying approved fresh Ubuntu 24.04 LTS target plus Azure/DNS/TLS/monitoring access and separate target deployment/enablement authority are not durably established.",
-            "Layer 4: L6 implements website, DNS service, automation and supporting systems; L7 independently proves the integrated release."
+            "UseSafeWeb DNS runner adguardvm -> 52.157.109.120; Ubuntu 24.04; sudo PASS; AdGuard active; port 53 listener.",
+            "Cross-repo transport runner hmgweb -> 20.71.90.212; Ubuntu 24.04; sudo PASS; Nginx active; usesafeweb.com configured."
           ]
         }
       },
@@ -19438,15 +19437,8 @@
       },
       {
         "id": "TSK-0452",
-        "status": "WAITING",
-        "acceptance_references": [],
-        "wait_details": {
-          "condition": "Dependencies TSK-0489 and TSK-0490 are PASS and existing direct-host source mechanics are preserved, but TSK-0452 is not genuinely executable under its current preconditions because current durable authority does not establish the required qualifying approved fresh Ubuntu 24.04 LTS target plus Azure/DNS/TLS/monitoring access, and no separate current durable authority permits the required direct-host target deployment/enablement. Repository/source AUTO_ALLOWED authority does not infer deployment or production/public runtime authority.",
-          "resolution_check": "Resume TSK-0452 only when current durable authority establishes an approved qualifying fresh Ubuntu 24.04 LTS host and the required Azure/DNS/TLS/monitoring access, and separately authorizes the target deployment/enablement required by VER-0452. Then reload the exact TSK-0452 contract and current material-action fences before target execution; do not infer participant, telemetry, payment, production/public activation, market activation, launch, profile/certificate, or service-removal authority.",
-          "references": [
-            "Canonical checkpoint revision 9 made TSK-0452 TODO but added no target-access evidence or material-action authority; TSK-0489 and TSK-0490 remain PASS; POL-004 and POL-013 remain controlling."
-          ]
-        }
+        "status": "TODO",
+        "acceptance_references": []
       },
       {
         "id": "TSK-0453",
