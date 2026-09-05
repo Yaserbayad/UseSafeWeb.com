@@ -2,7 +2,7 @@
   "checkpoint_schema": "serial-light-checkpoint-v1",
   "project_id": "UseSafeWeb.com",
   "governance_mode": "SERIAL_LIGHT",
-  "checkpoint_revision": 30,
+  "checkpoint_revision": 31,
   "baseline": {
     "version": 1,
     "objectives": [
@@ -19175,8 +19175,16 @@
       },
       {
         "id": "TSK-0423",
-        "status": "TODO",
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0423",
+            "evidence_type": "TEST_RESULT",
+            "reference": "Yaserbayad/UseSafeWeb.com source commit 0f5d9695c259c4f66b0c47bf3752cc40d7a10dc0; verifier blob c50dd2b9b5a0e83cdc60fd7a962f018dee46d142; acceptance workflow blob 1098e86c84eb8973f96f4d51d23d3956fe4ba230; GitHub Actions run 33982540881 jobs 101350218278 and 101350218385",
+            "summary": "ACC-0423 satisfied: the automated regression rejects every seeded unsafe privacy/security configuration class and the reusable release/deployment/recovery acceptance workflow passed both hosted negative-matrix verification and read-only production-like AdGuard target verification.",
+            "verification_context": "Run 33982540881 on exact head 0f5d9695c259c4f66b0c47bf3752cc40d7a10dc0: negative-regression SUCCESS and deployed-runtime-readonly SUCCESS. Target checks are read-only and cover live AdGuard settings, public-admin exposure/firewall, filter behavior and service state; no target mutation is performed."
+          }
+        ]
       },
       {
         "id": "TSK-0424",
