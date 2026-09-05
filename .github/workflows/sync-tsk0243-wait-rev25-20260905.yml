@@ -1,0 +1,54 @@
+name: Sync TSK-0243 WAITING rev25
+on:
+  push:
+    branches: [runtime/tsk0243-wait-refresh-rev25-20260905]
+    paths: [.github/workflows/sync-tsk0243-wait-rev25-20260905.yml]
+permissions:
+  contents: write
+concurrency:
+  group: usesafeweb-serial-light-checkpoint-write
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: runtime/tsk0243-wait-refresh-rev25-20260905
+          fetch-depth: 0
+      - name: Persist fresh TSK-0243 WAITING condition
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('CURRENT_STATE.md')
+          d=json.loads(p.read_text(encoding='utf-8'))
+          assert d['checkpoint_schema']=='serial-light-checkpoint-v1'
+          assert d['project_id']=='UseSafeWeb.com'
+          assert d['governance_mode']=='SERIAL_LIGHT'
+          assert d['checkpoint_revision']==24
+          assert d['baseline']['version']==1
+          assert d['runtime']['project_status']=='ACTIVE'
+          assert d['runtime']['governance_blocker'] is None
+          items={x['id']:x for x in d['runtime']['items']}
+          assert items['TSK-0009']['status']=='PASS'
+          assert items['TSK-0452']['status']=='PASS'
+          assert items['TSK-0243']['status']=='WAITING'
+          assert not any(x.get('status')=='TODO' for x in d['runtime']['items'])
+          t=items['TSK-0243']
+          t['wait']={
+            'condition':'The approved target/deployment prerequisite is complete through durable TSK-0452 PASS. The fresh bounded external preflight now confirms usesafeweb.com is healthy at HTTP 200, the verification-request endpoint is externally reachable and returns HTTP 405 to the read-only GET, and the deterministic verifier wildcard/challenge host resolves to 52.157.109.120. TSK-0243 still cannot proceed because the challenge hostname TLS/SNI handshake fails with TLS alert unrecognized name and the approved probe path remains unreachable at HTTP 000.',
+            'resolution_check':'Rerun only the bounded read-only TSK-0243 public preflight. Resume functional TSK-0243 proof only when the deterministic challenge hostname completes authenticated TLS/SNI and the approved /api/dns-verification/probes route is externally reachable, with the application request/result routes healthy. Do not infer or perform DNS, TLS, reverse-proxy, runtime, profile/device, participant, telemetry, payment, production/public, market, launch, or service-removal mutation without separate current durable authority.',
+            'reference':'Fresh bounded public preflight workflow run 33900198638, latest monitored job 101340861981; TSK-0452 durable PASS; checkpoint revision 24; TSK-0243 ACC-0243/VER-0243/EVD-0243 unchanged.'
+          }
+          d['checkpoint_revision']=25
+          p.write_text(json.dumps(d,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
+          PY
+          python3 -m json.tool CURRENT_STATE.md >/dev/null
+          git config user.name 'UseSafeWeb Governor'
+          git config user.email 'actions@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'state: refresh TSK-0243 WAITING at checkpoint revision 25'
+          git push origin HEAD:runtime/tsk0243-wait-refresh-rev25-20260905
