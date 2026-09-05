@@ -2,7 +2,7 @@
   "checkpoint_schema": "serial-light-checkpoint-v1",
   "project_id": "UseSafeWeb.com",
   "governance_mode": "SERIAL_LIGHT",
-  "checkpoint_revision": 27,
+  "checkpoint_revision": 28,
   "baseline": {
     "version": 1,
     "objectives": [
@@ -14612,33 +14612,42 @@
       },
       {
         "id": "TSK-0026",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker. Owner-frozen final plan is published and fetch-verified; governance hold is released.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0026; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0026",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0026; acceptance ACC-0026",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0027",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker. Owner-frozen final plan is published and fetch-verified; governance hold is released.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0027; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0027",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0027; acceptance ACC-0027",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0028",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker. Owner-frozen final plan is published and fetch-verified; governance hold is released.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0028; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0028",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0028; acceptance ACC-0028",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0029",
@@ -15949,13 +15958,16 @@
       },
       {
         "id": "TSK-0139",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; DEC-0050/CR-0003 active; TSK-0513 current PASS; required inputs/access available; no unresolved safety/privacy blocker applicable to bounded internal L4 definition/design; deferred real-participant/legal conditions carried explicitly.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0139; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0139",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0139; acceptance ACC-0139",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0140",
@@ -16251,53 +16263,68 @@
       },
       {
         "id": "TSK-0165",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0165; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0165",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0165; acceptance ACC-0165",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0166",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0166; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0166",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0166; acceptance ACC-0166",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0167",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0167; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0167",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0167; acceptance ACC-0167",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0168",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0168; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0168",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0168; acceptance ACC-0168",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0169",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0169; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0169",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0169; acceptance ACC-0169",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0170",
@@ -16684,13 +16711,16 @@
       },
       {
         "id": "TSK-0202",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker. Owner-frozen final plan is published and fetch-verified; governance hold is released.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0202; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0202",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0202; acceptance ACC-0202",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0203",
@@ -16734,13 +16764,16 @@
       },
       {
         "id": "TSK-0207",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker. Owner-frozen final plan is published and fetch-verified; governance hold is released.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0207; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0207",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0207; acceptance ACC-0207",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0208",
@@ -16804,13 +16837,16 @@
       },
       {
         "id": "TSK-0214",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0214; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0214",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0214; acceptance ACC-0214",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0215",
@@ -16929,13 +16965,16 @@
       },
       {
         "id": "TSK-0225",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0225; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0225",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0225; acceptance ACC-0225",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0226",
@@ -16949,23 +16988,29 @@
       },
       {
         "id": "TSK-0227",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0227; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0227",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0227; acceptance ACC-0227",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0228",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0228; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0228",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0228; acceptance ACC-0228",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0229",
@@ -17695,13 +17740,16 @@
       },
       {
         "id": "TSK-0298",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0298; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0298",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0298; acceptance ACC-0298",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0299",
@@ -17744,13 +17792,16 @@
       },
       {
         "id": "TSK-0302",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0302; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0302",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0302; acceptance ACC-0302",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0303",
@@ -18584,13 +18635,16 @@
       },
       {
         "id": "TSK-0374",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0374; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0374",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0374; acceptance ACC-0374",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0375",
@@ -19163,43 +19217,55 @@
       },
       {
         "id": "TSK-0428",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker. Owner-frozen final plan is published and fetch-verified; governance hold is released.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0428; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0428",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0428; acceptance ACC-0428",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0429",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker. Owner-frozen final plan is published and fetch-verified; governance hold is released.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0429; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0429",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0429; acceptance ACC-0429",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0430",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker. Owner-frozen final plan is published and fetch-verified; governance hold is released.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0430; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0430",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0430; acceptance ACC-0430",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0431",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker. Owner-frozen final plan is published and fetch-verified; governance hold is released.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0431; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0431",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0431; acceptance ACC-0431",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0432",
@@ -19265,13 +19331,16 @@
       },
       {
         "id": "TSK-0437",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker. Owner-frozen final plan is published and fetch-verified; governance hold is released.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0437; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0437",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0437; acceptance ACC-0437",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0438",
@@ -19305,33 +19374,42 @@
       },
       {
         "id": "TSK-0441",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker. Owner-frozen final plan is published and fetch-verified; governance hold is released.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0441; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0441",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0441; acceptance ACC-0441",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0442",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker. Owner-frozen final plan is published and fetch-verified; governance hold is released.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0442; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0442",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0442; acceptance ACC-0442",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0443",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker. Owner-frozen final plan is published and fetch-verified; governance hold is released.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0443; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0443",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0443; acceptance ACC-0443",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0444",
@@ -20052,53 +20130,68 @@
       },
       {
         "id": "TSK-0510",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker. Owner-frozen final plan is published and fetch-verified; governance hold is released.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0510; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0510",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0510; acceptance ACC-0510",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0511",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker. Owner-frozen final plan is published and fetch-verified; governance hold is released.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0511; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0511",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0511; acceptance ACC-0511",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0512",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker. Owner-frozen final plan is published and fetch-verified; governance hold is released.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0512; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0512",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0512; acceptance ACC-0512",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0513",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0513; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0513",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0513; acceptance ACC-0513",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0514",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker. Owner-frozen final plan is published and fetch-verified; governance hold is released.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0514; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0514",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0514; acceptance ACC-0514",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0515",
@@ -20563,13 +20656,16 @@
       },
       {
         "id": "TSK-0559",
-        "status": "WAITING",
-        "wait": {
-          "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker.",
-          "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0559; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2"
-        },
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0559",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_PRESERVATION_RECONCILIATION_EVIDENCE_2026-09-05.md; blob e87d1aaca75c155f88348f52adad2b6eb78e589a; evidence commit 2d20e5ef4b1f64b5df9b94bc1e7f2054a438c562; immutable legacy checkpoint blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; task TSK-0559; acceptance ACC-0559",
+            "summary": "Historical current PASS is preserved under POL-003 from immutable legacy runtime evidence; the current frozen acceptance identity is unchanged and no later owner deferral supersedes this task.",
+            "verification_context": "Source checkpoint revision 27 blob c2175c5b5e3a5797f38638e36503f76d6cafbd60; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; exact failure-boundary trace run 33980615850 job 101345052785 artifact 9973633064; reconciliation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a."
+          }
+        ]
       },
       {
         "id": "TSK-0560",
