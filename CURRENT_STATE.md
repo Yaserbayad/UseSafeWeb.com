@@ -2,7 +2,7 @@
   "checkpoint_schema": "serial-light-checkpoint-v1",
   "project_id": "UseSafeWeb.com",
   "governance_mode": "SERIAL_LIGHT",
-  "checkpoint_revision": 19,
+  "checkpoint_revision": 20,
   "baseline": {
     "version": 1,
     "objectives": [
@@ -17139,15 +17139,7 @@
           "resolution_check": "Complete the current AUTO_ALLOWED TSK-0452 direct-host deployment/health/rollback acceptance on the approved hosts. Then rerun the bounded read-only TSK-0243 public preflight. Only when public application/API health and challenge-host TLS/SNI/probe routing are healthy may the gated TSK-0243 functional target proof proceed under its own current authority.",
           "reference": "Owner target instruction 2026-09-05; DNS binding run 33966585612 job 101307674698; web binding run 33966551601 job 101307582123; WBS TSK-0452 AUTO_ALLOWED; TSK-0489 and TSK-0490 PASS."
         },
-        "acceptance_references": [],
-        "wait_details": {
-          "condition": "Target identity/access is proven; deployment/enablement and current target functional proof remain outstanding.",
-          "resolution_check": "After TSK-0452 deployment acceptance, rerun the existing TSK-0243 public preflight and proceed only on healthy current target evidence.",
-          "references": [
-            "UseSafeWeb DNS runner adguardvm -> 52.157.109.120; Ubuntu 24.04; sudo PASS; AdGuard active; port 53 listener.",
-            "Cross-repo transport runner hmgweb -> 20.71.90.212; Ubuntu 24.04; sudo PASS; Nginx active; usesafeweb.com configured."
-          ]
-        }
+        "acceptance_references": []
       },
       {
         "id": "TSK-0244",
@@ -19434,8 +19426,13 @@
         "id": "TSK-0452",
         "status": "PASS",
         "acceptance_references": [
-          "TSK_0452_PILOT_DEPLOYMENT_AUTOMATION_EVIDENCE_2026-09-05.md",
-          "Yaserbayad/erp.hmg.test Actions run 33969593425 job 101315631105; transport commit 03fc53cb5a030ce3534ede429a19123a28a27bbd"
+          {
+            "ac_id": "ACC-0452",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0452_PILOT_DEPLOYMENT_AUTOMATION_EVIDENCE_2026-09-05.md; blob 65902c584f450cd00ef7b3d0a01b421075683289; Yaserbayad/erp.hmg.test Actions run 33969593425 job 101315631105; transport commit 03fc53cb5a030ce3534ede429a19123a28a27bbd",
+            "summary": "ACC-0452 is satisfied by the direct-host deployment evidence: immutable release identity, approved host/runtime, validation and health checks, safe rollback behavior, and externally injected secret handling were verified.",
+            "verification_context": "Frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765, blob 357c5e1be3b455e7efddd329d6a2468e3125b502; evidence blob 65902c584f450cd00ef7b3d0a01b421075683289; successful deployment run 33969593425 job 101315631105."
+          }
         ]
       },
       {
