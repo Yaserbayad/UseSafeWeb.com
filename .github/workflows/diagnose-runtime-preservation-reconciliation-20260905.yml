@@ -1,0 +1,107 @@
+name: Diagnose runtime preservation reconciliation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/diagnose-runtime-preservation-reconciliation-20260905.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-serial-light-checkpoint-write
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out canonical main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Diagnose classification gaps without mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object CURRENT_STATE.md)" = 'c2175c5b5e3a5797f38638e36503f76d6cafbd60'
+          git show 20e2763c0be2124378e3158ac559aed826bc6765:CURRENT_STATE.md > /tmp/legacy-current-state.md
+          python3 - <<'PY'
+          import csv,json,re
+          from pathlib import Path
+          RESTORE='''TSK-0026 TSK-0027 TSK-0028 TSK-0139 TSK-0165 TSK-0166 TSK-0167 TSK-0168 TSK-0169 TSK-0202 TSK-0207 TSK-0214 TSK-0225 TSK-0227 TSK-0228 TSK-0298 TSK-0302 TSK-0374 TSK-0428 TSK-0431 TSK-0437 TSK-0441 TSK-0442 TSK-0443 TSK-0510 TSK-0511 TSK-0512 TSK-0513 TSK-0514 TSK-0559'''.split()
+          EXCLUDE='''TSK-0243 TSK-0360 TSK-0369 TSK-0399 TSK-0455 TSK-0483 TSK-0499 TSK-0630'''.split()
+          cur=json.loads(Path('CURRENT_STATE.md').read_text(encoding='utf-8'))
+          runtime={x['id']:x for x in cur['runtime']['items']}
+          work={x['id']:x for x in cur['baseline']['work_items']}
+          with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='') as f:
+              wbs={r['Task_ID']:r for r in csv.DictReader(f)}
+          lines=Path('/tmp/legacy-current-state.md').read_text(encoding='utf-8').splitlines()
+          headings={}
+          for i,line in enumerate(lines,1):
+              m=re.match(r'^#{2,6}\s+(TSK-\d{4})\b.*accepted stable state',line,re.I)
+              if m:
+                  tid=m.group(1).upper()
+                  if tid in runtime and runtime[tid]['status']!='PASS':
+                      headings.setdefault(tid,[]).append({'line':i,'heading':line.strip()})
+          def positives(tid):
+              out=[]
+              for i,line in enumerate(lines,1):
+                  if tid not in line: continue
+                  low=line.lower()
+                  if any(x in low for x in ['does not imply '+tid.lower()+' pass','does not prove or authorize '+tid.lower(),'not pass','non-pass','before pass','pending direct current','remains todo','remains waiting']):
+                      continue
+                  positive=(
+                    re.search(re.escape(tid)+r'.{0,500}(?:\*\*PASS|= PASS|: PASS|remains current PASS|current .*PASS|acceptance (?:is|are) satisfied|ACC-\d{4}.{0,80}satisfied)',line,re.I)
+                    or re.search(r'(?:Dependency\s+)?`?'+re.escape(tid)+r'`?\s+remains current PASS',line,re.I)
+                  )
+                  if positive:
+                      out.append({'line':i,'text':line.strip()})
+              return out
+          classified=set(RESTORE)|set(EXCLUDE)
+          unclassified=sorted(set(headings)-classified)
+          missing=[]
+          details=[]
+          for tid in RESTORE:
+              ps=positives(tid)
+              acc=[x['id'] for x in work[tid]['acceptance_criteria']]
+              expected='ACC-'+tid.split('-')[1]
+              if not ps or acc != [expected] or wbs[tid]['Acceptance_ID'] != expected:
+                  missing.append({'id':tid,'positive_count':len(ps),'checkpoint_acc':acc,'wbs_acc':wbs[tid]['Acceptance_ID'],'expected_acc':expected})
+              details.append({'id':tid,'positive_assertions':ps,'accepted_stable_headings':headings.get(tid,[])})
+          result={
+            'checkpoint_revision':cur['checkpoint_revision'],
+            'checkpoint_blob':'c2175c5b5e3a5797f38638e36503f76d6cafbd60',
+            'restore_count':len(RESTORE),
+            'exclude_count':len(EXCLUDE),
+            'accepted_stable_nonpass_ids':sorted(headings),
+            'unclassified_accepted_stable_nonpass_ids':unclassified,
+            'missing_or_mismatched_restore_assertions':missing,
+            'restore_details':details,
+            'diagnostic_result':'PASS' if not unclassified and not missing else 'NEEDS_REFINEMENT'
+          }
+          Path('runtime-preservation-reconciliation-diagnostic.json').write_text(json.dumps(result,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
+          print(json.dumps({k:v for k,v in result.items() if k!='restore_details'},indent=2,ensure_ascii=False))
+          PY
+      - name: Upload diagnostic
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-preservation-reconciliation-diagnostic
+          path: runtime-preservation-reconciliation-diagnostic.json
+          if-no-files-found: error
+      - name: Remove failed and diagnostic transports
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git show origin/main:CURRENT_STATE.md | git hash-object --stdin)" = 'c2175c5b5e3a5797f38638e36503f76d6cafbd60'
+          git switch -C main origin/main
+          git config user.name 'UseSafeWeb Governor'
+          git config user.email 'actions@users.noreply.github.com'
+          test -f .github/workflows/verify-runtime-preservation-reconciliation-20260905.yml
+          git rm .github/workflows/verify-runtime-preservation-reconciliation-20260905.yml
+          git rm .github/workflows/diagnose-runtime-preservation-reconciliation-20260905.yml
+          git commit -m 'evidence: remove runtime preservation diagnostic transports'
+          git push origin HEAD:main
