@@ -85,18 +85,18 @@ jobs:
           text = text.replace(revision_old, revision_new, 1)
 
           runtime_old = '''      {
-                "id": "TSK-0452",
-                "status": "TODO",
-                "acceptance_references": []
-              },'''
+        "id": "TSK-0452",
+        "status": "TODO",
+        "acceptance_references": []
+      },'''
           runtime_new = '''      {
-                "id": "TSK-0452",
-                "status": "PASS",
-                "acceptance_references": [
-                  "TSK_0452_PILOT_DEPLOYMENT_AUTOMATION_EVIDENCE_2026-09-05.md",
-                  "Yaserbayad/erp.hmg.test Actions run 33969593425 job 101315631105; transport commit 03fc53cb5a030ce3534ede429a19123a28a27bbd"
-                ]
-              },'''
+        "id": "TSK-0452",
+        "status": "PASS",
+        "acceptance_references": [
+          "TSK_0452_PILOT_DEPLOYMENT_AUTOMATION_EVIDENCE_2026-09-05.md",
+          "Yaserbayad/erp.hmg.test Actions run 33969593425 job 101315631105; transport commit 03fc53cb5a030ce3534ede429a19123a28a27bbd"
+        ]
+      },'''
           assert text.count(runtime_old) == 1
           text = text.replace(runtime_old, runtime_new, 1)
 
