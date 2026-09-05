@@ -18,12 +18,13 @@ jobs:
         with:
           ref: runtime/waiting-monitor-refresh-20260905-0754
           fetch-depth: 0
+          persist-credentials: true
       - name: Persist governed WAITING refresh
         shell: bash
         run: |
           set -Eeuo pipefail
           python3 - <<'PY'
-          import json
+          import json, re
           from pathlib import Path
 
           p = Path('CURRENT_STATE.md')
@@ -33,17 +34,37 @@ jobs:
           assert data['governance_mode'] == 'SERIAL_LIGHT'
           assert data['checkpoint_revision'] == 9
           assert data['baseline']['version'] == 1
-          rt = data['runtime_state']
-          assert rt['project_status'] == 'ACTIVE'
-          assert rt.get('governance_blocker') is None
-          tasks = {x['id']: x for x in rt['work_items']}
-          assert tasks['TSK-0243']['status'] == 'WAITING'
-          assert tasks['TSK-0452']['status'] == 'TODO'
-          assert tasks['TSK-0489']['status'] == 'PASS'
-          assert tasks['TSK-0490']['status'] == 'PASS'
+
+          def walk(obj, path=()):
+              if isinstance(obj, dict):
+                  yield path, obj
+                  for k, v in obj.items():
+                      yield from walk(v, path + (k,))
+              elif isinstance(obj, list):
+                  for i, v in enumerate(obj):
+                      yield from walk(v, path + (i,))
+
+          nodes = list(walk(data))
+          project_nodes = [(path, node) for path, node in nodes if isinstance(node, dict) and 'project_status' in node]
+          active_nodes = [(path, node) for path, node in project_nodes if node.get('project_status') == 'ACTIVE' and node.get('governance_blocker') is None]
+          assert len(active_nodes) == 1, [(path, node.get('project_status'), node.get('governance_blocker')) for path, node in project_nodes]
+
+          def task(tid):
+              found = [(path, node) for path, node in nodes if isinstance(node, dict) and node.get('id') == tid and 'status' in node]
+              assert len(found) == 1, (tid, [(path, node.get('status')) for path, node in found])
+              return found[0][1]
+
+          t0243 = task('TSK-0243')
+          t0452 = task('TSK-0452')
+          t0489 = task('TSK-0489')
+          t0490 = task('TSK-0490')
+          assert t0243['status'] == 'WAITING'
+          assert t0452['status'] == 'TODO'
+          assert t0489['status'] == 'PASS'
+          assert t0490['status'] == 'PASS'
 
           data['checkpoint_revision'] = 10
-          tasks['TSK-0243']['wait_details'] = {
+          t0243['wait_details'] = {
             'condition': 'Fresh bounded read-only public preflight attempt 13 shows the verifier DNS routing prerequisite changed from absent to present: verify.usesafeweb.com and the deterministic 32-hex challenge host now resolve to 52.157.109.120. The remaining public trust boundary is still not functional: the challenge-host TLS handshake fails with TLS alert 112 / unrecognized_name, the challenge probe returns HTTP 000, and https://usesafeweb.com/ plus /api/dns-verification/requests remain HTTP 502. Functional public-target proof therefore remains unavailable and fenced.',
             'resolution_check': 'Resume TSK-0243 functional target proof only when a fresh rerun of the existing bounded read-only public preflight shows the challenge verifier host has valid TLS/SNI and the approved probe path is externally reachable, and the public application request/result endpoints are healthy. Recheck current source/version and every material-action fence before any functional POST, DNS rewrite, deployment, certificate/proxy mutation, participant processing, production/public activation, market activation, payment, or launch action.',
             'references': [
@@ -51,8 +72,8 @@ jobs:
             ]
           }
 
-          tasks['TSK-0452']['status'] = 'WAITING'
-          tasks['TSK-0452']['wait_details'] = {
+          t0452['status'] = 'WAITING'
+          t0452['wait_details'] = {
             'condition': 'Dependencies TSK-0489 and TSK-0490 are PASS and existing direct-host source mechanics are preserved, but TSK-0452 is not genuinely executable under its current preconditions because current durable authority does not establish the required qualifying approved fresh Ubuntu 24.04 LTS target plus Azure/DNS/TLS/monitoring access, and no separate current durable authority permits the required direct-host target deployment/enablement. Repository/source AUTO_ALLOWED authority does not infer deployment or production/public runtime authority.',
             'resolution_check': 'Resume TSK-0452 only when current durable authority establishes an approved qualifying fresh Ubuntu 24.04 LTS host and the required Azure/DNS/TLS/monitoring access, and separately authorizes the target deployment/enablement required by VER-0452. Then reload the exact TSK-0452 contract and current material-action fences before target execution; do not infer participant, telemetry, payment, production/public activation, market activation, launch, profile/certificate, or service-removal authority.',
             'references': [
@@ -65,15 +86,16 @@ jobs:
           chk = json.loads(p.read_text(encoding='utf-8'))
           assert chk['checkpoint_revision'] == 10
           assert chk['baseline']['version'] == 1
-          crt = chk['runtime_state']
-          assert crt['project_status'] == 'ACTIVE'
-          assert crt.get('governance_blocker') is None
-          ct = {x['id']: x for x in crt['work_items']}
-          assert ct['TSK-0243']['status'] == 'WAITING'
-          assert ct['TSK-0452']['status'] == 'WAITING'
-          assert ct['TSK-0489']['status'] == 'PASS'
-          assert ct['TSK-0490']['status'] == 'PASS'
-          assert not any(x['status'] == 'TODO' for x in crt['work_items'])
+          chk_nodes = list(walk(chk))
+          chk_active = [(path, node) for path, node in chk_nodes if isinstance(node, dict) and node.get('project_status') == 'ACTIVE' and node.get('governance_blocker') is None]
+          assert len(chk_active) == 1
+          task_nodes = [node for _, node in chk_nodes if isinstance(node, dict) and re.fullmatch(r'TSK-\d{4}', str(node.get('id', ''))) and 'status' in node]
+          by_id = {node['id']: node for node in task_nodes}
+          assert by_id['TSK-0243']['status'] == 'WAITING'
+          assert by_id['TSK-0452']['status'] == 'WAITING'
+          assert by_id['TSK-0489']['status'] == 'PASS'
+          assert by_id['TSK-0490']['status'] == 'PASS'
+          assert not any(node['status'] == 'TODO' for node in task_nodes), [node['id'] for node in task_nodes if node['status'] == 'TODO']
           PY
           test "$(git diff --name-only)" = "CURRENT_STATE.md"
           git diff --check
