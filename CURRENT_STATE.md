@@ -2,7 +2,7 @@
   "checkpoint_schema": "serial-light-checkpoint-v1",
   "project_id": "UseSafeWeb.com",
   "governance_mode": "SERIAL_LIGHT",
-  "checkpoint_revision": 31,
+  "checkpoint_revision": 32,
   "baseline": {
     "version": 1,
     "objectives": [
@@ -17197,9 +17197,9 @@
         "id": "TSK-0243",
         "status": "WAITING",
         "wait": {
-          "condition": "The owner-selected target/access prerequisite is now established: GitHub reaches DNS host adguardvm at 52.157.109.120 and web host hmgweb at 20.71.90.212 with Ubuntu 24.04 and non-interactive sudo. TSK-0243 still requires the actual controlled direct-host deployment/enablement and then current public functional verification; the present HTTP 502/challenge TLS state is therefore an undeployed runtime condition, not a missing-target condition.",
-          "resolution_check": "Complete the current AUTO_ALLOWED TSK-0452 direct-host deployment/health/rollback acceptance on the approved hosts. Then rerun the bounded read-only TSK-0243 public preflight. Only when public application/API health and challenge-host TLS/SNI/probe routing are healthy may the gated TSK-0243 functional target proof proceed under its own current authority.",
-          "reference": "Owner target instruction 2026-09-05; DNS binding run 33966585612 job 101307674698; web binding run 33966551601 job 101307582123; WBS TSK-0452 AUTO_ALLOWED; TSK-0489 and TSK-0490 PASS."
+          "condition": "Fresh bounded public preflight confirms public application/API routing and verifier wildcard DNS are present, but the deterministic 32-hex challenge host still fails TLS/SNI with alert unrecognized name and its probe endpoint remains unreachable (HTTP 000). TSK-0452 is already PASS, so the remaining TSK-0243 prerequisite is specifically the verifier challenge-host TLS/proxy functional path, not target access or general web deployment.",
+          "resolution_check": "Rerun the existing bounded read-only TSK-0243 public preflight. Remain WAITING until the deterministic 32-hex challenge hostname both completes trusted TLS/SNI and reaches the approved /api/dns-verification/probes interface while the public application request/result endpoints remain healthy. Only then may separately authorized functional target proof proceed; do not infer DNS/TLS/proxy mutation authority from this WAITING state.",
+          "reference": "Fresh bounded read-only public preflight: workflow run 33900198638, fresh job 101348390683; TSK-0452 durable PASS in checkpoint revision 31; TSK-0423 durable PASS in checkpoint revision 31."
         },
         "acceptance_references": []
       },
