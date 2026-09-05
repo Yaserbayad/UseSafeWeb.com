@@ -7,6 +7,8 @@ INSTALL_ROOT="${USESAFEWEB_INSTALL_ROOT:-/opt/usesafeweb-web}"
 INSTALL_ROOT="${INSTALL_ROOT%/}"
 SERVICE="usesafeweb-web.service"
 ENV_FILE="/etc/usesafeweb/website.env"
+NODE_BIN="/opt/usesafeweb-runtime/node-v22.23.2/bin/node"
+NPM_CLI="/opt/usesafeweb-runtime/node-v22.23.2/lib/node_modules/npm/bin/npm-cli.js"
 
 fail(){ printf 'USESAFEWEB_DEPLOY=FAIL reason=%s\n' "$1" >&2; exit 1; }
 set_release_binding(){
@@ -35,8 +37,10 @@ set_release_binding(){
 [[ -d "${SOURCE_ROOT}/website" ]] || fail source_root
 [[ "${RELEASE_SHA}" =~ ^[0-9a-f]{40}$ ]] || fail release_sha
 [[ "$(git -C "${SOURCE_ROOT}" rev-parse HEAD)" == "${RELEASE_SHA}" ]] || fail source_binding
-[[ "$(node --version)" == 'v22.23.2' ]] || fail node_version
-[[ "$(npm --version)" == '10.9.8' ]] || fail npm_version
+[[ -x "${NODE_BIN}" ]] || fail node_runtime
+[[ -f "${NPM_CLI}" ]] || fail npm_runtime
+[[ "$("${NODE_BIN}" --version)" == 'v22.23.2' ]] || fail node_version
+[[ "$("${NODE_BIN}" "${NPM_CLI}" --version)" == '10.9.8' ]] || fail npm_version
 [[ -f "${ENV_FILE}" ]] || fail environment_file
 [[ "$(stat -c '%a %U:%G' "${ENV_FILE}")" == '600 root:root' ]] || fail environment_permissions
 env_release="$(awk -F= '$1=="USESAFEWEB_RELEASE_SHA" {sub(/^[^=]*=/,""); print; exit}' "${ENV_FILE}")"
@@ -134,8 +138,8 @@ if [[ -e "${release}" || -L "${release}" ]]; then
 fi
 
 cd "${SOURCE_ROOT}/website"
-npm ci --ignore-scripts --no-fund --no-audit
-NEXT_TELEMETRY_DISABLED=1 npm run validate
+"${NODE_BIN}" "${NPM_CLI}" ci --ignore-scripts --no-fund --no-audit
+NEXT_TELEMETRY_DISABLED=1 "${NODE_BIN}" "${NPM_CLI}" run validate
 
 rm -rf "${release}.new"
 install -d -o usesafeweb-web -g usesafeweb-web -m 0750 "${release}.new"

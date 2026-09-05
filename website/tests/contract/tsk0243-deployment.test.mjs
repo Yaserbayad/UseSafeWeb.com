@@ -14,6 +14,7 @@ const servicePath = resolve(repository, 'infrastructure/web-server/usesafeweb-we
 const envExamplePath = resolve(repository, 'infrastructure/web-server/website.env.example');
 const validatorPath = resolve(repository, 'infrastructure/web-server/validate-runtime.mjs');
 const deployPath = resolve(repository, 'infrastructure/web-server/deploy-release.sh');
+const nodeInstallerPath = resolve(repository, 'infrastructure/web-server/install-node-runtime.sh');
 
 async function loadRuntimeConfig() {
   assert.equal(existsSync(runtimeConfigPath), true, 'missing server runtime configuration module');
@@ -141,8 +142,8 @@ test('Next.js production output and direct-host service are deterministic and fa
 
   const deploy = readFileSync(deployPath, 'utf8');
   assert.match(deploy, /10\.9\.8/);
-  assert.match(deploy, /npm ci --ignore-scripts --no-fund --no-audit/);
-  assert.match(deploy, /npm run validate/);
+  assert.match(deploy, /ci --ignore-scripts --no-fund --no-audit/);
+  assert.match(deploy, /run validate/);
   assert.match(deploy, /environment_release_binding/);
   assert.match(deploy, /\.next\/standalone/);
   assert.match(deploy, /\.release-sha/);
@@ -151,4 +152,29 @@ test('Next.js production output and direct-host service are deterministic and fa
   assert.match(deploy, /systemctl restart ["']\$\{SERVICE\}["']/);
   assert.match(deploy, /api\/health\/ready/);
   assert.match(deploy, /rollback/i);
+});
+
+test('direct-host deployment uses an isolated pinned Node runtime without changing the host global Node', () => {
+  assert.equal(existsSync(nodeInstallerPath), true, 'missing isolated Node runtime installer');
+
+  const installer = readFileSync(nodeInstallerPath, 'utf8');
+  assert.match(installer, /v22\.23\.2/);
+  assert.match(installer, /d60acfe00a2932254bb0ad20e01b0d74397a0875595de719654b214f4b03f307/);
+  assert.match(installer, /node-v22\.23\.2-linux-x64\.tar\.xz/);
+  assert.match(installer, /sha256sum/);
+  assert.match(installer, /RUNTIME_ROOT='\/opt\/usesafeweb-runtime'/);
+  assert.match(installer, /DESTINATION="\$\{RUNTIME_ROOT\}\/node-v22\.23\.2"/);
+  assert.doesNotMatch(installer, /(?:ln|cp|mv).*\/usr\/bin\/node/);
+
+  const service = readFileSync(servicePath, 'utf8');
+  assert.match(service, /ExecStartPre=\/opt\/usesafeweb-runtime\/node-v22\.23\.2\/bin\/node .*validate-runtime\.mjs/);
+  assert.match(service, /ExecStart=\/opt\/usesafeweb-runtime\/node-v22\.23\.2\/bin\/node .*server\.js/);
+  assert.doesNotMatch(service, /ExecStart(?:Pre)?=\/usr\/bin\/node/);
+
+  const deploy = readFileSync(deployPath, 'utf8');
+  assert.match(deploy, /NODE_BIN=["']\/opt\/usesafeweb-runtime\/node-v22\.23\.2\/bin\/node["']/);
+  assert.match(deploy, /NPM_CLI=["']\/opt\/usesafeweb-runtime\/node-v22\.23\.2\/lib\/node_modules\/npm\/bin\/npm-cli\.js["']/);
+  assert.match(deploy, /"\$\{NODE_BIN\}" "\$\{NPM_CLI\}" ci --ignore-scripts --no-fund --no-audit/);
+  assert.match(deploy, /"\$\{NODE_BIN\}" "\$\{NPM_CLI\}" run validate/);
+  assert.doesNotMatch(deploy, /\$\(node --version\)|\$\(npm --version\)/);
 });
