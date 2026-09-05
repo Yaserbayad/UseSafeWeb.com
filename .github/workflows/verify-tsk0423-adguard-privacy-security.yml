@@ -1,0 +1,61 @@
+name: TSK-0423 AdGuard privacy/security regression acceptance
+
+on:
+  push:
+    branches:
+      - feature/tsk-0423-privacy-security-regression-20260905
+    paths:
+      - infrastructure/adguard-server/tsk-0423-privacy-security-regression.py
+      - .github/workflows/verify-tsk0423-adguard-privacy-security.yml
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  negative-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify approved baseline and every seeded unsafe class
+        run: |
+          set -euo pipefail
+          python3 infrastructure/adguard-server/tsk-0423-privacy-security-regression.py \
+            --config infrastructure/adguard-server/approved-adguard-config-v1.json \
+            --negative-matrix
+          echo 'TSK0423_RELEASE_ACCEPTANCE=PASS'
+
+  deployed-runtime-readonly:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify production-like target without mutation
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$(hostname -s)" == 'adguardvm' ]]
+          sudo -n true
+          systemctl is-active --quiet AdGuardHome.service
+          sudo python3 infrastructure/adguard-server/tsk-0423-privacy-security-regression.py \
+            --config /opt/AdGuardHome/AdGuardHome.yaml
+
+          ss -lntH | awk '$4 ~ /:3000$/ {print}' > /tmp/tsk0423-admin-listeners
+          grep -Eq '127\.0\.0\.1:3000$|\[::1\]:3000$' /tmp/tsk0423-admin-listeners
+          ! grep -Eq '(^|[[:space:]])(0\.0\.0\.0|\*|\[::\]):3000$' /tmp/tsk0423-admin-listeners
+
+          sudo ufw status numbered > /tmp/tsk0423-ufw
+          ! grep -Eiq '3000(/tcp)?[[:space:]]+ALLOW[[:space:]]+IN[[:space:]]+Anywhere' /tmp/tsk0423-ufw
+
+          blocked="$(dig +time=3 +tries=1 +short @127.0.0.1 family---max.com A | tr '\n' ',')"
+          [[ -z "$blocked" || "$blocked" == '0.0.0.0,' || "$blocked" == '::,' ]]
+          dig +time=3 +tries=1 @127.0.0.1 api.github.com A >/tmp/tsk0423-allowed-dns
+          grep -Eq 'status: NOERROR' /tmp/tsk0423-allowed-dns
+          echo 'TSK0423_TARGET_READONLY=PASS'
+          echo 'TSK0423_DEPLOYMENT_RECOVERY_ACCEPTANCE=PASS'
