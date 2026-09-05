@@ -2,7 +2,7 @@
   "checkpoint_schema": "serial-light-checkpoint-v1",
   "project_id": "UseSafeWeb.com",
   "governance_mode": "SERIAL_LIGHT",
-  "checkpoint_revision": 18,
+  "checkpoint_revision": 19,
   "baseline": {
     "version": 1,
     "objectives": [
@@ -14338,7 +14338,7 @@
       },
       {
         "id": "TSK-0002",
-        "status": "WAITING",
+        "status": "TODO",
         "wait": {
           "condition": "Canonical migrated runtime records this task as WAITING. Trigger: Applicable lifecycle/gate and all hard dependencies satisfied. Preconditions: Canonical state read; current gate/authority confirmed; required inputs/access available; no unresolved safety/privacy blocker.",
           "resolution_check": "Reload this checkpoint and the current owner-frozen modular Master Plan. Verify every hard dependency is PASS, every applicable lifecycle gate/trigger/precondition is satisfied, current action authority permits the work, and no material-action fence or active deferral applies. Only then transition WAITING to TODO in one confirmed checkpoint mutation; otherwise remain WAITING.",
