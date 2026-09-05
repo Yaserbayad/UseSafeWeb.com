@@ -1,0 +1,130 @@
+name: Record TSK-0010 evidence-backed PASS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/pass-tsk0010-20260905.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-serial-light-checkpoint-write
+  cancel-in-progress: false
+
+jobs:
+  pass:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out canonical main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify evidence and apply exact PASS mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPECTED_BLOB='1b2c5e610371610899fd8bca97a5fd3f4332f62b'
+          EVIDENCE_BLOB='6e1be43bfa6a73b2d77b7a40e569a93c9539eb77'
+          test "$(git hash-object CURRENT_STATE.md)" = "$EXPECTED_BLOB"
+          test "$(git hash-object TSK_0010_RUNTIME_REBASELINE_EVIDENCE_2026-09-05.md)" = "$EVIDENCE_BLOB"
+          cp CURRENT_STATE.md /tmp/CURRENT_STATE.before
+
+          python3 - <<'PY'
+          import copy,json
+          from pathlib import Path
+
+          path=Path('CURRENT_STATE.md')
+          text=path.read_text(encoding='utf-8')
+          before=json.loads(text)
+          assert text==json.dumps(before,indent=2,ensure_ascii=False)+'\n'
+          assert before['checkpoint_schema']=='serial-light-checkpoint-v1'
+          assert before['project_id']=='UseSafeWeb.com'
+          assert before['governance_mode']=='SERIAL_LIGHT'
+          assert before['checkpoint_revision']==28
+          assert before['baseline']['version']==1
+          assert before['runtime']['project_status']=='ACTIVE'
+          assert before['runtime']['governance_blocker'] is None
+          assert before['runtime']['human_constraints']==[]
+          base={x['id']:x for x in before['baseline']['work_items']}
+          rt={x['id']:x for x in before['runtime']['items']}
+          assert rt['TSK-0010']=={'id':'TSK-0010','status':'TODO','acceptance_references':[]}
+          assert rt['TSK-0011']['status']=='PASS'
+          assert base['TSK-0010']['depends_on']==['TSK-0011']
+          assert base['TSK-0010']['acceptance_criteria']==[{
+            'id':'ACC-0010',
+            'condition':'CURRENT_STATE identifies Plans/Master/MASTER_PLAN.md and MANIFEST.yaml plus the publication commit/tree/checksum set as planning authority, preserves actual evidence/status, records accountless/recovery decisions, maps LG-03 to legacy G-02, and names exact eligible readiness work.'}]
+
+          evidence=Path('TSK_0010_RUNTIME_REBASELINE_EVIDENCE_2026-09-05.md').read_text(encoding='utf-8')
+          required=[
+            'ACC-0010: **SATISFIED**.',
+            'Plans/Master/MASTER_PLAN.md@20e2763c0be2124378e3158ac559aed826bc6765',
+            'Plans/Master/MANIFEST.yaml@20e2763c0be2124378e3158ac559aed826bc6765',
+            '0ed412e5dd90f5a05238bb6542a061d7b0ce0ccf',
+            '8fbeb7337233adc289ea51e49a0722f33db08323',
+            'e87d1aaca75c155f88348f52adad2b6eb78e589a',
+            'DEC-0053 / CR-0006',
+            'DEC-0043',
+            'actual LG-03 (legacy G-02) execution state',
+            'NOT_APPLICABLE TO ACTIVE PRE-PRODUCT PATH',
+            'TSK-0423',
+            'eligible `TODO` items with all hard dependencies PASS: `0`',
+            'No mutable `next_work` field is added to `CURRENT_STATE.md`',
+            'Trace workflow run: `33980986839`',
+            'Artifact: `9973737334`']
+          for s in required:
+              assert s in evidence, s
+
+          after=copy.deepcopy(before)
+          after['checkpoint_revision']=29
+          target=next(x for x in after['runtime']['items'] if x['id']=='TSK-0010')
+          target['status']='PASS'
+          target['acceptance_references']=[{
+            'ac_id':'ACC-0010',
+            'evidence_type':'GITHUB_BLOB',
+            'reference':'Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_REBASELINE_EVIDENCE_2026-09-05.md; blob 6e1be43bfa6a73b2d77b7a40e569a93c9539eb77; evidence commit c42f408eec8ad6830ae128df072e2c294cb8223a; frozen authority commit 20e2763c0be2124378e3158ac559aed826bc6765 Plans tree 0ed412e5dd90f5a05238bb6542a061d7b0ce0ccf SHA256SUMS blob 8fbeb7337233adc289ea51e49a0722f33db08323; selector trace run 33980986839 job 101346042362 artifact 9973737334',
+            'summary':'ACC-0010 is satisfied: canonical state is bound to the frozen modular planning authority and publication/readback identities, valid historical runtime PASS evidence is preserved, DEC-0053 accountless and DEC-0043 recovery decisions are recorded, and LG-03 maps legacy G-02 with NOT_APPLICABLE active-pre-product disposition rather than a fabricated gate PASS.',
+            'verification_context':'Source checkpoint revision 28 blob 1b2c5e610371610899fd8bca97a5fd3f4332f62b; runtime-preservation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a; selector trace run 33980986839 job 101346042362 artifact 9973737334: hypothetical post-PASS eligible TODO count=0 and first satisfied non-deferred WAITING/AUTO_ALLOWED candidate=TSK-0423 priority 0 order 423. Selector result is derived acceptance evidence only and is not persisted as mutable next_work state.'}]
+
+          assert after['baseline']==before['baseline']
+          assert after['baseline']['version']==1
+          assert after['runtime']['project_status']=='ACTIVE'
+          assert after['runtime']['governance_blocker'] is None
+          assert after['runtime']['human_constraints']==[]
+          before_items={x['id']:x for x in before['runtime']['items']}
+          after_items={x['id']:x for x in after['runtime']['items']}
+          for tid,old in before_items.items():
+              if tid!='TSK-0010': assert after_items[tid]==old, tid
+          assert after_items['TSK-0010']['status']=='PASS'
+          assert set(after_items['TSK-0010'])=={'id','status','acceptance_references'}
+          assert len(after_items['TSK-0010']['acceptance_references'])==1
+          assert after_items['TSK-0010']['acceptance_references'][0]['ac_id']=='ACC-0010'
+          assert 'next_work' not in after
+          assert 'next_work' not in after['runtime']
+
+          path.write_text(json.dumps(after,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
+          assert json.loads(path.read_text(encoding='utf-8'))==after
+          print('TSK_0010_PASS_MUTATION=PASS revision=29 baseline=1')
+          PY
+          git diff --check -- CURRENT_STATE.md
+          git diff --stat -- CURRENT_STATE.md
+
+      - name: Recheck stale-write boundary, remove transport, and commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git show origin/main:CURRENT_STATE.md | git hash-object --stdin)" = '1b2c5e610371610899fd8bca97a5fd3f4332f62b'
+          test "$(git show origin/main:TSK_0010_RUNTIME_REBASELINE_EVIDENCE_2026-09-05.md | git hash-object --stdin)" = '6e1be43bfa6a73b2d77b7a40e569a93c9539eb77'
+          git config user.name 'UseSafeWeb Governor'
+          git config user.email 'actions@users.noreply.github.com'
+          git rm .github/workflows/pass-tsk0010-20260905.yml
+          git add CURRENT_STATE.md
+          printf '%s\n' '.github/workflows/pass-tsk0010-20260905.yml' 'CURRENT_STATE.md' | sort > /tmp/expected
+          git diff --cached --name-only | sort > /tmp/actual
+          diff -u /tmp/expected /tmp/actual
+          git commit -m 'state: confirm TSK-0010 runtime rebaseline pass'
+          git push origin HEAD:main
