@@ -1,0 +1,129 @@
+name: Confirm TSK-0452 deployment PASS checkpoint
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/checkpoint-tsk0452-pass-20260905.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-serial-light-checkpoint-write
+  cancel-in-progress: false
+
+jobs:
+  checkpoint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out canonical main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate authority and apply narrow checkpoint mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPECTED_BLOB='7dddb774d875a8d8be71f40a9b9ecb35199d894e'
+          ACTUAL_BLOB="$(git hash-object CURRENT_STATE.md)"
+          test "$ACTUAL_BLOB" = "$EXPECTED_BLOB"
+          test -f TSK_0452_PILOT_DEPLOYMENT_AUTOMATION_EVIDENCE_2026-09-05.md
+
+          cp CURRENT_STATE.md /tmp/CURRENT_STATE.before
+          python3 - <<'PY'
+          import copy
+          import json
+          from pathlib import Path
+
+          path = Path('CURRENT_STATE.md')
+          text = path.read_text(encoding='utf-8')
+          before = json.loads(text)
+
+          assert before['checkpoint_schema'] == 'serial-light-checkpoint-v1'
+          assert before['project_id'] == 'UseSafeWeb.com'
+          assert before['governance_mode'] == 'SERIAL_LIGHT'
+          assert before['checkpoint_revision'] == 17
+          assert before['baseline']['version'] == 1
+
+          candidates = []
+          def walk(node, trail=()):
+              if isinstance(node, dict):
+                  if node.get('id') == 'TSK-0452' and 'status' in node:
+                      candidates.append((trail, node))
+                  for key, value in node.items():
+                      walk(value, trail + (key,))
+              elif isinstance(node, list):
+                  for index, value in enumerate(node):
+                      walk(value, trail + (index,))
+
+          walk(before)
+          assert len(candidates) == 1, candidates
+          trail, runtime_item = candidates[0]
+          assert runtime_item == {
+              'id': 'TSK-0452',
+              'status': 'TODO',
+              'acceptance_references': [],
+          }, runtime_item
+
+          expected = copy.deepcopy(before)
+          expected['checkpoint_revision'] = 18
+          target = expected
+          for part in trail:
+              target = target[part]
+          target['status'] = 'PASS'
+          target['acceptance_references'] = [
+              'TSK_0452_PILOT_DEPLOYMENT_AUTOMATION_EVIDENCE_2026-09-05.md',
+              'Yaserbayad/erp.hmg.test Actions run 33969593425 job 101315631105; transport commit 03fc53cb5a030ce3534ede429a19123a28a27bbd',
+          ]
+
+          revision_old = '  "checkpoint_revision": 17,'
+          revision_new = '  "checkpoint_revision": 18,'
+          assert text.count(revision_old) == 1
+          text = text.replace(revision_old, revision_new, 1)
+
+          runtime_old = '''      {
+                "id": "TSK-0452",
+                "status": "TODO",
+                "acceptance_references": []
+              },'''
+          runtime_new = '''      {
+                "id": "TSK-0452",
+                "status": "PASS",
+                "acceptance_references": [
+                  "TSK_0452_PILOT_DEPLOYMENT_AUTOMATION_EVIDENCE_2026-09-05.md",
+                  "Yaserbayad/erp.hmg.test Actions run 33969593425 job 101315631105; transport commit 03fc53cb5a030ce3534ede429a19123a28a27bbd"
+                ]
+              },'''
+          assert text.count(runtime_old) == 1
+          text = text.replace(runtime_old, runtime_new, 1)
+
+          after = json.loads(text)
+          assert after == expected
+          assert after['checkpoint_revision'] == 18
+          assert after['baseline']['version'] == 1
+          path.write_text(text, encoding='utf-8')
+          print('CHECKPOINT_MUTATION_SEMANTICS=PASS revision=18 baseline=1 tsk0452=PASS')
+          PY
+
+          git diff --check -- CURRENT_STATE.md
+          git diff --exit-code --quiet /tmp/CURRENT_STATE.before CURRENT_STATE.md && exit 1 || true
+          git diff -- CURRENT_STATE.md
+
+      - name: Recheck stale-write boundary and commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPECTED_BLOB='7dddb774d875a8d8be71f40a9b9ecb35199d894e'
+          git fetch origin main
+          REMOTE_BLOB="$(git show origin/main:CURRENT_STATE.md | git hash-object --stdin)"
+          test "$REMOTE_BLOB" = "$EXPECTED_BLOB"
+
+          git config user.name 'UseSafeWeb Governor'
+          git config user.email 'actions@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          test "$(git diff --cached --name-only)" = 'CURRENT_STATE.md'
+          git commit -m 'state: confirm pilot deployment automation pass'
+          git push origin HEAD:main
