@@ -1,0 +1,95 @@
+name: Sync JSON WAITING monitor checkpoint refresh
+
+on:
+  push:
+    branches:
+      - runtime/waiting-monitor-json-20260905-0020
+    paths:
+      - .github/workflows/sync-waiting-json-monitor-20260905.yml
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: runtime/waiting-monitor-json-20260905-0020
+          fetch-depth: 0
+      - name: Validate authority frontier and persist fresh WAITING evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD^)" = "08b8de8e6b3e13ea7ce545e4a43e665141b812d6"
+          python - <<'PY'
+          import json
+          from collections import Counter
+          from pathlib import Path
+
+          path = Path('CURRENT_STATE.md')
+          data = json.loads(path.read_text(encoding='utf-8'))
+          assert data['checkpoint_schema'] == 'serial-light-checkpoint-v1'
+          assert data['project_id'] == 'UseSafeWeb.com'
+          assert data['governance_mode'] == 'SERIAL_LIGHT'
+          assert data['checkpoint_revision'] == 1
+          assert data['baseline']['version'] == 1
+
+          runtime = data['runtime']
+          assert runtime['project_status'] == 'ACTIVE'
+          assert runtime['governance_blocker'] is None
+
+          defs = {x['id']: x for x in data['baseline']['work_items']}
+          states = {x['id']: x for x in runtime['items']}
+          assert len(defs) == 641
+          assert set(defs) == set(states)
+          counts = Counter(x['status'] for x in runtime['items'])
+          assert counts == Counter({'WAITING': 419, 'PASS': 222}), counts
+          todos = sorted(k for k, v in states.items() if v['status'] == 'TODO')
+          assert todos == [], todos
+          print('RUNTIME_STATUS_COUNTS=' + json.dumps(dict(sorted(counts.items())), sort_keys=True))
+          print('RUNTIME_TODO_COUNT=0')
+
+          dep_ready_waiting = []
+          for tid, state in states.items():
+              if state['status'] != 'WAITING':
+                  continue
+              deps = defs[tid].get('depends_on', [])
+              if all(states[d]['status'] == 'PASS' for d in deps):
+                  dep_ready_waiting.append(tid)
+          assert len(dep_ready_waiting) == 104, len(dep_ready_waiting)
+          print('DEPENDENCY_READY_WAITING_COUNT=104')
+
+          for tid in ('TSK-0243', 'TSK-0360', 'TSK-0369', 'TSK-0455'):
+              assert states[tid]['status'] == 'WAITING', (tid, states[tid]['status'])
+
+          policies = {x['id']: x['text'] for x in data['baseline']['policy_rules']}
+          assert 'CR-0012' in policies['POL-005'] and 'TSK-0455' in policies['POL-005']
+          assert 'CR-0014' in policies['POL-006'] and 'TSK-0631' in policies['POL-006'] and 'TSK-0640' in policies['POL-006']
+          assert 'CR-0015' in policies['POL-007'] and 'TSK-0630' in policies['POL-007'] and 'TSK-0242' in policies['POL-007']
+          assert 'No deployment' in policies['POL-013']
+
+          t = states['TSK-0243']
+          assert t['wait']['condition'].startswith('Public DNS service is present')
+          base = t['wait']['reference'].split('; preflight run 33900198638')[0]
+          t['wait']['reference'] = (
+              base
+              + '; preflight run 33900198638 attempt 6 job 101214230447'
+              + '; read-only monitor 2026-09-05T00:20:32Z'
+              + '; result NOT_DEPLOYED_OR_NOT_EXTERNALLY_ROUTABLE'
+              + '; verifier wildcard/challenge unresolved; public origin/request route HTTP 502; no mutation/material action'
+          )
+          data['checkpoint_revision'] = 2
+          path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print('CHECKPOINT_TARGET_REVISION=2')
+          print('TSK0243_STATE=WAITING')
+          print('TSK0243_MONITOR_RESULT=NOT_DEPLOYED_OR_NOT_EXTERNALLY_ROUTABLE')
+          PY
+          git diff --check
+          test "$(git diff --name-only | tr '\n' ' ')" = "CURRENT_STATE.md "
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'Record TSK-0243 WAITING monitor attempt 6'
+          git push origin HEAD:runtime/waiting-monitor-json-20260905-0020
