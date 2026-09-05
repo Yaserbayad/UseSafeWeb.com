@@ -1,0 +1,161 @@
+name: Verify TSK-0009 frozen plan publication
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/verify-tsk0009-publication-20260905.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-serial-light-checkpoint-write
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out canonical main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify historical publication and current authority boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          CURRENT_CHECKPOINT_BLOB='c2cc419ce936dfca10b7811a88ec010a49f1c13c'
+          PUBLICATION_COMMIT='fce408f34470c0a0883ab978685b5265fdec4b97'
+          PRE_FREEZE_COMMIT='21fabcb64a17f4f1dbe79e3be61d769c0fbab574'
+          CURRENT_FROZEN_COMMIT='20e2763c0be2124378e3158ac559aed826bc6765'
+          test "$(git hash-object CURRENT_STATE.md)" = "$CURRENT_CHECKPOINT_BLOB"
+          test "$(git rev-parse ${PUBLICATION_COMMIT}^)" = "$PRE_FREEZE_COMMIT"
+          test "$(git log -1 --format=%s "$PUBLICATION_COMMIT")" = 'Freeze canonical master planning baseline for execution'
+
+          rm -rf /tmp/publication /tmp/current-frozen
+          mkdir -p /tmp/publication /tmp/current-frozen
+          git archive "$PUBLICATION_COMMIT" Plans | tar -x -C /tmp/publication
+          git archive "$CURRENT_FROZEN_COMMIT" Plans | tar -x -C /tmp/current-frozen
+
+          # The publication event itself must be confined to Plans/.
+          git diff --name-only "$PRE_FREEZE_COMMIT" "$PUBLICATION_COMMIT" > /tmp/publication-changed-files.txt
+          test -s /tmp/publication-changed-files.txt
+          if grep -Ev '^Plans/' /tmp/publication-changed-files.txt; then
+            echo 'Publication commit changed a path outside Plans/' >&2
+            exit 1
+          fi
+
+          # Every file in the publication Plans tree except the checksum file must be covered exactly once by SHA256SUMS.
+          cd /tmp/publication/Plans
+          sha256sum -c SHA256SUMS.txt | tee /tmp/publication-checksum-output.txt
+          git -C "$GITHUB_WORKSPACE" ls-tree -r --name-only "$PUBLICATION_COMMIT" Plans \
+            | grep -v '^Plans/SHA256SUMS.txt$' | sort > /tmp/publication-tree-files.txt
+          awk 'NF {sub(/^[0-9a-f]{64}  /, ""); print "Plans/" $0}' SHA256SUMS.txt | sort > /tmp/publication-checksum-files.txt
+          diff -u /tmp/publication-tree-files.txt /tmp/publication-checksum-files.txt
+          PUBLICATION_FILE_COUNT="$(wc -l < /tmp/publication-tree-files.txt | tr -d ' ')"
+          CHECKSUM_ENTRY_COUNT="$(wc -l < /tmp/publication-checksum-files.txt | tr -d ' ')"
+          test "$PUBLICATION_FILE_COUNT" = "$CHECKSUM_ENTRY_COUNT"
+
+          # Run the exact validator shipped in the historical publication commit.
+          python3 Master/Tools/validate_master_plan.py | tee /tmp/publication-validator-output.txt
+          grep -Fx 'VALIDATION PASS' /tmp/publication-validator-output.txt
+          grep -Fx 'tasks=641' /tmp/publication-validator-output.txt
+          grep -Fx 'broken_links=0' /tmp/publication-validator-output.txt
+          grep -Fx 'generated_missing_task_ids=0' /tmp/publication-validator-output.txt
+
+          # Confirm publication authority and authority fence in that historical published manifest.
+          grep -F 'owner_freeze: true' Master/MANIFEST.yaml
+          grep -F 'reviewed_pre_freeze_main_commit: 21fabcb64a17f4f1dbe79e3be61d769c0fbab574' Master/MANIFEST.yaml
+          grep -F 'publication_authority: complete owner-frozen Plans/ tree may be published to Yaserbayad/UseSafeWeb.com main without unrelated changes' Master/MANIFEST.yaml
+          grep -F 'publication_unit: complete Plans/ tree declared by MANIFEST.yaml and Plans/SHA256SUMS.txt; not a single derived file' Master/MANIFEST.yaml
+          grep -F 'derived_modules_never_authoritative: true' Master/MANIFEST.yaml
+          python3 - <<'PY'
+          from pathlib import Path
+          text=Path('Master/MANIFEST.yaml').read_text(encoding='utf-8')
+          anchor='- id: FULL\n'
+          assert anchor in text
+          block=text.split(anchor,1)[1].split('\n- id:',1)[0]
+          assert 'path: Generated/MASTER_PLAN_FULL.md' in block
+          assert 'authority: derived_non_authoritative' in block
+          print('DERIVED_FULL_AUTHORITY_FENCE=PASS')
+          PY
+
+          # Also validate today's frozen planning source independently to prove current references remain reconstructable.
+          cd /tmp/current-frozen/Plans
+          sha256sum -c SHA256SUMS.txt > /tmp/current-frozen-checksum-output.txt
+          python3 Master/Tools/validate_master_plan.py | tee /tmp/current-frozen-validator-output.txt
+          grep -Fx 'VALIDATION PASS' /tmp/current-frozen-validator-output.txt
+
+          cd "$GITHUB_WORKSPACE"
+          PUBLICATION_REPO_TREE="$(git rev-parse ${PUBLICATION_COMMIT}^{tree})"
+          PUBLICATION_PLANS_TREE="$(git rev-parse ${PUBLICATION_COMMIT}:Plans)"
+          CURRENT_FROZEN_REPO_TREE="$(git rev-parse ${CURRENT_FROZEN_COMMIT}^{tree})"
+          CURRENT_FROZEN_PLANS_TREE="$(git rev-parse ${CURRENT_FROZEN_COMMIT}:Plans)"
+          PUBLICATION_MANIFEST_BLOB="$(git rev-parse ${PUBLICATION_COMMIT}:Plans/Master/MANIFEST.yaml)"
+          PUBLICATION_SUMS_BLOB="$(git rev-parse ${PUBLICATION_COMMIT}:Plans/SHA256SUMS.txt)"
+          CURRENT_MANIFEST_BLOB="$(git rev-parse ${CURRENT_FROZEN_COMMIT}:Plans/Master/MANIFEST.yaml)"
+          CURRENT_SUMS_BLOB="$(git rev-parse ${CURRENT_FROZEN_COMMIT}:Plans/SHA256SUMS.txt)"
+          CHANGED_COUNT="$(wc -l < /tmp/publication-changed-files.txt | tr -d ' ')"
+
+          python3 - <<PY
+          import json
+          from pathlib import Path
+          result = {
+            'task':'TSK-0009',
+            'acceptance':'ACC-0009',
+            'result':'PASS',
+            'checkpoint_blob':'$CURRENT_CHECKPOINT_BLOB',
+            'checkpoint_revision':23,
+            'historical_publication':{
+              'pre_freeze_commit':'$PRE_FREEZE_COMMIT',
+              'publication_commit':'$PUBLICATION_COMMIT',
+              'repository_tree':'$PUBLICATION_REPO_TREE',
+              'plans_tree':'$PUBLICATION_PLANS_TREE',
+              'manifest_blob':'$PUBLICATION_MANIFEST_BLOB',
+              'sha256sums_blob':'$PUBLICATION_SUMS_BLOB',
+              'changed_file_count':int('$CHANGED_COUNT'),
+              'changed_only_under_plans':True,
+              'tree_file_count_excluding_sums':int('$PUBLICATION_FILE_COUNT'),
+              'checksum_entry_count':int('$CHECKSUM_ENTRY_COUNT'),
+              'checksum_exact_coverage':True,
+              'validator_pass':True,
+              'derived_full_is_non_authoritative':True
+            },
+            'current_frozen_authority':{
+              'commit':'$CURRENT_FROZEN_COMMIT',
+              'repository_tree':'$CURRENT_FROZEN_REPO_TREE',
+              'plans_tree':'$CURRENT_FROZEN_PLANS_TREE',
+              'manifest_blob':'$CURRENT_MANIFEST_BLOB',
+              'sha256sums_blob':'$CURRENT_SUMS_BLOB',
+              'checksum_pass':True,
+              'validator_pass':True
+            },
+            'publication_validator_output':Path('/tmp/publication-validator-output.txt').read_text(),
+            'current_frozen_validator_output':Path('/tmp/current-frozen-validator-output.txt').read_text(),
+            'changed_files':Path('/tmp/publication-changed-files.txt').read_text().splitlines()
+          }
+          Path('tsk0009-publication-verification.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps(result,indent=2))
+          PY
+
+      - name: Upload publication verification evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: tsk0009-publication-verification
+          path: tsk0009-publication-verification.json
+          if-no-files-found: error
+
+      - name: Remove one-off verification transport
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git show origin/main:CURRENT_STATE.md | git hash-object --stdin)" = 'c2cc419ce936dfca10b7811a88ec010a49f1c13c'
+          git config user.name 'UseSafeWeb Governor'
+          git config user.email 'actions@users.noreply.github.com'
+          git rm .github/workflows/verify-tsk0009-publication-20260905.yml
+          git commit -m 'evidence: remove TSK-0009 publication verification transport'
+          git push origin HEAD:main
