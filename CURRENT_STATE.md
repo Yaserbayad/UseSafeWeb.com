@@ -2,7 +2,7 @@
   "checkpoint_schema": "serial-light-checkpoint-v1",
   "project_id": "UseSafeWeb.com",
   "governance_mode": "SERIAL_LIGHT",
-  "checkpoint_revision": 28,
+  "checkpoint_revision": 29,
   "baseline": {
     "version": 1,
     "objectives": [
@@ -14439,8 +14439,16 @@
       },
       {
         "id": "TSK-0010",
-        "status": "TODO",
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0010",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0010_RUNTIME_REBASELINE_EVIDENCE_2026-09-05.md; blob 6e1be43bfa6a73b2d77b7a40e569a93c9539eb77; evidence commit c42f408eec8ad6830ae128df072e2c294cb8223a; frozen authority commit 20e2763c0be2124378e3158ac559aed826bc6765 Plans tree 0ed412e5dd90f5a05238bb6542a061d7b0ce0ccf SHA256SUMS blob 8fbeb7337233adc289ea51e49a0722f33db08323; selector trace run 33980986839 job 101346042362 artifact 9973737334",
+            "summary": "ACC-0010 is satisfied: canonical state is bound to the frozen modular planning authority and publication/readback identities, valid historical runtime PASS evidence is preserved, DEC-0053 accountless and DEC-0043 recovery decisions are recorded, and LG-03 maps legacy G-02 with NOT_APPLICABLE active-pre-product disposition rather than a fabricated gate PASS.",
+            "verification_context": "Source checkpoint revision 28 blob 1b2c5e610371610899fd8bca97a5fd3f4332f62b; runtime-preservation evidence blob e87d1aaca75c155f88348f52adad2b6eb78e589a; selector trace run 33980986839 job 101346042362 artifact 9973737334: hypothetical post-PASS eligible TODO count=0 and first satisfied non-deferred WAITING/AUTO_ALLOWED candidate=TSK-0423 priority 0 order 423. Selector result is derived acceptance evidence only and is not persisted as mutable next_work state."
+          }
+        ]
       },
       {
         "id": "TSK-0011",
