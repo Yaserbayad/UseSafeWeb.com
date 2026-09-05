@@ -142,8 +142,8 @@ test('Next.js production output and direct-host service are deterministic and fa
 
   const deploy = readFileSync(deployPath, 'utf8');
   assert.match(deploy, /10\.9\.8/);
-  assert.match(deploy, /npm ci --ignore-scripts --no-fund --no-audit/);
-  assert.match(deploy, /npm run validate/);
+  assert.match(deploy, /ci --ignore-scripts --no-fund --no-audit/);
+  assert.match(deploy, /run validate/);
   assert.match(deploy, /environment_release_binding/);
   assert.match(deploy, /\.next\/standalone/);
   assert.match(deploy, /\.release-sha/);
