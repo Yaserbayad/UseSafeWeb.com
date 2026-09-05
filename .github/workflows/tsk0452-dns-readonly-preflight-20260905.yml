@@ -1,0 +1,52 @@
+name: TSK0452 DNS read-only preflight 20260905
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/tsk0452-dns-readonly-preflight-20260905.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  dns_preflight:
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - name: Read-only DNS and verifier routing checks
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          echo "RUNNER_NAME=${RUNNER_NAME:-unknown}"
+          echo "HOSTNAME=$(hostname -s 2>/dev/null || hostname)"
+          . /etc/os-release
+          echo "OS=${ID:-unknown}-${VERSION_ID:-unknown}"
+          echo "ADGUARD_ACTIVE=$(systemctl is-active AdGuardHome 2>/dev/null || systemctl is-active adguardhome 2>/dev/null || true)"
+          if command -v AdGuardHome >/dev/null 2>&1; then AdGuardHome --version 2>/dev/null | head -n 1 | sed 's/^/ADGUARD_VERSION=/' || true; fi
+          if [ -x /opt/AdGuardHome/AdGuardHome ]; then /opt/AdGuardHome/AdGuardHome --version 2>/dev/null | head -n 1 | sed 's/^/ADGUARD_VERSION=/' || true; fi
+          challenge="$(printf '%032x' 123456789).verify.usesafeweb.com"
+          echo "CHALLENGE_HOST=${challenge}"
+          local_ans=$(dig +short +time=2 +tries=1 @127.0.0.1 "$challenge" A 2>/dev/null | paste -sd, - || true)
+          echo "SAFEWEB_DNS_ANSWER=${local_ans:-none}"
+          public_cf=$(dig +short +time=3 +tries=1 @1.1.1.1 "$challenge" A 2>/dev/null | paste -sd, - || true)
+          echo "PUBLIC_CF_ANSWER=${public_cf:-none}"
+          public_google=$(dig +short +time=3 +tries=1 @8.8.8.8 "$challenge" A 2>/dev/null | paste -sd, - || true)
+          echo "PUBLIC_GOOGLE_ANSWER=${public_google:-none}"
+          echo 'REWRITE_REFERENCES_BEGIN'
+          for f in /opt/AdGuardHome/AdGuardHome.yaml /etc/AdGuardHome/AdGuardHome.yaml /var/lib/usesafeweb/tsk-0422/current.env /etc/usesafeweb/*.env; do
+            [ -f "$f" ] || continue
+            if grep -qiE 'verify\.usesafeweb\.com|verifier.*(ip|host)|dns.*rewrite' "$f" 2>/dev/null; then
+              echo "FILE=$f"
+              grep -iE 'verify\.usesafeweb\.com|verifier.*(ip|host)|dns.*rewrite' "$f" 2>/dev/null \
+                | sed -E 's/([A-Za-z0-9_]*(SECRET|TOKEN|KEY|HMAC)[A-Za-z0-9_]*[=:]).*/\1[REDACTED]/I' \
+                | head -n 40 || true
+            fi
+          done
+          echo 'REWRITE_REFERENCES_END'
+          if [ -x infrastructure/adguard-server/tsk-0422-adguard-config-pipeline.sh ]; then
+            echo 'TSK0422_SCRIPT_PRESENT=yes'
+          else
+            echo 'TSK0422_SCRIPT_PRESENT=no'
+          fi
+          echo 'DNS_PREFLIGHT=COMPLETE'
