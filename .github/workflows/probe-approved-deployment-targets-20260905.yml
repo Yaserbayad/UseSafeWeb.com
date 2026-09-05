@@ -1,0 +1,66 @@
+name: Probe approved deployment targets 20260905
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/probe-approved-deployment-targets-20260905.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - name: Extract exact frozen deployment contracts
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import csv, json
+          wanted = {'TSK-0452','TSK-0243'}
+          with open('Plans/Master/WBS/master-wbs.csv', newline='', encoding='utf-8-sig') as f:
+              rows = [r for r in csv.DictReader(f) if r.get('ID') in wanted or r.get('Task_ID') in wanted]
+          if len(rows) != 2:
+              raise SystemExit(f'expected 2 rows, got {len(rows)}')
+          for r in rows:
+              keep = {k:v for k,v in r.items() if k and v and (k in {
+                  'ID','Task_ID','Task_Name','Title','Layer','Dependencies','Acceptance_Criteria','Verification_Method','Evidence_Reference','AI_Capability','Action_Authority','Plan_Priority','Priority','Execution_Context','Plan_Status','Execution_State'
+              } or 'Authority' in k or 'Acceptance' in k or 'Verification' in k or 'Evidence' in k)}
+              print('CONTRACT=' + json.dumps(keep, sort_keys=True))
+          PY
+
+  runner_probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        slot: [1, 2, 3, 4]
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 5
+    steps:
+      - name: Read-only runner identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          echo "PROBE_SLOT=${{ matrix.slot }}"
+          echo "RUNNER_NAME=${RUNNER_NAME:-unknown}"
+          echo "HOSTNAME=$(hostname -s 2>/dev/null || hostname)"
+          . /etc/os-release
+          echo "OS_ID=${ID:-unknown}"
+          echo "OS_VERSION=${VERSION_ID:-unknown}"
+          echo "RUNNER_OS=${RUNNER_OS:-unknown}"
+          echo "RUNNER_ARCH=${RUNNER_ARCH:-unknown}"
+          public_ip=''
+          if command -v curl >/dev/null 2>&1; then
+            public_ip=$(curl -fsS --max-time 3 -H Metadata:true 'http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/publicIpAddress?api-version=2021-02-01&format=text' 2>/dev/null || true)
+          fi
+          echo "AZURE_PUBLIC_IP=${public_ip:-unavailable}"
+          if sudo -n true 2>/dev/null; then echo 'SUDO_NONINTERACTIVE=PASS'; else echo 'SUDO_NONINTERACTIVE=FAIL'; fi
+          echo "ADGUARD_ACTIVE=$(systemctl is-active AdGuardHome 2>/dev/null || true)"
+          echo "NGINX_ACTIVE=$(systemctl is-active nginx 2>/dev/null || true)"
+          echo 'TARGET_PROBE=COMPLETE'
