@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  contract:
+  contract_and_routing:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -34,6 +34,16 @@ jobs:
               } or 'Authority' in k or 'Acceptance' in k or 'Verification' in k or 'Evidence' in k)}
               print('CONTRACT=' + json.dumps(keep, sort_keys=True))
           PY
+      - name: Inventory existing GitHub host-routing references
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          echo ROUTING_INVENTORY_BEGIN
+          grep -RInE --include='*.yml' --include='*.yaml' 'runs-on:.*self-hosted|self-hosted|secrets\.[A-Za-z0-9_]+|20\.71\.90\.212|52\.157\.109\.120|ssh|SSH|webserver|WEB_SERVER|WEB_HOST|AZURE_' .github/workflows 2>/dev/null \
+            | sed -E 's/(secrets\.[A-Za-z0-9_]+).*/\1/' \
+            | sort -u \
+            | head -n 300 || true
+          echo ROUTING_INVENTORY_END
 
   runner_probe:
     strategy:
