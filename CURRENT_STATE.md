@@ -2,7 +2,7 @@
   "checkpoint_schema": "serial-light-checkpoint-v1",
   "project_id": "UseSafeWeb.com",
   "governance_mode": "SERIAL_LIGHT",
-  "checkpoint_revision": 23,
+  "checkpoint_revision": 24,
   "baseline": {
     "version": 1,
     "objectives": [
@@ -14426,8 +14426,16 @@
       },
       {
         "id": "TSK-0009",
-        "status": "TODO",
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0009",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0009_MASTER_PLAN_PUBLICATION_EVIDENCE_2026-09-05.md; blob 741c5663c85fcb741a6b3fd9d7dfb4ccdb561bb6; publication evidence commit 7dccab9d09ee7c9f696e8baec3c15c597b08d10d; historical publication commit fce408f34470c0a0883ab978685b5265fdec4b97; verification run 33979284902 job 101341451733 artifact 9973256098",
+            "summary": "ACC-0009 is satisfied: the complete owner-frozen Plans tree was published under the approved repository root, publication identity and tree/file read-back were recovered, SHA256SUMS coverage and validators passed, and derived MASTER_PLAN_FULL remains non-authoritative.",
+            "verification_context": "Frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; source checkpoint revision 23 blob c2cc419ce936dfca10b7811a88ec010a49f1c13c; dependency TSK-0017 PASS; evidence blob 741c5663c85fcb741a6b3fd9d7dfb4ccdb561bb6; verification run 33979284902."
+          }
+        ]
       },
       {
         "id": "TSK-0010",
