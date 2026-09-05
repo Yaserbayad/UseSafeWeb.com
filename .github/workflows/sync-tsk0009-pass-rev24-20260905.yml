@@ -31,7 +31,8 @@ jobs:
           assert d['governance_mode']=='SERIAL_LIGHT'
           assert d['checkpoint_revision']==23
           assert d['baseline']['version']==1
-          assert d['project_status']=='ACTIVE'
+          assert d['runtime']['project_status']=='ACTIVE'
+          assert d['runtime']['governance_blocker'] is None
           items={x['id']:x for x in d['runtime']['items']}
           assert items['TSK-0009']['status']=='TODO'
           assert items['TSK-0017']['status']=='PASS'
