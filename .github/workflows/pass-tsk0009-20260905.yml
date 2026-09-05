@@ -1,0 +1,123 @@
+name: Record TSK-0009 evidence-backed PASS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/pass-tsk0009-20260905.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-serial-light-checkpoint-write
+  cancel-in-progress: false
+
+jobs:
+  pass:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out canonical main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify evidence and apply exact PASS mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPECTED_BLOB='c2cc419ce936dfca10b7811a88ec010a49f1c13c'
+          test "$(git hash-object CURRENT_STATE.md)" = "$EXPECTED_BLOB"
+          test -f TSK_0009_MASTER_PLAN_PUBLICATION_EVIDENCE_2026-09-05.md
+          test "$(git hash-object TSK_0009_MASTER_PLAN_PUBLICATION_EVIDENCE_2026-09-05.md)" = '741c5663c85fcb741a6b3fd9d7dfb4ccdb561bb6'
+
+          cp CURRENT_STATE.md /tmp/CURRENT_STATE.before
+          python3 - <<'PY'
+          import copy
+          import json
+          from pathlib import Path
+
+          path=Path('CURRENT_STATE.md')
+          text=path.read_text(encoding='utf-8')
+          before=json.loads(text)
+          assert text == json.dumps(before, indent=2, ensure_ascii=False) + '\n'
+          assert before['checkpoint_schema']=='serial-light-checkpoint-v1'
+          assert before['project_id']=='UseSafeWeb.com'
+          assert before['governance_mode']=='SERIAL_LIGHT'
+          assert before['checkpoint_revision']==23
+          assert before['baseline']['version']==1
+          assert before['runtime']['project_status']=='ACTIVE'
+          assert before['runtime']['governance_blocker'] is None
+
+          work={x['id']:x for x in before['baseline']['work_items']}
+          runtime={x['id']:x for x in before['runtime']['items']}
+          assert work['TSK-0009']['depends_on']==['TSK-0017']
+          assert runtime['TSK-0017']['status']=='PASS'
+          assert work['TSK-0009']['acceptance_criteria']==[{
+              'id':'ACC-0009',
+              'condition':'The complete approved Plans/ tree is committed under the approved repository root; MANIFEST.yaml, SHA256SUMS.txt, the resulting commit SHA, and repository tree/file read-back evidence are captured; no derived tracker or Generated/MASTER_PLAN_FULL.md is treated as independent authority.'
+          }]
+          assert runtime['TSK-0009']=={
+              'id':'TSK-0009',
+              'status':'TODO',
+              'acceptance_references':[]
+          }
+          evidence=Path('TSK_0009_MASTER_PLAN_PUBLICATION_EVIDENCE_2026-09-05.md').read_text(encoding='utf-8')
+          assert 'ACC-0009: **SATISFIED**.' in evidence
+          assert 'fce408f34470c0a0883ab978685b5265fdec4b97' in evidence
+          assert 'Artifact: `9973256098`' in evidence
+          assert 'Deviations: none observed for ACC-0009.' in evidence
+
+          after=copy.deepcopy(before)
+          after['checkpoint_revision']=24
+          target=next(x for x in after['runtime']['items'] if x['id']=='TSK-0009')
+          target['status']='PASS'
+          target['acceptance_references']=[{
+              'ac_id':'ACC-0009',
+              'evidence_type':'GITHUB_BLOB',
+              'reference':'Yaserbayad/UseSafeWeb.com TSK_0009_MASTER_PLAN_PUBLICATION_EVIDENCE_2026-09-05.md; blob 741c5663c85fcb741a6b3fd9d7dfb4ccdb561bb6; publication evidence commit 7dccab9d09ee7c9f696e8baec3c15c597b08d10d; historical publication commit fce408f34470c0a0883ab978685b5265fdec4b97; verification run 33979284902 job 101341451733 artifact 9973256098',
+              'summary':'ACC-0009 is satisfied: the complete owner-frozen Plans tree was published under the approved repository root, publication identity and tree/file read-back were recovered, SHA256SUMS coverage and validators passed, and derived MASTER_PLAN_FULL remains non-authoritative.',
+              'verification_context':'Frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; source checkpoint revision 23 blob c2cc419ce936dfca10b7811a88ec010a49f1c13c; dependency TSK-0017 PASS; evidence blob 741c5663c85fcb741a6b3fd9d7dfb4ccdb561bb6; verification run 33979284902.'
+          }]
+
+          assert after['baseline']==before['baseline']
+          assert after['runtime']['project_status']==before['runtime']['project_status']
+          assert after['runtime']['governance_blocker']==before['runtime']['governance_blocker']
+          before_items={x['id']:x for x in before['runtime']['items']}
+          after_items={x['id']:x for x in after['runtime']['items']}
+          for wid,old in before_items.items():
+              if wid!='TSK-0009': assert after_items[wid]==old, wid
+          assert after['checkpoint_revision']==before['checkpoint_revision']+1
+          assert after['baseline']['version']==before['baseline']['version']
+          assert after_items['TSK-0009']['status']=='PASS'
+          assert set(after_items['TSK-0009'])=={'id','status','acceptance_references'}
+          assert len(after_items['TSK-0009']['acceptance_references'])==1
+          assert after_items['TSK-0009']['acceptance_references'][0]['ac_id']=='ACC-0009'
+
+          path.write_text(json.dumps(after, indent=2, ensure_ascii=False)+'\n',encoding='utf-8')
+          assert json.loads(path.read_text(encoding='utf-8'))==after
+          print('TSK_0009_PASS_MUTATION=PASS revision=24 baseline=1')
+          PY
+
+          git diff --check -- CURRENT_STATE.md
+          git diff --stat -- CURRENT_STATE.md
+          git diff -- CURRENT_STATE.md
+
+      - name: Recheck stale-write boundary, remove transport, and commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPECTED_BLOB='c2cc419ce936dfca10b7811a88ec010a49f1c13c'
+          git fetch origin main
+          test "$(git show origin/main:CURRENT_STATE.md | git hash-object --stdin)" = "$EXPECTED_BLOB"
+          git config user.name 'UseSafeWeb Governor'
+          git config user.email 'actions@users.noreply.github.com'
+          git rm .github/workflows/pass-tsk0009-20260905.yml
+          git add CURRENT_STATE.md
+          printf '%s\n' '.github/workflows/pass-tsk0009-20260905.yml' 'CURRENT_STATE.md' > /tmp/expected-files
+          git diff --cached --name-only | sort > /tmp/actual-files
+          sort /tmp/expected-files -o /tmp/expected-files
+          diff -u /tmp/expected-files /tmp/actual-files
+          git commit -m 'state: confirm TSK-0009 publication record pass'
+          git push origin HEAD:main
