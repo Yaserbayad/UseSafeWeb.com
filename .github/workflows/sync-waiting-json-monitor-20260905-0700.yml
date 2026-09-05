@@ -1,0 +1,117 @@
+name: Sync JSON WAITING monitor checkpoint refresh attempt 12
+
+on:
+  push:
+    branches:
+      - runtime/waiting-monitor-json-20260905-0700
+    paths:
+      - .github/workflows/sync-waiting-json-monitor-20260905-0700.yml
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: runtime/waiting-monitor-json-20260905-0700
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Validate authority frontier and persist fresh WAITING evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE='cb7ae8d87a950684fae320635d1fb88a0354410b'
+          test "$(git rev-parse HEAD^)" = "${BASE}"
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "${BASE}"
+          test "$(git hash-object CURRENT_STATE.md)" = 'b3584d8e2625be418c55298d37ccb450cbe0debc'
+          python - <<'PY'
+          import json
+          from collections import Counter
+          from pathlib import Path
+
+          path = Path('CURRENT_STATE.md')
+          data = json.loads(path.read_text(encoding='utf-8'))
+          assert data['checkpoint_schema'] == 'serial-light-checkpoint-v1'
+          assert data['project_id'] == 'UseSafeWeb.com'
+          assert data['governance_mode'] == 'SERIAL_LIGHT'
+          assert data['checkpoint_revision'] == 7
+          assert data['baseline']['version'] == 1
+
+          runtime = data['runtime']
+          assert runtime['project_status'] == 'ACTIVE'
+          assert runtime['governance_blocker'] is None
+
+          defs = {x['id']: x for x in data['baseline']['work_items']}
+          states = {x['id']: x for x in runtime['items']}
+          assert len(defs) == 641
+          assert set(defs) == set(states)
+          counts = Counter(x['status'] for x in runtime['items'])
+          assert counts == Counter({'WAITING': 419, 'PASS': 222}), counts
+          assert not [k for k, v in states.items() if v['status'] == 'TODO']
+
+          dep_ready_waiting = []
+          for tid, state in states.items():
+              assert state['status'] in ('PASS', 'WAITING'), (tid, state['status'])
+              deps = defs[tid].get('depends_on', [])
+              assert all(d in states for d in deps), tid
+              if state['status'] == 'WAITING':
+                  wait = state.get('wait')
+                  assert isinstance(wait, dict), tid
+                  assert isinstance(wait.get('condition'), str) and wait['condition'].strip(), tid
+                  assert isinstance(wait.get('resolution_check'), str) and wait['resolution_check'].strip(), tid
+                  if all(states[d]['status'] == 'PASS' for d in deps):
+                      dep_ready_waiting.append(tid)
+          assert len(dep_ready_waiting) == 104, len(dep_ready_waiting)
+
+          policies = {x['id']: x['text'] for x in data['baseline']['policy_rules']}
+          assert 'CR-0012' in policies['POL-005'] and 'TSK-0455' in policies['POL-005']
+          assert 'CR-0014' in policies['POL-006'] and 'TSK-0631' in policies['POL-006'] and 'TSK-0640' in policies['POL-006']
+          assert 'CR-0015' in policies['POL-007'] and 'TSK-0630' in policies['POL-007'] and 'TSK-0242' in policies['POL-007']
+          assert 'No deployment' in policies['POL-013']
+
+          for tid in ('TSK-0243', 'TSK-0360', 'TSK-0369', 'TSK-0455'):
+              assert states[tid]['status'] == 'WAITING', (tid, states[tid]['status'])
+
+          assert 'supported iPhone/device target' in states['TSK-0360']['wait']['condition']
+          assert 'does not yet explicitly permit the required target deployment/enablement' in states['TSK-0369']['wait']['condition']
+          assert 'CR-0012' in states['TSK-0455']['wait']['condition']
+
+          t = states['TSK-0243']
+          assert t['wait']['condition'].startswith('Public DNS service is present')
+          assert 'Rerun only the authorized bounded read-only TSK-0243 public trust-boundary preflight' in t['wait']['resolution_check']
+          base_ref = t['wait']['reference'].split('; preflight run 33900198638')[0]
+          t['wait']['reference'] = (
+              base_ref
+              + '; preflight run 33900198638 attempt 12 job 101266313848'
+              + '; read-only monitor 2026-09-05T06:57:50Z'
+              + '; result NOT_DEPLOYED_OR_NOT_EXTERNALLY_ROUTABLE'
+              + '; verifier wildcard/challenge unresolved; public origin/request route HTTP 502; no mutation/material action'
+          )
+          data['checkpoint_revision'] = 8
+          path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          print('CHECKPOINT_SCHEMA=serial-light-checkpoint-v1')
+          print('PROJECT_ID=UseSafeWeb.com')
+          print('GOVERNANCE_MODE=SERIAL_LIGHT')
+          print('PROJECT_STATUS=ACTIVE')
+          print('GOVERNANCE_BLOCKER=NONE')
+          print('RUNTIME_STATUS_COUNTS=' + json.dumps(dict(sorted(counts.items())), sort_keys=True))
+          print('RUNTIME_TODO_COUNT=0')
+          print('DEPENDENCY_READY_WAITING_COUNT=104')
+          print('WAITING_CONTRACTS_VALIDATED=419')
+          print('CHECKPOINT_TARGET_REVISION=8')
+          print('TSK0243_STATE=WAITING')
+          print('TSK0243_MONITOR_RESULT=NOT_DEPLOYED_OR_NOT_EXTERNALLY_ROUTABLE')
+          print('MATERIAL_ACTION=NONE')
+          PY
+          git diff --check
+          test "$(git diff --name-only | tr '\n' ' ')" = "CURRENT_STATE.md "
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT_STATE.md
+          git commit -m 'Record TSK-0243 WAITING monitor attempt 12'
+          git push origin HEAD:runtime/waiting-monitor-json-20260905-0700
