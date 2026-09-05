@@ -1,0 +1,194 @@
+name: Verify TSK-0010 runtime rebaseline acceptance
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/verify-tsk0010-rebaseline-20260905.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-serial-light-checkpoint-write
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out canonical main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify rebaseline acceptance and post-PASS selector
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHECKPOINT_BLOB='1b2c5e610371610899fd8bca97a5fd3f4332f62b'
+          FROZEN_COMMIT='20e2763c0be2124378e3158ac559aed826bc6765'
+          WBS_BLOB='357c5e1be3b455e7efddd329d6a2468e3125b502'
+          RESTORE_EVIDENCE_BLOB='e87d1aaca75c155f88348f52adad2b6eb78e589a'
+          test "$(git hash-object CURRENT_STATE.md)" = "$CHECKPOINT_BLOB"
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "$WBS_BLOB"
+          test "$(git rev-parse HEAD:Plans)" = '0ed412e5dd90f5a05238bb6542a061d7b0ce0ccf'
+          test "$(git rev-parse HEAD:Plans/Master/MANIFEST.yaml)" = 'da35db0fe16009dfb5ce0e24caab05d6d02c84ed'
+          test "$(git rev-parse HEAD:Plans/SHA256SUMS.txt)" = '8fbeb7337233adc289ea51e49a0722f33db08323'
+
+          python3 - <<'PY'
+          import copy,csv,json,re
+          from pathlib import Path
+
+          RESTORE='''TSK-0026 TSK-0027 TSK-0028 TSK-0139 TSK-0165 TSK-0166 TSK-0167 TSK-0168 TSK-0169 TSK-0202 TSK-0207 TSK-0214 TSK-0225 TSK-0227 TSK-0228 TSK-0298 TSK-0302 TSK-0374 TSK-0428 TSK-0429 TSK-0430 TSK-0431 TSK-0437 TSK-0441 TSK-0442 TSK-0443 TSK-0510 TSK-0511 TSK-0512 TSK-0513 TSK-0514 TSK-0559'''.split()
+          EXCLUDE='''TSK-0243 TSK-0360 TSK-0369 TSK-0399 TSK-0455 TSK-0483 TSK-0499 TSK-0630'''.split()
+          OWNER_DEFER={'TSK-0455','TSK-0631','TSK-0633','TSK-0634','TSK-0635','TSK-0637','TSK-0640','TSK-0630','TSK-0421','TSK-0415','TSK-0416','TSK-0370','TSK-0499','TSK-0242'}
+          d=json.loads(Path('CURRENT_STATE.md').read_text(encoding='utf-8'))
+          assert d['checkpoint_schema']=='serial-light-checkpoint-v1'
+          assert d['project_id']=='UseSafeWeb.com'
+          assert d['governance_mode']=='SERIAL_LIGHT'
+          assert d['checkpoint_revision']==28
+          assert d['baseline']['version']==1
+          assert d['runtime']['project_status']=='ACTIVE'
+          assert d['runtime']['governance_blocker'] is None
+          assert d['runtime']['human_constraints']==[]
+          work={x['id']:x for x in d['baseline']['work_items']}
+          rt={x['id']:x for x in d['runtime']['items']}
+          policies={x['id']:x['text'] for x in d['baseline']['policy_rules']}
+          assert len(work)==641 and len(rt)==641 and set(work)==set(rt)
+          assert rt['TSK-0010']['status']=='TODO'
+          assert rt['TSK-0011']['status']=='PASS'
+
+          # Frozen planning authority identity is present in CURRENT_STATE.
+          objective=' '.join(x['reference'] for x in d['baseline']['objectives'])
+          assert 'Plans/Master/MANIFEST.yaml@20e2763c0be2124378e3158ac559aed826bc6765' in objective
+          assert 'Plans/Master/MASTER_PLAN.md@20e2763c0be2124378e3158ac559aed826bc6765' in objective
+          ref0009=' '.join(x['reference'] for x in rt['TSK-0009']['acceptance_references'])
+          ref0011=' '.join(x['reference'] for x in rt['TSK-0011']['acceptance_references'])
+          assert 'fce408f34470c0a0883ab978685b5265fdec4b97' in ref0009
+          assert '20e2763c0be2124378e3158ac559aed826bc6765' in ref0011
+          assert '0ed412e5dd90f5a05238bb6542a061d7b0ce0ccf' in ref0011
+          assert '8fbeb7337233adc289ea51e49a0722f33db08323' in ref0011
+
+          # Runtime evidence/status preservation is now exact for the verified set.
+          for tid in RESTORE:
+              assert rt[tid]['status']=='PASS', tid
+              refs=rt[tid].get('acceptance_references',[])
+              assert len(refs)==1, tid
+              assert refs[0]['ac_id']=='ACC-'+tid.split('-')[1], tid
+              assert 'e87d1aaca75c155f88348f52adad2b6eb78e589a' in refs[0]['reference'], tid
+          for tid in EXCLUDE:
+              assert rt[tid]['status']!='PASS', tid
+          assert not (set(RESTORE)&OWNER_DEFER)
+
+          # Accountless decision is already serialized in CURRENT_STATE.
+          assert 'DEC-0053 / CR-0006' in policies['POL-012']
+          assert 'accountless core plus optional parent account/session/minimum ownership persistence/lightweight dashboard/device management' in policies['POL-012']
+          assert 'mandatory login for core value' in policies['POL-012']
+
+          # Recovery decision and gate mapping are verified from the frozen authority;
+          # they will be serialized into the TSK-0010 acceptance reference on PASS.
+          decisions=Path('Plans/Master/Registers/DECISIONS_TRIGGERS.md').read_text(encoding='utf-8')
+          dec43=next(line for line in decisions.splitlines() if line.startswith('| DEC-0043 |'))
+          assert 'Lean recovery/availability and server topology' in dec43
+          assert 'one AdGuard node initially' in dec43
+          assert 'two separate fresh Ubuntu 24.04 LTS Azure VMs' in dec43
+          assert 'approximately 30-minute recovery' in dec43
+          assert 'restore/rebuild required' in dec43
+          assert rt['TSK-0431']['status']=='PASS'
+
+          iface=Path('Plans/Master/Governance/CURRENT_STATE_INTERFACE.md').read_text(encoding='utf-8')
+          mapping_line=next(line for line in iface.splitlines() if re.search(r'\|\s*LG-03\s*\|\s*G-02\s*\|',line))
+          assert 'NOT_APPLICABLE TO ACTIVE PRE-PRODUCT PATH' in mapping_line
+
+          # Hypothetical post-PASS state for deterministic selector evidence only.
+          status={tid:item['status'] for tid,item in rt.items()}
+          status['TSK-0010']='PASS'
+          def deps_pass(tid):
+              return all(status.get(dep)=='PASS' for dep in work[tid]['depends_on'])
+          eligible=[]
+          for tid,item in rt.items():
+              if tid=='TSK-0010':
+                  continue
+              if item['status']=='TODO' and deps_pass(tid):
+                  eligible.append(tid)
+          eligible.sort(key=lambda tid:(work[tid]['plan_priority'] if work[tid]['plan_priority'] is not None else 10**9,work[tid]['order'],tid))
+
+          with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='') as f:
+              wbs={r['Task_ID']:r for r in csv.DictReader(f)}
+          release_candidates=[]
+          for tid,item in rt.items():
+              if item['status']!='WAITING' or tid in OWNER_DEFER or not deps_pass(tid):
+                  continue
+              row=wbs[tid]
+              if row['Action_Authority']!='AUTO_ALLOWED':
+                  continue
+              release_candidates.append(tid)
+          release_candidates.sort(key=lambda tid:(work[tid]['plan_priority'] if work[tid]['plan_priority'] is not None else 10**9,work[tid]['order'],tid))
+          selected_release=release_candidates[0] if release_candidates else None
+          selected_row=wbs[selected_release] if selected_release else None
+
+          result={
+            'task':'TSK-0010',
+            'acceptance':'ACC-0010',
+            'result':'PASS',
+            'source_checkpoint_revision':28,
+            'source_checkpoint_blob':'1b2c5e610371610899fd8bca97a5fd3f4332f62b',
+            'baseline_version':1,
+            'planning_authority':{
+              'master_plan':'Plans/Master/MASTER_PLAN.md@20e2763c0be2124378e3158ac559aed826bc6765',
+              'manifest':'Plans/Master/MANIFEST.yaml@20e2763c0be2124378e3158ac559aed826bc6765',
+              'historical_publication_commit':'fce408f34470c0a0883ab978685b5265fdec4b97',
+              'current_frozen_commit':'20e2763c0be2124378e3158ac559aed826bc6765',
+              'plans_tree':'0ed412e5dd90f5a05238bb6542a061d7b0ce0ccf',
+              'manifest_blob':'da35db0fe16009dfb5ce0e24caab05d6d02c84ed',
+              'sha256sums_blob':'8fbeb7337233adc289ea51e49a0722f33db08323'
+            },
+            'runtime_preservation':{
+              'restored_pass_count':32,
+              'restore_evidence_blob':'e87d1aaca75c155f88348f52adad2b6eb78e589a',
+              'exclusions_remain_nonpass':EXCLUDE
+            },
+            'accountless_decision':policies['POL-012'],
+            'recovery_decision':dec43,
+            'recovery_acceptance_task':'TSK-0431',
+            'gate_mapping':mapping_line,
+            'gate_disposition':'LG-03 maps legacy G-02 and remains NOT_APPLICABLE TO ACTIVE PRE-PRODUCT PATH; no gate PASS is inferred.',
+            'post_pass_selector':{
+              'eligible_todo_count':len(eligible),
+              'eligible_todo_ids':eligible,
+              'next_wait_release_candidate':selected_release,
+              'candidate_plan_priority':work[selected_release]['plan_priority'] if selected_release else None,
+              'candidate_order':work[selected_release]['order'] if selected_release else None,
+              'candidate_title':work[selected_release]['title'] if selected_release else None,
+              'candidate_action_authority':selected_row['Action_Authority'] if selected_row else None,
+              'candidate_trigger':selected_row['Trigger'] if selected_row else None,
+              'candidate_preconditions':selected_row['Preconditions'] if selected_row else None,
+              'note':'This selector result is acceptance evidence only. No mutable next_work field is persisted in CURRENT_STATE.'
+            },
+            'serialization_plan':'On PASS, TSK-0010 acceptance reference will record the verified authority identity, DEC-0053 accountless decision, DEC-0043 recovery decision, LG-03/G-02 mapping/disposition, and this one-time selector result. No baseline semantic change or next_work field is introduced.'
+          }
+          Path('tsk0010-rebaseline-verification.json').write_text(json.dumps(result,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
+          print(json.dumps(result,indent=2,ensure_ascii=False))
+          PY
+
+      - name: Upload TSK-0010 verification evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: tsk0010-rebaseline-verification
+          path: tsk0010-rebaseline-verification.json
+          if-no-files-found: error
+
+      - name: Remove one-off verification transport
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git show origin/main:CURRENT_STATE.md | git hash-object --stdin)" = '1b2c5e610371610899fd8bca97a5fd3f4332f62b'
+          git switch -C main origin/main
+          git config user.name 'UseSafeWeb Governor'
+          git config user.email 'actions@users.noreply.github.com'
+          git rm .github/workflows/verify-tsk0010-rebaseline-20260905.yml
+          git commit -m 'evidence: remove TSK-0010 rebaseline verification transport'
+          git push origin HEAD:main
