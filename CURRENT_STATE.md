@@ -2,7 +2,7 @@
   "checkpoint_schema": "serial-light-checkpoint-v1",
   "project_id": "UseSafeWeb.com",
   "governance_mode": "SERIAL_LIGHT",
-  "checkpoint_revision": 24,
+  "checkpoint_revision": 25,
   "baseline": {
     "version": 1,
     "objectives": [
@@ -17146,9 +17146,9 @@
         "id": "TSK-0243",
         "status": "WAITING",
         "wait": {
-          "condition": "The owner-selected target/access prerequisite is now established: GitHub reaches DNS host adguardvm at 52.157.109.120 and web host hmgweb at 20.71.90.212 with Ubuntu 24.04 and non-interactive sudo. TSK-0243 still requires the actual controlled direct-host deployment/enablement and then current public functional verification; the present HTTP 502/challenge TLS state is therefore an undeployed runtime condition, not a missing-target condition.",
-          "resolution_check": "Complete the current AUTO_ALLOWED TSK-0452 direct-host deployment/health/rollback acceptance on the approved hosts. Then rerun the bounded read-only TSK-0243 public preflight. Only when public application/API health and challenge-host TLS/SNI/probe routing are healthy may the gated TSK-0243 functional target proof proceed under its own current authority.",
-          "reference": "Owner target instruction 2026-09-05; DNS binding run 33966585612 job 101307674698; web binding run 33966551601 job 101307582123; WBS TSK-0452 AUTO_ALLOWED; TSK-0489 and TSK-0490 PASS."
+          "condition": "The approved target/deployment prerequisite is complete through durable TSK-0452 PASS. The fresh bounded external preflight now confirms usesafeweb.com is healthy at HTTP 200, the verification-request endpoint is externally reachable and returns HTTP 405 to the read-only GET, and the deterministic verifier wildcard/challenge host resolves to 52.157.109.120. TSK-0243 still cannot proceed because the challenge hostname TLS/SNI handshake fails with TLS alert unrecognized name and the approved probe path remains unreachable at HTTP 000.",
+          "resolution_check": "Rerun only the bounded read-only TSK-0243 public preflight. Resume functional TSK-0243 proof only when the deterministic challenge hostname completes authenticated TLS/SNI and the approved /api/dns-verification/probes route is externally reachable, with the application request/result routes healthy. Do not infer or perform DNS, TLS, reverse-proxy, runtime, profile/device, participant, telemetry, payment, production/public, market, launch, or service-removal mutation without separate current durable authority.",
+          "reference": "Fresh bounded public preflight workflow run 33900198638, latest monitored job 101340861981; TSK-0452 durable PASS; checkpoint revision 24; TSK-0243 ACC-0243/VER-0243/EVD-0243 unchanged."
         },
         "acceptance_references": []
       },
