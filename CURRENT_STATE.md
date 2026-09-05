@@ -2,7 +2,7 @@
   "checkpoint_schema": "serial-light-checkpoint-v1",
   "project_id": "UseSafeWeb.com",
   "governance_mode": "SERIAL_LIGHT",
-  "checkpoint_revision": 21,
+  "checkpoint_revision": 22,
   "baseline": {
     "version": 1,
     "objectives": [
@@ -14338,8 +14338,16 @@
       },
       {
         "id": "TSK-0002",
-        "status": "TODO",
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0002",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0002_CHECKPOINT_DECISION_RECORD_EVIDENCE_2026-09-05.md; blob ac03f35d37e94abc681b3a2bf6f8fd5ffb946c2d; publication commit 4745356e4a7a400b7ec42ff1f7ab536011f60d49",
+            "summary": "Direct evidence backfill verifies that the current checkpoint declares runtime item status authoritative and prevents stale WBS execution snapshots from overriding later confirmed checkpoint state.",
+            "verification_context": "Frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765, blob 357c5e1be3b455e7efddd329d6a2468e3125b502; source checkpoint revision 21 blob 1f8eadb1517c862da5313c60b4a824bf46c65249; dependency TSK-0004 PASS; evidence blob ac03f35d37e94abc681b3a2bf6f8fd5ffb946c2d."
+          }
+        ]
       },
       {
         "id": "TSK-0003",
