@@ -2,7 +2,7 @@
   "checkpoint_schema": "serial-light-checkpoint-v1",
   "project_id": "UseSafeWeb.com",
   "governance_mode": "SERIAL_LIGHT",
-  "checkpoint_revision": 13,
+  "checkpoint_revision": 14,
   "baseline": {
     "version": 1,
     "objectives": [
@@ -17146,10 +17146,10 @@
         },
         "acceptance_references": [],
         "wait_details": {
-          "condition": "Fresh bounded read-only public preflight attempt 16 confirms the state is materially unchanged from attempt 15: verify.usesafeweb.com and the deterministic 32-hex challenge host resolve to 52.157.109.120, but the challenge-host TLS/SNI handshake still fails with TLS alert 112 / unrecognized_name, the challenge probe returns HTTP 000, and https://usesafeweb.com/ plus /api/dns-verification/requests remain HTTP 502. Functional public-target proof remains unavailable and fenced.",
+          "condition": "Fresh bounded read-only public preflight attempt 17 confirms the governed routing boundary is materially unchanged from attempt 16: verify.usesafeweb.com and the deterministic 32-hex challenge host resolve to 52.157.109.120, but the exact challenge-host TLS/SNI handshake still fails (timeout rc=124), the challenge probe returns HTTP 000, and https://usesafeweb.com/ plus /api/dns-verification/requests remain HTTP 502. Functional public-target proof remains unavailable and fenced.",
           "resolution_check": "Resume TSK-0243 functional target proof only when a fresh rerun of the existing bounded read-only public preflight shows the challenge verifier host has valid TLS/SNI and the approved probe path is externally reachable, and the public application request/result endpoints are healthy. Recheck current source/version and every material-action fence before any functional POST, DNS rewrite, deployment, certificate/proxy mutation, participant processing, production/public activation, market activation, payment, or launch action.",
           "references": [
-            "GitHub Actions workflow run 33900198638 attempt 16 / job 101283672687; completed SUCCESS 2026-09-05T09:18:21Z; TSK0243_PUBLIC_VERIFICATION_WILDCARD=PRESENT; TSK0243_PUBLIC_TRUST_BOUNDARY_PREFLIGHT=ROUTING_PRESENT_REQUIRES_FUNCTIONAL_PROOF; challenge TLS/SNI FAIL alert 112; public origin/request HTTP 502; mutation=NONE."
+            "GitHub Actions workflow run 33900198638 attempt 17 / job 101293048862; completed SUCCESS 2026-09-05T10:36:42Z; TSK0243_PUBLIC_DNS_SERVICE_HOST=PRESENT; TSK0243_PUBLIC_VERIFICATION_WILDCARD=PRESENT; TSK0243_PUBLIC_TRUST_BOUNDARY_PREFLIGHT=ROUTING_PRESENT_REQUIRES_FUNCTIONAL_PROOF; exact challenge TLS/SNI FAIL timeout rc=124; public origin/request HTTP 502; challenge probe HTTP 000; mutation=NONE; participant/payment/launch action=NONE."
           ]
         }
       },
