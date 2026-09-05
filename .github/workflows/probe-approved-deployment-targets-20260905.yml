@@ -8,49 +8,28 @@ on:
 
 permissions:
   contents: read
-  actions: read
 
 jobs:
-  inventory:
+  web_target_probe:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 1
-      - name: Extract exact frozen deployment contracts
+      - name: Read-only network probe for approved web target
         shell: bash
         run: |
           set -Eeuo pipefail
-          python3 - <<'PY'
-          import csv, json
-          wanted = {'TSK-0452','TSK-0243'}
-          with open('Plans/Master/WBS/master-wbs.csv', newline='', encoding='utf-8-sig') as f:
-              rows = [r for r in csv.DictReader(f) if r.get('ID') in wanted or r.get('Task_ID') in wanted]
-          if len(rows) != 2:
-              raise SystemExit(f'expected 2 rows, got {len(rows)}')
-          for r in rows:
-              keep = {k:v for k,v in r.items() if k and v and (k in {
-                  'Task_ID','Title','Dependencies','Acceptance_Criteria','Verification_Method','Evidence_Reference','Action_Authority','Priority','Execution_State'
-              } or 'Authority' in k or 'Acceptance' in k or 'Verification' in k or 'Evidence' in k)}
-              print('CONTRACT=' + json.dumps(keep, sort_keys=True))
-          PY
-      - name: Read repository runner inventory
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          set -Eeuo pipefail
-          response="$(curl -fsS --retry 2 \
-            -H 'Accept: application/vnd.github+json' \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
-            -H 'X-GitHub-Api-Version: 2022-11-28' \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runners?per_page=100")"
-          RESPONSE="$response" python3 - <<'PY'
-          import json, os
-          data=json.loads(os.environ['RESPONSE'])
-          print(f"RUNNER_COUNT={data.get('total_count',0)}")
-          for r in sorted(data.get('runners',[]), key=lambda x:x.get('name','')):
-              labels=','.join(sorted(l.get('name','') for l in r.get('labels',[])))
-              print(f"RUNNER name={r.get('name')} status={r.get('status')} busy={str(r.get('busy')).lower()} labels={labels}")
-          PY
+          target='20.71.90.212'
+          for port in 22 80 443; do
+            if timeout 5 bash -c "</dev/tcp/${target}/${port}" 2>/dev/null; then
+              echo "WEB_TARGET_PORT_${port}=REACHABLE"
+            else
+              echo "WEB_TARGET_PORT_${port}=NOT_REACHABLE"
+            fi
+          done
+          http_code=$(curl -sS --max-time 8 -o /dev/null -w '%{http_code}' -H 'Host: usesafeweb.com' "http://${target}/" || true)
+          echo "WEB_TARGET_HTTP_HOST_CODE=${http_code:-000}"
+          https_code=$(curl -skS --max-time 8 -o /dev/null -w '%{http_code}' --resolve "usesafeweb.com:443:${target}" 'https://usesafeweb.com/' || true)
+          echo "WEB_TARGET_HTTPS_RESOLVED_CODE=${https_code:-000}"
+          ssh_banner=$(timeout 4 bash -c "exec 3<>/dev/tcp/${target}/22; head -n 1 <&3" 2>/dev/null | tr -cd '[:print:]' | head -c 120 || true)
+          if [ -n "$ssh_banner" ]; then echo "WEB_TARGET_SSH_BANNER=${ssh_banner}"; else echo 'WEB_TARGET_SSH_BANNER=UNAVAILABLE'; fi
+          echo 'WEB_TARGET_PROBE=COMPLETE'
