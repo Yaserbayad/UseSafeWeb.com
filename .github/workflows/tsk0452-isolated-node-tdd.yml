@@ -21,3 +21,23 @@ jobs:
           cache-dependency-path: website/package-lock.json
       - name: Run focused deployment contract
         run: node --test website/tests/contract/tsk0243-deployment.test.mjs
+
+  installer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - name: Verify installer syntax and isolated runtime behavior
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bash -n infrastructure/web-server/install-node-runtime.sh
+          global_node_before="$(readlink -f /usr/bin/node 2>/dev/null || true)"
+          global_version_before="$(/usr/bin/node --version 2>/dev/null || true)"
+          sudo bash infrastructure/web-server/install-node-runtime.sh
+          sudo bash infrastructure/web-server/install-node-runtime.sh
+          test "$(/opt/usesafeweb-runtime/node-v22.23.2/bin/node --version)" = 'v22.23.2'
+          test "$(/opt/usesafeweb-runtime/node-v22.23.2/bin/node /opt/usesafeweb-runtime/node-v22.23.2/lib/node_modules/npm/bin/npm-cli.js --version)" = '10.9.8'
+          test "$(readlink -f /usr/bin/node 2>/dev/null || true)" = "$global_node_before"
+          test "$(/usr/bin/node --version 2>/dev/null || true)" = "$global_version_before"
+          echo 'ISOLATED_NODE_INSTALLER=PASS'
