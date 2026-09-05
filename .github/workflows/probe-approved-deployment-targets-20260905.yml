@@ -10,26 +10,44 @@ permissions:
   contents: read
 
 jobs:
-  web_target_probe:
-    runs-on: ubuntu-24.04
+  web_ssh_probe:
+    runs-on: [self-hosted, linux, x64]
     timeout-minutes: 5
     steps:
-      - name: Read-only network probe for approved web target
+      - name: Verify current self-hosted runner identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          echo "RUNNER_NAME=${RUNNER_NAME:-unknown}"
+          echo "HOSTNAME=$(hostname -s 2>/dev/null || hostname)"
+          . /etc/os-release
+          echo "OS=${ID:-unknown}-${VERSION_ID:-unknown}"
+      - name: Read-only batch SSH probe to approved web target
         shell: bash
         run: |
           set -Eeuo pipefail
           target='20.71.90.212'
-          for port in 22 80 443; do
-            if timeout 5 bash -c "</dev/tcp/${target}/${port}" 2>/dev/null; then
-              echo "WEB_TARGET_PORT_${port}=REACHABLE"
-            else
-              echo "WEB_TARGET_PORT_${port}=NOT_REACHABLE"
-            fi
-          done
-          http_code=$(curl -sS --max-time 8 -o /dev/null -w '%{http_code}' -H 'Host: usesafeweb.com' "http://${target}/" || true)
-          echo "WEB_TARGET_HTTP_HOST_CODE=${http_code:-000}"
-          https_code=$(curl -skS --max-time 8 -o /dev/null -w '%{http_code}' --resolve "usesafeweb.com:443:${target}" 'https://usesafeweb.com/' || true)
-          echo "WEB_TARGET_HTTPS_RESOLVED_CODE=${https_code:-000}"
-          ssh_banner=$(timeout 4 bash -c "exec 3<>/dev/tcp/${target}/22; head -n 1 <&3" 2>/dev/null | tr -cd '[:print:]' | head -c 120 || true)
-          if [ -n "$ssh_banner" ]; then echo "WEB_TARGET_SSH_BANNER=${ssh_banner}"; else echo 'WEB_TARGET_SSH_BANNER=UNAVAILABLE'; fi
-          echo 'WEB_TARGET_PROBE=COMPLETE'
+          out=''
+          rc=0
+          out=$(timeout 12 ssh \
+            -o BatchMode=yes \
+            -o ConnectTimeout=5 \
+            -o ConnectionAttempts=1 \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -o GlobalKnownHostsFile=/dev/null \
+            -o LogLevel=ERROR \
+            azureusr@"${target}" \
+            'printf "WEB_SSH_AUTH=PASS\nHOSTNAME=%s\n" "$(hostname -s 2>/dev/null || hostname)"; . /etc/os-release; printf "OS=%s-%s\n" "$ID" "$VERSION_ID"; if sudo -n true 2>/dev/null; then echo SUDO_NONINTERACTIVE=PASS; else echo SUDO_NONINTERACTIVE=FAIL; fi' 2>&1) || rc=$?
+          if [ "$rc" -eq 0 ]; then
+            printf '%s\n' "$out"
+          else
+            echo "WEB_SSH_AUTH=NOT_PROVEN"
+            echo "WEB_SSH_EXIT=${rc}"
+            case "$out" in
+              *'Permission denied'*) echo 'WEB_SSH_REASON=AUTHENTICATION_NOT_AVAILABLE' ;;
+              *'Connection timed out'*|*'Connection refused'*|*'No route to host'*) echo 'WEB_SSH_REASON=NETWORK_FAILURE' ;;
+              *) echo 'WEB_SSH_REASON=OTHER_FAIL_CLOSED' ;;
+            esac
+          fi
+          echo 'WEB_SSH_PROBE=COMPLETE'
