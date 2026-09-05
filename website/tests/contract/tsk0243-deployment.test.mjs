@@ -162,7 +162,8 @@ test('direct-host deployment uses an isolated pinned Node runtime without changi
   assert.match(installer, /d60acfe00a2932254bb0ad20e01b0d74397a0875595de719654b214f4b03f307/);
   assert.match(installer, /node-v22\.23\.2-linux-x64\.tar\.xz/);
   assert.match(installer, /sha256sum/);
-  assert.match(installer, /\/opt\/usesafeweb-runtime\/node-v22\.23\.2/);
+  assert.match(installer, /RUNTIME_ROOT='\/opt\/usesafeweb-runtime'/);
+  assert.match(installer, /DESTINATION="\$\{RUNTIME_ROOT\}\/node-v22\.23\.2"/);
   assert.doesNotMatch(installer, /(?:ln|cp|mv).*\/usr\/bin\/node/);
 
   const service = readFileSync(servicePath, 'utf8');
