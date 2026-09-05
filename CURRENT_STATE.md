@@ -2,7 +2,7 @@
   "checkpoint_schema": "serial-light-checkpoint-v1",
   "project_id": "UseSafeWeb.com",
   "governance_mode": "SERIAL_LIGHT",
-  "checkpoint_revision": 9,
+  "checkpoint_revision": 10,
   "baseline": {
     "version": 1,
     "objectives": [
@@ -17144,7 +17144,14 @@
           "resolution_check": "Rerun only the authorized bounded read-only TSK-0243 public trust-boundary preflight (run family 33900198638). Treat the wait as resolved only when verifier wildcard/challenge routing and the required public web/API trust boundary are externally present and eligible for the task functional proof without crossing any deployment or activation fence.",
           "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0243; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; preflight run 33900198638 attempt 12 job 101266313848; read-only monitor 2026-09-05T06:57:50Z; result NOT_DEPLOYED_OR_NOT_EXTERNALLY_ROUTABLE; verifier wildcard/challenge unresolved; public origin/request route HTTP 502; no mutation/material action"
         },
-        "acceptance_references": []
+        "acceptance_references": [],
+        "wait_details": {
+          "condition": "Fresh bounded read-only public preflight attempt 13 shows the verifier DNS routing prerequisite changed from absent to present: verify.usesafeweb.com and the deterministic 32-hex challenge host now resolve to 52.157.109.120. The remaining public trust boundary is still not functional: the challenge-host TLS handshake fails with TLS alert 112 / unrecognized_name, the challenge probe returns HTTP 000, and https://usesafeweb.com/ plus /api/dns-verification/requests remain HTTP 502. Functional public-target proof therefore remains unavailable and fenced.",
+          "resolution_check": "Resume TSK-0243 functional target proof only when a fresh rerun of the existing bounded read-only public preflight shows the challenge verifier host has valid TLS/SNI and the approved probe path is externally reachable, and the public application request/result endpoints are healthy. Recheck current source/version and every material-action fence before any functional POST, DNS rewrite, deployment, certificate/proxy mutation, participant processing, production/public activation, market activation, payment, or launch action.",
+          "references": [
+            "GitHub Actions workflow run 33900198638 attempt 13 / job 101273359483; completed SUCCESS 2026-09-05T07:54:17Z; TSK0243_PUBLIC_VERIFICATION_WILDCARD=PRESENT; TSK0243_PUBLIC_TRUST_BOUNDARY_PREFLIGHT=ROUTING_PRESENT_REQUIRES_FUNCTIONAL_PROOF; mutation=NONE."
+          ]
+        }
       },
       {
         "id": "TSK-0244",
@@ -19429,8 +19436,15 @@
       },
       {
         "id": "TSK-0452",
-        "status": "TODO",
-        "acceptance_references": []
+        "status": "WAITING",
+        "acceptance_references": [],
+        "wait_details": {
+          "condition": "Dependencies TSK-0489 and TSK-0490 are PASS and existing direct-host source mechanics are preserved, but TSK-0452 is not genuinely executable under its current preconditions because current durable authority does not establish the required qualifying approved fresh Ubuntu 24.04 LTS target plus Azure/DNS/TLS/monitoring access, and no separate current durable authority permits the required direct-host target deployment/enablement. Repository/source AUTO_ALLOWED authority does not infer deployment or production/public runtime authority.",
+          "resolution_check": "Resume TSK-0452 only when current durable authority establishes an approved qualifying fresh Ubuntu 24.04 LTS host and the required Azure/DNS/TLS/monitoring access, and separately authorizes the target deployment/enablement required by VER-0452. Then reload the exact TSK-0452 contract and current material-action fences before target execution; do not infer participant, telemetry, payment, production/public activation, market activation, launch, profile/certificate, or service-removal authority.",
+          "references": [
+            "Canonical checkpoint revision 9 made TSK-0452 TODO but added no target-access evidence or material-action authority; TSK-0489 and TSK-0490 remain PASS; POL-004 and POL-013 remain controlling."
+          ]
+        }
       },
       {
         "id": "TSK-0453",
