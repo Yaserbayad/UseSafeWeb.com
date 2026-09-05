@@ -2,7 +2,7 @@
   "checkpoint_schema": "serial-light-checkpoint-v1",
   "project_id": "UseSafeWeb.com",
   "governance_mode": "SERIAL_LIGHT",
-  "checkpoint_revision": 20,
+  "checkpoint_revision": 21,
   "baseline": {
     "version": 1,
     "objectives": [
