@@ -1,0 +1,148 @@
+name: Recompute SERIAL LIGHT next-work boundary at revision 22
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/select-next-serial-light-work-rev22-20260905.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-serial-light-checkpoint-write
+  cancel-in-progress: false
+
+jobs:
+  select:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out canonical main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Recompute current candidate boundaries mechanically
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object CURRENT_STATE.md)" = 'c280442b680c1965ef72cc3e20d9429d00de6c08'
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = '357c5e1be3b455e7efddd329d6a2468e3125b502'
+          python3 - <<'PY'
+          import csv
+          import json
+          from pathlib import Path
+
+          cp=json.loads(Path('CURRENT_STATE.md').read_text(encoding='utf-8'))
+          assert cp['checkpoint_schema']=='serial-light-checkpoint-v1'
+          assert cp['project_id']=='UseSafeWeb.com'
+          assert cp['governance_mode']=='SERIAL_LIGHT'
+          assert cp['checkpoint_revision']==22
+          assert cp['baseline']['version']==1
+          assert cp['runtime']['project_status']=='ACTIVE'
+          assert cp['runtime']['governance_blocker'] is None
+
+          with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig', newline='') as f:
+              rows=list(csv.DictReader(f))
+          wbs={r['Task_ID']:r for r in rows}
+          base={w['id']:w for w in cp['baseline']['work_items']}
+          runtime={i['id']:i for i in cp['runtime']['items']}
+          assert len(wbs)==641, len(wbs)
+          assert len(base)==641 and len(runtime)==641
+          assert set(wbs)==set(base)==set(runtime)
+
+          project_constraints=[]
+          item_constraints={}
+          for h in cp['runtime']['human_constraints']:
+              if h['scope']=='PROJECT': project_constraints.append(h)
+              elif h['scope']=='WORK_ITEMS':
+                  for wid in h.get('work_item_ids',[]): item_constraints.setdefault(wid,[]).append(h)
+
+          def deps_pass(wid):
+              return all(runtime[d]['status']=='PASS' for d in base[wid]['depends_on'])
+          def dep_snapshot(wid):
+              return [{'id':d,'status':runtime[d]['status']} for d in base[wid]['depends_on']]
+          def rank(wid):
+              b=base[wid]; r=runtime[wid]
+              po=r.get('priority_override')
+              return (po if po is not None else (b.get('plan_priority') if b.get('plan_priority') is not None else 10**9), b['order'], wid)
+          def record(wid):
+              b=base[wid]; r=runtime[wid]; row=wbs[wid]
+              return {
+                  'id':wid,
+                  'title':b['title'],
+                  'status':r['status'],
+                  'rank':list(rank(wid)),
+                  'plan_priority':b.get('plan_priority'),
+                  'priority_override':r.get('priority_override'),
+                  'order':b['order'],
+                  'required_for_completion':b['required_for_completion'],
+                  'depends_on':dep_snapshot(wid),
+                  'all_dependencies_pass':deps_pass(wid),
+                  'baseline_gates':b.get('gates',[]),
+                  'execution_context':b.get('execution_context'),
+                  'human_constraints':[{'id':h['id'],'text':h['text']} for h in item_constraints.get(wid,[])],
+                  'action_authority':row.get('Action_Authority'),
+                  'ai_capability':row.get('AI_Capability_A0_A4'),
+                  'plan_status':row.get('Plan_Status'),
+                  'wbs_execution_state_snapshot':row.get('Execution_State'),
+                  'trigger':row.get('Trigger'),
+                  'preconditions':row.get('Preconditions'),
+                  'required_tools_or_access':row.get('Required_Tools_or_Access'),
+                  'primary_owner':row.get('Primary_Owner'),
+                  'relative_timing':row.get('Relative_Timing'),
+                  'notes':row.get('Notes'),
+                  'wait':r.get('wait'),
+                  'blocker':r.get('blocker'),
+                  'continuation_note':r.get('continuation_note'),
+                  'acceptance_criteria':b.get('acceptance_criteria',[]),
+                  'spec_reference':b.get('spec_reference')
+              }
+
+          nonpass=sorted([wid for wid,x in runtime.items() if x['status']!='PASS'], key=rank)
+          todo_dep_ready=sorted([wid for wid in nonpass if runtime[wid]['status']=='TODO' and deps_pass(wid) and not item_constraints.get(wid)], key=rank)
+          waiting_dep_ready=sorted([wid for wid in nonpass if runtime[wid]['status']=='WAITING' and deps_pass(wid) and not item_constraints.get(wid)], key=rank)
+          blocked=sorted([wid for wid in nonpass if runtime[wid]['status']=='BLOCKED'], key=rank)
+
+          # Ordered boundary candidates include only states for which dependency readiness is mechanically true.
+          boundary=sorted(todo_dep_ready+waiting_dep_ready, key=rank)
+
+          out={
+              'checkpoint_blob':'c280442b680c1965ef72cc3e20d9429d00de6c08',
+              'checkpoint_revision':22,
+              'baseline_version':1,
+              'project_status':'ACTIVE',
+              'project_constraints':project_constraints,
+              'status_counts':{s:sum(1 for x in runtime.values() if x['status']==s) for s in ['TODO','WAITING','BLOCKED','PASS']},
+              'nonpass_count':len(nonpass),
+              'todo_dependency_ready_count':len(todo_dep_ready),
+              'waiting_dependency_ready_count':len(waiting_dep_ready),
+              'blocked_count':len(blocked),
+              'ordered_ready_boundaries':[record(wid) for wid in boundary[:30]],
+              'top_nonpass':[record(wid) for wid in nonpass[:30]],
+              'top_todo_dependency_ready':[record(wid) for wid in todo_dep_ready[:20]],
+              'top_waiting_dependency_ready':[record(wid) for wid in waiting_dep_ready[:20]],
+          }
+          Path('serial-light-next-work-rev22.json').write_text(json.dumps(out,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
+          print(json.dumps(out,indent=2,ensure_ascii=False))
+          PY
+
+      - name: Upload deterministic selection evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: serial-light-next-work-rev22
+          path: serial-light-next-work-rev22.json
+          if-no-files-found: error
+
+      - name: Remove one-off selection transport
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git show origin/main:CURRENT_STATE.md | git hash-object --stdin)" = 'c280442b680c1965ef72cc3e20d9429d00de6c08'
+          git config user.name 'UseSafeWeb Governor'
+          git config user.email 'actions@users.noreply.github.com'
+          git rm .github/workflows/select-next-serial-light-work-rev22-20260905.yml
+          git commit -m 'governance: remove revision 22 selection transport'
+          git push origin HEAD:main
