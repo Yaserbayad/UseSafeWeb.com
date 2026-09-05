@@ -8,9 +8,10 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
-  contract_and_routing:
+  inventory:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -30,47 +31,26 @@ jobs:
               raise SystemExit(f'expected 2 rows, got {len(rows)}')
           for r in rows:
               keep = {k:v for k,v in r.items() if k and v and (k in {
-                  'ID','Task_ID','Task_Name','Title','Layer','Dependencies','Acceptance_Criteria','Verification_Method','Evidence_Reference','AI_Capability','Action_Authority','Plan_Priority','Priority','Execution_Context','Plan_Status','Execution_State'
+                  'Task_ID','Title','Dependencies','Acceptance_Criteria','Verification_Method','Evidence_Reference','Action_Authority','Priority','Execution_State'
               } or 'Authority' in k or 'Acceptance' in k or 'Verification' in k or 'Evidence' in k)}
               print('CONTRACT=' + json.dumps(keep, sort_keys=True))
           PY
-      - name: Inventory existing GitHub host-routing references
+      - name: Read repository runner inventory
+        env:
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -Eeuo pipefail
-          echo ROUTING_INVENTORY_BEGIN
-          grep -RInE --include='*.yml' --include='*.yaml' 'runs-on:.*self-hosted|self-hosted|secrets\.[A-Za-z0-9_]+|20\.71\.90\.212|52\.157\.109\.120|ssh|SSH|webserver|WEB_SERVER|WEB_HOST|AZURE_' .github/workflows 2>/dev/null \
-            | sed -E 's/(secrets\.[A-Za-z0-9_]+).*/\1/' \
-            | sort -u \
-            | head -n 300 || true
-          echo ROUTING_INVENTORY_END
-
-  runner_probe:
-    strategy:
-      fail-fast: false
-      matrix:
-        slot: [1, 2, 3, 4]
-    runs-on: [self-hosted, linux, x64]
-    timeout-minutes: 5
-    steps:
-      - name: Read-only runner identity
-        shell: bash
-        run: |
-          set -Eeuo pipefail
-          echo "PROBE_SLOT=${{ matrix.slot }}"
-          echo "RUNNER_NAME=${RUNNER_NAME:-unknown}"
-          echo "HOSTNAME=$(hostname -s 2>/dev/null || hostname)"
-          . /etc/os-release
-          echo "OS_ID=${ID:-unknown}"
-          echo "OS_VERSION=${VERSION_ID:-unknown}"
-          echo "RUNNER_OS=${RUNNER_OS:-unknown}"
-          echo "RUNNER_ARCH=${RUNNER_ARCH:-unknown}"
-          public_ip=''
-          if command -v curl >/dev/null 2>&1; then
-            public_ip=$(curl -fsS --max-time 3 -H Metadata:true 'http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/publicIpAddress?api-version=2021-02-01&format=text' 2>/dev/null || true)
-          fi
-          echo "AZURE_PUBLIC_IP=${public_ip:-unavailable}"
-          if sudo -n true 2>/dev/null; then echo 'SUDO_NONINTERACTIVE=PASS'; else echo 'SUDO_NONINTERACTIVE=FAIL'; fi
-          echo "ADGUARD_ACTIVE=$(systemctl is-active AdGuardHome 2>/dev/null || true)"
-          echo "NGINX_ACTIVE=$(systemctl is-active nginx 2>/dev/null || true)"
-          echo 'TARGET_PROBE=COMPLETE'
+          response="$(curl -fsS --retry 2 \
+            -H 'Accept: application/vnd.github+json' \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runners?per_page=100")"
+          RESPONSE="$response" python3 - <<'PY'
+          import json, os
+          data=json.loads(os.environ['RESPONSE'])
+          print(f"RUNNER_COUNT={data.get('total_count',0)}")
+          for r in sorted(data.get('runners',[]), key=lambda x:x.get('name','')):
+              labels=','.join(sorted(l.get('name','') for l in r.get('labels',[])))
+              print(f"RUNNER name={r.get('name')} status={r.get('status')} busy={str(r.get('busy')).lower()} labels={labels}")
+          PY
