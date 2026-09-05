@@ -2,7 +2,7 @@
   "checkpoint_schema": "serial-light-checkpoint-v1",
   "project_id": "UseSafeWeb.com",
   "governance_mode": "SERIAL_LIGHT",
-  "checkpoint_revision": 23,
+  "checkpoint_revision": 24,
   "baseline": {
     "version": 1,
     "objectives": [
@@ -14426,8 +14426,16 @@
       },
       {
         "id": "TSK-0009",
-        "status": "TODO",
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0009",
+            "evidence_type": "GITHUB_ACTIONS_RUN",
+            "reference": "Yaserbayad/UseSafeWeb.com workflow run 33979284902 on commit a08a77d22f1af3accb4f64369b3bc26560544f1e; evidence artifact tsk0009-publication-verification id 9973256098 digest sha256:7bf2f9643cc8d16a2fd1b4bd1e5eb7897f49257e11f884e90e423885fff53363; historical publication commit fce408f34470c0a0883ab978685b5265fdec4b97; current frozen authority commit 20e2763c0be2124378e3158ac559aed826bc6765",
+            "summary": "Bounded verification proved the owner-frozen Plans publication changed only Plans/, had exact SHA256SUMS coverage for all 51 non-checksum files, passed the historical validator with 641 tasks and zero broken/generated-missing links, preserved Generated/MASTER_PLAN_FULL.md as derived non-authority, and revalidated the current frozen planning source.",
+            "verification_context": "Source checkpoint revision 23 blob c2cc419ce936dfca10b7811a88ec010a49f1c13c; TSK-0017 PASS; verification run 33979284902 SUCCESS; artifact result=PASS; no deployment, participant, telemetry, payment, production/public, market, launch, profile/certificate or service-removal action."
+          }
+        ]
       },
       {
         "id": "TSK-0010",
