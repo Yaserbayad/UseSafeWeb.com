@@ -2,7 +2,7 @@
   "checkpoint_schema": "serial-light-checkpoint-v1",
   "project_id": "UseSafeWeb.com",
   "governance_mode": "SERIAL_LIGHT",
-  "checkpoint_revision": 10,
+  "checkpoint_revision": 11,
   "baseline": {
     "version": 1,
     "objectives": [
@@ -17146,10 +17146,10 @@
         },
         "acceptance_references": [],
         "wait_details": {
-          "condition": "Fresh bounded read-only public preflight attempt 13 shows the verifier DNS routing prerequisite changed from absent to present: verify.usesafeweb.com and the deterministic 32-hex challenge host now resolve to 52.157.109.120. The remaining public trust boundary is still not functional: the challenge-host TLS handshake fails with TLS alert 112 / unrecognized_name, the challenge probe returns HTTP 000, and https://usesafeweb.com/ plus /api/dns-verification/requests remain HTTP 502. Functional public-target proof therefore remains unavailable and fenced.",
+          "condition": "Fresh bounded read-only public preflight attempt 14 confirms verifier DNS routing remains present: verify.usesafeweb.com and the deterministic 32-hex challenge host resolve to 52.157.109.120. The remaining public trust boundary is still not functional: the challenge-host TLS/SNI handshake fails with TLS alert 112 / unrecognized_name, the challenge probe returns HTTP 000, and https://usesafeweb.com/ plus /api/dns-verification/requests remain HTTP 502. Functional public-target proof therefore remains unavailable and fenced.",
           "resolution_check": "Resume TSK-0243 functional target proof only when a fresh rerun of the existing bounded read-only public preflight shows the challenge verifier host has valid TLS/SNI and the approved probe path is externally reachable, and the public application request/result endpoints are healthy. Recheck current source/version and every material-action fence before any functional POST, DNS rewrite, deployment, certificate/proxy mutation, participant processing, production/public activation, market activation, payment, or launch action.",
           "references": [
-            "GitHub Actions workflow run 33900198638 attempt 13 / job 101273359483; completed SUCCESS 2026-09-05T07:54:17Z; TSK0243_PUBLIC_VERIFICATION_WILDCARD=PRESENT; TSK0243_PUBLIC_TRUST_BOUNDARY_PREFLIGHT=ROUTING_PRESENT_REQUIRES_FUNCTIONAL_PROOF; mutation=NONE."
+            "GitHub Actions workflow run 33900198638 attempt 14 / job 101275465238; completed SUCCESS 2026-09-05T08:11:50Z; TSK0243_PUBLIC_VERIFICATION_WILDCARD=PRESENT; TSK0243_PUBLIC_TRUST_BOUNDARY_PREFLIGHT=ROUTING_PRESENT_REQUIRES_FUNCTIONAL_PROOF; mutation=NONE."
           ]
         }
       },
