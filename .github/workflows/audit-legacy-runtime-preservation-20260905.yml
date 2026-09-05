@@ -1,0 +1,145 @@
+name: Audit legacy runtime state preservation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/audit-legacy-runtime-preservation-20260905.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-serial-light-checkpoint-write
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out canonical main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Inventory explicit legacy PASS mismatches
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPECTED_CHECKPOINT_BLOB='c2175c5b5e3a5797f38638e36503f76d6cafbd60'
+          LEGACY_COMMIT='20e2763c0be2124378e3158ac559aed826bc6765'
+          WBS_BLOB='357c5e1be3b455e7efddd329d6a2468e3125b502'
+          test "$(git hash-object CURRENT_STATE.md)" = "$EXPECTED_CHECKPOINT_BLOB"
+          test "$(git rev-parse ${LEGACY_COMMIT}:CURRENT_STATE.md)" = 'd45c7b1f98ceba6265944aabd970c250dc7be2d2'
+          test "$(git hash-object Plans/Master/WBS/master-wbs.csv)" = "$WBS_BLOB"
+          git show "${LEGACY_COMMIT}:CURRENT_STATE.md" > /tmp/legacy-current-state.md
+
+          python3 - <<'PY'
+          import json,re
+          from pathlib import Path
+
+          cur=json.loads(Path('CURRENT_STATE.md').read_text(encoding='utf-8'))
+          assert cur['checkpoint_schema']=='serial-light-checkpoint-v1'
+          assert cur['project_id']=='UseSafeWeb.com'
+          assert cur['governance_mode']=='SERIAL_LIGHT'
+          assert cur['checkpoint_revision']==27
+          assert cur['baseline']['version']==1
+          assert cur['runtime']['project_status']=='ACTIVE'
+          runtime={x['id']:x for x in cur['runtime']['items']}
+          legacy=Path('/tmp/legacy-current-state.md').read_text(encoding='utf-8')
+          lines=legacy.splitlines()
+
+          # Conservative patterns: require the task ID and task-level PASS assertion
+          # on the same line, or an accepted-stable-state heading followed by a
+          # same-task PASS assertion in that section. These produce candidates only.
+          same_line_patterns=[
+            re.compile(r'(?i)\b(TSK-\d{4})\b.*(?:[:=]|\bis\b|\bremains\b|\btherefore\b|\brecovery acceptance\b).*\bPASS\b'),
+            re.compile(r'(?i)\*\*(TSK-\d{4})\s*[:=]\s*PASS[.;]?\*\*'),
+            re.compile(r'(?i)\b(TSK-\d{4})\b.*\bacceptance\b.*\b(?:is|are|therefore)\b.*\b(?:satisfied|PASS)\b'),
+          ]
+          explicit=[]
+          for i,line in enumerate(lines,1):
+              for p in same_line_patterns:
+                  m=p.search(line)
+                  if m:
+                      explicit.append((m.group(1).upper(),i,line.strip(),'same_line_explicit'))
+                      break
+
+          # Capture headings of the form "### TSK-xxxx accepted stable state" and
+          # require an explicit same-task PASS assertion before the next peer heading.
+          for i,line in enumerate(lines):
+              hm=re.match(r'^#{2,6}\s+(TSK-\d{4})\b.*accepted stable state',line,re.I)
+              if not hm: continue
+              tid=hm.group(1).upper()
+              level=len(line)-len(line.lstrip('#'))
+              end=min(len(lines),i+80)
+              for j in range(i+1,end):
+                  if re.match(r'^#{1,%d}\s+'%level,lines[j]):
+                      break
+                  if re.search(r'(?i)\b'+re.escape(tid)+r'\b.*\bPASS\b',lines[j]):
+                      explicit.append((tid,j+1,lines[j].strip(),'accepted_stable_state'))
+                      break
+
+          # De-duplicate exact source assertions, then retain only current non-PASS.
+          seen=set(); candidates=[]
+          for tid,ln,text,kind in explicit:
+              key=(tid,ln)
+              if key in seen or tid not in runtime: continue
+              seen.add(key)
+              if runtime[tid]['status']=='PASS': continue
+              lo=max(1,ln-2); hi=min(len(lines),ln+2)
+              context='\n'.join(f'{k}: {lines[k-1]}' for k in range(lo,hi+1))
+              candidates.append({
+                'id':tid,
+                'current_status':runtime[tid]['status'],
+                'legacy_line':ln,
+                'assertion_kind':kind,
+                'assertion':text,
+                'context':context
+              })
+
+          # Add selected policy-preservation invariants that must remain authoritative.
+          overrides={
+            'current_deferral_waiting':['TSK-0455','TSK-0631','TSK-0633','TSK-0634','TSK-0635','TSK-0637','TSK-0640','TSK-0630','TSK-0421','TSK-0415','TSK-0416','TSK-0370','TSK-0499','TSK-0242'],
+          }
+          result={
+            'result':'PASS',
+            'purpose':'candidate inventory only; no state mutation',
+            'checkpoint_revision':27,
+            'checkpoint_blob':'c2175c5b5e3a5797f38638e36503f76d6cafbd60',
+            'legacy_commit':'20e2763c0be2124378e3158ac559aed826bc6765',
+            'legacy_checkpoint_blob':'d45c7b1f98ceba6265944aabd970c250dc7be2d2',
+            'explicit_assertion_count':len(explicit),
+            'nonpass_candidate_count':len(candidates),
+            'candidates':candidates,
+            'current_owner_override_sets':overrides,
+            'notes':[
+              'Candidates are not automatically promoted.',
+              'Each candidate must be checked against current frozen task semantics, durable proof, and later owner deferrals/overrides.',
+              'LG/gate language is not converted into task PASS unless the task itself is explicitly PASS.'
+            ]
+          }
+          Path('legacy-runtime-preservation-audit.json').write_text(json.dumps(result,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
+          print(json.dumps(result,indent=2,ensure_ascii=False))
+          PY
+
+      - name: Upload audit evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: legacy-runtime-preservation-audit
+          path: legacy-runtime-preservation-audit.json
+          if-no-files-found: error
+
+      - name: Remove one-off audit transport
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git show origin/main:CURRENT_STATE.md | git hash-object --stdin)" = 'c2175c5b5e3a5797f38638e36503f76d6cafbd60'
+          git switch -C main origin/main
+          git config user.name 'UseSafeWeb Governor'
+          git config user.email 'actions@users.noreply.github.com'
+          git rm .github/workflows/audit-legacy-runtime-preservation-20260905.yml
+          git commit -m 'evidence: remove legacy runtime preservation audit transport'
+          git push origin HEAD:main
