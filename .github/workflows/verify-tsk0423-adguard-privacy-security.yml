@@ -46,16 +46,25 @@ jobs:
           sudo python3 infrastructure/adguard-server/tsk-0423-privacy-security-regression.py \
             --config /opt/AdGuardHome/AdGuardHome.yaml
 
-          ss -lntH | awk '$4 ~ /:3000$/ {print}' > /tmp/tsk0423-admin-listeners
-          grep -Eq '127\.0\.0\.1:3000$|\[::1\]:3000$' /tmp/tsk0423-admin-listeners
-          ! grep -Eq '(^|[[:space:]])(0\.0\.0\.0|\*|\[::\]):3000$' /tmp/tsk0423-admin-listeners
+          ss -lntH | awk '$4 ~ /:3000$/ {print $4}' > /tmp/tsk0423-admin-listeners
+          if grep -Eq '^(0\.0\.0\.0|\*|\[::\]):3000$' /tmp/tsk0423-admin-listeners; then
+            echo 'public AdGuard admin listener detected' >&2
+            cat /tmp/tsk0423-admin-listeners >&2
+            exit 1
+          fi
+          echo 'TSK0423_PUBLIC_ADMIN_EXPOSURE=ABSENT'
 
           sudo ufw status numbered > /tmp/tsk0423-ufw
-          ! grep -Eiq '3000(/tcp)?[[:space:]]+ALLOW[[:space:]]+IN[[:space:]]+Anywhere' /tmp/tsk0423-ufw
+          if grep -Eiq '3000(/tcp)?[[:space:]]+ALLOW[[:space:]]+IN[[:space:]]+Anywhere' /tmp/tsk0423-ufw; then
+            echo 'public firewall rule for AdGuard admin detected' >&2
+            exit 1
+          fi
+          echo 'TSK0423_PUBLIC_ADMIN_FIREWALL=PASS'
 
           blocked="$(dig +time=3 +tries=1 +short @127.0.0.1 family---max.com A | tr '\n' ',')"
           [[ -z "$blocked" || "$blocked" == '0.0.0.0,' || "$blocked" == '::,' ]]
           dig +time=3 +tries=1 @127.0.0.1 api.github.com A >/tmp/tsk0423-allowed-dns
           grep -Eq 'status: NOERROR' /tmp/tsk0423-allowed-dns
+          echo 'TSK0423_FILTER_RUNTIME=PASS'
           echo 'TSK0423_TARGET_READONLY=PASS'
           echo 'TSK0423_DEPLOYMENT_RECOVERY_ACCEPTANCE=PASS'
