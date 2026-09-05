@@ -1,0 +1,158 @@
+name: Trace runtime preservation verifier failure
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/trace-runtime-preservation-v2-failure-20260905.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usesafeweb-serial-light-checkpoint-write
+  cancel-in-progress: false
+
+jobs:
+  trace:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out canonical main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Emit every verifier predicate without asserting
+        shell: bash
+        run: |
+          set -u
+          git show 20e2763c0be2124378e3158ac559aed826bc6765:CURRENT_STATE.md > /tmp/legacy-current-state.md
+          python3 - <<'PY'
+          import csv,json,re,subprocess
+          from pathlib import Path
+          RESTORE='''TSK-0026 TSK-0027 TSK-0028 TSK-0139 TSK-0165 TSK-0166 TSK-0167 TSK-0168 TSK-0169 TSK-0202 TSK-0207 TSK-0214 TSK-0225 TSK-0227 TSK-0228 TSK-0298 TSK-0302 TSK-0374 TSK-0428 TSK-0429 TSK-0430 TSK-0431 TSK-0437 TSK-0441 TSK-0442 TSK-0443 TSK-0510 TSK-0511 TSK-0512 TSK-0513 TSK-0514 TSK-0559'''.split()
+          EXCLUDE='''TSK-0243 TSK-0360 TSK-0369 TSK-0399 TSK-0455 TSK-0483 TSK-0499 TSK-0630'''.split()
+          OWNER_DEFER={'TSK-0455','TSK-0631','TSK-0633','TSK-0634','TSK-0635','TSK-0637','TSK-0640','TSK-0630','TSK-0421','TSK-0415','TSK-0416','TSK-0370','TSK-0499','TSK-0242'}
+          cur=json.loads(Path('CURRENT_STATE.md').read_text(encoding='utf-8'))
+          runtime={x['id']:x for x in cur['runtime']['items']}
+          work={x['id']:x for x in cur['baseline']['work_items']}
+          with Path('Plans/Master/WBS/master-wbs.csv').open(encoding='utf-8-sig',newline='') as f:
+              wbs={r['Task_ID']:r for r in csv.DictReader(f)}
+          legacy=Path('/tmp/legacy-current-state.md').read_text(encoding='utf-8')
+          lines=legacy.splitlines()
+          def git_out(args):
+              try: return subprocess.check_output(args,text=True).strip()
+              except Exception as e: return 'ERROR:'+repr(e)
+          checkpoint_blob=git_out(['git','hash-object','CURRENT_STATE.md'])
+          legacy_blob=git_out(['git','rev-parse','20e2763c0be2124378e3158ac559aed826bc6765:CURRENT_STATE.md'])
+          wbs_blob=git_out(['git','hash-object','Plans/Master/WBS/master-wbs.csv'])
+          heading_positions=[]; headings={}
+          for idx,line in enumerate(lines):
+              m=re.match(r'^(#{2,6})\s+(TSK-\d{4})\b.*accepted stable state',line,re.I)
+              if m:
+                  tid=m.group(2).upper(); level=len(m.group(1))
+                  heading_positions.append((idx,tid,level,line.strip()))
+                  if tid in runtime and runtime[tid]['status']!='PASS':
+                      headings.setdefault(tid,[]).append({'line':idx+1,'heading':line.strip()})
+          def section_for(tid):
+              sections=[]
+              for idx,h_tid,level,h_text in heading_positions:
+                  if h_tid!=tid: continue
+                  end=len(lines)
+                  for j in range(idx+1,len(lines)):
+                      m=re.match(r'^(#{1,6})\s+',lines[j])
+                      if m and len(m.group(1))<=level:
+                          end=j; break
+                  sections.append((idx,end,'\n'.join(lines[idx:end])))
+              return sections
+          def direct_lines(tid,acc):
+              out=[]
+              task_status=re.compile(r'(?i)(?:\*\*)?'+re.escape(tid)+r'\s*(?:=|:)\s*PASS\b')
+              current_pass=re.compile(r'(?i)\b'+re.escape(tid)+r'\b.{0,300}\b(?:current PASS|remains current PASS)\b')
+              title_pass=re.compile(r'(?i)`?'+re.escape(tid)+r'\b[^\n]{0,220}:\s*\*\*PASS\b')
+              acc_sat=re.compile(r'(?i)\b'+re.escape(acc)+r'\b.{0,220}\b(?:is|are|remains)\s+(?:fully\s+)?satisfied\b')
+              for i,line in enumerate(lines,1):
+                  if tid not in line and acc not in line: continue
+                  if task_status.search(line) or current_pass.search(line) or title_pass.search(line) or (tid in line and acc_sat.search(line)):
+                      out.append({'line':i,'text':line.strip()})
+              return out
+          per=[]
+          for tid in RESTORE:
+              acc='ACC-'+tid.split('-')[1]
+              sections=section_for(tid)
+              direct=direct_lines(tid,acc)
+              section_proof=[]
+              for start,end,sec in sections:
+                  has_acc=bool(re.search(r'(?i)\b'+re.escape(acc)+r'\b.{0,300}\b(?:satisfied|PASS)\b',sec,re.S))
+                  has_pass=bool(re.search(r'(?i)\bPASS\b',sec))
+                  if has_acc and has_pass:
+                      section_proof.append({'start_line':start+1,'end_line':end})
+              per.append({
+                'id':tid,
+                'current_status':runtime.get(tid,{}).get('status'),
+                'nonpass_ok':runtime.get(tid,{}).get('status')!='PASS',
+                'checkpoint_acc':[x['id'] for x in work.get(tid,{}).get('acceptance_criteria',[])],
+                'wbs_acc':wbs.get(tid,{}).get('Acceptance_ID'),
+                'expected_acc':acc,
+                'acc_match':([x['id'] for x in work.get(tid,{}).get('acceptance_criteria',[])]==[acc] and wbs.get(tid,{}).get('Acceptance_ID')==acc),
+                'direct_count':len(direct),
+                'section_proof_count':len(section_proof),
+                'proof_ok':bool(direct or section_proof),
+                'direct':direct,
+                'section_proof':section_proof
+              })
+          unclassified=sorted(set(headings)-set(RESTORE)-set(EXCLUDE))
+          failed=[]
+          checks={
+            'checkpoint_blob':checkpoint_blob=='c2175c5b5e3a5797f38638e36503f76d6cafbd60',
+            'legacy_blob':legacy_blob=='d45c7b1f98ceba6265944aabd970c250dc7be2d2',
+            'wbs_blob':wbs_blob=='357c5e1be3b455e7efddd329d6a2468e3125b502',
+            'schema':cur.get('checkpoint_schema')=='serial-light-checkpoint-v1',
+            'project':cur.get('project_id')=='UseSafeWeb.com',
+            'mode':cur.get('governance_mode')=='SERIAL_LIGHT',
+            'revision':cur.get('checkpoint_revision')==27,
+            'baseline_version':cur.get('baseline',{}).get('version')==1,
+            'project_status':cur.get('runtime',{}).get('project_status')=='ACTIVE',
+            'restore_count':len(RESTORE)==32,
+            'exclude_count':len(EXCLUDE)==8,
+            'disjoint':not bool(set(RESTORE)&set(EXCLUDE)),
+            'no_owner_deferral_restore':not bool(set(RESTORE)&OWNER_DEFER),
+            'no_unclassified_headings':not bool(unclassified)
+          }
+          for k,v in checks.items():
+              if not v: failed.append({'scope':'global','check':k})
+          for r in per:
+              for k in ('nonpass_ok','acc_match','proof_ok'):
+                  if not r[k]: failed.append({'scope':r['id'],'check':k})
+          result={
+            'result':'TRACE_COMPLETE',
+            'global_checks':checks,
+            'actual_blobs':{'checkpoint':checkpoint_blob,'legacy':legacy_blob,'wbs':wbs_blob},
+            'accepted_stable_nonpass_ids':sorted(headings),
+            'unclassified':unclassified,
+            'failed_predicates':failed,
+            'per_restore':per
+          }
+          Path('runtime-preservation-v2-failure-trace.json').write_text(json.dumps(result,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
+          print(json.dumps({'global_checks':checks,'unclassified':unclassified,'failed_predicates':failed},indent=2,ensure_ascii=False))
+          PY
+      - name: Upload failure trace
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-preservation-v2-failure-trace
+          path: runtime-preservation-v2-failure-trace.json
+          if-no-files-found: error
+      - name: Remove failed verifier and trace transports
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git show origin/main:CURRENT_STATE.md | git hash-object --stdin)" = 'c2175c5b5e3a5797f38638e36503f76d6cafbd60'
+          git switch -C main origin/main
+          git config user.name 'UseSafeWeb Governor'
+          git config user.email 'actions@users.noreply.github.com'
+          test -f .github/workflows/verify-runtime-preservation-reconciliation-v2-20260905.yml
+          git rm .github/workflows/verify-runtime-preservation-reconciliation-v2-20260905.yml
+          git rm .github/workflows/trace-runtime-preservation-v2-failure-20260905.yml
+          git commit -m 'evidence: remove failed runtime preservation verifier transports'
+          git push origin HEAD:main
