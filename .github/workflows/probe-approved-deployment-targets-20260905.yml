@@ -10,11 +10,11 @@ permissions:
   contents: read
 
 jobs:
-  web_ssh_probe:
+  dns_target_probe:
     runs-on: [self-hosted, linux, x64]
     timeout-minutes: 5
     steps:
-      - name: Verify current self-hosted runner identity
+      - name: Read-only DNS host identity and target binding probe
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -22,32 +22,9 @@ jobs:
           echo "HOSTNAME=$(hostname -s 2>/dev/null || hostname)"
           . /etc/os-release
           echo "OS=${ID:-unknown}-${VERSION_ID:-unknown}"
-      - name: Read-only batch SSH probe to approved web target
-        shell: bash
-        run: |
-          set -Eeuo pipefail
-          target='20.71.90.212'
-          out=''
-          rc=0
-          out=$(timeout 12 ssh \
-            -o BatchMode=yes \
-            -o ConnectTimeout=5 \
-            -o ConnectionAttempts=1 \
-            -o StrictHostKeyChecking=no \
-            -o UserKnownHostsFile=/dev/null \
-            -o GlobalKnownHostsFile=/dev/null \
-            -o LogLevel=ERROR \
-            azureusr@"${target}" \
-            'printf "WEB_SSH_AUTH=PASS\nHOSTNAME=%s\n" "$(hostname -s 2>/dev/null || hostname)"; . /etc/os-release; printf "OS=%s-%s\n" "$ID" "$VERSION_ID"; if sudo -n true 2>/dev/null; then echo SUDO_NONINTERACTIVE=PASS; else echo SUDO_NONINTERACTIVE=FAIL; fi' 2>&1) || rc=$?
-          if [ "$rc" -eq 0 ]; then
-            printf '%s\n' "$out"
-          else
-            echo "WEB_SSH_AUTH=NOT_PROVEN"
-            echo "WEB_SSH_EXIT=${rc}"
-            case "$out" in
-              *'Permission denied'*) echo 'WEB_SSH_REASON=AUTHENTICATION_NOT_AVAILABLE' ;;
-              *'Connection timed out'*|*'Connection refused'*|*'No route to host'*) echo 'WEB_SSH_REASON=NETWORK_FAILURE' ;;
-              *) echo 'WEB_SSH_REASON=OTHER_FAIL_CLOSED' ;;
-            esac
-          fi
-          echo 'WEB_SSH_PROBE=COMPLETE'
+          if sudo -n true 2>/dev/null; then echo 'SUDO_NONINTERACTIVE=PASS'; else echo 'SUDO_NONINTERACTIVE=FAIL'; fi
+          echo "ADGUARD_ACTIVE=$(systemctl is-active AdGuardHome 2>/dev/null || true)"
+          outbound_ip=$(curl -fsS --max-time 8 https://api.ipify.org 2>/dev/null || true)
+          echo "OUTBOUND_PUBLIC_IP=${outbound_ip:-unavailable}"
+          if sudo ss -H -lntu 2>/dev/null | awk '{print $5}' | grep -Eq '(^|:)53$'; then echo 'DNS_PORT_53_LISTENER=PRESENT'; else echo 'DNS_PORT_53_LISTENER=ABSENT'; fi
+          echo 'DNS_TARGET_BINDING_PROBE=COMPLETE'
