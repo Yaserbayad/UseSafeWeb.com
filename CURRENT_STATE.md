@@ -2,7 +2,7 @@
   "checkpoint_schema": "serial-light-checkpoint-v1",
   "project_id": "UseSafeWeb.com",
   "governance_mode": "SERIAL_LIGHT",
-  "checkpoint_revision": 25,
+  "checkpoint_revision": 26,
   "baseline": {
     "version": 1,
     "objectives": [
@@ -14449,8 +14449,16 @@
       },
       {
         "id": "TSK-0011",
-        "status": "TODO",
-        "acceptance_references": []
+        "status": "PASS",
+        "acceptance_references": [
+          {
+            "ac_id": "ACC-0011",
+            "evidence_type": "GITHUB_BLOB",
+            "reference": "Yaserbayad/UseSafeWeb.com TSK_0011_PUBLISHED_PLAN_READBACK_EVIDENCE_2026-09-05.md; blob b89ca291a9cf891e6f3aed3918058b9576edcd87; evidence commit a19856346604521aef897a52e8c6e0d45ce63c94; frozen authority commit 20e2763c0be2124378e3158ac559aed826bc6765 Plans tree 0ed412e5dd90f5a05238bb6542a061d7b0ce0ccf; verification run 33979759038 job 101342759961 artifact 9973390487",
+            "summary": "ACC-0011 is satisfied: GitHub main read-back of the complete approved Plans package exactly matches the frozen authority tree; all 64 declared SHA-256 values and file-set checks pass, required authority-root files are present, and generated MASTER_PLAN_FULL remains non-authoritative.",
+            "verification_context": "Source checkpoint revision 25 blob 21a13045d2ad5c6408ca4ec86da76df2ea370755; dependency TSK-0009 PASS; frozen WBS commit 20e2763c0be2124378e3158ac559aed826bc6765 blob 357c5e1be3b455e7efddd329d6a2468e3125b502; manifest blob da35db0fe16009dfb5ce0e24caab05d6d02c84ed; SHA256SUMS blob 8fbeb7337233adc289ea51e49a0722f33db08323; verification run 33979759038."
+          }
+        ]
       },
       {
         "id": "TSK-0012",
