@@ -2,7 +2,7 @@
   "checkpoint_schema": "serial-light-checkpoint-v1",
   "project_id": "UseSafeWeb.com",
   "governance_mode": "SERIAL_LIGHT",
-  "checkpoint_revision": 5,
+  "checkpoint_revision": 6,
   "baseline": {
     "version": 1,
     "objectives": [
@@ -17142,7 +17142,7 @@
         "wait": {
           "condition": "Public DNS service is present but the required verify.usesafeweb.com / challenge-host verifier routing remains absent, while the public web origin and dns-verification request route remain HTTP 502. Functional public-target proof is therefore not yet available.",
           "resolution_check": "Rerun only the authorized bounded read-only TSK-0243 public trust-boundary preflight (run family 33900198638). Treat the wait as resolved only when verifier wildcard/challenge routing and the required public web/API trust boundary are externally present and eligible for the task functional proof without crossing any deployment or activation fence.",
-          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0243; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; preflight run 33900198638 attempt 9 job 101244339145; read-only monitor 2026-09-05T03:55:34Z; result NOT_DEPLOYED_OR_NOT_EXTERNALLY_ROUTABLE; verifier wildcard/challenge unresolved; public origin/request route HTTP 502; no mutation/material action"
+          "reference": "Plans/Master/WBS/master-wbs.csv@20e2763c0be2124378e3158ac559aed826bc6765; blob 357c5e1be3b455e7efddd329d6a2468e3125b502#TSK-0243; CURRENT_STATE.md@20e2763c0be2124378e3158ac559aed826bc6765; blob d45c7b1f98ceba6265944aabd970c250dc7be2d2; preflight run 33900198638 attempt 10 job 101247576746; read-only monitor 2026-09-05T04:21:42Z; result NOT_DEPLOYED_OR_NOT_EXTERNALLY_ROUTABLE; verifier wildcard/challenge unresolved; public origin/request route HTTP 502; no mutation/material action"
         },
         "acceptance_references": []
       },
