@@ -1,0 +1,202 @@
+name: Import TEST-LARGE-001 hierarchical plan
+
+on:
+  push:
+    paths:
+      - '.github/workflows/import-test-large-hierarchy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  import-hierarchical-plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      PLAN_LABEL: plan:test-large-hierarchy-001
+    steps:
+      - name: Create native hierarchical plan
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, time, urllib.request, urllib.error, urllib.parse
+
+          repo = os.environ['REPO']
+          token = os.environ['GH_TOKEN']
+          label = os.environ['PLAN_LABEL']
+          base = f'https://api.github.com/repos/{repo}'
+
+          phases = [
+              ('P01','Program Foundation',['Repository and branching','Development environment','Configuration management','Architecture baseline','Engineering standards']),
+              ('P02','Identity and Access',['User registration','Authentication','Authorization and roles','Session management','Account recovery']),
+              ('P03','Tenant and Organization Core',['Tenant lifecycle','Organization profile','Membership management','Teams and groups','Tenant settings']),
+              ('P04','Core Data Platform',['Schema design','Persistence layer','Data validation','Data import and export','Retention and archival']),
+              ('P05','Backend API',['API conventions','Core CRUD endpoints','Filtering and pagination','Error handling','API versioning']),
+              ('P06','Web Application Shell',['Application shell','Navigation','Responsive layout','State management','Client error handling']),
+              ('P07','Primary Business Workflows',['Workspace lifecycle','Record management','Task workflow','Approval workflow','Bulk operations']),
+              ('P08','Search and Discovery',['Search indexing','Global search','Scoped search','Facets and filters','Saved searches']),
+              ('P09','Notifications and Messaging',['Notification model','In-app notifications','Email notifications','Delivery preferences','Notification audit']),
+              ('P10','Billing and Entitlements',['Plan catalog','Subscription lifecycle','Entitlements','Invoices and receipts','Usage metering']),
+              ('P11','Reporting and Analytics',['Metrics model','Operational dashboards','Exports','Scheduled reports','Audit analytics']),
+              ('P12','Security and Compliance',['Security controls','Audit logging','Secrets handling','Privacy controls','Abuse protection']),
+              ('P13','Observability and Reliability',['Structured logging','Metrics and alerts','Tracing','Health checks','Failure recovery']),
+              ('P14','Deployment and Release',['Build pipeline','Deployment pipeline','Environment promotion','Rollback strategy','Release management']),
+              ('P15','Quality, Hardening and Launch',['Automated testing','Performance testing','Accessibility','Launch readiness','Post-launch stabilization']),
+          ]
+          actions = ['Define','Implement','Validate','Verify']
+          risk = [
+              'Avoid hidden coupling with unrelated components.',
+              'Keep the change reversible and its failure modes observable.',
+              'Do not count partial success as completion.',
+              'Preserve backward compatibility unless explicitly changed.',
+              'Keep configuration explicit so another worker can reproduce the result.',
+              'Check repository and issue state before changing anything.',
+              'Prefer deterministic behavior over hidden convenience state.',
+              'Record newly discovered follow-up work separately.',
+          ]
+
+          def api(method, path, data=None, ignore=None):
+              url = path if path.startswith('http') else base + path
+              body = None if data is None else json.dumps(data).encode('utf-8')
+              req = urllib.request.Request(url, data=body, method=method)
+              req.add_header('Authorization', f'Bearer {token}')
+              req.add_header('Accept', 'application/vnd.github+json')
+              req.add_header('X-GitHub-Api-Version', '2022-11-28')
+              req.add_header('User-Agent', 'test-large-hierarchy-import')
+              if body is not None:
+                  req.add_header('Content-Type', 'application/json')
+              try:
+                  with urllib.request.urlopen(req, timeout=60) as r:
+                      raw = r.read()
+                      return json.loads(raw.decode('utf-8')) if raw else None
+              except urllib.error.HTTPError as e:
+                  if ignore and e.code in ignore:
+                      return None
+                  raise
+
+          def ensure_label():
+              try:
+                  api('GET', '/labels/' + urllib.parse.quote(label, safe=''))
+              except urllib.error.HTTPError as e:
+                  if e.code == 404:
+                      api('POST', '/labels', {'name': label, 'color': '0e8a16', 'description': 'TEST-LARGE-001 native hierarchical master-plan issues'})
+                  else:
+                      raise
+
+          def existing_labeled_issues():
+              out = {}
+              page = 1
+              while True:
+                  q = urllib.parse.urlencode({'state':'all','labels':label,'per_page':100,'page':page})
+                  rows = api('GET', '/issues?' + q)
+                  if not rows:
+                      break
+                  for row in rows:
+                      if 'pull_request' not in row:
+                          out[row['title']] = row
+                  if len(rows) < 100:
+                      break
+                  page += 1
+              return out
+
+          def ensure_issue(title, body, existing):
+              if title in existing:
+                  row = existing[title]
+                  print(f'exists #{row["number"]} {title}')
+                  return row
+              row = api('POST', '/issues', {'title': title, 'body': body, 'labels':[label]})
+              existing[title] = row
+              print(f'created #{row["number"]} {title}')
+              time.sleep(0.8)
+              return row
+
+          def add_subissue(parent, child):
+              result = api('POST', f'/issues/{parent["number"]}/sub_issues', {'sub_issue_id': child['id']}, ignore={409,422})
+              time.sleep(0.15)
+              return result
+
+          def add_blocked_by(issue, blocker):
+              result = api('POST', f'/issues/{issue["number"]}/dependencies/blocked_by', {'issue_id': blocker['id']}, ignore={409,422})
+              time.sleep(0.15)
+              return result
+
+          ensure_label()
+          existing = existing_labeled_issues()
+
+          root_title = 'TEST-LARGE-001 — Hierarchical Master Plan (300 tasks)'
+          root_body = '''# TEST-LARGE-001 — AtlasHub Operations Platform\n\nThis is the root of the **native hierarchical** import of the same synthetic ~600 KiB test plan.\n\n- Format: native GitHub parent/sub-issues\n- Executable tasks: 300\n- Phase issues: 15\n- Work-package issues: 75\n- Hierarchy: root → phase → work package → task\n- Dependencies: task metadata plus native GitHub `blocked by` links\n- Plan label: `plan:test-large-hierarchy-001`\n- Existing TEST-001 and TEST-LARGE-001 flat issues are intentionally separate and untouched.\n\nExecution rule: select an eligible open leaf task, claim it, execute within a bounded window, verify acceptance criteria, and record durable evidence.\n'''
+          root = ensure_issue(root_title, root_body, existing)
+
+          phase_rows = {}
+          wp_rows = {}
+          task_rows = {}
+          deps = {}
+          task_no = 1
+          last_phase_task = None
+
+          for pid, pname, wps in phases:
+              ptitle = f'{pid} — {pname}'
+              pbody = f'''- **Plan:** TEST-LARGE-001 — AtlasHub Operations Platform\n- **Format:** HIERARCHICAL\n- **Level:** Phase\n- **Phase:** {pid} — {pname}\n- **Status:** TODO\n\n## Phase goal\nDeliver production-ready {pname.lower()} capabilities with explicit verification and handoff.\n\n## Exit gate\nThis phase is complete only after all child work packages and their executable task issues are complete and no blocker created by this phase remains unresolved.\n'''
+              prow = ensure_issue(ptitle, pbody, existing)
+              phase_rows[pid] = prow
+              phase_last = None
+
+              for wp_no, wp in enumerate(wps, 1):
+                  wpid = f'{pid}.WP{wp_no:02d}'
+                  wtitle = f'{wpid} — {wp}'
+                  wbody = f'''- **Plan:** TEST-LARGE-001 — AtlasHub Operations Platform\n- **Format:** HIERARCHICAL\n- **Level:** Work package\n- **Phase:** {pid} — {pname}\n- **Work package:** {wpid} — {wp}\n- **Status:** TODO\n\n## Intent\nEstablish a complete {wp.lower()} capability that can be executed and verified independently.\n\n## Exit gate\nThis work package is complete only after all four child executable tasks are complete with evidence.\n'''
+                  wrow = ensure_issue(wtitle, wbody, existing)
+                  wp_rows[wpid] = wrow
+                  prev = None
+
+                  for seq, action in enumerate(actions, 1):
+                      tid = f'T{task_no:04d}'
+                      if seq == 1:
+                          dep = last_phase_task if wp_no == 1 else f'T{task_no-2:04d}'
+                      else:
+                          dep = prev
+                      deps[tid] = dep
+
+                      title = f'{tid} — {action} {wp.lower()} — unit {seq:02d}'
+                      priority = 'P1' if seq == 1 else ('P2' if seq <= 3 else 'P3')
+                      execution_class = 'investigative' if seq == 3 else 'bounded'
+                      parallel_group = f'{pid}-G{((wp_no-1)%3)+1}'
+                      body = f'''- **Plan:** TEST-LARGE-001 — AtlasHub Operations Platform\n- **Format:** HIERARCHICAL\n- **Status:** TODO\n- **Phase:** {pid} — {pname}\n- **Work package:** {wpid} — {wp}\n- **Priority:** {priority}\n- **Execution class:** {execution_class}\n- **Parallel group:** {parallel_group}\n- **Depends on:** {dep or 'None'}\n- **Owner:** Unclaimed\n- **Claim state:** AVAILABLE\n\n## Objective\n{action} the {wp.lower()} capability so that it is usable, testable, maintainable, and resumable by an autonomous worker without hidden chat-only context.\n\n## Scope\nWork only inside the boundaries of {wp}. Inspect current repository state first, preserve compatible behavior, and avoid unrelated cleanup. If a shared contract changes, update every directly affected reference in the same task.\n\n## Execution notes\nRun a minimal preflight, verify prerequisites, inspect relevant code/configuration, then implement the smallest complete change that satisfies the objective. Use bounded troubleshooting experiments; stop and checkpoint if repeated attempts stop producing new evidence. {risk[(task_no + seq) % len(risk)]}\n\n## Acceptance criteria\n1. Intended {wp.lower()} behavior is present and repeatably exercisable.\n2. Directly related existing behavior still works unless a documented change is required.\n3. Invalid, missing, and boundary inputs have a defined outcome.\n4. No required placeholder remains unresolved.\n5. Another worker can independently verify completion from durable evidence.\n\n## Required evidence\n- Exact verification command, request, UI path, or test used.\n- Repository reference to changed artifacts where applicable.\n- Observed result proving the acceptance criteria.\n- Residual risk, limitation, or deferred follow-up, if any.\n\n## Completion update\n`{tid}: PASS | BLOCKED | PARTIAL — <factual result> — evidence: <reference>`\n'''
+                      trow = ensure_issue(title, body, existing)
+                      task_rows[tid] = trow
+                      prev = tid
+                      phase_last = tid
+                      task_no += 1
+              last_phase_task = phase_last
+
+          print('Linking native hierarchy...')
+          for pid, pname, wps in phases:
+              add_subissue(root, phase_rows[pid])
+              for wp_no, wp in enumerate(wps, 1):
+                  wpid = f'{pid}.WP{wp_no:02d}'
+                  add_subissue(phase_rows[pid], wp_rows[wpid])
+                  start = (int(pid[1:]) - 1) * 20 + (wp_no - 1) * 4 + 1
+                  for n in range(start, start + 4):
+                      add_subissue(wp_rows[wpid], task_rows[f'T{n:04d}'])
+
+          print('Linking native dependencies...')
+          for tid, dep in deps.items():
+              if dep:
+                  add_blocked_by(task_rows[tid], task_rows[dep])
+
+          summary = {
+              'root_issue': root['number'],
+              'phase_issues': len(phase_rows),
+              'work_package_issues': len(wp_rows),
+              'task_issues': len(task_rows),
+              'total_plan_issues': 1 + len(phase_rows) + len(wp_rows) + len(task_rows),
+              'native_hierarchy_links': len(phase_rows) + len(wp_rows) + len(task_rows),
+              'native_dependency_links': sum(1 for d in deps.values() if d),
+          }
+          print(json.dumps(summary, indent=2))
+          PY
