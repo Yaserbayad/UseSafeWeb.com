@@ -2,8 +2,6 @@ name: Build TEST-001 native issue hierarchy
 
 on:
   push:
-    paths:
-      - '.github/workflows/build-test-plan-hierarchy.yml'
   workflow_dispatch:
 
 permissions:
@@ -39,7 +37,7 @@ jobs:
               -H "X-GitHub-Api-Version: ${API_VERSION}" \
               "repos/${REPO}/issues/${parent}/sub_issues" \
               -f sub_issue_id="$child_id" >/dev/null 2>&1; then
-              echo "  already linked or GitHub rejected duplicate; continuing"
+              echo "  already linked or duplicate; continuing"
             fi
           }
 
@@ -52,18 +50,16 @@ jobs:
               -H "X-GitHub-Api-Version: ${API_VERSION}" \
               "repos/${REPO}/issues/${issue}/dependencies/blocked_by" \
               -f issue_id="$blocker_id" >/dev/null 2>&1; then
-              echo "  dependency already exists or GitHub rejected duplicate; continuing"
+              echo "  dependency already exists or duplicate; continuing"
             fi
           }
 
-          # Native WBS hierarchy: root -> phases -> executable leaf tasks
           for child in 2 3 4 5; do add_subissue 1 "$child"; done
           for child in 6 7; do add_subissue 2 "$child"; done
           for child in 8 9 10 11 12; do add_subissue 3 "$child"; done
           for child in 13 14 15 16; do add_subissue 4 "$child"; done
           for child in 17 18; do add_subissue 5 "$child"; done
 
-          # Native execution dependencies
           add_blocked_by 7 6
           add_blocked_by 8 7
           add_blocked_by 9 8
